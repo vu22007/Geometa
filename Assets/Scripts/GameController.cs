@@ -6,9 +6,11 @@ public class GameController : MonoBehaviour
     [SerializeField] List<Player> players;
     [SerializeField] Vector3Int respawnPoint1;
     //[SerializeField] Vector3Int respawnPoint2;
-    [SerializeField] CaptureFlag flag;
-    [SerializeField] float maxTime;
-    [SerializeField] float currentTime;
+    [SerializeField] CaptureFlag flag1;
+    //[SerializeField] CaptureFlag flag2;
+
+    [SerializeField] float maxTime = 480.0f; //8 minute games
+    [SerializeField] float currentTime = 0.0f;
 
     //Initialisation
     void Start()
@@ -22,6 +24,11 @@ public class GameController : MonoBehaviour
     //Framewise update
     void Update()
     {
+        currentTime += Time.deltaTime;
+        if (currentTime >= maxTime){
+            //end game
+        }
+
         foreach (Player player in players)
         {
             player.PlayerUpdate();

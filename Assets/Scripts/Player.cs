@@ -10,7 +10,7 @@ public class Player : MonoBehaviour
     float respawnTime = 10.0f;
     float currentRespawn = 0.0f;
     
-
+    //Player initialisation (Also used for respawning)
     public void PlayerStart(Vector3Int spawnPoint)
     {
         gameObject.transform.position = spawnPoint;
@@ -33,7 +33,7 @@ public class Player : MonoBehaviour
 
     //player moves according to key presses and player speed
     void PlayerMovement(){
-
+        //TODO
     }
 
     //take damage equal to input, includes check for death
