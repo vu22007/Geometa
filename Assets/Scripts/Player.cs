@@ -12,6 +12,7 @@ public class Player : MonoBehaviour
     float respawnTime = 10.0f;
     float currentRespawn = 0.0f;
     Rigidbody2D rb;
+    SpriteRenderer spriteRenderer;
     
     //Player initialisation (Also used for respawning)
     public void PlayerStart(Vector3Int spawnPoint)
@@ -23,6 +24,7 @@ public class Player : MonoBehaviour
         isAlive = true;
 
         rb = gameObject.GetComponent<Rigidbody2D>();
+        spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
     }
 
     //Update function, called from the game controller
@@ -38,9 +40,17 @@ public class Player : MonoBehaviour
 
     //player moves according to key presses and player speed
     void PlayerMovement(){
+        // Allow player to move
         float speedX = Input.GetAxis("Horizontal");
         float speedY = Input.GetAxis("Vertical");
         rb.linearVelocity = new Vector2(speedX, speedY).normalized * speed;
+
+        // Flip sprite to face direction the player is moving in
+        if (speedX < 0) {
+            spriteRenderer.flipX = true;
+        } else if (speedX > 0) {
+            spriteRenderer.flipX = false;
+        }
     }
 
     //take damage equal to input, includes check for death
