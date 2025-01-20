@@ -1,12 +1,14 @@
+using System;
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
 public class Player : MonoBehaviour
 {
-    [SerializeField] float speed;
-    [SerializeField] float maxHealth;
+    float speed;
+    float maxHealth;
     [SerializeField] Character character;
+    SpriteRenderer spriteRenderer;
     float currentHealth;
     public bool isAlive;
     float respawnTime = 10.0f;
@@ -19,7 +21,12 @@ public class Player : MonoBehaviour
     {
         gameObject.transform.position = spawnPoint;
 
-        //eventually the player will get their stats from the character they chose
+        //player gets stats from its character
+        maxHealth = character.MaxHealth;
+        speed = character.Speed;
+        spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
+        spriteRenderer.sprite = character.Sprite;
+
         currentHealth = maxHealth;
         isAlive = true;
 
