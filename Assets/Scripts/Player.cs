@@ -8,7 +8,6 @@ public class Player : MonoBehaviour
     float speed;
     float maxHealth;
     [SerializeField] Character character;
-    SpriteRenderer spriteRenderer;
     float currentHealth;
     public bool isAlive;
     float respawnTime = 10.0f;
@@ -31,7 +30,6 @@ public class Player : MonoBehaviour
         isAlive = true;
 
         rb = gameObject.GetComponent<Rigidbody2D>();
-        spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
     }
 
     //Update function, called from the game controller
