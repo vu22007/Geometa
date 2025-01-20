@@ -6,7 +6,7 @@ public class Player : MonoBehaviour
     float speed;
     float maxHealth;
     [SerializeField] Character character;
-    [SerializeField] SpriteRenderer spriteRenderer;
+    SpriteRenderer spriteRenderer;
     float currentHealth;
     public bool isAlive;
     float respawnTime = 10.0f;
