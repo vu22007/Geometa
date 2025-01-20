@@ -14,6 +14,11 @@ public class Player : MonoBehaviour
     float currentRespawn = 0.0f;
     Rigidbody2D rb;
     SpriteRenderer spriteRenderer;
+
+    //For the prefab factory (For when we have multiple players), to be called on instantiation of the prefab
+    public void OnCreated(){
+
+    }
     
     //Player initialisation (Also used for respawning)
     public void PlayerStart(Vector3Int spawnPoint)
