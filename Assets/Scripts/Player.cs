@@ -1,4 +1,6 @@
 using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
 
 public class Player : MonoBehaviour
 {
@@ -9,6 +11,7 @@ public class Player : MonoBehaviour
     public bool isAlive;
     float respawnTime = 10.0f;
     float currentRespawn = 0.0f;
+    Rigidbody2D rb;
     
     //Player initialisation (Also used for respawning)
     public void PlayerStart(Vector3Int spawnPoint)
@@ -18,6 +21,8 @@ public class Player : MonoBehaviour
         //eventually the player will get their stats from the character they chose
         currentHealth = maxHealth;
         isAlive = true;
+
+        rb = gameObject.GetComponent<Rigidbody2D>();
     }
 
     //Update function, called from the game controller
@@ -33,7 +38,9 @@ public class Player : MonoBehaviour
 
     //player moves according to key presses and player speed
     void PlayerMovement(){
-        //TODO
+        float speedX = Input.GetAxis("Horizontal");
+        float speedY = Input.GetAxis("Vertical");
+        rb.linearVelocity = new Vector2(speedX, speedY).normalized * speed;
     }
 
     //take damage equal to input, includes check for death
