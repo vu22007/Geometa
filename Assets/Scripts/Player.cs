@@ -35,19 +35,20 @@ public class Player : MonoBehaviour
     //Update function, called from the game controller
     public void PlayerUpdate()
     {
-        if(isAlive){
+        if (isAlive) {
             PlayerMovement();
         }
-        else{
+        else {
             //Respawn timer
         }
     }
 
     //player moves according to key presses and player speed
-    void PlayerMovement(){
+    void PlayerMovement()
+    {
         // Allow player to move
-        float speedX = Input.GetAxis("Horizontal");
-        float speedY = Input.GetAxis("Vertical");
+        float speedX = Input.GetAxisRaw("Horizontal");
+        float speedY = Input.GetAxisRaw("Vertical");
         rb.linearVelocity = new Vector2(speedX, speedY).normalized * speed;
 
         // Flip sprite to face direction the player is moving in
@@ -59,23 +60,25 @@ public class Player : MonoBehaviour
     }
 
     //take damage equal to input, includes check for death
-    public void TakeDamage(float damage){
+    public void TakeDamage(float damage)
+    {
         currentHealth -= damage;
-        if (currentHealth <= 0.0f)
-        {
+        if (currentHealth <= 0.0f) {
             Die();
         }
     }
 
     //heal equal to input, includes check for max health
-    public void Heal(float amount){
+    public void Heal(float amount)
+    {
         currentHealth += amount;
-        if (currentHealth >= maxHealth){
+        if (currentHealth >= maxHealth) {
             currentHealth = maxHealth;
         }
     }
 
-    void Die(){
+    void Die()
+    {
         Debug.Log("You died :((");
         isAlive = false;
     }
