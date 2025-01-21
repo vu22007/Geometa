@@ -5,7 +5,7 @@ public static class PrefabFactory
     public static Player SpawnPlayer(GameObject prefab, Vector3 spawnPosition, Character character){
         GameObject instantiatedPlayer = Object.Instantiate(prefab, spawnPosition, Quaternion.identity);
         Player player = instantiatedPlayer.GetComponent<Player>();
-        player.OnCreated();
+        player.OnCreated(character);
         return player;
     }
 

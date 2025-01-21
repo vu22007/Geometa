@@ -16,8 +16,11 @@ public class Player : MonoBehaviour
     SpriteRenderer spriteRenderer;
 
     //For the prefab factory (For when we have multiple players), to be called on instantiation of the prefab
-    public void OnCreated(){
-
+    public void OnCreated(Character character){
+        maxHealth = character.MaxHealth;
+        speed = character.Speed;
+        spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
+        spriteRenderer.sprite = character.Sprite;
     }
     
     //Player initialisation (Also used for respawning)
