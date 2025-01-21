@@ -44,20 +44,23 @@ public class Player : MonoBehaviour
         isAlive = true;
 
         rb = gameObject.GetComponent<Rigidbody2D>();
+        cam = Camera.main;
     }
 
-    //Update function, called from the game controller
-    public void PlayerUpdate()
+    //Update function, called from the game controller, returns a bullet if one is fired
+    public Bullet PlayerUpdate()
     {
+        Bullet bullet = null;
         if (isAlive) {
             PlayerMovement();
             if (Input.GetMouseButtonDown(0)){
-                ShootBullet();
+                bullet = ShootBullet();
             }
         }
         else {
             //Respawn timer
         }
+        return bullet;
     }
 
     //player moves according to key presses and player speed
@@ -101,15 +104,12 @@ public class Player : MonoBehaviour
     }
 
     //Shoots a bullet by spawning the prefab
-    void ShootBullet()
+    Bullet ShootBullet()
     {
         GameObject bulletPrefab = Resources.Load("Prefabs/Bullet") as GameObject;
-        
-        if (bulletPrefab != null){
-            Vector3 direction = CalculateDirectionFromMousePos();
-            PrefabFactory.SpawnBullet(bulletPrefab, gameObject.transform.position, direction, 10.0f, damage);
-        }
-
+        Vector3 direction = CalculateDirectionFromMousePos();
+        Bullet bullet = PrefabFactory.SpawnBullet(bulletPrefab, gameObject.transform.position, direction, 10.0f, damage);
+        return bullet;
     }
 
     Vector3 CalculateDirectionFromMousePos(){

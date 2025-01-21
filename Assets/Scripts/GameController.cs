@@ -12,6 +12,8 @@ public class GameController : MonoBehaviour
     [SerializeField] float maxTime = 480.0f; //8 minute games
     [SerializeField] float currentTime = 0.0f;
 
+    List<Bullet> bullets;
+
     //Initialisation
     void Start()
     {
@@ -31,7 +33,14 @@ public class GameController : MonoBehaviour
 
         foreach (Player player in players)
         {
-            player.PlayerUpdate();
+            Bullet newbullet = player.PlayerUpdate();
+            if(newbullet != null){
+                bullets.Add(newbullet);
+            }
+        }
+        foreach (Bullet bullet in bullets)
+        {
+            bullet.BulletUpdate();
         }
     }
 }
