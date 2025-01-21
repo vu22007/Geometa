@@ -2,12 +2,15 @@ using System;
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.Experimental.GraphView;
 
 public class Player : MonoBehaviour
 {
     float speed;
     float maxHealth;
+    float damage;
     [SerializeField] Character character;
+    Camera cam;
     float currentHealth;
     public bool isAlive;
     float respawnTime = 10.0f;
@@ -19,7 +22,9 @@ public class Player : MonoBehaviour
     public void OnCreated(Character character){
         maxHealth = character.MaxHealth;
         speed = character.Speed;
+        damage = character.Damage;
         spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
+        cam = Camera.main;
         spriteRenderer.sprite = character.Sprite;
     }
     
@@ -31,6 +36,7 @@ public class Player : MonoBehaviour
         //player gets stats from its character
         maxHealth = character.MaxHealth;
         speed = character.Speed;
+        damage = character.Damage;
         spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
         spriteRenderer.sprite = character.Sprite;
 
@@ -45,6 +51,9 @@ public class Player : MonoBehaviour
     {
         if (isAlive) {
             PlayerMovement();
+            if (Input.GetMouseButtonDown(0)){
+                ShootBullet();
+            }
         }
         else {
             //Respawn timer
@@ -89,5 +98,24 @@ public class Player : MonoBehaviour
     {
         Debug.Log("You died :((");
         isAlive = false;
+    }
+
+    //Shoots a bullet by spawning the prefab
+    void ShootBullet()
+    {
+        GameObject bulletPrefab = Resources.Load("Prefabs/Bullet") as GameObject;
+        
+        if (bulletPrefab != null){
+            Vector3 direction = CalculateDirectionFromMousePos();
+            PrefabFactory.SpawnBullet(bulletPrefab, gameObject.transform.position, direction, 10.0f, damage);
+        }
+
+    }
+
+    Vector3 CalculateDirectionFromMousePos(){
+        Vector2 mousePos = Input.mousePosition;
+        Vector3 worldPoint = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
+        Vector3 direction = (worldPoint - gameObject.transform.position).normalized;
+        return direction;
     }
 }
