@@ -17,6 +17,7 @@ public class GameController : MonoBehaviour
     //Initialisation
     void Start()
     {
+        bullets = new List<Bullet>();
         foreach (Player player in players)
         {
             player.PlayerStart(respawnPoint1);

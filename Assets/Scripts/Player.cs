@@ -108,11 +108,12 @@ public class Player : MonoBehaviour
     {
         GameObject bulletPrefab = Resources.Load("Prefabs/Bullet") as GameObject;
         Vector3 direction = CalculateDirectionFromMousePos();
-        Bullet bullet = PrefabFactory.SpawnBullet(bulletPrefab, gameObject.transform.position, direction, 10.0f, damage);
+        Bullet bullet = PrefabFactory.SpawnBullet(bulletPrefab, gameObject.transform.position, direction, 40.0f, damage);
         return bullet;
     }
 
-    Vector3 CalculateDirectionFromMousePos(){
+    Vector3 CalculateDirectionFromMousePos()
+    {
         Vector2 mousePos = Input.mousePosition;
         Vector3 worldPoint = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
         Vector3 direction = (worldPoint - gameObject.transform.position).normalized;
