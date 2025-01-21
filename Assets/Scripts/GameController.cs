@@ -42,6 +42,10 @@ public class GameController : MonoBehaviour
         foreach (Bullet bullet in bullets)
         {
             bullet.BulletUpdate();
+            if (bullet.done){
+                bullets.Remove(bullet);
+                bullet.DestroyBullet();
+            }
         }
     }
 }
