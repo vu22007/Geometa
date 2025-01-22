@@ -4,7 +4,7 @@ using UnityEngine;
 public class TriangleShape : MonoBehaviour
 {
     public GameObject circleColliderPrefab;
-    public GameObject[] corners;
+    private GameObject[] corners = new GameObject[3];
     private float radius = 7.0f;
     private bool buffActivated = false;
     private Dictionary<GameObject, GameObject> playersAtCorners = new Dictionary<GameObject, GameObject>();
@@ -35,6 +35,21 @@ public class TriangleShape : MonoBehaviour
             corners[i] = Instantiate(circleColliderPrefab, new Vector3(x, y, center.z), Quaternion.identity, transform);
             // initialise no player at each corner
             playersAtCorners[corners[i]] = null;
+        }
+    }
+
+    public void CheckCorners()
+    {
+        foreach (var corner in corners) {
+            CircleCornerCollider coll = corner.GetComponent<CircleCornerCollider>();
+            if (!coll.isOccupied)
+            {
+                return;
+            }
+        }
+
+        if(!buffActivated) {
+            ActivateBuff(); 
         }
     }
 
