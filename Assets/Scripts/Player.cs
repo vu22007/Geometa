@@ -11,7 +11,7 @@ public class Player : MonoBehaviour
     float currentHealth;
     public bool isAlive;
     float respawnTime = 10.0f;
-    float currentRespawn = 0.0f;
+    float currentRespawn;
     Rigidbody2D rb;
     SpriteRenderer spriteRenderer;
     
@@ -28,6 +28,7 @@ public class Player : MonoBehaviour
 
         currentHealth = maxHealth;
         isAlive = true;
+        currentRespawn = 0.0f;
 
         rb = gameObject.GetComponent<Rigidbody2D>();
     }
@@ -39,7 +40,7 @@ public class Player : MonoBehaviour
             PlayerMovement();
         }
         else {
-            //Respawn timer
+            currentRespawn += Time.deltaTime;
         }
     }
 
@@ -81,5 +82,10 @@ public class Player : MonoBehaviour
     {
         Debug.Log("You died :((");
         isAlive = false;
+    }
+
+    public bool RespawnTimerDone()
+    {
+        return currentRespawn >= respawnTime;
     }
 }
