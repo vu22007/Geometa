@@ -14,7 +14,8 @@ public static class PrefabFactory
         Quaternion wantedRotation = Quaternion.LookRotation(moveDirection, up);
         GameObject instantiatedBullet = Object.Instantiate(prefab, spawnPosition, wantedRotation);
         Bullet newBullet = instantiatedBullet.GetComponent<Bullet>();
-        newBullet.OnCreated(moveDirection, speed, damage);
+        moveDirection.z = 0;
+        newBullet.OnCreated(moveDirection.normalized, speed, damage);
         return newBullet;
     }
 }

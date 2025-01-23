@@ -116,7 +116,7 @@ public class Player : MonoBehaviour
     {
         Vector2 mousePos = Input.mousePosition;
         Vector3 worldPoint = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
-        Vector3 direction = (worldPoint - gameObject.transform.position).normalized;
+        Vector3 direction = worldPoint - gameObject.transform.position;
         return direction;
     }
 }
