@@ -32,6 +32,11 @@ public class GameController : MonoBehaviour
         foreach (Player player in players)
         {
             player.PlayerUpdate();
+
+            // If player is dead and respawn timer is done then respawn player
+            if (!player.isAlive && player.RespawnTimerDone()) {
+                player.PlayerStart(respawnPoint1);
+            }
         }
     }
 }
