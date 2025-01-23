@@ -15,7 +15,8 @@ Players can form shapes to activate certain buffs:
  - Triangle: +resistance -speed
  - Rectangle: +damage -speed
  - Pentagon: +damage +spread -movement
- - After they get killed players respawn after a 10s cooldown.
+
+After they get killed players respawn after a 10s cooldown.
 
 Once carrying the flag you cannot join a shape/activate a buff.
 
