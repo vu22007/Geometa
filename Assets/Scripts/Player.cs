@@ -9,6 +9,9 @@ public class Player : MonoBehaviour
     float speed;
     float maxHealth;
     float damage;
+    int maxAmmo;
+    int currentAmmo;
+    float fireRate;
     [SerializeField] Character character;
     Camera cam;
     float currentHealth;
@@ -23,6 +26,9 @@ public class Player : MonoBehaviour
         maxHealth = character.MaxHealth;
         speed = character.Speed;
         damage = character.Damage;
+        maxAmmo = character.MaxAmmo;
+        currentAmmo = maxAmmo;
+        fireRate = character.FireRate;
         spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
         cam = Camera.main;
         spriteRenderer.sprite = character.Sprite;
@@ -37,6 +43,9 @@ public class Player : MonoBehaviour
         maxHealth = character.MaxHealth;
         speed = character.Speed;
         damage = character.Damage;
+        maxAmmo = character.MaxAmmo;
+        currentAmmo = maxAmmo;
+        fireRate = character.FireRate;
         spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
         spriteRenderer.sprite = character.Sprite;
 
@@ -54,7 +63,17 @@ public class Player : MonoBehaviour
         if (isAlive) {
             PlayerMovement();
             if (Input.GetMouseButtonDown(0)){
-                bullet = ShootBullet();
+                if(!(currentAmmo == 0)){
+                    bullet = ShootBullet();
+                }
+                else{
+                    Debug.Log("Press R to reload!!");
+                }
+            }
+            if (Input.GetKeyDown(KeyCode.R)){
+                Debug.Log("Reloading");
+                //implement wait
+                Reload();
             }
         }
         else {
@@ -103,12 +122,17 @@ public class Player : MonoBehaviour
         isAlive = false;
     }
 
+    void Reload(){
+        currentAmmo = maxAmmo;
+    }
+
     //Shoots a bullet by spawning the prefab
     Bullet ShootBullet()
     {
         GameObject bulletPrefab = Resources.Load("Prefabs/Bullet") as GameObject;
         Vector3 direction = CalculateDirectionFromMousePos();
         Bullet bullet = PrefabFactory.SpawnBullet(bulletPrefab, gameObject.transform.position, direction, 40.0f, damage);
+        currentAmmo --;
         return bullet;
     }
 
