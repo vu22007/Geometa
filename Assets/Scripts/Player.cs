@@ -13,48 +13,38 @@ public class Player : MonoBehaviour
     int currentAmmo;
     float fireRate;
     [SerializeField] Character character;
-    Camera cam;
+    [SerializeField] Camera cam;
     float currentHealth;
     public bool isAlive;
     float respawnTime = 10.0f;
     float currentRespawn;
     Rigidbody2D rb;
     SpriteRenderer spriteRenderer;
+    Vector3 respawnPoint;
 
     //For the prefab factory (For when we have multiple players), to be called on instantiation of the prefab
-    public void OnCreated(Character character){
+    public void OnCreated(Character character, Vector3 respawnPoint){
         maxHealth = character.MaxHealth;
         speed = character.Speed;
         damage = character.Damage;
         maxAmmo = character.MaxAmmo;
-        currentAmmo = maxAmmo;
         fireRate = character.FireRate;
+        this.respawnPoint = respawnPoint;
         spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
-        cam = Camera.main;
+        rb = gameObject.GetComponent<Rigidbody2D>();
         spriteRenderer.sprite = character.Sprite;
+
+        Respawn();
     }
     
     //Player initialisation (Also used for respawning)
-    public void PlayerStart(Vector3Int spawnPoint)
+    public void Respawn()
     {
-        gameObject.transform.position = spawnPoint;
-
-        //player gets stats from its character
-        maxHealth = character.MaxHealth;
-        speed = character.Speed;
-        damage = character.Damage;
-        maxAmmo = character.MaxAmmo;
+        gameObject.transform.position = respawnPoint;
         currentAmmo = maxAmmo;
-        fireRate = character.FireRate;
-        spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
-        spriteRenderer.sprite = character.Sprite;
-
         currentHealth = maxHealth;
         isAlive = true;
         currentRespawn = 0.0f;
-
-        rb = gameObject.GetComponent<Rigidbody2D>();
-        cam = Camera.main;
     }
 
     //Update function, called from the game controller, returns a bullet if one is fired
