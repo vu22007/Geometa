@@ -34,17 +34,13 @@ public class GameController : MonoBehaviour
 
         foreach (Player player in players)
         {
-            Bullet newbullet = player.PlayerUpdate();
+            Bullet newBullet = player.PlayerUpdate();
             if(newbullet != null){
                 bullets.Add(newbullet);
             }
-        }
-        foreach (Bullet bullet in bullets)
-        {
-            bullet.BulletUpdate();
-            if (bullet.done){
-                bullets.Remove(bullet);
-                bullet.DestroyBullet();
+            //If player is dead and respawn timer is done then respawn player
+            if (!player.isAlive && player.RespawnTimerDone()) {
+                player.PlayerStart(respawnPoint1);
             }
         }
     }
