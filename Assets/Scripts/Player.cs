@@ -61,7 +61,10 @@ public class Player : MonoBehaviour
     {
         Bullet bullet = null;
         if (isAlive) {
+            //WASD movement
             PlayerMovement();
+
+            //Firing the weapon
             if (Input.GetMouseButtonDown(0)){
                 if(!(currentAmmo == 0)){
                     bullet = ShootBullet();
@@ -70,6 +73,8 @@ public class Player : MonoBehaviour
                     Debug.Log("Press R to reload!!");
                 }
             }
+
+            //Reloading
             if (Input.GetKeyDown(KeyCode.R)){
                 Debug.Log("Reloading");
                 //implement wait
