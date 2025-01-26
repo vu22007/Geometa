@@ -25,7 +25,8 @@ public class GameController : MonoBehaviour
 
         players = new List<Player>();
 
-        Player playerOne = PrefabFactory.SpawnPlayer(playerPrefab, respawnPoint1, armyVet);
+        int team = 1;
+        Player playerOne = PrefabFactory.SpawnPlayer(playerPrefab, respawnPoint1, armyVet, team);
         players.Add(playerOne);
 
     }

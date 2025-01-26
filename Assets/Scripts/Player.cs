@@ -21,9 +21,10 @@ public class Player : MonoBehaviour
     Rigidbody2D rb;
     SpriteRenderer spriteRenderer;
     Vector3 respawnPoint;
+    public int team;
 
     //For the prefab factory (For when we have multiple players), to be called on instantiation of the prefab
-    public void OnCreated(Character character, Vector3 respawnPoint){
+    public void OnCreated(Character character, Vector3 respawnPoint, int team){
         maxHealth = character.MaxHealth;
         speed = character.Speed;
         damage = character.Damage;
@@ -33,6 +34,7 @@ public class Player : MonoBehaviour
         spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
         rb = gameObject.GetComponent<Rigidbody2D>();
         spriteRenderer.sprite = character.Sprite;
+        this.team = team;
 
         Respawn();
     }
@@ -116,6 +118,7 @@ public class Player : MonoBehaviour
     {
         Debug.Log("You died :((");
         isAlive = false;
+        rb.linearVelocity = new Vector2(0, 0); // stop player from moving
     }
 
     public bool RespawnTimerDone()
@@ -132,8 +135,8 @@ public class Player : MonoBehaviour
     {
         GameObject bulletPrefab = Resources.Load("Prefabs/Bullet") as GameObject;
         Vector3 direction = CalculateDirectionFromMousePos();
-        Bullet bullet = PrefabFactory.SpawnBullet(bulletPrefab, gameObject.transform.position, direction, 40.0f, damage);
-        currentAmmo --;
+        Bullet bullet = PrefabFactory.SpawnBullet(bulletPrefab, gameObject.transform.position, direction, 40.0f, damage, team);
+        currentAmmo--;
         return bullet;
     }
 
