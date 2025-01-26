@@ -17,3 +17,5 @@ MonoBehaviour:
   damage: 4
   ability: {fileID: 0}
   sprite: {fileID: 21300000, guid: 0d8585c6e1c304d30ac82acef223238f, type: 3}
+  maxAmmo: 10
+  fireRate: 3

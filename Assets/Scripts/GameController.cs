@@ -1,9 +1,9 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class GameController : MonoBehaviour
 {
-    [SerializeField] List<Player> players;
     [SerializeField] Vector3Int respawnPoint1;
     //[SerializeField] Vector3Int respawnPoint2;
     [SerializeField] CaptureFlag flag1;
@@ -12,13 +12,22 @@ public class GameController : MonoBehaviour
     [SerializeField] float maxTime = 480.0f; //8 minute games
     [SerializeField] float currentTime = 0.0f;
 
+    List<Bullet> bullets;
+    List<Player> players;
+
     //Initialisation
     void Start()
     {
-        foreach (Player player in players)
-        {
-            player.PlayerStart(respawnPoint1);
-        }
+        GameObject playerPrefab = Resources.Load("Prefabs/Player") as GameObject;
+        Character armyVet = Resources.Load("ScriptableObjects/Characters/Army Vet") as Character;
+
+        bullets = new List<Bullet>();
+
+        players = new List<Player>();
+
+        Player playerOne = PrefabFactory.SpawnPlayer(playerPrefab, respawnPoint1, armyVet);
+        players.Add(playerOne);
+
     }
 
     //Framewise update
@@ -31,11 +40,22 @@ public class GameController : MonoBehaviour
 
         foreach (Player player in players)
         {
-            player.PlayerUpdate();
-
-            // If player is dead and respawn timer is done then respawn player
+            Bullet newBullet = player.PlayerUpdate();
+            if(newBullet != null){
+                bullets.Add(newBullet);
+            }
+            //If player is dead and respawn timer is done then respawn player
             if (!player.isAlive && player.RespawnTimerDone()) {
-                player.PlayerStart(respawnPoint1);
+                player.Respawn();
+            }
+        }
+
+        foreach (Bullet bullet in bullets)
+        {
+            bullet.BulletUpdate();
+            if(bullet.done){
+                bullets.Remove(bullet);
+                bullet.DestroyBullet();
             }
         }
     }
