@@ -22,6 +22,7 @@ public class Player : MonoBehaviour
     SpriteRenderer spriteRenderer;
     Vector3 respawnPoint;
     public int team;
+    float timeToWaitForBullet;
 
     //For the prefab factory (For when we have multiple players), to be called on instantiation of the prefab
     public void OnCreated(Character character, Vector3 respawnPoint, int team){
@@ -35,6 +36,8 @@ public class Player : MonoBehaviour
         rb = gameObject.GetComponent<Rigidbody2D>();
         spriteRenderer.sprite = character.Sprite;
         this.team = team;
+        fireRate = 0.25f;
+        timeToWaitForBullet = 0;
 
         Respawn();
     }
@@ -58,17 +61,21 @@ public class Player : MonoBehaviour
             PlayerMovement();
 
             //Firing the weapon
-            if (Input.GetMouseButtonDown(0)){
-                if(!(currentAmmo == 0)){
-                    bullet = ShootBullet();
-                }
-                else{
-                    Debug.Log("Press R to reload!!");
+            timeToWaitForBullet -= Time.deltaTime;
+            if (Input.GetMouseButton(0)) {
+                if (timeToWaitForBullet <= 0) {
+                    timeToWaitForBullet = fireRate;
+                    if (currentAmmo != 0) {
+                        bullet = ShootBullet();
+                    }
+                    else {
+                        Debug.Log("Press R to reload!!");
+                    }
                 }
             }
 
             //Reloading
-            if (Input.GetKeyDown(KeyCode.R)){
+            if (Input.GetKeyDown(KeyCode.R)) {
                 Debug.Log("Reloading");
                 //implement wait
                 Reload();
