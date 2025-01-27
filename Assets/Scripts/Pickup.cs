@@ -45,10 +45,10 @@ public class Pickup : MonoBehaviour
         switch (type)
         {
             case 0: //Health
-                sprite = Resources.Load("") as Sprite;
+                sprite = Resources.Load("Sprites/HealthPickup") as Sprite;
                 break;
             case 1: //Points
-                sprite = Resources.Load("") as Sprite;
+                sprite = Resources.Load("Sprites/PointsPickup") as Sprite;
                 break;
             default:
                 Debug.Log("Unknown type of pickup");

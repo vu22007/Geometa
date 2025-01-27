@@ -20,6 +20,7 @@ public class GameController : MonoBehaviour
     {
         GameObject playerPrefab = Resources.Load("Prefabs/Player") as GameObject;
         Character armyVet = Resources.Load("ScriptableObjects/Characters/Army Vet") as Character;
+        GameObject pickupPrefab = Resources.Load("Prefabs/Pickup") as GameObject;
 
         bullets = new List<Bullet>();
 
@@ -29,6 +30,7 @@ public class GameController : MonoBehaviour
         Player playerOne = PrefabFactory.SpawnPlayer(playerPrefab, respawnPoint1, armyVet, team);
         players.Add(playerOne);
 
+        PrefabFactory.SpawnPickup(pickupPrefab, new Vector3(2,2,2), 0, 10); //test pickup
     }
 
     //Framewise update
