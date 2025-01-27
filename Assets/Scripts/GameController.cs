@@ -25,7 +25,8 @@ public class GameController : MonoBehaviour
 
         players = new List<Player>();
 
-        Player playerOne = PrefabFactory.SpawnPlayer(playerPrefab, respawnPoint1, armyVet);
+        int team = 1;
+        Player playerOne = PrefabFactory.SpawnPlayer(playerPrefab, respawnPoint1, armyVet, team);
         players.Add(playerOne);
 
     }
@@ -50,8 +51,9 @@ public class GameController : MonoBehaviour
             }
         }
 
-        foreach (Bullet bullet in bullets)
+        for (int i = bullets.Count - 1; i >= 0; i--)
         {
+            Bullet bullet = bullets[i];
             bullet.BulletUpdate();
             if(bullet.done){
                 bullets.Remove(bullet);
