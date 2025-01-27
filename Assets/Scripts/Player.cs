@@ -12,6 +12,8 @@ public class Player : MonoBehaviour
     int maxAmmo;
     int currentAmmo;
     float fireRate;
+    float reloadTime;
+    float timeToWaitForBullet;
     [SerializeField] Character character;
     [SerializeField] Camera cam;
     float currentHealth;
@@ -22,7 +24,6 @@ public class Player : MonoBehaviour
     SpriteRenderer spriteRenderer;
     Vector3 respawnPoint;
     public int team;
-    float timeToWaitForBullet;
 
     //For the prefab factory (For when we have multiple players), to be called on instantiation of the prefab
     public void OnCreated(Character character, Vector3 respawnPoint, int team){
@@ -37,7 +38,7 @@ public class Player : MonoBehaviour
         spriteRenderer.sprite = character.Sprite;
         this.team = team;
         fireRate = 0.25f;
-        timeToWaitForBullet = 0;
+        reloadTime = 1.0f;
 
         Respawn();
     }
@@ -50,6 +51,7 @@ public class Player : MonoBehaviour
         currentHealth = maxHealth;
         isAlive = true;
         currentRespawn = 0.0f;
+        timeToWaitForBullet = 0.0f;
     }
 
     //Update function, called from the game controller, returns a bullet if one is fired
@@ -77,7 +79,7 @@ public class Player : MonoBehaviour
             //Reloading
             if (Input.GetKeyDown(KeyCode.R)) {
                 Debug.Log("Reloading");
-                //implement wait
+                timeToWaitForBullet = reloadTime;
                 Reload();
             }
         }
