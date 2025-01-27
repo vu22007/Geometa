@@ -59,11 +59,13 @@ public class Player : MonoBehaviour
     {
         Bullet bullet = null;
         if (isAlive) {
-            //WASD movement
+            // WASD movement
             PlayerMovement();
 
-            //Firing the weapon
-            timeToWaitForBullet -= Time.deltaTime;
+            // Decrease bullet timer and clamp to 0 if below 0
+            timeToWaitForBullet = (timeToWaitForBullet > 0) ? timeToWaitForBullet - Time.deltaTime : 0;
+
+            // Firing the weapon
             if (Input.GetMouseButton(0)) {
                 if (timeToWaitForBullet <= 0) {
                     timeToWaitForBullet = fireRate;
@@ -76,7 +78,7 @@ public class Player : MonoBehaviour
                 }
             }
 
-            //Reloading
+            // Reloading
             if (Input.GetKeyDown(KeyCode.R)) {
                 Debug.Log("Reloading");
                 timeToWaitForBullet = reloadTime;
