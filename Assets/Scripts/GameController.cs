@@ -51,8 +51,9 @@ public class GameController : MonoBehaviour
             }
         }
 
-        foreach (Bullet bullet in bullets)
+        for (int i = bullets.Count - 1; i >= 0; i--)
         {
+            Bullet bullet = bullets[i];
             bullet.BulletUpdate();
             if(bullet.done){
                 bullets.Remove(bullet);
