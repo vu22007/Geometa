@@ -18,4 +18,11 @@ public static class PrefabFactory
         newBullet.OnCreated(moveDirection.normalized, speed, damage, team);
         return newBullet;
     }
+
+    public static Pickup SpawnPickup(GameObject prefab, Vector3 spawnPosition, int type, int amount){
+        GameObject instantiatedPickup = Object.Instantiate(prefab, spawnPosition, Quaternion.identity);
+        Pickup pickup = instantiatedPickup.GetComponent<Pickup>();
+        pickup.OnCreated(type, amount);
+        return pickup;
+    }
 }
