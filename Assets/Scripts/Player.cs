@@ -37,7 +37,6 @@ public class Player : MonoBehaviour
         rb = gameObject.GetComponent<Rigidbody2D>();
         spriteRenderer.sprite = character.Sprite;
         this.team = team;
-        fireRate = 0.25f;
         reloadTime = 1.0f;
 
         Respawn();
@@ -68,7 +67,7 @@ public class Player : MonoBehaviour
             // Firing the weapon
             if (Input.GetMouseButton(0)) {
                 if (timeToWaitForBullet <= 0) {
-                    timeToWaitForBullet = fireRate;
+                    timeToWaitForBullet = 1/fireRate;
                     if (currentAmmo != 0) {
                         bullet = ShootBullet();
                     }
