@@ -14,6 +14,7 @@ public class Player : MonoBehaviour
     float fireRate;
     float reloadTime;
     float timeToWaitForBullet;
+    int points;
     [SerializeField] Character character;
     [SerializeField] Camera cam;
     float currentHealth;
@@ -38,6 +39,7 @@ public class Player : MonoBehaviour
         spriteRenderer.sprite = character.Sprite;
         this.team = team;
         reloadTime = 1.0f;
+        points = 0;
 
         Respawn();
     }
@@ -122,6 +124,11 @@ public class Player : MonoBehaviour
         if (currentHealth >= maxHealth) {
             currentHealth = maxHealth;
         }
+    }
+
+    public void GainPoints(int amount)
+    {
+        points += amount;
     }
 
     void Die()
