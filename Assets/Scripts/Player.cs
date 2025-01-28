@@ -2,7 +2,6 @@ using System;
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.Experimental.GraphView;
 
 public class Player : MonoBehaviour
 {
@@ -24,6 +23,7 @@ public class Player : MonoBehaviour
     SpriteRenderer spriteRenderer;
     Vector3 respawnPoint;
     public int team;
+    private TriangleController triangleController;
 
     //For the prefab factory (For when we have multiple players), to be called on instantiation of the prefab
     public void OnCreated(Character character, Vector3 respawnPoint, int team){
@@ -53,6 +53,19 @@ public class Player : MonoBehaviour
         timeToWaitForBullet = 0.0f;
     }
 
+    //public void Update()
+    //{
+    //    if (isAlive)
+    //    {
+    //        // WASD movement
+    //        PlayerMovement();
+    //        if (Input.GetKeyDown(KeyCode.Q))
+    //        {
+    //            triangleController.ActivateTriangle();
+    //        }
+
+    //    }
+
     //Update function, called from the game controller, returns a bullet if one is fired
     public Bullet PlayerUpdate()
     {
@@ -60,6 +73,12 @@ public class Player : MonoBehaviour
         if (isAlive) {
             // WASD movement
             PlayerMovement();
+            if (Input.GetKeyDown(KeyCode.Q))
+            {
+
+                triangleController = GetComponent<TriangleController>();
+                triangleController.ActivateTriangle();
+            }
 
             // Decrease bullet timer and clamp to 0 if below 0
             timeToWaitForBullet = (timeToWaitForBullet > 0) ? timeToWaitForBullet - Time.deltaTime : 0;

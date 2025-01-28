@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 6975032210494896427}
   - component: {fileID: -5256008576835943960}
   - component: {fileID: 8839131842078529516}
+  - component: {fileID: -3994952273510835414}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -106,6 +107,7 @@ MonoBehaviour:
   character: {fileID: 0}
   cam: {fileID: 3093333144043118080}
   isAlive: 0
+  team: 0
 --- !u!50 &-5256008576835943960
 Rigidbody2D:
   serializedVersion: 5
@@ -170,6 +172,20 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: 0}
   m_Size: {x: 2.27, y: 5.25}
   m_Direction: 0
+--- !u!114 &-3994952273510835414
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3801650017718524952}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c90026c16c1ceb4b934e259a0ec0af9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  trianglePrefab: {fileID: 1674966375643425539, guid: 9e1835267b0b05843b7780cfade6b527, type: 3}
+  previewTrianglePrefab: {fileID: 7447591849957452562, guid: 01c9fb0d5a523a6469cb48b359d9fed0, type: 3}
 --- !u!1 &4590873436755935670
 GameObject:
   m_ObjectHideFlags: 0
