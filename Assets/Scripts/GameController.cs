@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class GameController : MonoBehaviour
 {
-    [SerializeField] Vector3Int respawnPoint1;
+    [SerializeField] public Vector3Int respawnPoint1;
     //[SerializeField] Vector3Int respawnPoint2;
     [SerializeField] CaptureFlag flag1;
     //[SerializeField] CaptureFlag flag2;
@@ -13,7 +13,7 @@ public class GameController : MonoBehaviour
     [SerializeField] float currentTime = 0.0f;
 
     List<Bullet> bullets;
-    List<Player> players;
+    public List<Player> players;
 
     //Initialisation
     void Start()
