@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
+using static Unity.Collections.Unicode;
 
-public class GameController : MonoBehaviour
+public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
 {
     [SerializeField] public Vector3Int respawnPoint1;
     //[SerializeField] Vector3Int respawnPoint2;
@@ -14,7 +15,9 @@ public class GameController : MonoBehaviour
     [SerializeField] float currentTime = 0.0f;
 
     List<Bullet> bullets;
-    public List<Player> players;
+    List<Player> players;
+
+    private Dictionary<PlayerRef, NetworkObject> spawnedPlayers = new Dictionary<PlayerRef, NetworkObject>();
 
     // Initialisation
     void Start()
@@ -32,7 +35,7 @@ public class GameController : MonoBehaviour
     }
 
     // Update for every server simulation tick
-    void Update()
+    public override void FixedUpdateNetwork()
     {
         currentTime += Time.deltaTime;
         if (currentTime >= maxTime)
@@ -62,6 +65,51 @@ public class GameController : MonoBehaviour
             {
                 bullets.Remove(bullet);
                 bullet.DestroyBullet();
+            }
+        }
+    }
+
+    public void PlayerJoined(PlayerRef player)
+    {
+        // Run the following only on the server
+        if (Runner.IsServer)
+        {
+            // Load prefabs
+            GameObject playerPrefab = Resources.Load("Prefabs/Player") as GameObject;
+            Character armyVet = Resources.Load("ScriptableObjects/Characters/Army Vet") as Character;
+
+            // Spawn the player network object
+            NetworkObject networkPlayerObject = Runner.Spawn(playerPrefab, respawnPoint1, Quaternion.identity, player);
+
+            // Initialise the player
+            Player playerObject = networkPlayerObject.GetComponent<Player>();
+            playerObject.OnCreated(armyVet, respawnPoint1, 1);
+
+            // Update the player network object
+            Runner.SetPlayerObject(player, networkPlayerObject);
+
+            // Add player network object to dictionary
+            spawnedPlayers.Add(player, networkPlayerObject);
+
+            // Pass the player to the game controller
+            players.Add(playerObject);
+        }
+    }
+
+    public void PlayerLeft(PlayerRef player)
+    {
+        // Run the following only on the server
+        if (Runner.IsServer)
+        {
+            if (spawnedPlayers.TryGetValue(player, out NetworkObject networkPlayerObject))
+            {
+                // Despawn the network object and remove from dictionary
+                Runner.Despawn(networkPlayerObject);
+                spawnedPlayers.Remove(player);
+
+                // Remove the player from the game controller
+                Player playerObject = networkPlayerObject.GetComponent<Player>();
+                players.Remove(playerObject);
             }
         }
     }

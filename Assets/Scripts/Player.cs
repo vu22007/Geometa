@@ -33,6 +33,7 @@ public class Player : NetworkBehaviour
         spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
         rb = gameObject.GetComponent<Rigidbody2D>();
         spriteRenderer.sprite = character.Sprite;
+        this.character = character;
         this.team = team;
         reloadTime = 1.0f;
 
@@ -90,7 +91,7 @@ public class Player : NetworkBehaviour
     //player moves according to key presses and player speed
     void PlayerMovement()
     {
-        // Note: Only the player that the user has input authority for will recieve the input on the line below
+        // GetInput will return true on the StateAuthority (the server) and the InputAuthority (the client who controls this player)
         if (GetInput(out NetworkInputData data))
         {
             // Move the player by setting the velocity using the supplied movement direction vector
