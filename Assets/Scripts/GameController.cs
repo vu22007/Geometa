@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Fusion;
 using UnityEngine;
 
 public class GameController : MonoBehaviour
@@ -15,7 +16,7 @@ public class GameController : MonoBehaviour
     List<Bullet> bullets;
     public List<Player> players;
 
-    //Initialisation
+    // Initialisation
     void Start()
     {
         GameObject playerPrefab = Resources.Load("Prefabs/Player") as GameObject;
@@ -25,28 +26,30 @@ public class GameController : MonoBehaviour
 
         players = new List<Player>();
 
-        int team = 1;
-        Player playerOne = PrefabFactory.SpawnPlayer(playerPrefab, respawnPoint1, armyVet, team);
-        players.Add(playerOne);
-
+        //int team = 1;
+        //Player playerOne = PrefabFactory.SpawnPlayer(playerPrefab, respawnPoint1, armyVet, team);
+        //players.Add(playerOne);
     }
 
-    //Framewise update
+    // Update for every server simulation tick
     void Update()
     {
         currentTime += Time.deltaTime;
-        if (currentTime >= maxTime){
+        if (currentTime >= maxTime)
+        {
             //end game
         }
 
         foreach (Player player in players)
         {
             Bullet newBullet = player.PlayerUpdate();
-            if(newBullet != null){
+            if (newBullet != null)
+            {
                 bullets.Add(newBullet);
             }
             //If player is dead and respawn timer is done then respawn player
-            if (!player.isAlive && player.RespawnTimerDone()) {
+            if (!player.isAlive && player.RespawnTimerDone())
+            {
                 player.Respawn();
             }
         }
@@ -55,7 +58,8 @@ public class GameController : MonoBehaviour
         {
             Bullet bullet = bullets[i];
             bullet.BulletUpdate();
-            if(bullet.done){
+            if (bullet.done)
+            {
                 bullets.Remove(bullet);
                 bullet.DestroyBullet();
             }

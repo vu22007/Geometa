@@ -11,15 +11,11 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
     private NetworkRunner runner;
     private Dictionary<PlayerRef, NetworkObject> spawnedPlayers = new Dictionary<PlayerRef, NetworkObject>();
 
-    // Create GUI to allow user to start game as either a server, a host or a client
+    // Create GUI to allow user to start game as either a host or a client
     private void OnGUI()
     {
         if (runner == null)
         {
-            if (GUI.Button(new Rect(0, 0, 200, 40), "Start Server"))
-            {
-                StartGame(GameMode.Server);
-            }
             if (GUI.Button(new Rect(0, 0, 200, 40), "Host"))
             {
                 StartGame(GameMode.Host);
@@ -57,6 +53,7 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
+        // Run the following only on the server
         if (runner.IsServer)
         {
             // Load prefabs
@@ -64,27 +61,35 @@ public class BasicSpawner : MonoBehaviour, INetworkRunnerCallbacks
             Character armyVet = Resources.Load("ScriptableObjects/Characters/Army Vet") as Character;
 
             // Spawn the player network object and add to dictionary
-            NetworkObject networkPlayerObject = runner.Spawn(playerPrefab, gameController.respawnPoint1, Quaternion.identity, player);
+            NetworkObject networkPlayerObject = runner.Spawn(playerPrefab, gameController.respawnPoint1, Quaternion.identity, player, (NetworkRunner runner, NetworkObject obj) =>
+            {
+                // Initialise the player
+                Player playerObject = obj.GetComponent<Player>();
+                playerObject.OnCreated(armyVet, gameController.respawnPoint1, 1);
+            });
             spawnedPlayers.Add(player, networkPlayerObject);
 
-            // Initialise the player and pass it to the game controller
+            // Pass the player to the game controller
             Player playerObject = networkPlayerObject.GetComponent<Player>();
-            playerObject.OnCreated(armyVet, gameController.respawnPoint1, 2);
             gameController.players.Add(playerObject);
         }
     }
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
     {
-        if (spawnedPlayers.TryGetValue(player, out NetworkObject networkPlayerObject))
+        // Run the following only on the server
+        if (runner.IsServer)
         {
-            // Despawn the network object and remove from dictionary
-            runner.Despawn(networkPlayerObject);
-            spawnedPlayers.Remove(player);
+            if (spawnedPlayers.TryGetValue(player, out NetworkObject networkPlayerObject))
+            {
+                // Despawn the network object and remove from dictionary
+                runner.Despawn(networkPlayerObject);
+                spawnedPlayers.Remove(player);
 
-            // Remove the player from the game controller
-            Player playerObject = networkPlayerObject.GetComponent<Player>();
-            gameController.players.Remove(playerObject);
+                // Remove the player from the game controller
+                Player playerObject = networkPlayerObject.GetComponent<Player>();
+                gameController.players.Remove(playerObject);
+            }
         }
     }
 

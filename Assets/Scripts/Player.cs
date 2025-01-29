@@ -1,6 +1,7 @@
+using Fusion;
 using UnityEngine;
 
-public class Player : MonoBehaviour
+public class Player : NetworkBehaviour
 {
     float speed;
     float maxHealth;
@@ -89,16 +90,22 @@ public class Player : MonoBehaviour
     //player moves according to key presses and player speed
     void PlayerMovement()
     {
-        // Allow player to move
-        float speedX = Input.GetAxisRaw("Horizontal");
-        float speedY = Input.GetAxisRaw("Vertical");
-        rb.linearVelocity = new Vector2(speedX, speedY).normalized * speed;
+        // Note: Only the player that the user has input authority for will recieve the input on the line below
+        if (GetInput(out NetworkInputData data))
+        {
+            // Move the player by setting the velocity using the supplied movement direction vector
+            Vector2 velocity = data.direction.normalized * speed;
+            rb.linearVelocity = velocity;
 
-        // Flip sprite to face direction the player is moving in
-        if (speedX < 0) {
-            spriteRenderer.flipX = true;
-        } else if (speedX > 0) {
-            spriteRenderer.flipX = false;
+            // Flip sprite to face direction the player is moving in
+            if (velocity.x < 0)
+            {
+                spriteRenderer.flipX = true;
+            }
+            else if (velocity.x > 0)
+            {
+                spriteRenderer.flipX = false;
+            }
         }
     }
 
