@@ -4,4 +4,6 @@ using UnityEngine;
 public struct NetworkInputData : INetworkInput
 {
     public Vector2 direction;
+    public bool shoot;
+    public bool reload;
 }

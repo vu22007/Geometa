@@ -10,10 +10,16 @@ public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
     {
         NetworkInputData data = new NetworkInputData();
 
-        // Get movement direction vector and set it in the input data
+        // Get movement direction vector and set in input data
         float speedX = Input.GetAxisRaw("Horizontal");
         float speedY = Input.GetAxisRaw("Vertical");
         data.direction = new Vector2(speedX, speedY).normalized;
+
+        // Get left mouse button down status and set in input data
+        data.shoot = Input.GetMouseButton(0);
+
+        // Get R key down status and set in input data
+        data.reload = Input.GetKeyDown(KeyCode.R);
 
         input.Set(data);
     }

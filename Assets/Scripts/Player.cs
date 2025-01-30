@@ -26,8 +26,18 @@ public class Player : NetworkBehaviour
     // Called on each client and server when player is spawned in network
     public override void Spawned()
     {
+        Character character = Resources.Load("ScriptableObjects/Characters/Army Vet") as Character;
+        maxHealth = character.MaxHealth;
+        speed = character.Speed;
+        damage = character.Damage;
+        maxAmmo = character.MaxAmmo;
+        fireRate = character.FireRate;
         spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
         rb = gameObject.GetComponent<Rigidbody2D>();
+        spriteRenderer.sprite = character.Sprite;
+        this.character = character;
+        team = 1;
+        reloadTime = 1.0f;
 
         // Camera object is child of player object
         GameObject cameraObject = gameObject.transform.GetChild(0).gameObject;
@@ -37,6 +47,8 @@ public class Player : NetworkBehaviour
         {
             cameraObject.SetActive(false);
         }
+
+        Respawn();
     }
 
     //For the prefab factory (For when we have multiple players), to be called on instantiation of the prefab
@@ -79,24 +91,35 @@ public class Player : NetworkBehaviour
             // Decrease bullet timer and clamp to 0 if below 0
             timeToWaitForBullet = (timeToWaitForBullet > 0) ? timeToWaitForBullet - Runner.DeltaTime : 0;
 
-            // Firing the weapon
-            if (Input.GetMouseButton(0)) {
-                if (timeToWaitForBullet <= 0) {
-                    timeToWaitForBullet = 1/fireRate;
-                    if (currentAmmo != 0) {
-                        bullet = ShootBullet();
-                    }
-                    else {
-                        Debug.Log("Press R to reload!!");
+            // GetInput will return true on the StateAuthority (the server) and the InputAuthority (the client who controls this player)
+            // So the following is ran for just the server and the client who controls this player
+            if (GetInput(out NetworkInputData data))
+            {
+                // Firing the weapon
+                if (data.shoot)
+                {
+                    if (timeToWaitForBullet <= 0)
+                    {
+                        timeToWaitForBullet = 1 / fireRate;
+                        Debug.Log("In here 1");
+                        if (currentAmmo != 0)
+                        {
+                            bullet = ShootBullet();
+                        }
+                        else
+                        {
+                            Debug.Log("Press R to reload!!");
+                        }
                     }
                 }
-            }
 
-            // Reloading
-            if (Input.GetKeyDown(KeyCode.R)) {
-                Debug.Log("Reloading");
-                timeToWaitForBullet = reloadTime;
-                Reload();
+                // Reloading
+                if (data.reload)
+                {
+                    Debug.Log("Reloading");
+                    timeToWaitForBullet = reloadTime;
+                    Reload();
+                }
             }
         }
         else {
