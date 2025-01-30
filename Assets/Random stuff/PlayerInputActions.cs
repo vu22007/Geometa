@@ -116,6 +116,15 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Place Shape"",
+                    ""type"": ""Button"",
+                    ""id"": ""4378aca6-6709-45f3-9e1e-13c5249121f0"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -512,6 +521,17 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Triangle"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""bdc80543-ddb4-4e36-be14-03cc6a9783db"",
+                    ""path"": ""<Mouse>/rightButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Place Shape"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1109,6 +1129,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         m_Player_Next = m_Player.FindAction("Next", throwIfNotFound: true);
         m_Player_Sprint = m_Player.FindAction("Sprint", throwIfNotFound: true);
         m_Player_Triangle = m_Player.FindAction("Triangle", throwIfNotFound: true);
+        m_Player_PlaceShape = m_Player.FindAction("Place Shape", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -1198,6 +1219,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Next;
     private readonly InputAction m_Player_Sprint;
     private readonly InputAction m_Player_Triangle;
+    private readonly InputAction m_Player_PlaceShape;
     public struct PlayerActions
     {
         private @PlayerInputActions m_Wrapper;
@@ -1212,6 +1234,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         public InputAction @Next => m_Wrapper.m_Player_Next;
         public InputAction @Sprint => m_Wrapper.m_Player_Sprint;
         public InputAction @Triangle => m_Wrapper.m_Player_Triangle;
+        public InputAction @PlaceShape => m_Wrapper.m_Player_PlaceShape;
         public InputActionMap Get() { return m_Wrapper.m_Player; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -1251,6 +1274,9 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @Triangle.started += instance.OnTriangle;
             @Triangle.performed += instance.OnTriangle;
             @Triangle.canceled += instance.OnTriangle;
+            @PlaceShape.started += instance.OnPlaceShape;
+            @PlaceShape.performed += instance.OnPlaceShape;
+            @PlaceShape.canceled += instance.OnPlaceShape;
         }
 
         private void UnregisterCallbacks(IPlayerActions instance)
@@ -1285,6 +1311,9 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @Triangle.started -= instance.OnTriangle;
             @Triangle.performed -= instance.OnTriangle;
             @Triangle.canceled -= instance.OnTriangle;
+            @PlaceShape.started -= instance.OnPlaceShape;
+            @PlaceShape.performed -= instance.OnPlaceShape;
+            @PlaceShape.canceled -= instance.OnPlaceShape;
         }
 
         public void RemoveCallbacks(IPlayerActions instance)
@@ -1477,6 +1506,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         void OnNext(InputAction.CallbackContext context);
         void OnSprint(InputAction.CallbackContext context);
         void OnTriangle(InputAction.CallbackContext context);
+        void OnPlaceShape(InputAction.CallbackContext context);
     }
     public interface IUIActions
     {

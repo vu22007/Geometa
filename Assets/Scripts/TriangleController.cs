@@ -3,13 +3,14 @@ using UnityEngine.InputSystem;
 
 public class TriangleController : MonoBehaviour
 {
-    public GameObject trianglePrefab;
-    private GameObject previewTriangle;
-    public GameObject previewTrianglePrefab;
+    [SerializeField] GameObject trianglePrefab;
+    [SerializeField] GameObject previewTrianglePrefab;
+    private GameObject previewTriangle;    
     private bool isPlacing = false;
-    [SerializeField] Camera cam;
+    private Camera cam;
     private float angle; // angle of cursor wrt y axis unit vector
-    public InputAction actionTriangle;
+    private InputAction actionTriangle;
+    private InputAction placeShape;
     public PlayerInputActions playerInputActions;
 
     private void OnEnable()
@@ -19,16 +20,23 @@ public class TriangleController : MonoBehaviour
             playerInputActions = new PlayerInputActions();
         }
         actionTriangle = playerInputActions.Player.Triangle;
+        placeShape = playerInputActions.Player.PlaceShape;
         actionTriangle.Enable();
+        placeShape.Enable(); 
     }
 
     private void OnDisable()
     {
         actionTriangle.Disable();
+        placeShape.Disable();
     }
     public void ActivateTriangle()
     {
         cam = GetComponentInChildren<Camera>();
+        if(cam == null)
+        {
+            Debug.Log("No camera in children of player: ", cam);
+        }
         Vector2 mousePos = Input.mousePosition;
         // World point of the cursor
         Vector3 worldPoint = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
@@ -65,7 +73,7 @@ public class TriangleController : MonoBehaviour
             previewTriangle.transform.rotation = Quaternion.Euler(0, 0, angle);
 
             // Place triangle if right clicked while holding Q
-            if (Input.GetMouseButtonDown(1))
+            if (placeShape.IsPressed())
             {
                 PlaceTriangle(angle);
                 return;

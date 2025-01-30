@@ -108,6 +108,7 @@ MonoBehaviour:
   cam: {fileID: 3093333144043118080}
   isAlive: 0
   team: 0
+  triangleControllerPrefab: {fileID: 3889213209015694579, guid: c9d922ed792e9d649b8b177d097d4ee2, type: 3}
 --- !u!50 &-5256008576835943960
 Rigidbody2D:
   serializedVersion: 5
@@ -186,16 +187,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   trianglePrefab: {fileID: 1674966375643425539, guid: 9e1835267b0b05843b7780cfade6b527, type: 3}
   previewTrianglePrefab: {fileID: 7447591849957452562, guid: 01c9fb0d5a523a6469cb48b359d9fed0, type: 3}
-  cam: {fileID: 0}
-  actionTriangle:
-    m_Name: Action Triangle
-    m_Type: 0
-    m_ExpectedControlType: 
-    m_Id: a67fa3f6-ca7d-4185-aba7-9d937f026905
-    m_Processors: 
-    m_Interactions: 
-    m_SingletonActionBindings: []
-    m_Flags: 0
 --- !u!1 &4590873436755935670
 GameObject:
   m_ObjectHideFlags: 0
