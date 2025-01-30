@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class TriangleController : MonoBehaviour
 {
@@ -8,9 +9,25 @@ public class TriangleController : MonoBehaviour
     private bool isPlacing = false;
     [SerializeField] Camera cam;
     private float angle; // angle of cursor wrt y axis unit vector
+    public InputAction actionTriangle;
+    public PlayerInputActions playerInputActions;
 
+    private void OnEnable()
+    {
+        if (playerInputActions == null)
+        {
+            playerInputActions = new PlayerInputActions();
+        }
+        actionTriangle = playerInputActions.Player.Triangle;
+        actionTriangle.Enable();
+    }
+
+    private void OnDisable()
+    {
+        actionTriangle.Disable();
+    }
     public void ActivateTriangle()
-    {   
+    {
         cam = GetComponentInChildren<Camera>();
         Vector2 mousePos = Input.mousePosition;
         // World point of the cursor
@@ -29,7 +46,7 @@ public class TriangleController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (!Input.GetKey(KeyCode.Q))
+        if (!actionTriangle.IsPressed())
         {
             isPlacing=false;
             Destroy(previewTriangle);

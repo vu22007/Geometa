@@ -44,5 +44,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c90026c16c1ceb4b934e259a0ec0af9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  trianglePrefab: {fileID: 1674966375643425539, guid: 9e1835267b0b05843b7780cfade6b527, type: 3}
+  trianglePrefab: {fileID: 0}
   previewTrianglePrefab: {fileID: 0}
+  cam: {fileID: 0}
+  actionTriangle:
+    m_Name: Action Triangle
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 90142fb6-bb26-4e2a-a0e3-cc3b7fb7270c
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings: []
+    m_Flags: 0

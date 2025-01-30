@@ -399,6 +399,18 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 0}
     - target: {fileID: 6255603288260897929, guid: c9d922ed792e9d649b8b177d097d4ee2, type: 3}
+      propertyPath: action.m_Name
+      value: Action
+      objectReference: {fileID: 0}
+    - target: {fileID: 6255603288260897929, guid: c9d922ed792e9d649b8b177d097d4ee2, type: 3}
+      propertyPath: inputActionAsset
+      value: 
+      objectReference: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
+    - target: {fileID: 6255603288260897929, guid: c9d922ed792e9d649b8b177d097d4ee2, type: 3}
+      propertyPath: actionTriangle.m_Name
+      value: Action Triangle
+      objectReference: {fileID: 0}
+    - target: {fileID: 6255603288260897929, guid: c9d922ed792e9d649b8b177d097d4ee2, type: 3}
       propertyPath: previewTrianglePrefab
       value: 
       objectReference: {fileID: 0}

@@ -1,2 +1,15 @@
 fileFormatVersion: 2
 guid: 8c90026c16c1ceb4b934e259a0ec0af9
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - trianglePrefab: {instanceID: 0}
+  - previewTrianglePrefab: {instanceID: 0}
+  - cam: {instanceID: 0}
+  - inputActionAsset: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

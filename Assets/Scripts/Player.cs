@@ -53,19 +53,6 @@ public class Player : MonoBehaviour
         timeToWaitForBullet = 0.0f;
     }
 
-    //public void Update()
-    //{
-    //    if (isAlive)
-    //    {
-    //        // WASD movement
-    //        PlayerMovement();
-    //        if (Input.GetKeyDown(KeyCode.Q))
-    //        {
-    //            triangleController.ActivateTriangle();
-    //        }
-
-    //    }
-
     //Update function, called from the game controller, returns a bullet if one is fired
     public Bullet PlayerUpdate()
     {
@@ -75,7 +62,7 @@ public class Player : MonoBehaviour
             PlayerMovement();
             if (Input.GetKeyDown(KeyCode.Q))
             {
-
+                Debug.Log("Q pressed");
                 triangleController = GetComponent<TriangleController>();
                 triangleController.ActivateTriangle();
             }
