@@ -28,6 +28,15 @@ public class Player : NetworkBehaviour
     {
         spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
         rb = gameObject.GetComponent<Rigidbody2D>();
+
+        // Camera object is child of player object
+        GameObject cameraObject = gameObject.transform.GetChild(0).gameObject;
+
+        // Disable the camera object if client does not control this player
+        if (!HasInputAuthority)
+        {
+            cameraObject.SetActive(false);
+        }
     }
 
     //For the prefab factory (For when we have multiple players), to be called on instantiation of the prefab
