@@ -732,7 +732,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88230848386761045af440d808ee3efa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  RunnerPrefab: {fileID: 0}
+  RunnerPrefab: {fileID: 1717420568}
   StartMode: 0
   AutoStartAs: 2
   AutoHideGUI: 1

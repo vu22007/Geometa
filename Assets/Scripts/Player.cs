@@ -21,6 +21,14 @@ public class Player : NetworkBehaviour
     SpriteRenderer spriteRenderer;
     Vector3 respawnPoint;
     public int team;
+    [Networked] bool isFlipped { get; set; }
+
+    // Called on each client and server when player is spawned in network
+    public override void Spawned()
+    {
+        spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
+        rb = gameObject.GetComponent<Rigidbody2D>();
+    }
 
     //For the prefab factory (For when we have multiple players), to be called on instantiation of the prefab
     public void OnCreated(Character character, Vector3 respawnPoint, int team){
@@ -60,7 +68,7 @@ public class Player : NetworkBehaviour
             PlayerMovement();
 
             // Decrease bullet timer and clamp to 0 if below 0
-            timeToWaitForBullet = (timeToWaitForBullet > 0) ? timeToWaitForBullet - Time.deltaTime : 0;
+            timeToWaitForBullet = (timeToWaitForBullet > 0) ? timeToWaitForBullet - Runner.DeltaTime : 0;
 
             // Firing the weapon
             if (Input.GetMouseButton(0)) {
@@ -83,7 +91,7 @@ public class Player : NetworkBehaviour
             }
         }
         else {
-            currentRespawn += Time.deltaTime;
+            currentRespawn += Runner.DeltaTime;
         }
         return bullet;
     }
@@ -92,6 +100,7 @@ public class Player : NetworkBehaviour
     void PlayerMovement()
     {
         // GetInput will return true on the StateAuthority (the server) and the InputAuthority (the client who controls this player)
+        // So the following is ran for just the server and the client who controls this player
         if (GetInput(out NetworkInputData data))
         {
             // Move the player by setting the velocity using the supplied movement direction vector
@@ -99,15 +108,19 @@ public class Player : NetworkBehaviour
             rb.linearVelocity = velocity;
 
             // Flip sprite to face direction the player is moving in
+            // Note: This sets a networked property so all clients can set the sprite correctly for this player
             if (velocity.x < 0)
             {
-                spriteRenderer.flipX = true;
+                isFlipped = true;
             }
             else if (velocity.x > 0)
             {
-                spriteRenderer.flipX = false;
+                isFlipped = false;
             }
         }
+
+        // The following is ran for all clients and server
+        spriteRenderer.flipX = isFlipped;
     }
 
     //take damage equal to input, includes check for death

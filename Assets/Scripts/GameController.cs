@@ -1,8 +1,6 @@
-using System;
 using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
-using static Unity.Collections.Unicode;
 
 public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
 {
@@ -14,46 +12,44 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
     [SerializeField] float maxTime = 480.0f; //8 minute games
     [SerializeField] float currentTime = 0.0f;
 
-    List<Bullet> bullets;
-    List<Player> players;
+    private List<Bullet> bullets;
+    private List<PlayerRef> players;
 
     private Dictionary<PlayerRef, NetworkObject> spawnedPlayers = new Dictionary<PlayerRef, NetworkObject>();
+
+    int nextTeam = 1;
 
     // Initialisation
     void Start()
     {
-        GameObject playerPrefab = Resources.Load("Prefabs/Player") as GameObject;
-        Character armyVet = Resources.Load("ScriptableObjects/Characters/Army Vet") as Character;
-
         bullets = new List<Bullet>();
-
-        players = new List<Player>();
-
-        //int team = 1;
-        //Player playerOne = PrefabFactory.SpawnPlayer(playerPrefab, respawnPoint1, armyVet, team);
-        //players.Add(playerOne);
+        players = new List<PlayerRef>();
     }
 
     // Update for every server simulation tick
     public override void FixedUpdateNetwork()
     {
-        currentTime += Time.deltaTime;
+        currentTime += Runner.DeltaTime;
         if (currentTime >= maxTime)
         {
             //end game
         }
 
-        foreach (Player player in players)
+        foreach (PlayerRef playerRef in players)
         {
-            Bullet newBullet = player.PlayerUpdate();
-            if (newBullet != null)
+            if (Runner.TryGetPlayerObject(playerRef, out NetworkObject networkPlayerObject))
             {
-                bullets.Add(newBullet);
-            }
-            //If player is dead and respawn timer is done then respawn player
-            if (!player.isAlive && player.RespawnTimerDone())
-            {
-                player.Respawn();
+                Player player = networkPlayerObject.GetComponent<Player>();
+                Bullet newBullet = player.PlayerUpdate();
+                if (newBullet != null)
+                {
+                    bullets.Add(newBullet);
+                }
+                //If player is dead and respawn timer is done then respawn player
+                if (!player.isAlive && player.RespawnTimerDone())
+                {
+                    player.Respawn();
+                }
             }
         }
 
@@ -71,6 +67,9 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
 
     public void PlayerJoined(PlayerRef player)
     {
+        // Add player ref to list
+        players.Add(player);
+
         // Run the following only on the server
         if (Runner.IsServer)
         {
@@ -83,21 +82,22 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
 
             // Initialise the player
             Player playerObject = networkPlayerObject.GetComponent<Player>();
-            playerObject.OnCreated(armyVet, respawnPoint1, 1);
+            playerObject.OnCreated(armyVet, respawnPoint1, nextTeam);
+            nextTeam = (nextTeam == 1) ? 2 : 1; // Flip the next team so the next player to join will be on the other team
 
             // Update the player network object
             Runner.SetPlayerObject(player, networkPlayerObject);
 
             // Add player network object to dictionary
             spawnedPlayers.Add(player, networkPlayerObject);
-
-            // Pass the player to the game controller
-            players.Add(playerObject);
         }
     }
 
     public void PlayerLeft(PlayerRef player)
     {
+        // Remove player ref from list
+        players.Remove(player);
+
         // Run the following only on the server
         if (Runner.IsServer)
         {
@@ -106,10 +106,6 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
                 // Despawn the network object and remove from dictionary
                 Runner.Despawn(networkPlayerObject);
                 spawnedPlayers.Remove(player);
-
-                // Remove the player from the game controller
-                Player playerObject = networkPlayerObject.GetComponent<Player>();
-                players.Remove(playerObject);
             }
         }
     }
