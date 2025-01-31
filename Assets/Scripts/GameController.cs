@@ -13,7 +13,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
     [SerializeField] float currentTime = 0.0f;
 
     private List<Bullet> bullets;
-    private List<PlayerRef> players;
+    private List<Player> players;
 
     private Dictionary<PlayerRef, NetworkObject> spawnedPlayers = new Dictionary<PlayerRef, NetworkObject>();
 
@@ -23,7 +23,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
     void Start()
     {
         bullets = new List<Bullet>();
-        players = new List<PlayerRef>();
+        players = new List<Player>();
     }
 
     // Update for every server simulation tick
@@ -35,21 +35,17 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
             //end game
         }
 
-        foreach (PlayerRef playerRef in players)
+        foreach (Player player in players)
         {
-            if (Runner.TryGetPlayerObject(playerRef, out NetworkObject networkPlayerObject))
+            Bullet newBullet = player.PlayerUpdate();
+            if (newBullet != null)
             {
-                Player player = networkPlayerObject.GetComponent<Player>();
-                Bullet newBullet = player.PlayerUpdate();
-                if (newBullet != null)
-                {
-                    bullets.Add(newBullet);
-                }
-                //If player is dead and respawn timer is done then respawn player
-                if (!player.isAlive && player.RespawnTimerDone())
-                {
-                    player.Respawn();
-                }
+                bullets.Add(newBullet);
+            }
+            //If player is dead and respawn timer is done then respawn player
+            if (!player.isAlive && player.RespawnTimerDone())
+            {
+                player.Respawn();
             }
         }
 
@@ -65,11 +61,18 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
         }
     }
 
+    public void RegisterPlayer(Player player)
+    {
+        players.Add(player);
+    }
+
+    public void UnregisterPlayer(Player player)
+    {
+        players.Remove(player);
+    }
+
     public void PlayerJoined(PlayerRef player)
     {
-        // Add player ref to list
-        players.Add(player);
-
         // Run the following only on the server
         if (Runner.IsServer)
         {
@@ -95,9 +98,6 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
 
     public void PlayerLeft(PlayerRef player)
     {
-        // Remove player ref from list
-        players.Remove(player);
-
         // Run the following only on the server
         if (Runner.IsServer)
         {

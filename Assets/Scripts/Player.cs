@@ -21,7 +21,7 @@ public class Player : NetworkBehaviour
     SpriteRenderer spriteRenderer;
     Vector3 respawnPoint;
     public int team;
-    [Networked] bool isFlipped { get; set; }
+    [Networked] bool spriteIsFlipped { get; set; }
 
     // Called on each client and server when player is spawned in network
     public override void Spawned()
@@ -48,7 +48,25 @@ public class Player : NetworkBehaviour
             cameraObject.SetActive(false);
         }
 
+        // Add this player to game controller player list (do this for all found game controllers to ensure that it is added to the correct one)
+        foreach (GameObject gameControllerObject in GameObject.FindGameObjectsWithTag("GameController"))
+        {
+            GameController gameController = gameControllerObject.GetComponent<GameController>();
+            gameController.RegisterPlayer(this);
+        }
+
         Respawn();
+    }
+
+    // Called on each client and server when player is despawned in network
+    public override void Despawned(NetworkRunner runner, bool hasState)
+    {
+        // Remove this player from game controller player list (do this for all found game controllers to ensure that it is removed from the correct one)
+        foreach (GameObject gameControllerObject in GameObject.FindGameObjectsWithTag("GameController"))
+        {
+            GameController gameController = gameControllerObject.GetComponent<GameController>();
+            gameController.UnregisterPlayer(this);
+        }
     }
 
     //For the prefab factory (For when we have multiple players), to be called on instantiation of the prefab
@@ -101,7 +119,6 @@ public class Player : NetworkBehaviour
                     if (timeToWaitForBullet <= 0)
                     {
                         timeToWaitForBullet = 1 / fireRate;
-                        Debug.Log("In here 1");
                         if (currentAmmo != 0)
                         {
                             bullet = ShootBullet();
@@ -137,22 +154,23 @@ public class Player : NetworkBehaviour
         {
             // Move the player by setting the velocity using the supplied movement direction vector
             Vector2 velocity = data.direction.normalized * speed;
-            rb.linearVelocity = velocity;
+            //rb.linearVelocity = velocity;
+            transform.Translate(new Vector3(velocity.x, velocity.y, 0) * Runner.DeltaTime);
 
             // Flip sprite to face direction the player is moving in
             // Note: This sets a networked property so all clients can set the sprite correctly for this player
             if (velocity.x < 0)
             {
-                isFlipped = true;
+                spriteIsFlipped = true;
             }
             else if (velocity.x > 0)
             {
-                isFlipped = false;
+                spriteIsFlipped = false;
             }
         }
 
         // The following is ran for all clients and server
-        spriteRenderer.flipX = isFlipped;
+        spriteRenderer.flipX = spriteIsFlipped;
     }
 
     //take damage equal to input, includes check for death
@@ -185,7 +203,8 @@ public class Player : NetworkBehaviour
         return currentRespawn >= respawnTime;
     }
 
-    void Reload(){
+    void Reload()
+    {
         currentAmmo = maxAmmo;
     }
 
