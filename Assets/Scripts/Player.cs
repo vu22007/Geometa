@@ -23,7 +23,8 @@ public class Player : MonoBehaviour
     SpriteRenderer spriteRenderer;
     Vector3 respawnPoint;
     public int team;
-    private TriangleController triangleController;
+    public GameObject triangleControllerPrefab;
+    private GameObject triangleController;
 
     //For the prefab factory (For when we have multiple players), to be called on instantiation of the prefab
     public void OnCreated(Character character, Vector3 respawnPoint, int team){
@@ -38,7 +39,7 @@ public class Player : MonoBehaviour
         spriteRenderer.sprite = character.Sprite;
         this.team = team;
         reloadTime = 1.0f;
-
+        triangleController = Instantiate(triangleControllerPrefab, cam.transform);
         Respawn();
     }
     
@@ -60,12 +61,6 @@ public class Player : MonoBehaviour
         if (isAlive) {
             // WASD movement
             PlayerMovement();
-            if (Input.GetKeyDown(KeyCode.Q))
-            {
-                Debug.Log("Q pressed");
-                triangleController = GetComponent<TriangleController>();
-                triangleController.ActivateTriangle();
-            }
 
             // Decrease bullet timer and clamp to 0 if below 0
             timeToWaitForBullet = (timeToWaitForBullet > 0) ? timeToWaitForBullet - Time.deltaTime : 0;
