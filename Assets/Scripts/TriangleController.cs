@@ -54,6 +54,7 @@ public class TriangleController : MonoBehaviour
             Vector2 mousePos = Input.mousePosition;
             // World point of the cursor
             Vector3 cursorWorldPoint = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
+            // Direction of cursor
             Vector3 direction = cursorWorldPoint - transform.position;
             // This wont be needed with an orthographic camera maybe
             direction.z = 0;
