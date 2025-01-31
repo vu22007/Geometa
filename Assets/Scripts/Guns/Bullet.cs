@@ -1,6 +1,7 @@
+using Fusion;
 using UnityEngine;
 
-public class Bullet : MonoBehaviour
+public class Bullet : NetworkBehaviour
 {
     Vector3 velocity;
     float damage;
@@ -8,7 +9,8 @@ public class Bullet : MonoBehaviour
     float lifespan;
     int team;
     
-    public void OnCreated(Vector3 startDirection, float speed, float damage, int team){
+    public void OnCreated(Vector3 startDirection, float speed, float damage, int team)
+    {
         velocity = startDirection * speed;
         velocity.z = 0;
         this.damage = damage;
@@ -18,9 +20,10 @@ public class Bullet : MonoBehaviour
     }
 
     // On colliding with a collider
-    void OnTriggerEnter2D(Collider2D other){
+    void OnTriggerEnter2D(Collider2D other)
+    {
         // Check if object is a player
-        if (other.CompareTag("Player")){
+        if (other.CompareTag("Player")) {
             Player player = other.GetComponent<Player>();
             if (player != null) {
                 // Check if player is from the enemy team
@@ -33,16 +36,18 @@ public class Bullet : MonoBehaviour
     }
 
     // To be called in the game controller with the list of all currently active bullets
-    public void BulletUpdate(){
-        gameObject.transform.position += velocity * Time.deltaTime;
+    public void BulletUpdate()
+    {
+        gameObject.transform.position += velocity * Runner.DeltaTime;
         
-        lifespan -= Time.deltaTime;
-        if(lifespan <= 0.0f){
+        lifespan -= Runner.DeltaTime;
+        if (lifespan <= 0.0f) {
             done = true;
         }
     }
 
-    public void DestroyBullet(){
+    public void DestroyBullet()
+    {
         Destroy(gameObject);
     }
 }

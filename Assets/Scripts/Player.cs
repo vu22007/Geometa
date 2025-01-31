@@ -1,5 +1,6 @@
 using Fusion;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class Player : NetworkBehaviour
 {
@@ -12,7 +13,7 @@ public class Player : NetworkBehaviour
     float reloadTime;
     float timeToWaitForBullet;
     [SerializeField] Character character;
-    [SerializeField] Camera cam;
+    public Camera cam;
     float currentHealth;
     public bool isAlive;
     float respawnTime = 10.0f;
@@ -39,13 +40,10 @@ public class Player : NetworkBehaviour
         team = 1;
         reloadTime = 1.0f;
 
-        // Camera object is child of player object
-        GameObject cameraObject = gameObject.transform.GetChild(0).gameObject;
-
-        // Disable the camera object if client does not control this player
+        // Disable the camera if client does not control this player
         if (!HasInputAuthority)
         {
-            cameraObject.SetActive(false);
+            cam.gameObject.SetActive(false);
         }
 
         // Add this player to game controller player list (do this for all found game controllers to ensure that it is added to the correct one)
@@ -70,7 +68,8 @@ public class Player : NetworkBehaviour
     }
 
     //For the prefab factory (For when we have multiple players), to be called on instantiation of the prefab
-    public void OnCreated(Character character, Vector3 respawnPoint, int team){
+    public void OnCreated(Character character, Vector3 respawnPoint, int team)
+    {
         maxHealth = character.MaxHealth;
         speed = character.Speed;
         damage = character.Damage;
@@ -102,76 +101,100 @@ public class Player : NetworkBehaviour
     public Bullet PlayerUpdate()
     {
         Bullet bullet = null;
-        if (isAlive) {
-            // WASD movement
-            PlayerMovement();
 
-            // Decrease bullet timer and clamp to 0 if below 0
-            timeToWaitForBullet = (timeToWaitForBullet > 0) ? timeToWaitForBullet - Runner.DeltaTime : 0;
-
-            // GetInput will return true on the StateAuthority (the server) and the InputAuthority (the client who controls this player)
-            // So the following is ran for just the server and the client who controls this player
-            if (GetInput(out NetworkInputData data))
-            {
-                // Firing the weapon
-                if (data.shoot)
-                {
-                    if (timeToWaitForBullet <= 0)
-                    {
-                        timeToWaitForBullet = 1 / fireRate;
-                        if (currentAmmo != 0)
-                        {
-                            bullet = ShootBullet();
-                        }
-                        else
-                        {
-                            Debug.Log("Press R to reload!!");
-                        }
-                    }
-                }
-
-                // Reloading
-                if (data.reload)
-                {
-                    Debug.Log("Reloading");
-                    timeToWaitForBullet = reloadTime;
-                    Reload();
-                }
-            }
-        }
-        else {
+        // If player is dead then add to respawn timer and return
+        if (!isAlive)
+        {
             currentRespawn += Runner.DeltaTime;
+            return null;
         }
-        return bullet;
-    }
 
-    //player moves according to key presses and player speed
-    void PlayerMovement()
-    {
+        // Decrease bullet timer and clamp to 0 if below 0
+        timeToWaitForBullet = (timeToWaitForBullet > 0) ? timeToWaitForBullet - Runner.DeltaTime : 0;
+
         // GetInput will return true on the StateAuthority (the server) and the InputAuthority (the client who controls this player)
         // So the following is ran for just the server and the client who controls this player
         if (GetInput(out NetworkInputData data))
         {
-            // Move the player by setting the velocity using the supplied movement direction vector
-            Vector2 velocity = data.direction.normalized * speed;
-            //rb.linearVelocity = velocity;
-            transform.Translate(new Vector3(velocity.x, velocity.y, 0) * Runner.DeltaTime);
+            // WASD movement
+            PlayerMovement(data.moveDirection);
 
-            // Flip sprite to face direction the player is moving in
-            // Note: This sets a networked property so all clients can set the sprite correctly for this player
-            if (velocity.x < 0)
+            // Firing the weapon
+            if (data.shoot)
             {
-                spriteIsFlipped = true;
+                Shoot(data.aimDirection);
             }
-            else if (velocity.x > 0)
+
+            // Reloading
+            if (data.reload)
             {
-                spriteIsFlipped = false;
+                Reload();
             }
         }
 
-        // The following is ran for all clients and server
+        // Flip the player sprite if necessary (this is done on all clients and server)
         spriteRenderer.flipX = spriteIsFlipped;
+
+        return bullet;
     }
+
+    // Player moves according to key presses and player speed
+    void PlayerMovement(Vector2 moveDirection)
+    {
+        // Move the player by setting the velocity using the supplied movement direction vector
+        Vector2 velocity = moveDirection.normalized * speed;
+        //rb.linearVelocity = velocity;
+        transform.Translate(new Vector3(velocity.x, velocity.y, 0) * Runner.DeltaTime);
+
+        // Flip sprite to face direction the player is moving in
+        // Note: This sets a networked property so all clients can set the sprite correctly for this player
+        if (velocity.x < 0)
+        {
+            spriteIsFlipped = true;
+        }
+        else if (velocity.x > 0)
+        {
+            spriteIsFlipped = false;
+        }
+    }
+
+    Bullet Shoot(Vector2 aimDirection)
+    {
+        Bullet bullet = null;
+
+        if (timeToWaitForBullet <= 0)
+        {
+            timeToWaitForBullet = 1 / fireRate;
+            if (currentAmmo != 0)
+            {
+                Vector3 direction = new Vector3(aimDirection.x, aimDirection.y);
+                bullet = ShootBullet(direction);
+            }
+            else
+            {
+                Debug.Log("Press R to reload!!");
+            }
+        }
+
+        return bullet;
+    }
+
+    // Shoots a bullet by spawning the prefab
+    Bullet ShootBullet(Vector3 direction)
+    {
+        GameObject bulletPrefab = Resources.Load("Prefabs/Bullet") as GameObject;
+        //Bullet bullet = PrefabFactory.SpawnBullet(bulletPrefab, gameObject.transform.position, direction, 40.0f, damage, team);
+
+        Quaternion wantedRotation = Quaternion.LookRotation(direction, new Vector3(0.0f, 0.0f, -1.0f));
+        NetworkObject networkPlayerObject = Runner.Spawn(bulletPrefab, gameObject.transform.position, wantedRotation);
+        Bullet bullet = networkPlayerObject.GetComponent<Bullet>();
+        direction.z = 0;
+        bullet.OnCreated(direction.normalized, speed, damage, team);
+
+        currentAmmo--;
+        return bullet;
+    }
+
 
     //take damage equal to input, includes check for death
     public void TakeDamage(float damage)
@@ -205,24 +228,8 @@ public class Player : NetworkBehaviour
 
     void Reload()
     {
+        Debug.Log("Reloading");
+        timeToWaitForBullet = reloadTime;
         currentAmmo = maxAmmo;
-    }
-
-    //Shoots a bullet by spawning the prefab
-    Bullet ShootBullet()
-    {
-        GameObject bulletPrefab = Resources.Load("Prefabs/Bullet") as GameObject;
-        Vector3 direction = CalculateDirectionFromMousePos();
-        Bullet bullet = PrefabFactory.SpawnBullet(bulletPrefab, gameObject.transform.position, direction, 40.0f, damage, team);
-        currentAmmo--;
-        return bullet;
-    }
-
-    Vector3 CalculateDirectionFromMousePos()
-    {
-        Vector2 mousePos = Input.mousePosition;
-        Vector3 worldPoint = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
-        Vector3 direction = worldPoint - gameObject.transform.position;
-        return direction;
     }
 }
