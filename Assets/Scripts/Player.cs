@@ -138,8 +138,8 @@ public class Player : NetworkBehaviour
     {
         // Move the player by setting the velocity using the supplied movement direction vector
         Vector2 velocity = moveDirection.normalized * speed;
-        //rb.linearVelocity = velocity;
-        transform.Translate(new Vector3(velocity.x, velocity.y, 0) * Runner.DeltaTime);
+        rb.linearVelocity = velocity;
+        //transform.Translate(new Vector3(velocity.x, velocity.y, 0) * Runner.DeltaTime);
 
         // Flip sprite to face direction the player is moving in
         // Note: This sets a networked property so all clients can set the sprite correctly for this player
