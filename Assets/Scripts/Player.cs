@@ -1,45 +1,47 @@
 using Fusion;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 public class Player : NetworkBehaviour
 {
-    float speed;
-    float maxHealth;
-    float damage;
-    int maxAmmo;
-    int currentAmmo;
-    float fireRate;
-    float reloadTime;
-    float timeToWaitForBullet;
-    [SerializeField] Character character;
-    public Camera cam;
-    float currentHealth;
-    public bool isAlive;
-    float respawnTime = 10.0f;
-    float currentRespawn;
-    Rigidbody2D rb;
-    SpriteRenderer spriteRenderer;
-    Vector3 respawnPoint;
-    public int team;
+    [Networked] float speed { get; set; }
+    [Networked] float maxHealth { get; set; }
+    [Networked] float damage { get; set; }
+    [Networked] int maxAmmo { get; set; }
+    [Networked] int currentAmmo { get; set; }
+    [Networked] float fireRate { get; set; }
+    [Networked] float reloadTime { get; set; }
+    [Networked] float timeToWaitForBullet { get; set; }
+    [Networked] float currentHealth { get; set; }
+    [Networked] int team { get; set; }
+    [Networked] Vector3 respawnPoint { get; set; }
+    [Networked] bool isAlive { get; set; }
+    [Networked] float respawnTime { get; set; }
+    [Networked] float currentRespawn { get; set; }
     [Networked] bool spriteIsFlipped { get; set; }
 
-    // Called on each client and server when player is spawned in network
-    public override void Spawned()
+    public Camera cam;
+    Rigidbody2D rb;
+    SpriteRenderer spriteRenderer;
+
+    // Player intialisation (called from game controller on server when creating the player)
+    public void OnCreated(Character character, Vector3 respawnPoint, int team)
     {
-        Character character = Resources.Load("ScriptableObjects/Characters/Army Vet") as Character;
         maxHealth = character.MaxHealth;
         speed = character.Speed;
         damage = character.Damage;
         maxAmmo = character.MaxAmmo;
         fireRate = character.FireRate;
-        spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
-        rb = gameObject.GetComponent<Rigidbody2D>();
-        spriteRenderer.sprite = character.Sprite;
-        this.character = character;
-        team = 1;
+        this.respawnPoint = respawnPoint;
+        this.team = team;
         reloadTime = 1.0f;
+        respawnTime = 10.0f;
 
+        // TODO: Sort out setting character sprite through networked property
+    }
+
+    // Player initialisation (called on each client and server when player is spawned on network)
+    public override void Spawned()
+    {
         // Disable the camera if client does not control this player
         if (!HasInputAuthority)
         {
@@ -53,10 +55,14 @@ public class Player : NetworkBehaviour
             gameController.RegisterPlayer(this);
         }
 
+        // Initialise player
+        rb = gameObject.GetComponent<Rigidbody2D>();
+        spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
+        //spriteRenderer.sprite = character.Sprite;
         Respawn();
     }
 
-    // Called on each client and server when player is despawned in network
+    // Called on each client and server when player is despawned from network
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
         // Remove this player from game controller player list (do this for all found game controllers to ensure that it is removed from the correct one)
@@ -66,27 +72,8 @@ public class Player : NetworkBehaviour
             gameController.UnregisterPlayer(this);
         }
     }
-
-    //For the prefab factory (For when we have multiple players), to be called on instantiation of the prefab
-    public void OnCreated(Character character, Vector3 respawnPoint, int team)
-    {
-        maxHealth = character.MaxHealth;
-        speed = character.Speed;
-        damage = character.Damage;
-        maxAmmo = character.MaxAmmo;
-        fireRate = character.FireRate;
-        this.respawnPoint = respawnPoint;
-        spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
-        rb = gameObject.GetComponent<Rigidbody2D>();
-        spriteRenderer.sprite = character.Sprite;
-        this.character = character;
-        this.team = team;
-        reloadTime = 1.0f;
-
-        Respawn();
-    }
     
-    //Player initialisation (Also used for respawning)
+    // Player initialisation (also used for respawning)
     public void Respawn()
     {
         gameObject.transform.position = respawnPoint;
@@ -97,16 +84,14 @@ public class Player : NetworkBehaviour
         timeToWaitForBullet = 0.0f;
     }
 
-    //Update function, called from the game controller, returns a bullet if one is fired
-    public Bullet PlayerUpdate()
+    // Update function (called from the game controller on all clients and server)
+    public void PlayerUpdate()
     {
-        Bullet bullet = null;
-
         // If player is dead then add to respawn timer and return
         if (!isAlive)
         {
             currentRespawn += Runner.DeltaTime;
-            return null;
+            return;
         }
 
         // Decrease bullet timer and clamp to 0 if below 0
@@ -120,7 +105,7 @@ public class Player : NetworkBehaviour
             PlayerMovement(data.moveDirection);
 
             // Firing the weapon
-            if (data.shoot)
+            if (data.shoot && Runner.IsServer)
             {
                 Shoot(data.aimDirection);
             }
@@ -134,8 +119,6 @@ public class Player : NetworkBehaviour
 
         // Flip the player sprite if necessary (this is done on all clients and server)
         spriteRenderer.flipX = spriteIsFlipped;
-
-        return bullet;
     }
 
     // Player moves according to key presses and player speed
@@ -158,41 +141,40 @@ public class Player : NetworkBehaviour
         }
     }
 
-    Bullet Shoot(Vector2 aimDirection)
+    void Shoot(Vector2 aimDirection)
     {
-        Bullet bullet = null;
-
         if (timeToWaitForBullet <= 0)
         {
             timeToWaitForBullet = 1 / fireRate;
             if (currentAmmo != 0)
             {
-                Vector3 direction = new Vector3(aimDirection.x, aimDirection.y);
-                bullet = ShootBullet(direction);
+                ShootBullet(aimDirection);
             }
             else
             {
                 Debug.Log("Press R to reload!!");
             }
         }
-
-        return bullet;
     }
 
-    // Shoots a bullet by spawning the prefab
-    Bullet ShootBullet(Vector3 direction)
+    // Shoots a bullet by spawning the prefab on the network
+    void ShootBullet(Vector2 aimDirection)
     {
+        // Load prefab
         GameObject bulletPrefab = Resources.Load("Prefabs/Bullet") as GameObject;
         //Bullet bullet = PrefabFactory.SpawnBullet(bulletPrefab, gameObject.transform.position, direction, 40.0f, damage, team);
 
-        Quaternion wantedRotation = Quaternion.LookRotation(direction, new Vector3(0.0f, 0.0f, -1.0f));
-        NetworkObject networkPlayerObject = Runner.Spawn(bulletPrefab, gameObject.transform.position, wantedRotation);
-        Bullet bullet = networkPlayerObject.GetComponent<Bullet>();
-        direction.z = 0;
-        bullet.OnCreated(direction.normalized, speed, damage, team);
+        // Spawn the bullet network object
+        Vector3 direction = new Vector3(aimDirection.x, aimDirection.y);
+        Quaternion rotation = Quaternion.LookRotation(direction, new Vector3(0.0f, 0.0f, -1.0f));
+        NetworkObject networkBulletObject = Runner.Spawn(bulletPrefab, gameObject.transform.position, rotation);
+
+        // Initialise the bullet
+        Bullet bullet = networkBulletObject.GetComponent<Bullet>();
+        float bulletSpeed = 40.0f;
+        bullet.OnCreated(direction.normalized, bulletSpeed, damage, team);
 
         currentAmmo--;
-        return bullet;
     }
 
 
@@ -231,5 +213,15 @@ public class Player : NetworkBehaviour
         Debug.Log("Reloading");
         timeToWaitForBullet = reloadTime;
         currentAmmo = maxAmmo;
+    }
+
+    public bool IsAlive()
+    {
+        return isAlive;
+    }
+
+    public int GetTeam()
+    {
+        return team;
     }
 }

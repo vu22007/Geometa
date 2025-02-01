@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
 {
-    [SerializeField] public Vector3Int respawnPoint1;
+    [SerializeField] Vector3Int respawnPoint1;
     //[SerializeField] Vector3Int respawnPoint2;
     [SerializeField] CaptureFlag flag1;
     //[SerializeField] CaptureFlag flag2;
@@ -15,8 +15,10 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
     private List<Bullet> bullets;
     private List<Player> players;
 
+    // For server to use only so that it can manage the spawn and despawn of players
     private Dictionary<PlayerRef, NetworkObject> spawnedPlayers = new Dictionary<PlayerRef, NetworkObject>();
 
+    // For server to use to keep track of what team to assign to a new player when they join
     int nextTeam = 1;
 
     // Initialisation
@@ -37,17 +39,16 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
 
         foreach (Player player in players)
         {
-            Bullet newBullet = player.PlayerUpdate();
-            if (newBullet != null)
-            {
-                bullets.Add(newBullet);
-            }
-            //If player is dead and respawn timer is done then respawn player
-            if (!player.isAlive && player.RespawnTimerDone())
+            player.PlayerUpdate();
+
+            // If player is dead and respawn timer is done then respawn player
+            if (!player.IsAlive() && player.RespawnTimerDone())
             {
                 player.Respawn();
             }
         }
+
+        //Debug.Log(bullets.Count);
 
         for (int i = bullets.Count - 1; i >= 0; i--)
         {
@@ -71,6 +72,16 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
         players.Remove(player);
     }
 
+    public void RegisterBullet(Bullet bullet)
+    {
+        bullets.Add(bullet);
+    }
+
+    public void UnregisterBullet(Bullet bullet)
+    {
+        bullets.Remove(bullet);
+    }
+
     public void PlayerJoined(PlayerRef player)
     {
         // Run the following only on the server
@@ -87,9 +98,6 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
             Player playerObject = networkPlayerObject.GetComponent<Player>();
             playerObject.OnCreated(armyVet, respawnPoint1, nextTeam);
             nextTeam = (nextTeam == 1) ? 2 : 1; // Flip the next team so the next player to join will be on the other team
-
-            // Update the player network object
-            Runner.SetPlayerObject(player, networkPlayerObject);
 
             // Add player network object to dictionary
             spawnedPlayers.Add(player, networkPlayerObject);

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Fusion;
 using Fusion.Sockets;
 using UnityEngine;
-using static Unity.Collections.Unicode;
 
 public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
 {
