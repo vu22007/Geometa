@@ -1,10 +1,15 @@
 using Fusion;
 using UnityEngine;
 
+enum InputButtons
+{
+    Shoot = 0,
+    Reload = 1,
+}
+
 public struct NetworkInputData : INetworkInput
 {
+    public NetworkButtons buttons;
     public Vector2 moveDirection;
     public Vector2 aimDirection;
-    public bool shoot;
-    public bool reload;
 }

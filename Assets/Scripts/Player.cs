@@ -19,6 +19,7 @@ public class Player : NetworkBehaviour
     [Networked] float currentRespawn { get; set; }
     [Networked] bool spriteIsFlipped { get; set; }
     [Networked, Capacity(50)] string characterPath { get; set; }
+    [Networked] NetworkButtons previousButtons { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
@@ -108,22 +109,24 @@ public class Player : NetworkBehaviour
 
         // GetInput will return true on the StateAuthority (the server) and the InputAuthority (the client who controls this player)
         // So the following is ran for just the server and the client who controls this player
-        if (GetInput(out NetworkInputData data))
+        if (GetInput(out NetworkInputData input))
         {
             // WASD movement
-            PlayerMovement(data.moveDirection);
+            PlayerMovement(input.moveDirection);
 
             // Firing the weapon
-            if (data.shoot)
+            if (input.buttons.IsSet(InputButtons.Shoot))
             {
-                Shoot(data.aimDirection);
+                Shoot(input.aimDirection);
             }
 
             // Reloading
-            if (data.reload)
+            if (input.buttons.WasPressed(previousButtons, InputButtons.Reload))
             {
                 Reload();
             }
+
+            previousButtons = input.buttons;
         }
 
         // Flip the player sprite if necessary (this is done on all clients and server)
@@ -193,7 +196,7 @@ public class Player : NetworkBehaviour
 
     void Die()
     {
-        Debug.Log("You died :((");
+        if (HasInputAuthority) Debug.Log("You died :(("); // only show message for client who controls this player
         isAlive = false;
         rb.linearVelocity = new Vector2(0, 0); // stop player from moving
     }

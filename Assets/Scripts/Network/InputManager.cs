@@ -10,6 +10,12 @@ public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
     {
         NetworkInputData data = new NetworkInputData();
 
+        // Get left mouse button down status
+        data.buttons.Set(InputButtons.Shoot, Input.GetMouseButton(0));
+
+        // Get R key down status
+        data.buttons.Set(InputButtons.Reload, Input.GetKey(KeyCode.R));
+
         // Get movement direction vector
         float speedX = Input.GetAxisRaw("Horizontal");
         float speedY = Input.GetAxisRaw("Vertical");
@@ -17,12 +23,6 @@ public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
 
         // Get aim direction vector
         data.aimDirection = CalculateDirectionFromMousePos();
-
-        // Get left mouse button down status
-        data.shoot = Input.GetMouseButton(0);
-
-        // Get R key down status
-        data.reload = Input.GetKeyDown(KeyCode.R);
 
         input.Set(data);
     }
