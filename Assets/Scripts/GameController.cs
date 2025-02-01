@@ -48,16 +48,20 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
             }
         }
 
-        //Debug.Log(bullets.Count);
-
         for (int i = bullets.Count - 1; i >= 0; i--)
         {
             Bullet bullet = bullets[i];
             bullet.BulletUpdate();
+
             if (bullet.done)
             {
                 bullets.Remove(bullet);
-                bullet.DestroyBullet();
+
+                // Despawn bullet from network (only the server can do this)
+                if (Runner.IsServer)
+                {
+                    Runner.Despawn(bullet.GetComponent<NetworkObject>());
+                }
             }
         }
     }

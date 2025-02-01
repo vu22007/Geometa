@@ -67,9 +67,4 @@ public class Bullet : NetworkBehaviour
             done = true;
         }
     }
-
-    public void DestroyBullet()
-    {
-        Destroy(gameObject);
-    }
 }
