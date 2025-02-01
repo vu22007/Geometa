@@ -105,7 +105,7 @@ public class Player : NetworkBehaviour
             PlayerMovement(data.moveDirection);
 
             // Firing the weapon
-            if (data.shoot && Runner.IsServer)
+            if (data.shoot)
             {
                 Shoot(data.aimDirection);
             }
@@ -141,6 +141,7 @@ public class Player : NetworkBehaviour
         }
     }
 
+    // Shoots a bullet by spawning the prefab on the network
     void Shoot(Vector2 aimDirection)
     {
         if (timeToWaitForBullet <= 0)
@@ -148,7 +149,13 @@ public class Player : NetworkBehaviour
             timeToWaitForBullet = 1 / fireRate;
             if (currentAmmo != 0)
             {
-                ShootBullet(aimDirection);
+                // Spawn bullet (only the server can do this)
+                if (HasStateAuthority)
+                {
+                    GameObject bulletPrefab = Resources.Load("Prefabs/Bullet") as GameObject;
+                    PrefabFactory.SpawnBullet(Runner, bulletPrefab, gameObject.transform.position, aimDirection, 40.0f, damage, team);
+                    currentAmmo--;
+                }
             }
             else
             {
@@ -156,28 +163,6 @@ public class Player : NetworkBehaviour
             }
         }
     }
-
-    // Shoots a bullet by spawning the prefab on the network
-    void ShootBullet(Vector2 aimDirection)
-    {
-        // Load prefab
-        GameObject bulletPrefab = Resources.Load("Prefabs/Bullet") as GameObject;
-        //Bullet bullet = PrefabFactory.SpawnBullet(bulletPrefab, gameObject.transform.position, direction, 40.0f, damage, team);
-
-        // Spawn the bullet network object
-        Vector3 direction = new Vector3(aimDirection.x, aimDirection.y);
-        Quaternion rotation = Quaternion.LookRotation(Vector3.forward, direction);
-        NetworkObject networkBulletObject = Runner.Spawn(bulletPrefab, gameObject.transform.position, rotation, null, (runner, networkObject) =>
-        {
-            // Initialise the bullet (this is called before the bullet is spawned)
-            Bullet bullet = networkObject.GetComponent<Bullet>();
-            float bulletSpeed = 40.0f;
-            bullet.OnCreated(aimDirection, bulletSpeed, damage, team);
-        });
-
-        currentAmmo--;
-    }
-
 
     //take damage equal to input, includes check for death
     public void TakeDamage(float damage)
@@ -204,16 +189,16 @@ public class Player : NetworkBehaviour
         rb.linearVelocity = new Vector2(0, 0); // stop player from moving
     }
 
-    public bool RespawnTimerDone()
-    {
-        return currentRespawn >= respawnTime;
-    }
-
     void Reload()
     {
         Debug.Log("Reloading");
         timeToWaitForBullet = reloadTime;
         currentAmmo = maxAmmo;
+    }
+
+    public bool RespawnTimerDone()
+    {
+        return currentRespawn >= respawnTime;
     }
 
     public bool IsAlive()

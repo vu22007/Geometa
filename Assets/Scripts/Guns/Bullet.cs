@@ -41,7 +41,8 @@ public class Bullet : NetworkBehaviour
         }
     }
 
-    // On colliding with a collider
+    // On colliding with a collider (runs on all clients and server, but only the server has the authority to make the bullet done and
+    // to damage the player (since only the server can modify the networked properties))
     void OnTriggerEnter2D(Collider2D other)
     {
         // Check if object is a player
