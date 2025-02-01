@@ -23,8 +23,8 @@ public class Player : MonoBehaviour
     SpriteRenderer spriteRenderer;
     Vector3 respawnPoint;
     public int team;
-    public GameObject triangleControllerPrefab;
-    private GameObject triangleController;
+    public GameObject shapeControllerPrefab;
+    private GameObject shapeController;
 
     //For the prefab factory (For when we have multiple players), to be called on instantiation of the prefab
     public void OnCreated(Character character, Vector3 respawnPoint, int team){
@@ -39,7 +39,7 @@ public class Player : MonoBehaviour
         spriteRenderer.sprite = character.Sprite;
         this.team = team;
         reloadTime = 1.0f;
-        triangleController = Instantiate(triangleControllerPrefab, cam.transform);
+        shapeController = Instantiate(shapeControllerPrefab, cam.transform);
         Respawn();
     }
     

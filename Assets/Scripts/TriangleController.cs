@@ -1,14 +1,14 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class TriangleController : MonoBehaviour
+public class ShapeController : MonoBehaviour
 {
     [SerializeField] GameObject trianglePrefab;
     [SerializeField] GameObject squarePrefab;
     private GameObject currentPrefab;
     [SerializeField] GameObject previewTrianglePrefab;
     [SerializeField] GameObject previewSquarePrefab;
-    private GameObject previewTriangle;    
+    private GameObject previewShape;    
     private bool isPlacing = false;
     private Camera cam;
     private float angle; // angle of cursor wrt y axis unit vector
@@ -62,7 +62,7 @@ public class TriangleController : MonoBehaviour
         if (!actionTriangle.IsPressed() && !actionSquare.IsPressed())
         {
             isPlacing = false;
-            Destroy(previewTriangle);
+            Destroy(previewShape);   
             return;
         }
         if (isPlacing)
@@ -77,14 +77,14 @@ public class TriangleController : MonoBehaviour
 
             angle = Vector3.SignedAngle(Vector3.up, direction, Vector3.forward) - 180 + plusAngle;
 
-            previewTriangle.transform.position = cursorWorldPoint;
-            previewTriangle.transform.rotation = Quaternion.Euler(0, 0, angle);
+            previewShape.transform.position = cursorWorldPoint;
+            previewShape.transform.rotation = Quaternion.Euler(0, 0, angle);
         }
     }
     
     private void trianglePerformed(InputAction.CallbackContext context)
     {
-        if (!isPlacing)
+        if (!isPlacing && cooldown == 0)
         {
             plusAngle = 0;
             currentPrefab = trianglePrefab;
@@ -95,16 +95,15 @@ public class TriangleController : MonoBehaviour
             Vector3 direction = cursorWorldPoint - transform.position;
             direction.z = 0;
             angle = Vector3.SignedAngle(Vector3.up, direction, Vector3.forward) - 180;
-            
-
+           
             // Instantiate a preview triangle
-            previewTriangle = Instantiate(previewTrianglePrefab, cursorWorldPoint, Quaternion.Euler(0, 0, angle));
+            previewShape= Instantiate(previewTrianglePrefab, cursorWorldPoint, Quaternion.Euler(0, 0, angle));
         }
     }
 
     private void squarePerformed(InputAction.CallbackContext context)
     {
-        if (!isPlacing)
+        if (!isPlacing && cooldown == 0)
         {
             plusAngle = 45;
             currentPrefab = squarePrefab;
@@ -115,30 +114,30 @@ public class TriangleController : MonoBehaviour
             direction.z = 0;
             angle = Vector3.SignedAngle(Vector3.up, direction, Vector3.forward) - 180 + plusAngle;
 
-            previewTriangle = Instantiate(previewSquarePrefab, cursorWorldPoint, Quaternion.Euler(0, 0, angle));
+            previewShape= Instantiate(previewSquarePrefab, cursorWorldPoint, Quaternion.Euler(0, 0, angle));
         }
     }
 
     private void placeShapePerformed(InputAction.CallbackContext context)
     {
         // Place shape if right clicked while holding Q
-        if (isPlacing && cooldown > 0)
+        if (!isPlacing || cooldown > 0)
         {
             Debug.Log("Triangle cooldown remaning: " + cooldown.ToString());
             return;
         }
         cooldown = 5;
         isPlacing = false;
-        PlaceTriangle(angle);
+        PlaceShape(angle);
         return;
     }
 
-    public void PlaceTriangle(float angle)
+    public void PlaceShape(float angle)
     {
         // Place the triangle with the colliders
-        Instantiate(currentPrefab, previewTriangle.transform.position, Quaternion.Euler(0, 0, angle));
+        Instantiate(currentPrefab, previewShape.transform.position, Quaternion.Euler(0, 0, angle));
      
-        Destroy(previewTriangle);
-        previewTriangle = null;
+        Destroy(previewShape);
+        previewShape= null;
     }
 }

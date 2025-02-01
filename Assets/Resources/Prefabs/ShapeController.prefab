@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 2402221577820210888}
   - component: {fileID: 6255603288260897929}
   m_Layer: 0
-  m_Name: TriangleController
+  m_Name: ShapeController
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
