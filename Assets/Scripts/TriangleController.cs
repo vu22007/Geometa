@@ -10,6 +10,7 @@ public class TriangleController : MonoBehaviour
     private Camera cam;
     private float angle; // angle of cursor wrt y axis unit vector
     private InputAction actionTriangle;
+    private InputAction actionSquare;
     private InputAction placeShape;
     public PlayerInputActions playerInputActions;
     private float cooldown = 0;
@@ -22,13 +23,20 @@ public class TriangleController : MonoBehaviour
         }
         actionTriangle = playerInputActions.Player.Triangle;
         placeShape = playerInputActions.Player.PlaceShape;
+        actionSquare = playerInputActions.Player.Square;
+
+        actionTriangle.performed += trianglePerformed;
+        placeShape.performed += placeShapePerformed;    
+
         actionTriangle.Enable();
+        actionSquare.Enable();
         placeShape.Enable(); 
     }
 
     private void OnDisable()
     {
         actionTriangle.Disable();
+        actionSquare.Disable();
         placeShape.Disable();
     }
 
@@ -50,7 +58,8 @@ public class TriangleController : MonoBehaviour
             Destroy(previewTriangle);
             return;
         }
-        if (isPlacing) {
+        if (isPlacing)
+        {
             Vector2 mousePos = Input.mousePosition;
             // World point of the cursor
             Vector3 cursorWorldPoint = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
@@ -65,21 +74,13 @@ public class TriangleController : MonoBehaviour
 
             previewTriangle.transform.rotation = Quaternion.Euler(0, 0, angle);
 
-            // Place triangle if right clicked while holding Q
-            if (placeShape.IsPressed())
-            {
-                // Return if there is a cooldown
-                if (cooldown > 0)
-                {
-                    Debug.Log("Triangle cooldown remaning: " + cooldown.ToString());
-                    return;
-                }
-                cooldown = 5;
-                isPlacing = false;
-                PlaceTriangle(angle);
-                return;
-            }
-        } else if (actionTriangle.IsPressed())
+        }
+    }
+    
+    private void trianglePerformed(InputAction.CallbackContext context)
+    {
+        // Place triangle if right clicked while holding Q
+        if (!isPlacing)
         {
             isPlacing = true;
             Vector2 mousePos = Input.mousePosition;
@@ -94,6 +95,19 @@ public class TriangleController : MonoBehaviour
             // Instantiate a preview triangle
             previewTriangle = Instantiate(previewTrianglePrefab, cursorWorldPoint, Quaternion.Euler(0, 0, angle));
         }
+    }
+
+    private void placeShapePerformed(InputAction.CallbackContext context)
+    { 
+        if (isPlacing && cooldown > 0)
+        {
+            Debug.Log("Triangle cooldown remaning: " + cooldown.ToString());
+            return;
+        }
+        cooldown = 5;
+        isPlacing = false;
+        PlaceTriangle(angle);
+        return;
     }
 
     public void PlaceTriangle(float angle)
