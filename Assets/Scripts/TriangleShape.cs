@@ -5,7 +5,7 @@ public class TriangleShape : Shape
 {
     // public GameObject circleColliderPrefab;
     private float radius = 4.5f;
-    private bool buffActivated = false;
+    // private bool buffActivated = false;
     // private Dictionary<GameObject, GameObject> playersAtCorners = new Dictionary<GameObject, GameObject>();
 
     // Awake is used because with Start runs before the whole object is initialised. 
@@ -33,22 +33,22 @@ public class TriangleShape : Shape
     //    }
     //}
 
-    public override void CheckCorners()
-    {
-        foreach (var corner in corners) {
-            CircleCornerCollider coll = corner.GetComponent<CircleCornerCollider>();
-            if (!coll.isOccupied)
-            {
-                return;
-            }
-        }
+    //public override void CheckCorners()
+    //{
+    //    foreach (var corner in corners) {
+    //        CircleCornerCollider coll = corner.GetComponent<CircleCornerCollider>();
+    //        if (!coll.isOccupied)
+    //        {
+    //            return;
+    //        }
+    //    }
 
-        if(!buffActivated) {
-            ActivateBuff(); 
-        }
-    }
+    //    if(!buffActivated) {
+    //        ActivateBuff(); 
+    //    }
+    //}
 
-    void ActivateBuff()
+    public override void ActivateBuff()
     {
         buffActivated = true;
         Debug.Log("Buff Activated");

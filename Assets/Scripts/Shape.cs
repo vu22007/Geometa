@@ -4,8 +4,9 @@ using UnityEngine;
 public abstract class Shape : MonoBehaviour
 {
     [SerializeField] CircleCornerCollider circleColliderPrefab;
-    public CircleCornerCollider[] corners;
-    private Dictionary<CircleCornerCollider, Player> playersAtCorners = new Dictionary<CircleCornerCollider, Player>();
+    protected CircleCornerCollider[] corners;
+    protected Dictionary<CircleCornerCollider, Player> playersAtCorners = new Dictionary<CircleCornerCollider, Player>();
+    protected bool buffActivated = false;
 
     public void CalculateTriangleCorners(Vector3 center, float radius, float rotationAngle, int nCorners, Transform transform)
     {
@@ -26,5 +27,22 @@ public abstract class Shape : MonoBehaviour
         }
     }
 
-    public abstract void CheckCorners();
+    public void CheckCorners()
+    {
+        foreach (var corner in corners)
+        {
+            CircleCornerCollider coll = corner.GetComponent<CircleCornerCollider>();
+            if (!coll.isOccupied)
+            {
+                return;
+            }
+        }
+
+        if (!buffActivated)
+        {
+            ActivateBuff();
+        }
+    }
+
+    public abstract void ActivateBuff();
 }
