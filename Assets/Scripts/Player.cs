@@ -18,14 +18,17 @@ public class Player : NetworkBehaviour
     [Networked] float respawnTime { get; set; }
     [Networked] float currentRespawn { get; set; }
     [Networked] bool spriteIsFlipped { get; set; }
+    [Networked, Capacity(50)] string characterPath { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
     SpriteRenderer spriteRenderer;
 
     // Player intialisation (called from game controller on server when creating the player)
-    public void OnCreated(Character character, Vector3 respawnPoint, int team)
+    public void OnCreated(string characterPath, Vector3 respawnPoint, int team)
     {
+        Character character = Resources.Load(characterPath) as Character;
+
         maxHealth = character.MaxHealth;
         speed = character.Speed;
         damage = character.Damage;
@@ -37,6 +40,7 @@ public class Player : NetworkBehaviour
         respawnTime = 10.0f;
 
         // TODO: Sort out setting character sprite through networked property
+        this.characterPath = characterPath;
     }
 
     // Player initialisation (called on each client and server when player is spawned on network)
@@ -55,10 +59,15 @@ public class Player : NetworkBehaviour
             gameController.RegisterPlayer(this);
         }
 
-        // Initialise player
+        // Get components
         rb = gameObject.GetComponent<Rigidbody2D>();
         spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
-        //spriteRenderer.sprite = character.Sprite;
+
+        // Set sprite from resource path
+        Character character = Resources.Load(characterPath) as Character;
+        spriteRenderer.sprite = character.Sprite;
+
+        // Initialise player
         Respawn();
     }
 

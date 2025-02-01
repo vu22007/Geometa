@@ -91,12 +91,12 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
         // Run the following only on the server
         if (Runner.IsServer)
         {
-            // Load prefabs
+            // Load prefab
             GameObject playerPrefab = Resources.Load("Prefabs/Player") as GameObject;
-            Character armyVet = Resources.Load("ScriptableObjects/Characters/Army Vet") as Character;
+            string characterPath = "ScriptableObjects/Characters/Army Vet";
 
             // Spawn the player network object
-            NetworkObject networkPlayerObject = PrefabFactory.SpawnPlayer(Runner, player, playerPrefab, respawnPoint1, armyVet, nextTeam);
+            NetworkObject networkPlayerObject = PrefabFactory.SpawnPlayer(Runner, player, playerPrefab, respawnPoint1, characterPath, nextTeam);
 
             // Flip the next team so the next player to join will be on the other team
             nextTeam = (nextTeam == 1) ? 2 : 1;
