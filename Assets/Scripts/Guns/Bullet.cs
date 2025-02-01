@@ -12,7 +12,7 @@ public class Bullet : NetworkBehaviour
     // Bullet intialisation (called from a player object on server when creating the bullet)
     public void OnCreated(Vector2 startDirection, float speed, float damage, int team)
     {
-        velocity = startDirection * speed;
+        velocity = startDirection.normalized * speed;
         this.damage = damage;
         done = false;
         lifespan = 20.0f;
@@ -61,7 +61,7 @@ public class Bullet : NetworkBehaviour
     public void BulletUpdate()
     {
         gameObject.transform.position += new Vector3(velocity.x, velocity.y) * Runner.DeltaTime;
-        
+
         lifespan -= Runner.DeltaTime;
         if (lifespan <= 0.0f) {
             done = true;

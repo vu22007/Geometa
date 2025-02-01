@@ -82,6 +82,9 @@ public class Player : NetworkBehaviour
         isAlive = true;
         currentRespawn = 0.0f;
         timeToWaitForBullet = 0.0f;
+
+        Debug.Log(maxAmmo);
+        Debug.Log(currentAmmo);
     }
 
     // Update function (called from the game controller on all clients and server)
@@ -167,12 +170,13 @@ public class Player : NetworkBehaviour
         // Spawn the bullet network object
         Vector3 direction = new Vector3(aimDirection.x, aimDirection.y);
         Quaternion rotation = Quaternion.LookRotation(direction, new Vector3(0.0f, 0.0f, -1.0f));
-        NetworkObject networkBulletObject = Runner.Spawn(bulletPrefab, gameObject.transform.position, rotation);
-
-        // Initialise the bullet
-        Bullet bullet = networkBulletObject.GetComponent<Bullet>();
-        float bulletSpeed = 40.0f;
-        bullet.OnCreated(direction.normalized, bulletSpeed, damage, team);
+        NetworkObject networkBulletObject = Runner.Spawn(bulletPrefab, gameObject.transform.position, rotation, null, (runner, networkObject) =>
+        {
+            // Initialise the bullet (this is called before the bullet is spawned)
+            Bullet bullet = networkObject.GetComponent<Bullet>();
+            float bulletSpeed = 40.0f;
+            bullet.OnCreated(aimDirection, bulletSpeed, damage, team);
+        });
 
         currentAmmo--;
     }
