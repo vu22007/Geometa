@@ -4,11 +4,15 @@ using UnityEngine.InputSystem;
 public class TriangleController : MonoBehaviour
 {
     [SerializeField] GameObject trianglePrefab;
+    [SerializeField] GameObject squarePrefab;
+    private GameObject currentPrefab;
     [SerializeField] GameObject previewTrianglePrefab;
+    [SerializeField] GameObject previewSquarePrefab;
     private GameObject previewTriangle;    
     private bool isPlacing = false;
     private Camera cam;
     private float angle; // angle of cursor wrt y axis unit vector
+    private float plusAngle = 0;
     private InputAction actionTriangle;
     private InputAction actionSquare;
     private InputAction placeShape;
@@ -22,10 +26,12 @@ public class TriangleController : MonoBehaviour
             playerInputActions = new PlayerInputActions();
         }
         actionTriangle = playerInputActions.Player.Triangle;
-        placeShape = playerInputActions.Player.PlaceShape;
         actionSquare = playerInputActions.Player.Square;
+        placeShape = playerInputActions.Player.PlaceShape;
 
+        // What function should be ran when action is performed(when a key is pressed)
         actionTriangle.performed += trianglePerformed;
+        actionSquare.performed += squarePerformed;
         placeShape.performed += placeShapePerformed;    
 
         actionTriangle.Enable();
@@ -51,8 +57,9 @@ public class TriangleController : MonoBehaviour
 
     void Update()
     {
+        // Need cooldown for every shape separately
         cooldown = (cooldown > 0) ? cooldown - Time.deltaTime : 0;
-        if (!actionTriangle.IsPressed())
+        if (!actionTriangle.IsPressed() && !actionSquare.IsPressed())
         {
             isPlacing = false;
             Destroy(previewTriangle);
@@ -68,37 +75,53 @@ public class TriangleController : MonoBehaviour
             // This wont be needed with an orthographic camera maybe
             direction.z = 0;
 
-            angle = Vector3.SignedAngle(Vector3.up, direction, Vector3.forward) - 180;
+            angle = Vector3.SignedAngle(Vector3.up, direction, Vector3.forward) - 180 + plusAngle;
 
             previewTriangle.transform.position = cursorWorldPoint;
-
             previewTriangle.transform.rotation = Quaternion.Euler(0, 0, angle);
-
         }
     }
     
     private void trianglePerformed(InputAction.CallbackContext context)
     {
-        // Place triangle if right clicked while holding Q
         if (!isPlacing)
         {
+            plusAngle = 0;
+            currentPrefab = trianglePrefab;
             isPlacing = true;
+            // Calculating the slope for the shape placed like above
             Vector2 mousePos = Input.mousePosition;
-            // World point of the cursor
             Vector3 cursorWorldPoint = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
-            // Direction of cursor
             Vector3 direction = cursorWorldPoint - transform.position;
-            // This wont be needed with an orthographic camera maybe
             direction.z = 0;
             angle = Vector3.SignedAngle(Vector3.up, direction, Vector3.forward) - 180;
+            
 
             // Instantiate a preview triangle
             previewTriangle = Instantiate(previewTrianglePrefab, cursorWorldPoint, Quaternion.Euler(0, 0, angle));
         }
     }
 
+    private void squarePerformed(InputAction.CallbackContext context)
+    {
+        if (!isPlacing)
+        {
+            plusAngle = 45;
+            currentPrefab = squarePrefab;
+            isPlacing = true;
+            Vector2 mousePos = Input.mousePosition;
+            Vector3 cursorWorldPoint = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
+            Vector3 direction = cursorWorldPoint - transform.position;
+            direction.z = 0;
+            angle = Vector3.SignedAngle(Vector3.up, direction, Vector3.forward) - 180 + plusAngle;
+
+            previewTriangle = Instantiate(previewSquarePrefab, cursorWorldPoint, Quaternion.Euler(0, 0, angle));
+        }
+    }
+
     private void placeShapePerformed(InputAction.CallbackContext context)
-    { 
+    {
+        // Place shape if right clicked while holding Q
         if (isPlacing && cooldown > 0)
         {
             Debug.Log("Triangle cooldown remaning: " + cooldown.ToString());
@@ -113,7 +136,7 @@ public class TriangleController : MonoBehaviour
     public void PlaceTriangle(float angle)
     {
         // Place the triangle with the colliders
-        Instantiate(trianglePrefab, previewTriangle.transform.position, Quaternion.Euler(0, 0, angle));
+        Instantiate(currentPrefab, previewTriangle.transform.position, Quaternion.Euler(0, 0, angle));
      
         Destroy(previewTriangle);
         previewTriangle = null;
