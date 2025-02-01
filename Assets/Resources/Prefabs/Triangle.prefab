@@ -100,4 +100,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 043133f212c64b746a06ebd4430a625f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  circleColliderPrefab: {fileID: 3931564396056729670, guid: 3ba6f4783e9270242919d1a7526ad676, type: 3}
+  circleColliderPrefab: {fileID: 9080372979443685343, guid: 3ba6f4783e9270242919d1a7526ad676, type: 3}
+  corners: []
