@@ -1,49 +1,94 @@
-using System;
+using Fusion;
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-public class Player : MonoBehaviour
+public class Player : NetworkBehaviour
 {
-    float speed;
-    float maxHealth;
-    float damage;
-    int maxAmmo;
-    int currentAmmo;
-    float fireRate;
-    float reloadTime;
-    float timeToWaitForBullet;
-    [SerializeField] Character character;
-    [SerializeField] Camera cam;
-    float currentHealth;
-    public bool isAlive;
-    float respawnTime = 10.0f;
-    float currentRespawn;
+    [Networked] float speed { get; set; }
+    [Networked] float maxHealth { get; set; }
+    [Networked] float damage { get; set; }
+    [Networked] int maxAmmo { get; set; }
+    [Networked] int currentAmmo { get; set; }
+    [Networked] float fireRate { get; set; }
+    [Networked] float reloadTime { get; set; }
+    [Networked] float timeToWaitForBullet { get; set; }
+    [Networked] float currentHealth { get; set; }
+    [Networked] int team { get; set; }
+    [Networked] Vector3 respawnPoint { get; set; }
+    [Networked] bool isAlive { get; set; }
+    [Networked] float respawnTime { get; set; }
+    [Networked] float currentRespawn { get; set; }
+    [Networked] bool spriteIsFlipped { get; set; }
+    [Networked, Capacity(50)] string characterPath { get; set; }
+    [Networked] NetworkButtons previousButtons { get; set; }
+
+    public Camera cam;
     Rigidbody2D rb;
     SpriteRenderer spriteRenderer;
-    Vector3 respawnPoint;
-    public int team;
     public GameObject triangleControllerPrefab;
     private GameObject triangleController;
 
-    //For the prefab factory (For when we have multiple players), to be called on instantiation of the prefab
-    public void OnCreated(Character character, Vector3 respawnPoint, int team){
+    // Player intialisation (called from game controller on server when creating the player)
+    public void OnCreated(string characterPath, Vector3 respawnPoint, int team)
+    {
+        Character character = Resources.Load(characterPath) as Character;
+
         maxHealth = character.MaxHealth;
         speed = character.Speed;
         damage = character.Damage;
         maxAmmo = character.MaxAmmo;
         fireRate = character.FireRate;
         this.respawnPoint = respawnPoint;
-        spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
-        rb = gameObject.GetComponent<Rigidbody2D>();
-        spriteRenderer.sprite = character.Sprite;
         this.team = team;
         reloadTime = 1.0f;
+        respawnTime = 10.0f;
+
+        this.characterPath = characterPath;
+    }
+
+    // Player initialisation (called on each client and server when player is spawned on network)
+    public override void Spawned()
+    {
+        // Disable the camera if client does not control this player
+        if (!HasInputAuthority)
+        {
+            cam.gameObject.SetActive(false);
+        }
+
+        // Add this player to game controller player list (do this for all found game controllers to ensure that it is added to the correct one)
+        foreach (GameObject gameControllerObject in GameObject.FindGameObjectsWithTag("GameController"))
+        {
+            GameController gameController = gameControllerObject.GetComponent<GameController>();
+            gameController.RegisterPlayer(this);
+        }
+
+        // Get components
+        rb = gameObject.GetComponent<Rigidbody2D>();
+        spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
+
+        // Set sprite from resource path
+        Character character = Resources.Load(characterPath) as Character;
+        spriteRenderer.sprite = character.Sprite;
+
         triangleController = Instantiate(triangleControllerPrefab, cam.transform);
+
+        // Initialise player
         Respawn();
     }
+
+    // Called on each client and server when player is despawned from network
+    public override void Despawned(NetworkRunner runner, bool hasState)
+    {
+        // Remove this player from game controller player list (do this for all found game controllers to ensure that it is removed from the correct one)
+        foreach (GameObject gameControllerObject in GameObject.FindGameObjectsWithTag("GameController"))
+        {
+            GameController gameController = gameControllerObject.GetComponent<GameController>();
+            gameController.UnregisterPlayer(this);
+        }
+    }
     
-    //Player initialisation (Also used for respawning)
+    // Player initialisation (also used for respawning)
     public void Respawn()
     {
         gameObject.transform.position = respawnPoint;
@@ -54,56 +99,84 @@ public class Player : MonoBehaviour
         timeToWaitForBullet = 0.0f;
     }
 
-    //Update function, called from the game controller, returns a bullet if one is fired
-    public Bullet PlayerUpdate()
+    // Update function (called from the game controller on all clients and server)
+    public void PlayerUpdate()
     {
-        Bullet bullet = null;
-        if (isAlive) {
-            // WASD movement
-            PlayerMovement();
+        // If player is dead then add to respawn timer and return
+        if (!isAlive)
+        {
+            currentRespawn += Runner.DeltaTime;
+            return;
+        }
 
-            // Decrease bullet timer and clamp to 0 if below 0
-            timeToWaitForBullet = (timeToWaitForBullet > 0) ? timeToWaitForBullet - Time.deltaTime : 0;
+        // Decrease bullet timer and clamp to 0 if below 0
+        timeToWaitForBullet = (timeToWaitForBullet > 0) ? timeToWaitForBullet - Runner.DeltaTime : 0;
+
+        // GetInput will return true on the StateAuthority (the server) and the InputAuthority (the client who controls this player)
+        // So the following is ran for just the server and the client who controls this player
+        if (GetInput(out NetworkInputData input))
+        {
+            // WASD movement
+            PlayerMovement(input.moveDirection);
 
             // Firing the weapon
-            if (Input.GetMouseButton(0)) {
-                if (timeToWaitForBullet <= 0) {
-                    timeToWaitForBullet = 1/fireRate;
-                    if (currentAmmo != 0) {
-                        bullet = ShootBullet();
-                    }
-                    else {
-                        Debug.Log("Press R to reload!!");
-                    }
-                }
+            if (input.buttons.IsSet(InputButtons.Shoot))
+            {
+                Shoot(input.aimDirection);
             }
 
             // Reloading
-            if (Input.GetKeyDown(KeyCode.R)) {
-                Debug.Log("Reloading");
-                timeToWaitForBullet = reloadTime;
+            if (input.buttons.WasPressed(previousButtons, InputButtons.Reload))
+            {
                 Reload();
             }
+
+            previousButtons = input.buttons;
         }
-        else {
-            currentRespawn += Time.deltaTime;
-        }
-        return bullet;
+
+        // Flip the player sprite if necessary (this is done on all clients and server)
+        spriteRenderer.flipX = spriteIsFlipped;
     }
 
-    //player moves according to key presses and player speed
-    void PlayerMovement()
+    // Player moves according to key presses and player speed
+    void PlayerMovement(Vector2 moveDirection)
     {
-        // Allow player to move
-        float speedX = Input.GetAxisRaw("Horizontal");
-        float speedY = Input.GetAxisRaw("Vertical");
-        rb.linearVelocity = new Vector2(speedX, speedY).normalized * speed;
+        // Move the player by setting the velocity using the supplied movement direction vector
+        Vector2 velocity = moveDirection.normalized * speed;
+        rb.linearVelocity = velocity;
 
         // Flip sprite to face direction the player is moving in
-        if (speedX < 0) {
-            spriteRenderer.flipX = true;
-        } else if (speedX > 0) {
-            spriteRenderer.flipX = false;
+        // Note: This sets a networked property so all clients can set the sprite correctly for this player
+        if (velocity.x < 0)
+        {
+            spriteIsFlipped = true;
+        }
+        else if (velocity.x > 0)
+        {
+            spriteIsFlipped = false;
+        }
+    }
+
+    // Shoots a bullet by spawning the prefab on the network
+    void Shoot(Vector2 aimDirection)
+    {
+        if (timeToWaitForBullet <= 0)
+        {
+            timeToWaitForBullet = 1 / fireRate;
+            if (currentAmmo != 0)
+            {
+                // Spawn bullet (only the server can do this)
+                if (HasStateAuthority)
+                {
+                    GameObject bulletPrefab = Resources.Load("Prefabs/Bullet") as GameObject;
+                    PrefabFactory.SpawnBullet(Runner, bulletPrefab, gameObject.transform.position, aimDirection, 40.0f, damage, team);
+                    currentAmmo--;
+                }
+            }
+            else
+            {
+                Debug.Log("Press R to reload!!");
+            }
         }
     }
 
@@ -127,9 +200,16 @@ public class Player : MonoBehaviour
 
     void Die()
     {
-        Debug.Log("You died :((");
+        if (HasInputAuthority) Debug.Log("You died :(("); // only show message for client who controls this player
         isAlive = false;
         rb.linearVelocity = new Vector2(0, 0); // stop player from moving
+    }
+
+    void Reload()
+    {
+        Debug.Log("Reloading");
+        timeToWaitForBullet = reloadTime;
+        currentAmmo = maxAmmo;
     }
 
     public bool RespawnTimerDone()
@@ -137,25 +217,13 @@ public class Player : MonoBehaviour
         return currentRespawn >= respawnTime;
     }
 
-    void Reload(){
-        currentAmmo = maxAmmo;
+    public bool IsAlive()
+    {
+        return isAlive;
     }
 
-    //Shoots a bullet by spawning the prefab
-    Bullet ShootBullet()
+    public int GetTeam()
     {
-        GameObject bulletPrefab = Resources.Load("Prefabs/Bullet") as GameObject;
-        Vector3 direction = CalculateDirectionFromMousePos();
-        Bullet bullet = PrefabFactory.SpawnBullet(bulletPrefab, gameObject.transform.position, direction, 40.0f, damage, team);
-        currentAmmo--;
-        return bullet;
-    }
-
-    Vector3 CalculateDirectionFromMousePos()
-    {
-        Vector2 mousePos = Input.mousePosition;
-        Vector3 worldPoint = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
-        Vector3 direction = worldPoint - gameObject.transform.position;
-        return direction;
+        return team;
     }
 }
