@@ -5,14 +5,12 @@ public class ShapeController : MonoBehaviour
 {
     [SerializeField] GameObject trianglePrefab;
     [SerializeField] GameObject squarePrefab;
+    [SerializeField] GameObject pentagonPrefab;
     private GameObject currentPrefab;
     [SerializeField] GameObject previewTrianglePrefab;
     [SerializeField] GameObject previewSquarePrefab;
-    // [SerializeField] Shape triangleShape;
-    // [SerializeField] GameObject squarePrefab;
+    [SerializeField] GameObject previewPentagonPrefab;
     private Shape currentShape;
-    //[SerializeField] GameObject previewTrianglePrefab;
-    //[SerializeField] GameObject previewSquarePrefab;
     private GameObject previewShape;    
     private bool isPlacing = false;
     private Camera cam;
@@ -20,28 +18,31 @@ public class ShapeController : MonoBehaviour
     private float plusAngle = 0;
     private InputAction actionTriangle;
     private InputAction actionSquare;
+    private InputAction actionPentagon;   
     private InputAction placeShape;
     public PlayerInputActions playerInputActions;
     private float cooldown = 0;
 
     private void OnEnable()
     {
-
         if (playerInputActions == null)
         {
             playerInputActions = new PlayerInputActions();
         }
         actionTriangle = playerInputActions.Player.Triangle;
         actionSquare = playerInputActions.Player.Square;
+        actionPentagon = playerInputActions.Player.Pentagon;        
         placeShape = playerInputActions.Player.PlaceShape;
 
         // What function should be ran when action is performed(when a key is pressed)
         actionTriangle.performed += trianglePerformed;
         actionSquare.performed += squarePerformed;
+        actionPentagon.performed += pentagonPerformed;
         placeShape.performed += placeShapePerformed;    
 
         actionTriangle.Enable();
         actionSquare.Enable();
+        actionPentagon.Enable();
         placeShape.Enable(); 
     }
 
@@ -49,6 +50,7 @@ public class ShapeController : MonoBehaviour
     {
         actionTriangle.Disable();
         actionSquare.Disable();
+        actionPentagon.Disable();
         placeShape.Disable();
     }
 
@@ -57,7 +59,7 @@ public class ShapeController : MonoBehaviour
         cam = GetComponentInParent<Camera>();
         if(cam == null)
         {
-            Debug.LogError("Triangle controller doesn't have a Camera parent");
+            Debug.LogError("Triangle controller doesn't have a Camera in parent");
         }
     }
 
@@ -65,7 +67,7 @@ public class ShapeController : MonoBehaviour
     {
         // Need cooldown for every shape separately
         cooldown = (cooldown > 0) ? cooldown - Time.deltaTime : 0;
-        if (!actionTriangle.IsPressed() && !actionSquare.IsPressed())
+        if (!actionTriangle.IsPressed() && !actionSquare.IsPressed() && !actionPentagon.IsPressed())
         {
             isPlacing = false;
             Destroy(previewShape);   
@@ -118,6 +120,23 @@ public class ShapeController : MonoBehaviour
         }
     }
 
+    private void pentagonPerformed(InputAction.CallbackContext context)
+    {
+        if (!isPlacing && cooldown == 0)
+        {
+            plusAngle = 180/5;
+            currentPrefab = pentagonPrefab;
+            currentShape = currentPrefab.GetComponent<Shape>();
+            isPlacing = true;
+
+            Vector2 mousePos = Input.mousePosition;
+            Vector3 cursorWorldPoint = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
+            angle = CalculateAngle(cursorWorldPoint);
+
+            previewShape = Instantiate(previewPentagonPrefab, cursorWorldPoint, Quaternion.Euler(0, 0, angle));
+        }
+    }
+
     private void placeShapePerformed(InputAction.CallbackContext context)
     {
         // Place shape if right clicked while holding Q
@@ -126,7 +145,7 @@ public class ShapeController : MonoBehaviour
             Debug.Log("Triangle cooldown remaning: " + cooldown.ToString());
             return;
         }
-        cooldown = 5;
+        cooldown = currentShape.Cooldown();
         isPlacing = false;
         PlaceShape(angle);
         return;

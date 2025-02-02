@@ -1,17 +1,16 @@
-using System.Collections.Generic;
 using UnityEngine;
 
-public class SquareShape : Shape
+public class PentagonShape : Shape
 {
-    private int nCorners = 4;
-    [SerializeField] float radius = 4.5f;
-    [SerializeField] float cooldown = 5;
+    private int nCorners = 5;
+    [SerializeField] float radius = 3.5f;
+    [SerializeField] float cooldown = 7;
 
     // Awake is used because with Start runs before the whole object is initialised. 
     void Awake()
     {
         // eulerAngles represent rotations relative to world coordinates
-        CalculateTriangleCorners(transform.position, radius, transform.rotation.eulerAngles.z + 45, nCorners, transform);
+        CalculateTriangleCorners(transform.position, radius, transform.rotation.eulerAngles.z, nCorners, transform);
     }
 
     public override float Cooldown()

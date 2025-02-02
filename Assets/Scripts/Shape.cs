@@ -8,9 +8,10 @@ public abstract class Shape : MonoBehaviour
     protected Dictionary<CircleCornerCollider, Player> playersAtCorners = new Dictionary<CircleCornerCollider, Player>();
     protected bool buffActivated = false;
 
+    public abstract float Cooldown();
+
     public void CalculateTriangleCorners(Vector3 center, float radius, float rotationAngle, int nCorners, Transform transform)
     {
-        Debug.Log(circleColliderPrefab.ToString());
         corners = new CircleCornerCollider[nCorners];
         for (int i = 0; i < nCorners; i++)
         {
