@@ -8,6 +8,11 @@ public class ShapeController : MonoBehaviour
     private GameObject currentPrefab;
     [SerializeField] GameObject previewTrianglePrefab;
     [SerializeField] GameObject previewSquarePrefab;
+    // [SerializeField] Shape triangleShape;
+    // [SerializeField] GameObject squarePrefab;
+    private Shape currentShape;
+    //[SerializeField] GameObject previewTrianglePrefab;
+    //[SerializeField] GameObject previewSquarePrefab;
     private GameObject previewShape;    
     private bool isPlacing = false;
     private Camera cam;
@@ -21,6 +26,7 @@ public class ShapeController : MonoBehaviour
 
     private void OnEnable()
     {
+
         if (playerInputActions == null)
         {
             playerInputActions = new PlayerInputActions();
@@ -70,12 +76,7 @@ public class ShapeController : MonoBehaviour
             Vector2 mousePos = Input.mousePosition;
             // World point of the cursor
             Vector3 cursorWorldPoint = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
-            // Direction of cursor
-            Vector3 direction = cursorWorldPoint - transform.position;
-            // This wont be needed with an orthographic camera maybe
-            direction.z = 0;
-
-            angle = Vector3.SignedAngle(Vector3.up, direction, Vector3.forward) - 180 + plusAngle;
+            float angle = CalculateAngle(cursorWorldPoint);
 
             previewShape.transform.position = cursorWorldPoint;
             previewShape.transform.rotation = Quaternion.Euler(0, 0, angle);
@@ -88,13 +89,12 @@ public class ShapeController : MonoBehaviour
         {
             plusAngle = 0;
             currentPrefab = trianglePrefab;
+            currentShape = currentPrefab.GetComponent<Shape>();
             isPlacing = true;
-            // Calculating the slope for the shape placed like above
+
             Vector2 mousePos = Input.mousePosition;
             Vector3 cursorWorldPoint = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
-            Vector3 direction = cursorWorldPoint - transform.position;
-            direction.z = 0;
-            angle = Vector3.SignedAngle(Vector3.up, direction, Vector3.forward) - 180;
+            angle = CalculateAngle(cursorWorldPoint);
            
             // Instantiate a preview triangle
             previewShape= Instantiate(previewTrianglePrefab, cursorWorldPoint, Quaternion.Euler(0, 0, angle));
@@ -107,14 +107,14 @@ public class ShapeController : MonoBehaviour
         {
             plusAngle = 45;
             currentPrefab = squarePrefab;
+            currentShape = currentPrefab.GetComponent<Shape>();
             isPlacing = true;
+            
             Vector2 mousePos = Input.mousePosition;
             Vector3 cursorWorldPoint = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
-            Vector3 direction = cursorWorldPoint - transform.position;
-            direction.z = 0;
-            angle = Vector3.SignedAngle(Vector3.up, direction, Vector3.forward) - 180 + plusAngle;
+            angle = CalculateAngle(cursorWorldPoint);
 
-            previewShape= Instantiate(previewSquarePrefab, cursorWorldPoint, Quaternion.Euler(0, 0, angle));
+            previewShape = Instantiate(previewSquarePrefab, cursorWorldPoint, Quaternion.Euler(0, 0, angle));
         }
     }
 
@@ -139,5 +139,16 @@ public class ShapeController : MonoBehaviour
      
         Destroy(previewShape);
         previewShape= null;
+    }
+
+    private float CalculateAngle(Vector3 cursorWorldPoint)
+    {
+        Vector3 direction = cursorWorldPoint - transform.position;
+        // This wont be needed with an orthographic camera maybe
+        direction.z = 0;
+
+        angle = Vector3.SignedAngle(Vector3.up, direction, Vector3.forward) - 180 + plusAngle;
+
+        return angle;
     }
 }

@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2402221577820210888}
   - component: {fileID: 6255603288260897929}
+  - component: {fileID: -8523976578364615329}
   m_Layer: 0
   m_Name: ShapeController
   m_TagString: Untagged
@@ -48,3 +49,16 @@ MonoBehaviour:
   squarePrefab: {fileID: 4293930322108404015, guid: bd6895500ec667449aa30400b08188d4, type: 3}
   previewTrianglePrefab: {fileID: 7447591849957452562, guid: 01c9fb0d5a523a6469cb48b359d9fed0, type: 3}
   previewSquarePrefab: {fileID: 3328978197166670331, guid: 95ff52000d6e70f43871a6fb719145fd, type: 3}
+--- !u!114 &-8523976578364615329
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3889213209015694579}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 043133f212c64b746a06ebd4430a625f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  circleColliderPrefab: {fileID: 9080372979443685343, guid: 3ba6f4783e9270242919d1a7526ad676, type: 3}
