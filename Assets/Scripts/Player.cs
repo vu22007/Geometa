@@ -1,5 +1,7 @@
 using Fusion;
 using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
 
 public class Player : NetworkBehaviour
 {
@@ -24,6 +26,8 @@ public class Player : NetworkBehaviour
     public Camera cam;
     Rigidbody2D rb;
     SpriteRenderer spriteRenderer;
+    public GameObject triangleControllerPrefab;
+    private GameObject triangleController;
 
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(string characterPath, Vector3 respawnPoint, int team)
@@ -40,7 +44,6 @@ public class Player : NetworkBehaviour
         reloadTime = 1.0f;
         respawnTime = 10.0f;
 
-        // TODO: Sort out setting character sprite through networked property
         this.characterPath = characterPath;
     }
 
@@ -67,6 +70,8 @@ public class Player : NetworkBehaviour
         // Set sprite from resource path
         Character character = Resources.Load(characterPath) as Character;
         spriteRenderer.sprite = character.Sprite;
+
+        triangleController = Instantiate(triangleControllerPrefab, cam.transform);
 
         // Initialise player
         Respawn();
@@ -139,7 +144,6 @@ public class Player : NetworkBehaviour
         // Move the player by setting the velocity using the supplied movement direction vector
         Vector2 velocity = moveDirection.normalized * speed;
         rb.linearVelocity = velocity;
-        //transform.Translate(new Vector3(velocity.x, velocity.y, 0) * Runner.DeltaTime);
 
         // Flip sprite to face direction the player is moving in
         // Note: This sets a networked property so all clients can set the sprite correctly for this player
