@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.U2D;
 
 public abstract class Shape : MonoBehaviour
 {
@@ -7,15 +8,13 @@ public abstract class Shape : MonoBehaviour
     protected CircleCornerCollider[] corners;
     protected Dictionary<CircleCornerCollider, Player> playersAtCorners = new Dictionary<CircleCornerCollider, Player>();
     protected bool buffActivated = false;
-    public bool cornersInitialised = false;
+    [SerializeField] public bool cornersInitialised = false;
 
     public abstract float Cooldown();
 
     public void CalculateTriangleCorners(Vector3 center, float radius, float rotationAngle, int nCorners, Transform transform)
     {
         corners = new CircleCornerCollider[nCorners];
-
-        cornersInitialised = false;
 
         for (int i = 0; i < nCorners; i++)
         {
@@ -30,8 +29,24 @@ public abstract class Shape : MonoBehaviour
             // initialise no player at each corner
             playersAtCorners[corners[i]] = null;
         }
-        
+
         cornersInitialised = true;
+    }
+
+    public void EnableCorners()
+    {
+        if (cornersInitialised)
+        {
+            foreach(CircleCornerCollider corner in corners)
+            {
+                CircleCollider2D col = corner.GetComponent<CircleCollider2D>();
+                if (col == null)
+                {
+                    Debug.LogError("Circle Corner Collider doesn't have a CircleCollider2D component");
+                }
+                col.enabled = true;
+            }
+        }
     }
 
     public void CheckCorners()
