@@ -19,6 +19,7 @@ public static class PrefabFactory
         return newBullet;
     }
 
+    //For type: 0 is health, 1 is points
     public static Pickup SpawnPickup(GameObject prefab, Vector3 spawnPosition, int type, int amount){
         GameObject instantiatedPickup = Object.Instantiate(prefab, spawnPosition, Quaternion.identity);
         Pickup pickup = instantiatedPickup.GetComponent<Pickup>();

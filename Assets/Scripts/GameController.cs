@@ -30,7 +30,7 @@ public class GameController : MonoBehaviour
         Player playerOne = PrefabFactory.SpawnPlayer(playerPrefab, respawnPoint1, armyVet, team);
         players.Add(playerOne);
 
-        PrefabFactory.SpawnPickup(pickupPrefab, new Vector3(2,2,2), 0, 10); //test pickup
+        PrefabFactory.SpawnPickup(pickupPrefab, new Vector3(5,5,0), 0, 10); //test pickup
     }
 
     //Framewise update
