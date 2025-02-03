@@ -54,8 +54,6 @@ public class CircleCornerCollider : MonoBehaviour
             occupyingPlayer = null;
 
             Debug.Log("Player " + collider.gameObject.name + " exited");
-            // Maybe should delete this because there is no need for check when exited
-            // parentShape.CheckCorners();
         }
     }
 }

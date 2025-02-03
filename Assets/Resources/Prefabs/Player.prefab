@@ -13,6 +13,8 @@ GameObject:
   - component: {fileID: 6975032210494896427}
   - component: {fileID: -5256008576835943960}
   - component: {fileID: 8839131842078529516}
+  - component: {fileID: 5463599753878306190}
+  - component: {fileID: 4562077412377926483}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -102,10 +104,9 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 353e13b90929a4bae92837e83a85b75f, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
-  character: {fileID: 0}
+  m_EditorClassIdentifier:
   cam: {fileID: 3093333144043118080}
-  isAlive: 0
+  triangleControllerPrefab: {fileID: 3889213209015694579, guid: c9d922ed792e9d649b8b177d097d4ee2, type: 3}
 --- !u!50 &-5256008576835943960
 Rigidbody2D:
   serializedVersion: 5
@@ -168,8 +169,51 @@ CapsuleCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_Size: {x: 2.27, y: 5.25}
+  m_Size: {x: 1.73, y: 4.6}
   m_Direction: 0
+--- !u!114 &5463599753878306190
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3801650017718524952}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SortKey: 51510197
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 6975032210494896427}
+  - {fileID: 4562077412377926483}
+  ForceRemoteRenderTimeframe: 0
+--- !u!114 &4562077412377926483
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3801650017718524952}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5e690b5fb1084f5ab1c86457af401d4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _stateAuthorityChangeErrorCorrectionDelta: 0.15
+  SyncScale: 0
+  SyncParent: 1
+  _interpolationTarget: {fileID: 0}
+  UsePreciseRotation: 0
+  UseRenderSleepThresholds: 1
+  RenderThresholds:
+    UseEnergy: 1
+    Position: 0.01
+    Rotation: 0.01
+    Scale: 0.01
 --- !u!1 &4590873436755935670
 GameObject:
   m_ObjectHideFlags: 0
@@ -184,7 +228,7 @@ GameObject:
   - component: {fileID: 1106812533577162162}
   m_Layer: 0
   m_Name: Camera
-  m_TagString: Untagged
+  m_TagString: MainCamera
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

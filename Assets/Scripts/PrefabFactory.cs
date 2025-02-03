@@ -1,22 +1,37 @@
+using Fusion;
 using UnityEngine;
+using UnityEngine.UIElements;
+using static Unity.Collections.Unicode;
 
 public static class PrefabFactory
 {
-    static Vector3 up = new Vector3(0.0f,0.0f,-1.0f);
-    public static Player SpawnPlayer(GameObject prefab, Vector3 spawnPosition, Character character, int team){
-        GameObject instantiatedPlayer = Object.Instantiate(prefab, spawnPosition, Quaternion.identity);
-        Player player = instantiatedPlayer.GetComponent<Player>();
-        player.OnCreated(character, spawnPosition, team);
-        return player;
+    public static NetworkObject SpawnPlayer(NetworkRunner runner, PlayerRef playerRef, GameObject prefab, Vector3 spawnPosition, string characterPath, int team){
+        // Spawn the player network object
+        NetworkObject networkPlayerObject = runner.Spawn(prefab, spawnPosition, Quaternion.identity, playerRef, (runner, networkObject) =>
+        {
+            // Initialise the player (this is called before the player is spawned)
+            Player player = networkObject.GetComponent<Player>();
+            player.OnCreated(characterPath, spawnPosition, team);
+            runner.SetPlayerObject(playerRef, networkObject);
+        });
+
+        return networkPlayerObject;
     }
 
-    public static Bullet SpawnBullet(GameObject prefab, Vector3 spawnPosition, Vector3 moveDirection, float speed, float damage, int team){
-        Quaternion wantedRotation = Quaternion.LookRotation(moveDirection, up);
-        GameObject instantiatedBullet = Object.Instantiate(prefab, spawnPosition, wantedRotation);
-        Bullet newBullet = instantiatedBullet.GetComponent<Bullet>();
-        moveDirection.z = 0;
-        newBullet.OnCreated(moveDirection.normalized, speed, damage, team);
-        return newBullet;
+    public static NetworkObject SpawnBullet(NetworkRunner runner, GameObject prefab, Vector3 spawnPosition, Vector2 moveDirection, float speed, float damage, int team){
+        // Get rotation
+        Vector3 direction = new Vector3(moveDirection.x, moveDirection.y);
+        Quaternion rotation = Quaternion.LookRotation(Vector3.forward, direction);
+
+        // Spawn the bullet network object
+        NetworkObject networkBulletObject = runner.Spawn(prefab, spawnPosition, rotation, null, (runner, networkObject) =>
+        {
+            // Initialise the bullet (this is called before the bullet is spawned)
+            Bullet bullet = networkObject.GetComponent<Bullet>();
+            bullet.OnCreated(moveDirection, speed, damage, team);
+        });
+
+        return networkBulletObject;
     }
 
     //For type: 0 is health, 1 is points

@@ -1,8 +1,8 @@
-using System;
 using System.Collections.Generic;
+using Fusion;
 using UnityEngine;
 
-public class GameController : MonoBehaviour
+public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
 {
     [SerializeField] Vector3Int respawnPoint1;
     //[SerializeField] Vector3Int respawnPoint2;
@@ -12,10 +12,16 @@ public class GameController : MonoBehaviour
     [SerializeField] float maxTime = 480.0f; //8 minute games
     [SerializeField] float currentTime = 0.0f;
 
-    List<Bullet> bullets;
-    List<Player> players;
+    private List<Bullet> bullets;
+    private List<Player> players;
 
-    //Initialisation
+    // For server to use only so that it can manage the spawn and despawn of players
+    private Dictionary<PlayerRef, NetworkObject> spawnedPlayers = new Dictionary<PlayerRef, NetworkObject>();
+
+    // For server to use to keep track of what team to assign to a new player when they join
+    int nextTeam = 1;
+
+    // Initialisation
     void Start()
     {
         GameObject playerPrefab = Resources.Load("Prefabs/Player") as GameObject;
@@ -23,7 +29,6 @@ public class GameController : MonoBehaviour
         GameObject pickupPrefab = Resources.Load("Prefabs/Pickup") as GameObject;
 
         bullets = new List<Bullet>();
-
         players = new List<Player>();
 
         int team = 1;
@@ -31,24 +36,25 @@ public class GameController : MonoBehaviour
         players.Add(playerOne);
 
         PrefabFactory.SpawnPickup(pickupPrefab, new Vector3(5,5,0), 0, 10); //test pickup
+
     }
 
-    //Framewise update
-    void Update()
+    // Update for every server simulation tick
+    public override void FixedUpdateNetwork()
     {
-        currentTime += Time.deltaTime;
-        if (currentTime >= maxTime){
+        currentTime += Runner.DeltaTime;
+        if (currentTime >= maxTime)
+        {
             //end game
         }
 
         foreach (Player player in players)
         {
-            Bullet newBullet = player.PlayerUpdate();
-            if(newBullet != null){
-                bullets.Add(newBullet);
-            }
-            //If player is dead and respawn timer is done then respawn player
-            if (!player.isAlive && player.RespawnTimerDone()) {
+            player.PlayerUpdate();
+
+            // If player is dead and respawn timer is done then respawn player
+            if (!player.IsAlive() && player.RespawnTimerDone())
+            {
                 player.Respawn();
             }
         }
@@ -57,9 +63,70 @@ public class GameController : MonoBehaviour
         {
             Bullet bullet = bullets[i];
             bullet.BulletUpdate();
-            if(bullet.done){
+
+            if (bullet.done)
+            {
                 bullets.Remove(bullet);
-                bullet.DestroyBullet();
+
+                // Despawn bullet from network (only the server can do this)
+                if (Runner.IsServer)
+                {
+                    Runner.Despawn(bullet.GetComponent<NetworkObject>());
+                }
+            }
+        }
+    }
+
+    public void RegisterPlayer(Player player)
+    {
+        players.Add(player);
+    }
+
+    public void UnregisterPlayer(Player player)
+    {
+        players.Remove(player);
+    }
+
+    public void RegisterBullet(Bullet bullet)
+    {
+        bullets.Add(bullet);
+    }
+
+    public void UnregisterBullet(Bullet bullet)
+    {
+        bullets.Remove(bullet);
+    }
+
+    public void PlayerJoined(PlayerRef player)
+    {
+        // Run the following only on the server
+        if (Runner.IsServer)
+        {
+            // Load prefab
+            GameObject playerPrefab = Resources.Load("Prefabs/Player") as GameObject;
+            string characterPath = "ScriptableObjects/Characters/Army Vet";
+
+            // Spawn the player network object
+            NetworkObject networkPlayerObject = PrefabFactory.SpawnPlayer(Runner, player, playerPrefab, respawnPoint1, characterPath, nextTeam);
+
+            // Flip the next team so the next player to join will be on the other team
+            nextTeam = (nextTeam == 1) ? 2 : 1;
+
+            // Add player network object to dictionary
+            spawnedPlayers.Add(player, networkPlayerObject);
+        }
+    }
+
+    public void PlayerLeft(PlayerRef player)
+    {
+        // Run the following only on the server
+        if (Runner.IsServer)
+        {
+            if (spawnedPlayers.TryGetValue(player, out NetworkObject networkPlayerObject))
+            {
+                // Despawn the network object and remove from dictionary
+                Runner.Despawn(networkPlayerObject);
+                spawnedPlayers.Remove(player);
             }
         }
     }
