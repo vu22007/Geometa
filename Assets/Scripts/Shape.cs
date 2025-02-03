@@ -7,12 +7,16 @@ public abstract class Shape : MonoBehaviour
     protected CircleCornerCollider[] corners;
     protected Dictionary<CircleCornerCollider, Player> playersAtCorners = new Dictionary<CircleCornerCollider, Player>();
     protected bool buffActivated = false;
+    public bool cornersInitialised = false;
 
     public abstract float Cooldown();
 
     public void CalculateTriangleCorners(Vector3 center, float radius, float rotationAngle, int nCorners, Transform transform)
     {
         corners = new CircleCornerCollider[nCorners];
+
+        cornersInitialised = false;
+
         for (int i = 0; i < nCorners; i++)
         {
             // (120deg = 2pi/3 radians) + the rotation angle in radians
@@ -26,6 +30,8 @@ public abstract class Shape : MonoBehaviour
             // initialise no player at each corner
             playersAtCorners[corners[i]] = null;
         }
+        
+        cornersInitialised = true;
     }
 
     public void CheckCorners()

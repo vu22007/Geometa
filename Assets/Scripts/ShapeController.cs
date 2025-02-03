@@ -15,7 +15,7 @@ public class ShapeController : MonoBehaviour
     private bool isPlacing = false;
     private Camera cam;
     private float angle; // angle of cursor wrt y axis unit vector
-    private float plusAngle = 0;
+    [SerializeField] float plusAngle = 0;
     private InputAction actionTriangle;
     private InputAction actionSquare;
     private InputAction actionPentagon;   
@@ -124,7 +124,7 @@ public class ShapeController : MonoBehaviour
     {
         if (!isPlacing && cooldown == 0)
         {
-            plusAngle = 180/5;
+            plusAngle = 0;
             currentPrefab = pentagonPrefab;
             currentShape = currentPrefab.GetComponent<Shape>();
             isPlacing = true;

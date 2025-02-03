@@ -26,8 +26,6 @@ public class Player : NetworkBehaviour
     public Camera cam;
     Rigidbody2D rb;
     SpriteRenderer spriteRenderer;
-    Vector3 respawnPoint;
-    public int team;
     public GameObject shapeControllerPrefab;
     private GameObject shapeController;
 
@@ -44,7 +42,6 @@ public class Player : NetworkBehaviour
         this.respawnPoint = respawnPoint;
         this.team = team;
         reloadTime = 1.0f;
-        shapeController = Instantiate(shapeControllerPrefab, cam.transform);
         respawnTime = 10.0f;
 
         this.characterPath = characterPath;
@@ -69,12 +66,13 @@ public class Player : NetworkBehaviour
         // Get components
         rb = gameObject.GetComponent<Rigidbody2D>();
         spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
+        shapeController = Instantiate(shapeControllerPrefab, cam.transform);
 
         // Set sprite from resource path
         Character character = Resources.Load(characterPath) as Character;
         spriteRenderer.sprite = character.Sprite;
 
-        triangleController = Instantiate(triangleControllerPrefab, cam.transform);
+        shapeController = Instantiate(shapeControllerPrefab, cam.transform);
 
         // Initialise player
         Respawn();

@@ -8,7 +8,7 @@ public class CircleCornerCollider : MonoBehaviour
     private GameObject occupyingPlayer;
     private Shape parentShape;
 
-    void Start()
+    void Awake()
     {
         parentShape = GetComponentInParent<Shape>(true);
         if (parentShape == null) Debug.LogError("CircleCornerCollider's parent doesn't have a component of type Shape.");
@@ -27,7 +27,10 @@ public class CircleCornerCollider : MonoBehaviour
                 occupyingPlayer = coll.gameObject;
                 Debug.Log("Player " + coll.gameObject.name + " is on collider");
 
-                parentShape.CheckCorners();
+                if (parentShape.cornersInitialised)
+                {
+                    parentShape.CheckCorners();
+                }           
                 return;
             }
         }
