@@ -6,21 +6,19 @@ public class ShapeController : MonoBehaviour
     [SerializeField] GameObject trianglePrefab;
     [SerializeField] GameObject squarePrefab;
     [SerializeField] GameObject pentagonPrefab;
-    private GameObject currentPrefab;
-    [SerializeField] GameObject previewTrianglePrefab;
-    [SerializeField] GameObject previewSquarePrefab;
-    [SerializeField] GameObject previewPentagonPrefab;
     private Shape currentShape;
     private GameObject previewShape;    
-    private bool isPlacing = false;
-    private Camera cam;
-    private float angle; // angle of cursor wrt y axis unit vector
-    [SerializeField] float plusAngle = 0;
+
+    public PlayerInputActions playerInputActions;    
     private InputAction actionTriangle;
     private InputAction actionSquare;
     private InputAction actionPentagon;   
     private InputAction placeShape;
-    public PlayerInputActions playerInputActions;
+
+    private bool isPlacing = false;
+    private Camera cam;
+    private float angle; // angle of cursor wrt y axis unit vector
+    [SerializeField] float plusAngle = 0;
     private float cooldown = 0;
 
     private void OnEnable()
@@ -90,26 +88,7 @@ public class ShapeController : MonoBehaviour
         if (!isPlacing && cooldown == 0)
         {
             plusAngle = 0;
-            isPlacing = true;
-            
-            currentPrefab = trianglePrefab;
-            if (currentPrefab == null)
-            {
-                Debug.LogError("Shape prefab isn't set");
-            }
-
-            Vector2 mousePos = Input.mousePosition;
-            Vector3 cursorWorldPoint = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
-            angle = CalculateAngle(cursorWorldPoint);
-           
-            // Instantiate a preview triangle
-            previewShape= Instantiate(currentPrefab, cursorWorldPoint, Quaternion.Euler(0, 0, angle));
-
-            currentShape = previewShape.GetComponent<Shape>();
-            if (currentShape == null)
-            {
-                Debug.LogError("Shape prefab doesn't have a Shape component");
-            }
+            InstantiateShape(trianglePrefab);
         }
     }
 
@@ -118,25 +97,7 @@ public class ShapeController : MonoBehaviour
         if (!isPlacing && cooldown == 0)
         {
             plusAngle = 45;
-            isPlacing = true;            
-            
-            currentPrefab = squarePrefab;
-            if (currentPrefab == null)
-            {
-                Debug.LogError("Shape prefab isn't set");
-            }
-            
-            Vector2 mousePos = Input.mousePosition;
-            Vector3 cursorWorldPoint = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
-            angle = CalculateAngle(cursorWorldPoint);
-
-            previewShape = Instantiate(squarePrefab, cursorWorldPoint, Quaternion.Euler(0, 0, angle));
-
-            currentShape = currentPrefab.GetComponent<Shape>();
-            if (currentShape == null)
-            {
-                Debug.LogError("Shape prefab doesn't have a Shape component");
-            }
+            InstantiateShape(squarePrefab);
         }
     }
 
@@ -145,25 +106,26 @@ public class ShapeController : MonoBehaviour
         if (!isPlacing && cooldown == 0)
         {
             plusAngle = 0;
-            isPlacing = true;    
-            
-            currentPrefab = pentagonPrefab;
-            if (currentPrefab == null)
-            {
-                Debug.LogError("Shape prefab isn't set");
-            }
+            InstantiateShape(pentagonPrefab);
+        }
+    }
 
-            Vector2 mousePos = Input.mousePosition;
-            Vector3 cursorWorldPoint = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
-            angle = CalculateAngle(cursorWorldPoint);
+    private void InstantiateShape(GameObject shapePrefab)
+    {
+        isPlacing = true;
 
-            previewShape = Instantiate(previewPentagonPrefab, cursorWorldPoint, Quaternion.Euler(0, 0, angle));
+        Vector2 mousePos = Input.mousePosition;
+        Vector3 cursorWorldPoint = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
+        angle = CalculateAngle(cursorWorldPoint);
 
-            currentShape = currentPrefab.GetComponent<Shape>();
-            if (currentShape == null)
-            {
-                Debug.LogError("Shape prefab doesn't have a Shape component");
-            }
+        // Instantiate an object of the shape prefab. The default colliders are dissable and they
+        // are enable once the shape is placed
+        previewShape = Instantiate(shapePrefab, cursorWorldPoint, Quaternion.Euler(0, 0, angle));
+
+        currentShape = previewShape.GetComponent<Shape>();
+        if (currentShape == null)
+        {
+            Debug.LogError("Shape prefab doesn't have a Shape component");
         }
     }
 
@@ -175,6 +137,7 @@ public class ShapeController : MonoBehaviour
             Debug.Log("Triangle cooldown remaning: " + cooldown.ToString());
             return;
         }
+
         cooldown = currentShape.Cooldown();
         isPlacing = false;
 

@@ -66,7 +66,6 @@ public class Player : NetworkBehaviour
         // Get components
         rb = gameObject.GetComponent<Rigidbody2D>();
         spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
-        shapeController = Instantiate(shapeControllerPrefab, cam.transform);
 
         // Set sprite from resource path
         Character character = Resources.Load(characterPath) as Character;
