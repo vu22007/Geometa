@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 8981262098280133107}
   - component: {fileID: 6097142764160687398}
   - component: {fileID: 7883988328372885048}
+  - component: {fileID: 2264761178982945866}
   m_Layer: 0
   m_Name: Pentagon
   m_TagString: Untagged
@@ -123,4 +124,22 @@ MonoBehaviour:
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 6097142764160687398}
+  - {fileID: 2264761178982945866}
   ForceRemoteRenderTimeframe: 0
+--- !u!114 &2264761178982945866
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6725597113058825095}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 158639473, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _stateAuthorityChangeErrorCorrectionDelta: 0.15
+  SyncScale: 0
+  SyncParent: 0
+  _autoAOIOverride: 1
+  DisableSharedModeInterpolation: 0

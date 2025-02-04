@@ -1,6 +1,5 @@
 using Fusion;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class ShapeController : NetworkBehaviour
 {
@@ -10,13 +9,19 @@ public class ShapeController : NetworkBehaviour
     private Shape currentShape;
     private GameObject previewShape;
 
-    private bool isPlacing = false;
+    [Networked] private bool isPlacing { get; set; }
     private Vector3 cursorWorldPoint;
     private float angle; // angle of cursor wrt y axis unit vector
     [SerializeField] float plusAngle = 0;
-    private float cooldown = 0;
-
+    [Networked] private float cooldown { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
+
+    // Shape controller intialisation (called from player on server when creating the shape controller)
+    public void OnCreated()
+    {
+        isPlacing = false;
+        cooldown = 0;
+    }
 
     public override void FixedUpdateNetwork()
     {
@@ -36,7 +41,7 @@ public class ShapeController : NetworkBehaviour
             if (input.buttons.WasPressed(previousButtons, InputButtons.Square)) SquarePerformed();
             if (input.buttons.WasPressed(previousButtons, InputButtons.Pentagon)) PentagonPerformed();
 
-            // Place down the shape if place shape button pressed
+            // Place down the shape if PlaceShape button pressed
             if (input.buttons.WasPressed(previousButtons, InputButtons.PlaceShape)) PlaceShapePerformed();
 
             // If all shape keys are released
@@ -52,7 +57,6 @@ public class ShapeController : NetworkBehaviour
                     }
                     previewShape = null;
                 }
-                return;
             }
 
             // If a shape key is still held down
@@ -95,6 +99,9 @@ public class ShapeController : NetworkBehaviour
 
     private void SpawnShape(GameObject shapePrefab)
     {
+        // Only the server can spawn shapes
+        if (!HasStateAuthority) return;
+
         isPlacing = true;
 
         // Spawn an object of the shape prefab. The default colliders are dissable and they
@@ -123,8 +130,6 @@ public class ShapeController : NetworkBehaviour
 
         currentShape.EnableCorners();
         previewShape = null;
-        
-        return;
     }
 
     private float CalculateAngle(Vector3 direction)
