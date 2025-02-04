@@ -34,5 +34,13 @@ After dying players will respawn after a period of time.
 
 To avoid a draw, the timer gradually increase.
 
+## Controls
+WASD - Movement
+
+Left click - fire gun 
+
+R - Reload 
+
+Q - preview triangle placement; + right click - place triangle
 
 

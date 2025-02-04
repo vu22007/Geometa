@@ -6,13 +6,12 @@ public class CircleCornerCollider : MonoBehaviour
 {
     public bool isOccupied = false;
     private GameObject occupyingPlayer;
-    // Should replace with parent shape later
-    private TriangleShape parentShape;
+    private Shape parentShape;
 
-    void Start()
+    void Awake()
     {
-        parentShape = GetComponentInParent<TriangleShape>(true);
-        if (parentShape == null) Debug.LogError("CircleCornerCollider doesn't have a parent");
+        parentShape = GetComponentInParent<Shape>(true);
+        if (parentShape == null) Debug.LogError("CircleCornerCollider's parent doesn't have a component of type Shape.");
         detectPlayersOnInstantiation();
     }
 
@@ -28,7 +27,10 @@ public class CircleCornerCollider : MonoBehaviour
                 occupyingPlayer = coll.gameObject;
                 Debug.Log("Player " + coll.gameObject.name + " is on collider");
 
-                parentShape.CheckCorners();
+                if (parentShape.cornersInitialised)
+                {
+                    parentShape.CheckCorners();
+                }           
                 return;
             }
         }
@@ -54,8 +56,6 @@ public class CircleCornerCollider : MonoBehaviour
             occupyingPlayer = null;
 
             Debug.Log("Player " + collider.gameObject.name + " exited");
-            // Maybe should delete this because there is no need for check when exited
-            // parentShape.CheckCorners();
         }
     }
 }
