@@ -26,8 +26,8 @@ public class Player : NetworkBehaviour
     public Camera cam;
     Rigidbody2D rb;
     SpriteRenderer spriteRenderer;
-    public GameObject triangleControllerPrefab;
-    private GameObject triangleController;
+    public GameObject shapeControllerPrefab;
+    private GameObject shapeController;
 
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(string characterPath, Vector3 respawnPoint, int team)
@@ -71,7 +71,7 @@ public class Player : NetworkBehaviour
         Character character = Resources.Load(characterPath) as Character;
         spriteRenderer.sprite = character.Sprite;
 
-        triangleController = Instantiate(triangleControllerPrefab, cam.transform);
+        shapeController = Instantiate(shapeControllerPrefab, cam.transform);
 
         // Initialise player
         Respawn();

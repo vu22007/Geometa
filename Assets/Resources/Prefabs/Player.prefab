@@ -106,7 +106,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier:
   cam: {fileID: 3093333144043118080}
-  triangleControllerPrefab: {fileID: 3889213209015694579, guid: c9d922ed792e9d649b8b177d097d4ee2, type: 3}
+  isAlive: 0
+  team: 0
+  shapeControllerPrefab: {fileID: 3889213209015694579, guid: c9d922ed792e9d649b8b177d097d4ee2, type: 3}
 --- !u!50 &-5256008576835943960
 Rigidbody2D:
   serializedVersion: 5
@@ -283,7 +285,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 7
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
