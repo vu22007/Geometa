@@ -257,6 +257,7 @@ public class Player : NetworkBehaviour
     }
 
     Vector3 CalculateDirectionFromMousePos()
+    {
         return isAlive;
     }
 
