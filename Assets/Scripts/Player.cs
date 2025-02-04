@@ -3,6 +3,9 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor.Experimental.GraphView;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using TMPro; 
 
 public class Player : MonoBehaviour
 {
@@ -24,6 +27,8 @@ public class Player : MonoBehaviour
     SpriteRenderer spriteRenderer;
     Vector3 respawnPoint;
     public int team;
+    public Image healthBar;
+    public TextMeshProUGUI ammoText;
 
     //For the prefab factory (For when we have multiple players), to be called on instantiation of the prefab
     public void OnCreated(Character character, Vector3 respawnPoint, int team){
@@ -38,6 +43,7 @@ public class Player : MonoBehaviour
         spriteRenderer.sprite = character.Sprite;
         this.team = team;
         reloadTime = 1.0f;
+        ammoText.text = "Bullets: " + currentAmmo;
 
         Respawn();
     }
@@ -51,6 +57,8 @@ public class Player : MonoBehaviour
         isAlive = true;
         currentRespawn = 0.0f;
         timeToWaitForBullet = 0.0f;
+        // Refill the health bar
+        healthBar.fillAmount = currentHealth/ 100f; 
     }
 
     //Update function, called from the game controller, returns a bullet if one is fired
@@ -83,6 +91,18 @@ public class Player : MonoBehaviour
                 timeToWaitForBullet = reloadTime;
                 Reload();
             }
+
+            // Spacebar to take damage
+            if( Input.GetKeyDown( KeyCode.Space ) ){
+                Debug.Log("Damage taken");
+                TakeDamage(10); 
+            }
+            // Enter to heal
+            if( Input.GetKeyDown( KeyCode.Return ) ){
+                Debug.Log("Healed");
+                Heal(10); 
+            }
+
         }
         else {
             currentRespawn += Time.deltaTime;
@@ -110,6 +130,7 @@ public class Player : MonoBehaviour
     public void TakeDamage(float damage)
     {
         currentHealth -= damage;
+        healthBar.fillAmount = currentHealth/ 100f;
         if (currentHealth <= 0.0f) {
             Die();
         }
@@ -119,6 +140,7 @@ public class Player : MonoBehaviour
     public void Heal(float amount)
     {
         currentHealth += amount;
+        healthBar.fillAmount = currentHealth/ 100f;
         if (currentHealth >= maxHealth) {
             currentHealth = maxHealth;
         }
@@ -138,6 +160,7 @@ public class Player : MonoBehaviour
 
     void Reload(){
         currentAmmo = maxAmmo;
+        ammoText.text = "Bullets: " + currentAmmo;
     }
 
     //Shoots a bullet by spawning the prefab
@@ -147,6 +170,7 @@ public class Player : MonoBehaviour
         Vector3 direction = CalculateDirectionFromMousePos();
         Bullet bullet = PrefabFactory.SpawnBullet(bulletPrefab, gameObject.transform.position, direction, 40.0f, damage, team);
         currentAmmo--;
+        ammoText.text = "Bullets: " + currentAmmo;
         return bullet;
     }
 
