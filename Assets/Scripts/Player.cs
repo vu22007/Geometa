@@ -170,8 +170,8 @@ public class Player : NetworkBehaviour
                 {
                     GameObject bulletPrefab = Resources.Load("Prefabs/Bullet") as GameObject;
                     PrefabFactory.SpawnBullet(Runner, bulletPrefab, gameObject.transform.position, aimDirection, 40.0f, damage, team);
-                    currentAmmo--;
                 }
+                currentAmmo--;
             }
             else
             {
