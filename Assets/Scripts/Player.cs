@@ -104,7 +104,7 @@ public class Player : NetworkBehaviour
         currentRespawn = 0.0f;
         timeToWaitForBullet = 0.0f;
         // Refill the health bar
-        healthBar.fillAmount = currentHealth/ 100f; 
+        healthBar.fillAmount = currentHealth/ maxHealth; 
     }
 
     // Update function (called from the game controller on all clients and server)
@@ -204,7 +204,7 @@ public class Player : NetworkBehaviour
     public void TakeDamage(float damage)
     {
         currentHealth -= damage;
-        healthBar.fillAmount = currentHealth/ 100f;
+        healthBar.fillAmount = currentHealth/ maxHealth;
         if (currentHealth <= 0.0f) {
             Die();
         }
@@ -214,7 +214,7 @@ public class Player : NetworkBehaviour
     public void Heal(float amount)
     {
         currentHealth += amount;
-        healthBar.fillAmount = currentHealth/ 100f;
+        healthBar.fillAmount = currentHealth/ maxHealth;
         if (currentHealth >= maxHealth) {
             currentHealth = maxHealth;
         }
