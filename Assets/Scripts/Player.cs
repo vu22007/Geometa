@@ -27,10 +27,9 @@ public class Player : NetworkBehaviour
     Rigidbody2D rb;
     SpriteRenderer spriteRenderer;
     public GameObject shapeControllerPrefab;
-    private GameObject shapeController;
 
     // Player intialisation (called from game controller on server when creating the player)
-    public void OnCreated(string characterPath, Vector3 respawnPoint, int team)
+    public void OnCreated(PlayerRef playerRef, string characterPath, Vector3 respawnPoint, int team)
     {
         Character character = Resources.Load(characterPath) as Character;
 
@@ -45,6 +44,9 @@ public class Player : NetworkBehaviour
         respawnTime = 10.0f;
 
         this.characterPath = characterPath;
+
+        // Spawn a shape controller for this player
+        Runner.Spawn(shapeControllerPrefab, respawnPoint, Quaternion.identity, playerRef);
     }
 
     // Player initialisation (called on each client and server when player is spawned on network)
@@ -70,8 +72,6 @@ public class Player : NetworkBehaviour
         // Set sprite from resource path
         Character character = Resources.Load(characterPath) as Character;
         spriteRenderer.sprite = character.Sprite;
-
-        shapeController = Instantiate(shapeControllerPrefab, cam.transform);
 
         // Initialise player
         Respawn();

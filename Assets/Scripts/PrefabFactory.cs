@@ -1,7 +1,5 @@
 using Fusion;
 using UnityEngine;
-using UnityEngine.UIElements;
-using static Unity.Collections.Unicode;
 
 public static class PrefabFactory
 {
@@ -11,7 +9,7 @@ public static class PrefabFactory
         {
             // Initialise the player (this is called before the player is spawned)
             Player player = networkObject.GetComponent<Player>();
-            player.OnCreated(characterPath, spawnPosition, team);
+            player.OnCreated(playerRef, characterPath, spawnPosition, team);
             runner.SetPlayerObject(playerRef, networkObject);
         });
 
@@ -32,5 +30,18 @@ public static class PrefabFactory
         });
 
         return networkBulletObject;
+    }
+
+    public static NetworkObject SpawnShape(NetworkRunner runner, GameObject prefab, Vector3 spawnPosition, Quaternion rotation)
+    {
+        // Spawn the shape network object
+        NetworkObject networkShapeObject = runner.Spawn(prefab, spawnPosition, rotation, null, (runner, networkObject) =>
+        {
+            // Initialise the shape (this is called before the shape is spawned)
+            Shape shape = networkObject.GetComponent<Shape>();
+            //shape.OnCreated(moveDirection, speed, damage, team);
+        });
+
+        return networkShapeObject;
     }
 }

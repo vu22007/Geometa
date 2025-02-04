@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 162328805765885754}
   - component: {fileID: 3911805412209137842}
   - component: {fileID: 9134385890481291151}
+  - component: {fileID: 6101088537559125833}
   m_Layer: 0
   m_Name: Triangle
   m_TagString: Untagged
@@ -101,4 +102,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   circleColliderPrefab: {fileID: 9080372979443685343, guid: 3ba6f4783e9270242919d1a7526ad676, type: 3}
-  corners: []
+  cornersInitialised: 0
+  radius: 4.5
+  cooldown: 3
+--- !u!114 &6101088537559125833
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1674966375643425539}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SortKey: 305943493
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 9134385890481291151}
+  ForceRemoteRenderTimeframe: 0

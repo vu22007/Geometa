@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 2947516832657927201}
   - component: {fileID: 6290469138965764661}
   - component: {fileID: 1700457066169644039}
+  - component: {fileID: 893801356204998330}
   m_Layer: 0
   m_Name: Square
   m_TagString: Untagged
@@ -101,3 +102,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   circleColliderPrefab: {fileID: 9080372979443685343, guid: 3ba6f4783e9270242919d1a7526ad676, type: 3}
+  cornersInitialised: 0
+  radius: 4.5
+  cooldown: 5
+--- !u!114 &893801356204998330
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4293930322108404015}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SortKey: 1072294465
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 1700457066169644039}
+  ForceRemoteRenderTimeframe: 0

@@ -3,45 +3,85 @@ using System.Collections.Generic;
 using Fusion;
 using Fusion.Sockets;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
 {
+    public PlayerInputActions playerInputActions;
+    private InputAction actionShoot;
+    private InputAction actionReload;
+    private InputAction actionPlaceShape;
+    private InputAction actionTriangle;
+    private InputAction actionSquare;
+    private InputAction actionPentagon;
+
+    private void OnEnable()
+    {
+        if (playerInputActions == null)
+        {
+            playerInputActions = new PlayerInputActions();
+        }
+
+        actionShoot = playerInputActions.Player.Shoot;
+        actionReload = playerInputActions.Player.Reload;
+        actionPlaceShape = playerInputActions.Player.PlaceShape;
+        actionTriangle = playerInputActions.Player.Triangle;
+        actionSquare = playerInputActions.Player.Square;
+        actionPentagon = playerInputActions.Player.Pentagon;
+
+        actionShoot.Enable();
+        actionReload.Enable();
+        actionPlaceShape.Enable();
+        actionTriangle.Enable();
+        actionSquare.Enable();
+        actionPentagon.Enable();
+    }
+
+    private void OnDisable()
+    {
+        actionShoot.Disable();
+        actionReload.Disable();
+        actionPlaceShape.Disable();
+        actionTriangle.Disable();
+        actionSquare.Disable();
+        actionPentagon.Disable();
+    }
+
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {
         NetworkInputData data = new NetworkInputData();
 
-        // Get left mouse button down status
-        data.buttons.Set(InputButtons.Shoot, Input.GetMouseButton(0));
+        // Set buttons
+        data.buttons.Set(InputButtons.Shoot, actionShoot.IsPressed());
+        data.buttons.Set(InputButtons.Reload, actionReload.IsPressed());
+        data.buttons.Set(InputButtons.PlaceShape, actionPlaceShape.IsPressed());
+        data.buttons.Set(InputButtons.Triangle, actionTriangle.IsPressed());
+        data.buttons.Set(InputButtons.Square, actionSquare.IsPressed());
+        data.buttons.Set(InputButtons.Pentagon, actionPentagon.IsPressed());
 
-        // Get R key down status
-        data.buttons.Set(InputButtons.Reload, Input.GetKey(KeyCode.R));
-
-        // Get movement direction vector
+        // Set movement direction vector
         float speedX = Input.GetAxisRaw("Horizontal");
         float speedY = Input.GetAxisRaw("Vertical");
         data.moveDirection = new Vector2(speedX, speedY).normalized;
 
-        // Get aim direction vector
-        data.aimDirection = CalculateDirectionFromMousePos();
-
-        input.Set(data);
-    }
-
-    Vector2 CalculateDirectionFromMousePos()
-    {
-        Vector3 direction = Vector3.zero;
-
         if (Runner.TryGetPlayerObject(Runner.LocalPlayer, out NetworkObject networkPlayerObject))
         {
+            // Get local player and camera
             Player localPlayer = networkPlayerObject.GetComponent<Player>();
             Camera cam = localPlayer.cam;
 
             Vector2 mousePos = Input.mousePosition;
             Vector3 worldPoint = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
-            direction = worldPoint - localPlayer.transform.position;
+            Vector3 direction = worldPoint - localPlayer.transform.position;
+
+            // Set cursor world point vector
+            data.cursorWorldPoint = new Vector2(worldPoint.x, worldPoint.y);
+
+            // Set aim direction vector
+            data.aimDirection = new Vector2(direction.x, direction.y);
         }
 
-        return new Vector2(direction.x, direction.y);
+        input.Set(data);
     }
 
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player) {}

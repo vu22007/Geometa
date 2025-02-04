@@ -1,8 +1,8 @@
 using System.Collections.Generic;
+using Fusion;
 using UnityEngine;
-using UnityEngine.U2D;
 
-public abstract class Shape : MonoBehaviour
+public abstract class Shape : NetworkBehaviour
 {
     [SerializeField] CircleCornerCollider circleColliderPrefab;
     protected CircleCornerCollider[] corners;

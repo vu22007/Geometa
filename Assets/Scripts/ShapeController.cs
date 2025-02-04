@@ -1,7 +1,8 @@
+using Fusion;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class ShapeController : MonoBehaviour
+public class ShapeController : NetworkBehaviour
 {
     [SerializeField] GameObject trianglePrefab;
     [SerializeField] GameObject squarePrefab;
@@ -16,7 +17,6 @@ public class ShapeController : MonoBehaviour
     private InputAction placeShape;
 
     private bool isPlacing = false;
-    private Camera cam;
     private float angle; // angle of cursor wrt y axis unit vector
     [SerializeField] float plusAngle = 0;
     private float cooldown = 0;
@@ -36,12 +36,12 @@ public class ShapeController : MonoBehaviour
         actionTriangle.performed += trianglePerformed;
         actionSquare.performed += squarePerformed;
         actionPentagon.performed += pentagonPerformed;
-        placeShape.performed += placeShapePerformed;    
+        placeShape.performed += placeShapePerformed;
 
         actionTriangle.Enable();
         actionSquare.Enable();
         actionPentagon.Enable();
-        placeShape.Enable(); 
+        placeShape.Enable();
     }
 
     private void OnDisable()
@@ -52,15 +52,6 @@ public class ShapeController : MonoBehaviour
         placeShape.Disable();
     }
 
-    void Start()
-    {
-        cam = GetComponentInParent<Camera>();
-        if(cam == null)
-        {
-            Debug.LogError("Triangle controller doesn't have a Camera in parent");
-        }
-    }
-
     void Update()
     {
         // Need cooldown for every shape separately
@@ -68,11 +59,20 @@ public class ShapeController : MonoBehaviour
         if (!actionTriangle.IsPressed() && !actionSquare.IsPressed() && !actionPentagon.IsPressed())
         {
             isPlacing = false;
-            Destroy(previewShape);   
+            if (previewShape != null)
+            {
+                Runner.Despawn(previewShape.GetComponent<NetworkObject>());
+                previewShape = null;
+            }
             return;
         }
         if (isPlacing)
         {
+            // TEMP
+            NetworkObject networkPlayerObject = Runner.GetPlayerObject(Runner.LocalPlayer);
+            Player localPlayer = networkPlayerObject.GetComponent<Player>();
+            Camera cam = localPlayer.cam;
+
             Vector2 mousePos = Input.mousePosition;
             // World point of the cursor
             Vector3 cursorWorldPoint = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
@@ -88,7 +88,7 @@ public class ShapeController : MonoBehaviour
         if (!isPlacing && cooldown == 0)
         {
             plusAngle = 0;
-            InstantiateShape(trianglePrefab);
+            SpawnShape(trianglePrefab);
         }
     }
 
@@ -97,7 +97,7 @@ public class ShapeController : MonoBehaviour
         if (!isPlacing && cooldown == 0)
         {
             plusAngle = 45;
-            InstantiateShape(squarePrefab);
+            SpawnShape(squarePrefab);
         }
     }
 
@@ -106,21 +106,27 @@ public class ShapeController : MonoBehaviour
         if (!isPlacing && cooldown == 0)
         {
             plusAngle = 0;
-            InstantiateShape(pentagonPrefab);
+            SpawnShape(pentagonPrefab);
         }
     }
 
-    private void InstantiateShape(GameObject shapePrefab)
+    private void SpawnShape(GameObject shapePrefab)
     {
         isPlacing = true;
+
+        // TEMP
+        NetworkObject networkPlayerObject = Runner.GetPlayerObject(Runner.LocalPlayer);
+        Player localPlayer = networkPlayerObject.GetComponent<Player>();
+        Camera cam = localPlayer.cam;
 
         Vector2 mousePos = Input.mousePosition;
         Vector3 cursorWorldPoint = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
         angle = CalculateAngle(cursorWorldPoint);
 
-        // Instantiate an object of the shape prefab. The default colliders are dissable and they
+        // Spawn an object of the shape prefab. The default colliders are dissable and they
         // are enable once the shape is placed
-        previewShape = Instantiate(shapePrefab, cursorWorldPoint, Quaternion.Euler(0, 0, angle));
+        NetworkObject shapeNetworkObject = PrefabFactory.SpawnShape(Runner, shapePrefab, cursorWorldPoint, Quaternion.Euler(0, 0, angle));
+        previewShape = shapeNetworkObject.gameObject;
 
         currentShape = previewShape.GetComponent<Shape>();
         if (currentShape == null)

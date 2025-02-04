@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2402221577820210888}
   - component: {fileID: 6255603288260897929}
+  - component: {fileID: -1334907531457785578}
   m_Layer: 0
   m_Name: ShapeController
   m_TagString: Untagged
@@ -47,6 +48,23 @@ MonoBehaviour:
   trianglePrefab: {fileID: 1674966375643425539, guid: 9e1835267b0b05843b7780cfade6b527, type: 3}
   squarePrefab: {fileID: 4293930322108404015, guid: bd6895500ec667449aa30400b08188d4, type: 3}
   pentagonPrefab: {fileID: 6725597113058825095, guid: f926b1916d900b5478758b7954ba8981, type: 3}
-  previewTrianglePrefab: {fileID: 7447591849957452562, guid: 01c9fb0d5a523a6469cb48b359d9fed0, type: 3}
-  previewSquarePrefab: {fileID: 3328978197166670331, guid: 95ff52000d6e70f43871a6fb719145fd, type: 3}
-  previewPentagonPrefab: {fileID: 1799039305723677602, guid: b55862bc332fc554eabcce21015c294f, type: 3}
+  plusAngle: 0
+--- !u!114 &-1334907531457785578
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3889213209015694579}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SortKey: 2809356580
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 6255603288260897929}
+  ForceRemoteRenderTimeframe: 0
