@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Fusion;
+using Unity.Burst.Intrinsics;
 using UnityEngine;
 
 public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
@@ -15,6 +16,9 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
     private List<Bullet> bullets;
     private List<Player> players;
 
+    private List<Pickup> pickups;
+
+
     // For server to use only so that it can manage the spawn and despawn of players
     private Dictionary<PlayerRef, NetworkObject> spawnedPlayers = new Dictionary<PlayerRef, NetworkObject>();
 
@@ -24,19 +28,14 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
     // Initialisation
     void Start()
     {
-        GameObject playerPrefab = Resources.Load("Prefabs/Player") as GameObject;
-        Character armyVet = Resources.Load("ScriptableObjects/Characters/Army Vet") as Character;
-        GameObject pickupPrefab = Resources.Load("Prefabs/Pickup") as GameObject;
-
         bullets = new List<Bullet>();
         players = new List<Player>();
+        pickups = new List<Pickup>();
 
-        int team = 1;
-        Player playerOne = PrefabFactory.SpawnPlayer(playerPrefab, respawnPoint1, armyVet, team);
-        players.Add(playerOne);
-
-        PrefabFactory.SpawnPickup(pickupPrefab, new Vector3(5,5,0), 0, 10); //test pickup
-
+        if (Runner.IsServer){
+            GameObject pickupPrefab = Resources.Load("Prefabs/Pickup") as GameObject;
+            PrefabFactory.SpawnPickup(Runner, pickupPrefab, new Vector3(5f,5f,0f), 0, 20);
+        }
     }
 
     // Update for every server simulation tick
@@ -95,6 +94,16 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
     public void UnregisterBullet(Bullet bullet)
     {
         bullets.Remove(bullet);
+    }
+
+    public void RegisterPickup(Pickup pickup)
+    {
+        pickups.Add(pickup);
+    }
+
+    public void UnregisterPickup(Pickup pickup)
+    {
+        pickups.Remove(pickup);
     }
 
     public void PlayerJoined(PlayerRef player)

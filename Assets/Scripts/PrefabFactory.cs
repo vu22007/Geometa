@@ -35,10 +35,15 @@ public static class PrefabFactory
     }
 
     //For type: 0 is health, 1 is points
-    public static Pickup SpawnPickup(GameObject prefab, Vector3 spawnPosition, int type, int amount){
-        GameObject instantiatedPickup = Object.Instantiate(prefab, spawnPosition, Quaternion.identity);
-        Pickup pickup = instantiatedPickup.GetComponent<Pickup>();
-        pickup.OnCreated(type, amount);
-        return pickup;
+    public static NetworkObject SpawnPickup(NetworkRunner runner, GameObject prefab, Vector3 spawnPosition, int type, int amount){
+
+        NetworkObject networkPickupObject = runner.Spawn(prefab, spawnPosition, Quaternion.identity, null, (runner, networkObject) =>
+        {
+            // Initialise the pickup (this is called before the pickup is spawned)
+            Pickup pickup = networkObject.GetComponent<Pickup>();
+            pickup.OnCreated(type, amount);
+        });
+
+        return networkPickupObject;
     }
 }
