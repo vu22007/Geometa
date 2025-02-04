@@ -48,6 +48,7 @@ public class Player : NetworkBehaviour
         this.team = team;
         reloadTime = 1.0f;
         respawnTime = 10.0f;
+        ammoText.text = "Bullets: " + currentAmmo;
 
         this.characterPath = characterPath;
     }
@@ -77,7 +78,6 @@ public class Player : NetworkBehaviour
         spriteRenderer.sprite = character.Sprite;
 
         shapeController = Instantiate(shapeControllerPrefab, cam.transform);
-        ammoText.text = "Bullets: " + currentAmmo;
 
         // Initialise player
         Respawn();
@@ -138,6 +138,7 @@ public class Player : NetworkBehaviour
             {
                 Reload();
             }
+            previousButtons = input.buttons;
 
             // Spacebar to take damage
             if( Input.GetKeyDown( KeyCode.Space ) ){
@@ -149,9 +150,7 @@ public class Player : NetworkBehaviour
                 Debug.Log("Healed");
                 Heal(10); 
             }
-
-
-            previousButtons = input.buttons;
+            
         }
 
         // Flip the player sprite if necessary (this is done on all clients and server)
@@ -191,6 +190,7 @@ public class Player : NetworkBehaviour
                     GameObject bulletPrefab = Resources.Load("Prefabs/Bullet") as GameObject;
                     PrefabFactory.SpawnBullet(Runner, bulletPrefab, gameObject.transform.position, aimDirection, 40.0f, damage, team);
                     currentAmmo--;
+                    ammoText.text = "Bullets: " + currentAmmo;
                 }
             }
             else
@@ -232,6 +232,7 @@ public class Player : NetworkBehaviour
         Debug.Log("Reloading");
         timeToWaitForBullet = reloadTime;
         currentAmmo = maxAmmo;
+        ammoText.text = "Bullets: " + currentAmmo;
     }
 
     public bool RespawnTimerDone()
@@ -239,24 +240,9 @@ public class Player : NetworkBehaviour
         return currentRespawn >= respawnTime;
     }
 
-    void Reload(){
-        currentAmmo = maxAmmo;
-        ammoText.text = "Bullets: " + currentAmmo;
-    }
-
     //Shoots a bullet by spawning the prefab
-    Bullet ShootBullet()
+    //Bullet ShootBullet();
     public bool IsAlive()
-    {
-        GameObject bulletPrefab = Resources.Load("Prefabs/Bullet") as GameObject;
-        Vector3 direction = CalculateDirectionFromMousePos();
-        Bullet bullet = PrefabFactory.SpawnBullet(bulletPrefab, gameObject.transform.position, direction, 40.0f, damage, team);
-        currentAmmo--;
-        ammoText.text = "Bullets: " + currentAmmo;
-        return bullet;
-    }
-
-    Vector3 CalculateDirectionFromMousePos()
     {
         return isAlive;
     }
