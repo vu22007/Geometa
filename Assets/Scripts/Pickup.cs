@@ -1,9 +1,10 @@
+using Fusion;
 using UnityEngine;
 
-public class Pickup : MonoBehaviour
+public class Pickup : NetworkBehaviour
 {
-    int amount;
-    int type;
+    [Networked] int amount { get; set; }
+    [Networked] int type { get; set; }
     SpriteRenderer spriteRenderer;
 
     public void OnCreated(int type, int amount){
