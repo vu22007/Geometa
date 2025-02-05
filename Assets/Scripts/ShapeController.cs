@@ -60,7 +60,7 @@ public class ShapeController : NetworkBehaviour
             }
 
             // If a shape key is still held down
-            if (isPlacing)
+            if (isPlacing && previewShape != null)
             {
                 previewShape.transform.position = cursorWorldPoint;
                 previewShape.transform.rotation = Quaternion.Euler(0, 0, angle);
@@ -124,6 +124,8 @@ public class ShapeController : NetworkBehaviour
             Debug.Log("Triangle cooldown remaning: " + cooldown.ToString());
             return;
         }
+
+        if (currentShape == null) return;
 
         cooldown = currentShape.Cooldown();
         isPlacing = false;
