@@ -7,13 +7,17 @@ public class Pickup : NetworkBehaviour
     [Networked] int type { get; set; }
     SpriteRenderer spriteRenderer;
 
+    // Pickup intialisation (called from game controller on server when creating the pickup)
     public void OnCreated(int type, int amount){
         this.type = type;
         this.amount = amount;
+    }
+
+    // Pickup initialisation (called on each client and server when pickup is spawned on network)
+    public override void Spawned()
+    {
         spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
-
         Sprite sprite = GetSprite();
-
         spriteRenderer.sprite = sprite;
     }
 
@@ -64,6 +68,10 @@ public class Pickup : NetworkBehaviour
     }
 
     public void DestroyPickup(){
-        Destroy(gameObject);
+        // Despawn the pickup (only the server can do this)
+        if (HasStateAuthority)
+        {
+            Runner.Despawn(gameObject.GetComponent<NetworkObject>());
+        }
     }
 }

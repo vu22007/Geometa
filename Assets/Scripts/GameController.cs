@@ -3,7 +3,7 @@ using Fusion;
 using Unity.Burst.Intrinsics;
 using UnityEngine;
 
-public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
+public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, ISceneLoadStart
 {
     [SerializeField] Vector3Int respawnPoint1;
     //[SerializeField] Vector3Int respawnPoint2;
@@ -31,12 +31,18 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
         bullets = new List<Bullet>();
         players = new List<Player>();
         pickups = new List<Pickup>();
+    }
 
-        if (Runner.IsServer){
+    public void SceneLoadStart(SceneRef sceneRef)
+    {
+        // Spawn a pickup (only the server can do this)
+        if (Runner.IsServer)
+        {
             GameObject pickupPrefab = Resources.Load("Prefabs/Pickup") as GameObject;
-            PrefabFactory.SpawnPickup(Runner, pickupPrefab, new Vector3(5f,5f,0f), 0, 20);
+            PrefabFactory.SpawnPickup(Runner, pickupPrefab, new Vector3(5f, 5f, 0f), 0, 20);
         }
     }
+
 
     // Update for every server simulation tick
     public override void FixedUpdateNetwork()
