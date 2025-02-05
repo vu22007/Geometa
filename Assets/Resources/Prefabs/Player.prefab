@@ -104,7 +104,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 353e13b90929a4bae92837e83a85b75f, type: 3}
   m_Name: 
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   cam: {fileID: 3093333144043118080}
   triangleControllerPrefab: {fileID: 3889213209015694579, guid: c9d922ed792e9d649b8b177d097d4ee2, type: 3}
 --- !u!50 &-5256008576835943960
@@ -283,7 +283,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 12
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
