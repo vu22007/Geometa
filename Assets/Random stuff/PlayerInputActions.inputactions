@@ -103,6 +103,24 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Square",
+                    "type": "Button",
+                    "id": "f6cb82c3-b781-471b-a537-525a694270db",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Pentagon",
+                    "type": "Button",
+                    "id": "a18836eb-b3ac-4861-81e9-71091d0bc79b",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -494,7 +512,7 @@
                 {
                     "name": "",
                     "id": "e28c70ac-0480-4782-a638-eff86aad05a1",
-                    "path": "<Keyboard>/q",
+                    "path": "<Keyboard>/#(Q)",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -510,6 +528,28 @@
                     "processors": "",
                     "groups": "",
                     "action": "Place Shape",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "56300ccc-47cf-433c-b79e-b19340652f6b",
+                    "path": "<Keyboard>/#(E)",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Square",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "4aeffd5f-f825-42ec-b38e-d58a8fc5d010",
+                    "path": "<Keyboard>/#(F)",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Pentagon",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

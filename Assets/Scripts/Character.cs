@@ -6,7 +6,7 @@ public class Character : ScriptableObject
     [SerializeField] float speed;
     [SerializeField] float maxHealth;
     [SerializeField] float damage;
-    [SerializeField] Ability ability;
+    //[SerializeField] Ability ability;
     [SerializeField] Sprite sprite;
     [SerializeField] int maxAmmo;
     [SerializeField] float fireRate;
@@ -20,9 +20,9 @@ public class Character : ScriptableObject
     public float Damage{
         get{return damage;}
     }
-    public Ability Ability{
-        get{return ability;}
-    }
+    // public Ability Ability{
+    //     get{return ability;}
+    // }
     public Sprite Sprite{
         get{return sprite;}
     }
