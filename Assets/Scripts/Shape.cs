@@ -9,6 +9,33 @@ public abstract class Shape : NetworkBehaviour
     protected Dictionary<CircleCornerCollider, Player> playersAtCorners = new Dictionary<CircleCornerCollider, Player>();
     protected bool buffActivated = false;
     [SerializeField] public bool cornersInitialised = false;
+    [Networked] bool isPreview { get; set; }
+
+    public void OnCreated(bool isPreview)
+    {
+        this.isPreview = isPreview;
+    }
+
+    public override void Spawned()
+    {
+        // Check if this shape is owned by this client
+        if (HasInputAuthority)
+        {
+            // Look over all shape controllers and find the one that this client owns (the one with input authority)
+            // and set its previewShape and currentShape to this shape, so that the client's copy of their shape controller
+            // can control the shape for client-side prediction purposes
+            foreach (GameObject shapeControllerObject in GameObject.FindGameObjectsWithTag("ShapeController"))
+            {
+                ShapeController shapeController = shapeControllerObject.GetComponent<ShapeController>();
+                if (shapeController.HasInputAuthority)
+                {
+                    // This shape belongs to this shape controller for this client, so add the shape to controller
+                    shapeController.previewShape = gameObject;
+                    shapeController.currentShape = this;
+                }
+            }
+        }
+    }
 
     public abstract float Cooldown();
 

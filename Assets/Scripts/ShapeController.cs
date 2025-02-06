@@ -6,8 +6,8 @@ public class ShapeController : NetworkBehaviour
     [SerializeField] GameObject trianglePrefab;
     [SerializeField] GameObject squarePrefab;
     [SerializeField] GameObject pentagonPrefab;
-    private Shape currentShape;
-    private GameObject previewShape;
+    public Shape currentShape;
+    public GameObject previewShape;
 
     [Networked] private bool isPlacing { get; set; }
     private Vector3 cursorWorldPoint;
@@ -15,12 +15,14 @@ public class ShapeController : NetworkBehaviour
     [SerializeField] float plusAngle = 0;
     [Networked] private float cooldown { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
+    [Networked] PlayerRef playerRef { get; set; }
 
     // Shape controller intialisation (called from player on server when creating the shape controller)
-    public void OnCreated()
+    public void OnCreated(PlayerRef playerRef)
     {
         isPlacing = false;
         cooldown = 0;
+        this.playerRef = playerRef; // The player who owns this shape controller
     }
 
     public override void FixedUpdateNetwork()
@@ -106,7 +108,7 @@ public class ShapeController : NetworkBehaviour
 
         // Spawn an object of the shape prefab. The default colliders are dissable and they
         // are enable once the shape is placed
-        NetworkObject shapeNetworkObject = PrefabFactory.SpawnShape(Runner, shapePrefab, cursorWorldPoint, Quaternion.Euler(0, 0, angle));
+        NetworkObject shapeNetworkObject = PrefabFactory.SpawnShape(Runner, playerRef, shapePrefab, cursorWorldPoint, Quaternion.Euler(0, 0, angle), true);
         previewShape = shapeNetworkObject.gameObject;
 
         currentShape = previewShape.GetComponent<Shape>();

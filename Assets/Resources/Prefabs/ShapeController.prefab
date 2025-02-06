@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: -1334907531457785578}
   m_Layer: 0
   m_Name: ShapeController
-  m_TagString: Untagged
+  m_TagString: ShapeController
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

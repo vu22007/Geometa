@@ -46,9 +46,7 @@ public class Player : NetworkBehaviour
         this.characterPath = characterPath;
 
         // Spawn a shape controller for this player
-        NetworkObject shapeControllerNetworkObject = Runner.Spawn(shapeControllerPrefab, respawnPoint, Quaternion.identity, playerRef);
-        ShapeController shapeController = shapeControllerNetworkObject.GetComponent<ShapeController>();
-        shapeController.OnCreated();
+        PrefabFactory.SpawnShapeController(Runner, playerRef, shapeControllerPrefab, respawnPoint);
     }
 
     // Player initialisation (called on each client and server when player is spawned on network)
