@@ -39,7 +39,7 @@ public static class PrefabFactory
         {
             // Initialise the shape (this is called before the shape is spawned)
             Shape shape = networkObject.GetComponent<Shape>();
-            shape.OnCreated(isPreview);
+            shape.OnCreated(playerRef, isPreview);
         });
 
         return networkShapeObject;

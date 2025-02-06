@@ -15,7 +15,7 @@ public class ShapeController : NetworkBehaviour
     [SerializeField] float plusAngle = 0;
     [Networked] private float cooldown { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
-    [Networked] PlayerRef playerRef { get; set; }
+    [Networked, HideInInspector] public PlayerRef playerRef { get; set; }
 
     // Shape controller intialisation (called on each client and server when shape controller is spawned on network)
     public override void Spawned()

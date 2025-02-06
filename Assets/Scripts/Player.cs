@@ -20,11 +20,11 @@ public class Player : NetworkBehaviour
     [Networked] bool spriteIsFlipped { get; set; }
     [Networked, Capacity(50)] string characterPath { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
+    [Networked, HideInInspector] public PlayerRef playerRef { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
     SpriteRenderer spriteRenderer;
-    [HideInInspector] [Networked] public PlayerRef playerRef { get; set; }
 
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(PlayerRef playerRef, string characterPath, Vector3 respawnPoint, int team)
