@@ -106,9 +106,10 @@ public class ShapeController : NetworkBehaviour
 
         isPlacing = true;
 
-        // Spawn an object of the shape prefab. The default colliders are dissable and they
-        // are enable once the shape is placed
-        NetworkObject shapeNetworkObject = PrefabFactory.SpawnShape(Runner, playerRef, shapePrefab, cursorWorldPoint, Quaternion.Euler(0, 0, angle), true);
+        // Spawn an object of the shape prefab as a preview. The default colliders are disabled and they
+        // are enabled once the shape is placed
+        bool isPreview = true;
+        NetworkObject shapeNetworkObject = PrefabFactory.SpawnShape(Runner, playerRef, shapePrefab, cursorWorldPoint, Quaternion.Euler(0, 0, angle), isPreview);
         previewShape = shapeNetworkObject.gameObject;
 
         currentShape = previewShape.GetComponent<Shape>();
@@ -128,6 +129,9 @@ public class ShapeController : NetworkBehaviour
         }
 
         if (currentShape == null) return;
+
+        // Shape is placed so it no longer is a preview
+        currentShape.isPreview = false;
 
         cooldown = currentShape.Cooldown();
         isPlacing = false;

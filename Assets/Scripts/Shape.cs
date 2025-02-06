@@ -9,13 +9,15 @@ public abstract class Shape : NetworkBehaviour
     protected Dictionary<CircleCornerCollider, Player> playersAtCorners = new Dictionary<CircleCornerCollider, Player>();
     protected bool buffActivated = false;
     [SerializeField] public bool cornersInitialised = false;
-    [Networked] bool isPreview { get; set; }
+    [Networked, OnChangedRender(nameof(OnIsPreviewChanged))] public bool isPreview { get; set; }
 
+    // Shape intialisation (called from shape controller on server when creating the shape)
     public void OnCreated(bool isPreview)
     {
         this.isPreview = isPreview;
     }
 
+    // Shape initialisation (called on each client and server when shape is spawned on network)
     public override void Spawned()
     {
         // Check if this shape is owned by this client
@@ -33,6 +35,22 @@ public abstract class Shape : NetworkBehaviour
                     shapeController.previewShape = gameObject;
                     shapeController.currentShape = this;
                 }
+            }
+        }
+
+        OnIsPreviewChanged();
+    }
+
+    // Called when the isPreview networked property is changed
+    void OnIsPreviewChanged()
+    {
+        // If the client does not own this shape, then make it invisible if the shape is a preview
+        if (!HasInputAuthority)
+        {
+            bool isVisisble = !isPreview;
+            foreach (Renderer renderer in gameObject.GetComponentsInChildren<Renderer>())
+            {
+                renderer.enabled = isVisisble;
             }
         }
     }
