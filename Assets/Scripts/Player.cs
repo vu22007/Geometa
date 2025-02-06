@@ -24,13 +24,12 @@ public class Player : NetworkBehaviour
     public Camera cam;
     Rigidbody2D rb;
     SpriteRenderer spriteRenderer;
-    public GameObject shapeControllerPrefab;
+    [HideInInspector] [Networked] public PlayerRef playerRef { get; set; }
 
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(PlayerRef playerRef, string characterPath, Vector3 respawnPoint, int team)
     {
         Character character = Resources.Load(characterPath) as Character;
-
         maxHealth = character.MaxHealth;
         speed = character.Speed;
         damage = character.Damage;
@@ -40,11 +39,8 @@ public class Player : NetworkBehaviour
         this.team = team;
         reloadTime = 1.0f;
         respawnTime = 10.0f;
-
         this.characterPath = characterPath;
-
-        // Spawn a shape controller for this player
-        PrefabFactory.SpawnShapeController(Runner, playerRef, shapeControllerPrefab, respawnPoint);
+        this.playerRef = playerRef;
     }
 
     // Player initialisation (called on each client and server when player is spawned on network)

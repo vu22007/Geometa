@@ -6,8 +6,8 @@ public class ShapeController : NetworkBehaviour
     [SerializeField] GameObject trianglePrefab;
     [SerializeField] GameObject squarePrefab;
     [SerializeField] GameObject pentagonPrefab;
-    public Shape currentShape;
-    public GameObject previewShape;
+    [HideInInspector] public Shape currentShape;
+    [HideInInspector] public GameObject previewShape;
 
     [Networked] private bool isPlacing { get; set; }
     private Vector3 cursorWorldPoint;
@@ -17,12 +17,14 @@ public class ShapeController : NetworkBehaviour
     [Networked] NetworkButtons previousButtons { get; set; }
     [Networked] PlayerRef playerRef { get; set; }
 
-    // Shape controller intialisation (called from player on server when creating the shape controller)
-    public void OnCreated(PlayerRef playerRef)
+    // Shape controller intialisation (called on each client and server when shape controller is spawned on network)
+    public override void Spawned()
     {
         isPlacing = false;
         cooldown = 0;
-        this.playerRef = playerRef; // The player who owns this shape controller
+
+        // Set the reference for the player who owns this shape controller (the player this shape controller is a child of)
+        playerRef = gameObject.GetComponentInParent<Player>().playerRef;
     }
 
     public override void FixedUpdateNetwork()
