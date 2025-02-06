@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Fusion;
-using Unity.Burst.Intrinsics;
 using UnityEngine;
 
 public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, ISceneLoadStart

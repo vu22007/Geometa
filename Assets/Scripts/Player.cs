@@ -1,7 +1,7 @@
 using Fusion;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro; 
+using TMPro;
 
 public class Player : NetworkBehaviour
 {
@@ -23,20 +23,18 @@ public class Player : NetworkBehaviour
     [Networked] bool spriteIsFlipped { get; set; }
     [Networked, Capacity(50)] string characterPath { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
+    [Networked, HideInInspector] public PlayerRef playerRef { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
     SpriteRenderer spriteRenderer;
-    public GameObject shapeControllerPrefab;
-    private GameObject shapeController;
     public Image healthBar;
     public TextMeshProUGUI ammoText;
 
     // Player intialisation (called from game controller on server when creating the player)
-    public void OnCreated(string characterPath, Vector3 respawnPoint, int team)
+    public void OnCreated(PlayerRef playerRef, string characterPath, Vector3 respawnPoint, int team)
     {
         Character character = Resources.Load(characterPath) as Character;
-
         maxHealth = character.MaxHealth;
         speed = character.Speed;
         damage = character.Damage;
@@ -47,8 +45,8 @@ public class Player : NetworkBehaviour
         points = 0;
         reloadTime = 1.0f;
         respawnTime = 10.0f;
-
         this.characterPath = characterPath;
+        this.playerRef = playerRef;
     }
 
     // Player initialisation (called on each client and server when player is spawned on network)
@@ -74,8 +72,6 @@ public class Player : NetworkBehaviour
         // Set sprite from resource path
         Character character = Resources.Load(characterPath) as Character;
         spriteRenderer.sprite = character.Sprite;
-
-        shapeController = Instantiate(shapeControllerPrefab, cam.transform);
 
         // Initialise player
         Respawn();

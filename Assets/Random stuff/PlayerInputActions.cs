@@ -173,9 +173,18 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
-                    ""name"": ""Triangle"",
+                    ""name"": ""Shoot"",
                     ""type"": ""Button"",
-                    ""id"": ""9e9b074c-6f2a-4477-aa2d-09e5ff9c1ffd"",
+                    ""id"": ""3a7c7e8b-f693-4034-a547-f00cef9d5383"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Reload"",
+                    ""type"": ""Button"",
+                    ""id"": ""59f72f2d-43ae-42bc-877d-f71609cc75b4"",
                     ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """",
@@ -185,6 +194,15 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""name"": ""Place Shape"",
                     ""type"": ""Button"",
                     ""id"": ""4378aca6-6709-45f3-9e1e-13c5249121f0"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Triangle"",
+                    ""type"": ""Button"",
+                    ""id"": ""9e9b074c-6f2a-4477-aa2d-09e5ff9c1ffd"",
                     ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """",
@@ -636,6 +654,28 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Pentagon"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""fa0434e2-e9a2-445a-831d-7312ac6a97c0"",
+                    ""path"": ""<Keyboard>/#(R)"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Reload"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""ac031aaa-f89e-480d-97c1-ec136a31d033"",
+                    ""path"": ""<Mouse>/leftButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Shoot"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1232,8 +1272,10 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         m_Player_Previous = m_Player.FindAction("Previous", throwIfNotFound: true);
         m_Player_Next = m_Player.FindAction("Next", throwIfNotFound: true);
         m_Player_Sprint = m_Player.FindAction("Sprint", throwIfNotFound: true);
-        m_Player_Triangle = m_Player.FindAction("Triangle", throwIfNotFound: true);
+        m_Player_Shoot = m_Player.FindAction("Shoot", throwIfNotFound: true);
+        m_Player_Reload = m_Player.FindAction("Reload", throwIfNotFound: true);
         m_Player_PlaceShape = m_Player.FindAction("Place Shape", throwIfNotFound: true);
+        m_Player_Triangle = m_Player.FindAction("Triangle", throwIfNotFound: true);
         m_Player_Square = m_Player.FindAction("Square", throwIfNotFound: true);
         m_Player_Pentagon = m_Player.FindAction("Pentagon", throwIfNotFound: true);
         // UI
@@ -1338,8 +1380,10 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Previous;
     private readonly InputAction m_Player_Next;
     private readonly InputAction m_Player_Sprint;
-    private readonly InputAction m_Player_Triangle;
+    private readonly InputAction m_Player_Shoot;
+    private readonly InputAction m_Player_Reload;
     private readonly InputAction m_Player_PlaceShape;
+    private readonly InputAction m_Player_Triangle;
     private readonly InputAction m_Player_Square;
     private readonly InputAction m_Player_Pentagon;
     /// <summary>
@@ -1390,13 +1434,21 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// </summary>
         public InputAction @Sprint => m_Wrapper.m_Player_Sprint;
         /// <summary>
-        /// Provides access to the underlying input action "Player/Triangle".
+        /// Provides access to the underlying input action "Player/Shoot".
         /// </summary>
-        public InputAction @Triangle => m_Wrapper.m_Player_Triangle;
+        public InputAction @Shoot => m_Wrapper.m_Player_Shoot;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/Reload".
+        /// </summary>
+        public InputAction @Reload => m_Wrapper.m_Player_Reload;
         /// <summary>
         /// Provides access to the underlying input action "Player/PlaceShape".
         /// </summary>
         public InputAction @PlaceShape => m_Wrapper.m_Player_PlaceShape;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/Triangle".
+        /// </summary>
+        public InputAction @Triangle => m_Wrapper.m_Player_Triangle;
         /// <summary>
         /// Provides access to the underlying input action "Player/Square".
         /// </summary>
@@ -1458,12 +1510,18 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @Sprint.started += instance.OnSprint;
             @Sprint.performed += instance.OnSprint;
             @Sprint.canceled += instance.OnSprint;
-            @Triangle.started += instance.OnTriangle;
-            @Triangle.performed += instance.OnTriangle;
-            @Triangle.canceled += instance.OnTriangle;
+            @Shoot.started += instance.OnShoot;
+            @Shoot.performed += instance.OnShoot;
+            @Shoot.canceled += instance.OnShoot;
+            @Reload.started += instance.OnReload;
+            @Reload.performed += instance.OnReload;
+            @Reload.canceled += instance.OnReload;
             @PlaceShape.started += instance.OnPlaceShape;
             @PlaceShape.performed += instance.OnPlaceShape;
             @PlaceShape.canceled += instance.OnPlaceShape;
+            @Triangle.started += instance.OnTriangle;
+            @Triangle.performed += instance.OnTriangle;
+            @Triangle.canceled += instance.OnTriangle;
             @Square.started += instance.OnSquare;
             @Square.performed += instance.OnSquare;
             @Square.canceled += instance.OnSquare;
@@ -1508,12 +1566,18 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @Sprint.started -= instance.OnSprint;
             @Sprint.performed -= instance.OnSprint;
             @Sprint.canceled -= instance.OnSprint;
-            @Triangle.started -= instance.OnTriangle;
-            @Triangle.performed -= instance.OnTriangle;
-            @Triangle.canceled -= instance.OnTriangle;
+            @Shoot.started -= instance.OnShoot;
+            @Shoot.performed -= instance.OnShoot;
+            @Shoot.canceled -= instance.OnShoot;
+            @Reload.started -= instance.OnReload;
+            @Reload.performed -= instance.OnReload;
+            @Reload.canceled -= instance.OnReload;
             @PlaceShape.started -= instance.OnPlaceShape;
             @PlaceShape.performed -= instance.OnPlaceShape;
             @PlaceShape.canceled -= instance.OnPlaceShape;
+            @Triangle.started -= instance.OnTriangle;
+            @Triangle.performed -= instance.OnTriangle;
+            @Triangle.canceled -= instance.OnTriangle;
             @Square.started -= instance.OnSquare;
             @Square.performed -= instance.OnSquare;
             @Square.canceled -= instance.OnSquare;
@@ -1884,12 +1948,19 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnSprint(InputAction.CallbackContext context);
         /// <summary>
-        /// Method invoked when associated input action "Triangle" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "Shoot" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnTriangle(InputAction.CallbackContext context);
+        void OnShoot(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Reload" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnReload(InputAction.CallbackContext context);
         /// <summary>
         /// Method invoked when associated input action "Place Shape" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
@@ -1897,6 +1968,13 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnPlaceShape(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Triangle" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnTriangle(InputAction.CallbackContext context);
         /// <summary>
         /// Method invoked when associated input action "Square" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
