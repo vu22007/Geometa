@@ -1,5 +1,7 @@
 using Fusion;
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 
 public class Player : NetworkBehaviour
 {
@@ -25,6 +27,8 @@ public class Player : NetworkBehaviour
     public Camera cam;
     Rigidbody2D rb;
     SpriteRenderer spriteRenderer;
+    public Image healthBar;
+    public TextMeshProUGUI ammoText;
 
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(PlayerRef playerRef, string characterPath, Vector3 respawnPoint, int team)
@@ -91,6 +95,10 @@ public class Player : NetworkBehaviour
         isAlive = true;
         currentRespawn = 0.0f;
         timeToWaitForBullet = 0.0f;
+        // Refill the health bar
+        healthBar.fillAmount = currentHealth / maxHealth;
+        // Set the ammo counter
+        ammoText.text = "Bullets: " + currentAmmo;
     }
 
     // Update function (called from the game controller on all clients and server)
@@ -99,6 +107,9 @@ public class Player : NetworkBehaviour
         // If player is dead then add to respawn timer and return
         if (!isAlive)
         {
+            // Ensure health bar is empty
+            healthBar.fillAmount = 0.0f;
+            // Update respawn timer
             currentRespawn += Runner.DeltaTime;
             return;
         }
@@ -130,6 +141,10 @@ public class Player : NetworkBehaviour
 
         // Flip the player sprite if necessary (this is done on all clients and server)
         spriteRenderer.flipX = spriteIsFlipped;
+
+
+        // Update the health bar
+        healthBar.fillAmount = currentHealth / maxHealth;
     }
 
     // Player moves according to key presses and player speed
@@ -166,6 +181,7 @@ public class Player : NetworkBehaviour
                     PrefabFactory.SpawnBullet(Runner, bulletPrefab, gameObject.transform.position, aimDirection, 40.0f, damage, team);
                 }
                 currentAmmo--;
+                ammoText.text = "Bullets: " + currentAmmo;
             }
             else
             {
@@ -178,6 +194,7 @@ public class Player : NetworkBehaviour
     public void TakeDamage(float damage)
     {
         currentHealth -= damage;
+        healthBar.fillAmount = currentHealth / maxHealth;
         if (currentHealth <= 0.0f) {
             Die();
         }
@@ -187,6 +204,7 @@ public class Player : NetworkBehaviour
     public void Heal(float amount)
     {
         currentHealth += amount;
+        healthBar.fillAmount = currentHealth / maxHealth;
         if (currentHealth >= maxHealth) {
             currentHealth = maxHealth;
         }
@@ -204,6 +222,7 @@ public class Player : NetworkBehaviour
         Debug.Log("Reloading");
         timeToWaitForBullet = reloadTime;
         currentAmmo = maxAmmo;
+        ammoText.text = "Bullets: " + currentAmmo;
     }
 
     public bool RespawnTimerDone()
