@@ -12,6 +12,7 @@ public class Player : NetworkBehaviour
     [Networked] int currentAmmo { get; set; }
     [Networked] float fireRate { get; set; }
     [Networked] float reloadTime { get; set; }
+    [Networked] int points { get; set; }
     [Networked] float timeToWaitForBullet { get; set; }
     [Networked] float currentHealth { get; set; }
     [Networked] int team { get; set; }
@@ -41,6 +42,7 @@ public class Player : NetworkBehaviour
         fireRate = character.FireRate;
         this.respawnPoint = respawnPoint;
         this.team = team;
+        points = 0;
         reloadTime = 1.0f;
         respawnTime = 10.0f;
         this.characterPath = characterPath;
@@ -208,6 +210,11 @@ public class Player : NetworkBehaviour
         if (currentHealth >= maxHealth) {
             currentHealth = maxHealth;
         }
+    }
+
+    public void GainPoints(int amount)
+    {
+        points += amount;
     }
 
     void Die()

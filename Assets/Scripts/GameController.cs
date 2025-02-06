@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
 
-public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
+public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, ISceneLoadStart
 {
     [SerializeField] Vector3Int respawnPoint1;
     //[SerializeField] Vector3Int respawnPoint2;
@@ -15,6 +15,9 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
     private List<Bullet> bullets;
     private List<Player> players;
 
+    private List<Pickup> pickups;
+
+
     // For server to use only so that it can manage the spawn and despawn of players
     private Dictionary<PlayerRef, NetworkObject> spawnedPlayers = new Dictionary<PlayerRef, NetworkObject>();
 
@@ -26,7 +29,19 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
     {
         bullets = new List<Bullet>();
         players = new List<Player>();
+        pickups = new List<Pickup>();
     }
+
+    public void SceneLoadStart(SceneRef sceneRef)
+    {
+        // Spawn a pickup (only the server can do this)
+        if (Runner.IsServer)
+        {
+            GameObject pickupPrefab = Resources.Load("Prefabs/Pickup") as GameObject;
+            PrefabFactory.SpawnPickup(Runner, pickupPrefab, new Vector3(5f, 5f, 0f), 0, 20);
+        }
+    }
+
 
     // Update for every server simulation tick
     public override void FixedUpdateNetwork()
@@ -84,6 +99,16 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
     public void UnregisterBullet(Bullet bullet)
     {
         bullets.Remove(bullet);
+    }
+
+    public void RegisterPickup(Pickup pickup)
+    {
+        pickups.Add(pickup);
+    }
+
+    public void UnregisterPickup(Pickup pickup)
+    {
+        pickups.Remove(pickup);
     }
 
     public void PlayerJoined(PlayerRef player)
