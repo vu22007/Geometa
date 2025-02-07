@@ -5,6 +5,7 @@ enum InputButtons
 {
     Shoot = 0,
     Reload = 1,
+    TakeDamage = 2,
 }
 
 public struct NetworkInputData : INetworkInput

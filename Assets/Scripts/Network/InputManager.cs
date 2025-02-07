@@ -16,6 +16,9 @@ public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
         // Get R key down status
         data.buttons.Set(InputButtons.Reload, Input.GetKey(KeyCode.R));
 
+        // Get J key down status
+        data.buttons.Set(InputButtons.TakeDamage, Input.GetKey(KeyCode.J));
+
         // Get movement direction vector
         float speedX = Input.GetAxisRaw("Horizontal");
         float speedY = Input.GetAxisRaw("Vertical");
