@@ -9,7 +9,7 @@ public static class PrefabFactory
         {
             // Initialise the player (this is called before the player is spawned)
             Player player = networkObject.GetComponent<Player>();
-            player.OnCreated(playerRef, characterPath, spawnPosition, team);
+            player.OnCreated(characterPath, spawnPosition, team);
             runner.SetPlayerObject(playerRef, networkObject);
         });
 
@@ -39,7 +39,7 @@ public static class PrefabFactory
         {
             // Initialise the shape (this is called before the shape is spawned)
             Shape shape = networkObject.GetComponent<Shape>();
-            shape.OnCreated(playerRef, isPreview);
+            shape.OnCreated(isPreview);
         });
 
         return networkShapeObject;
