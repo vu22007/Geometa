@@ -68,7 +68,7 @@ public class Bullet : NetworkBehaviour
         Vector3 direction = currentPosition - previousPosition;
 
         // Lag-compensated hit detection
-        int hitMask = -1;
+        int hitMask = LayerMask.GetMask("Default"); // Only register collisions with colliders and hitboxes on the "Default" layer
         HitOptions options = HitOptions.IncludeBox2D | HitOptions.IgnoreInputAuthority;
         if (Runner.LagCompensation.Raycast(previousPosition, direction, direction.magnitude, Object.InputAuthority, out LagCompensatedHit hit, hitMask, options))
         {
@@ -122,10 +122,6 @@ public class Bullet : NetworkBehaviour
     // On colliding with a Collider2D (e.g. a wall)
     void OnCollisionCollider2D(Collider2D collider)
     {
-        // Check if object is not a player (i.e. it is an obstacle that should destroy the bullet)
-        if (!collider.CompareTag("Player"))
-        {
-            done = true; // Doesn't pierce
-        }
+        done = true; // Doesn't pierce
     }
 }
