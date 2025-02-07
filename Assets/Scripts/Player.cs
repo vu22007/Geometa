@@ -34,17 +34,26 @@ public class Player : NetworkBehaviour
     public void OnCreated(string characterPath, Vector3 respawnPoint, int team)
     {
         Character character = Resources.Load(characterPath) as Character;
+
         maxHealth = character.MaxHealth;
         speed = character.Speed;
         damage = character.Damage;
         maxAmmo = character.MaxAmmo;
         fireRate = character.FireRate;
+
         this.respawnPoint = respawnPoint;
         this.team = team;
+        this.characterPath = characterPath;
+
         points = 0;
         reloadTime = 1.0f;
         respawnTime = 10.0f;
-        this.characterPath = characterPath;
+        currentAmmo = maxAmmo;
+        currentHealth = maxHealth;
+        isAlive = true;
+        currentRespawn = 0.0f;
+        timeToWaitForBullet = 0.0f;
+        spriteIsFlipped = false;
     }
 
     // Player initialisation (called on each client and server when player is spawned on network)
@@ -71,8 +80,11 @@ public class Player : NetworkBehaviour
         Character character = Resources.Load(characterPath) as Character;
         spriteRenderer.sprite = character.Sprite;
 
-        // Initialise player
-        Respawn();
+        // Set the health bar
+        healthBar.fillAmount = currentHealth / maxHealth;
+
+        // Set the ammo counter
+        ammoText.text = "Bullets: " + currentAmmo;
     }
 
     // Called on each client and server when player is despawned from network
@@ -86,7 +98,7 @@ public class Player : NetworkBehaviour
         }
     }
     
-    // Player initialisation (also used for respawning)
+    // Player initialisation when respawning
     public void Respawn()
     {
         gameObject.transform.position = respawnPoint;
@@ -95,8 +107,10 @@ public class Player : NetworkBehaviour
         isAlive = true;
         currentRespawn = 0.0f;
         timeToWaitForBullet = 0.0f;
+
         // Refill the health bar
         healthBar.fillAmount = currentHealth / maxHealth;
+
         // Set the ammo counter
         ammoText.text = "Bullets: " + currentAmmo;
     }
@@ -107,8 +121,6 @@ public class Player : NetworkBehaviour
         // If player is dead then add to respawn timer and return
         if (!isAlive)
         {
-            // Ensure health bar is empty
-            healthBar.fillAmount = 0.0f;
             // Update respawn timer
             currentRespawn += Runner.DeltaTime;
             return;
@@ -213,9 +225,10 @@ public class Player : NetworkBehaviour
 
     void Die()
     {
-        if (HasInputAuthority) Debug.Log("You died :(("); // only show message for client who controls this player
+        if (HasInputAuthority) Debug.Log("You died :(("); // Only show message for client who controls this player
         isAlive = false;
-        rb.linearVelocity = new Vector2(0, 0); // stop player from moving
+        rb.linearVelocity = new Vector2(0, 0); // Stop player from moving
+        healthBar.fillAmount = 0.0f; // Ensure health bar is empty
     }
 
     void Reload()

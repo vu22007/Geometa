@@ -273,7 +273,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Config: 3
-  BroadRadius: 2.4085267
+  BroadRadius: 2.3326595
   Offset: {x: 0, y: 0, z: 0}
   GizmosColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   Hitboxes:
@@ -293,7 +293,7 @@ MonoBehaviour:
   Type: 1
   SphereRadius: 0
   CapsuleRadius: 0
-  BoxExtents: {x: -0.91, y: -2.23, z: 0}
+  BoxExtents: {x: -0.83, y: -2.18, z: 0}
   CapsuleExtents: 0
   Offset: {x: 0, y: 0, z: 0}
   Root: {fileID: -8433905836698240597}
@@ -832,10 +832,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1305256347895112903}
-  - component: {fileID: 7686211159986079971}
+  - component: {fileID: 6768334457049021428}
   m_Layer: 2
   m_Name: Collider
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -855,8 +855,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 981996023074110673}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!70 &7686211159986079971
-CapsuleCollider2D:
+--- !u!61 &6768334457049021428
+BoxCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -890,8 +890,17 @@ CapsuleCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_Size: {x: 1.73, y: 4.6}
-  m_Direction: 0
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 1.67, y: 4.37}
+  m_EdgeRadius: 0
 --- !u!1 &8450117847216719978
 GameObject:
   m_ObjectHideFlags: 0
