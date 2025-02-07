@@ -141,10 +141,6 @@ public class Player : NetworkBehaviour
 
         // Flip the player sprite if necessary (this is done on all clients and server)
         spriteRenderer.flipX = spriteIsFlipped;
-
-
-        // Update the health bar
-        healthBar.fillAmount = currentHealth / maxHealth;
     }
 
     // Player moves according to key presses and player speed
