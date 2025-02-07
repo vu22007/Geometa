@@ -3,16 +3,22 @@ using UnityEngine;
 
 public class Bullet : NetworkBehaviour
 {
+    [Networked] int initialTick { get; set; }
+    [Networked] Vector2 initialPosition { get; set; }
     [Networked] Vector2 velocity { get; set; }
+    [Networked] Quaternion rotation { get; set; }
     [Networked] float damage { get; set; }
     [Networked] public bool done { get; set; }
     [Networked] float lifespan { get; set; }
     [Networked] int team { get; set; }
 
     // Bullet intialisation (called from a player object on server when creating the bullet)
-    public void OnCreated(Vector2 startDirection, float speed, float damage, int team)
+    public void OnCreated(Vector2 position, Vector2 direction, Quaternion rotation, float speed, float damage, int team)
     {
-        velocity = startDirection.normalized * speed;
+        initialTick = Runner.Tick;
+        initialPosition = position;
+        velocity = direction.normalized * speed;
+        this.rotation = rotation;
         this.damage = damage;
         done = false;
         lifespan = 20.0f;
@@ -28,6 +34,9 @@ public class Bullet : NetworkBehaviour
             GameController gameController = gameControllerObject.GetComponent<GameController>();
             gameController.RegisterBullet(this);
         }
+
+        // Rotate the bullet into the correct orientation
+        transform.rotation = rotation;
     }
 
     // Called on each client and server when bullet is despawned from network
@@ -41,16 +50,22 @@ public class Bullet : NetworkBehaviour
         }
     }
 
-    // On colliding with a collider (runs on all clients and server, but only the server has the authority to make the bullet done and
-    // to damage the player (since only the server can modify the networked properties))
-    void OnTriggerEnter2D(Collider2D other)
+    // On colliding with a collider
+    void OnTriggerEnter2D(Collider2D other) { }
+
+    // On colliding with a lag-compensated hitbox (runs on all clients and server, but only the server has the authority to make the
+    // bullet done and to damage the player (since only the server can modify the networked properties))
+    void OnCollisionHitbox(Hitbox hitbox)
     {
         // Check if object is a player
-        if (other.CompareTag("Player")) {
-            Player player = other.GetComponent<Player>();
-            if (player != null) {
+        if (hitbox.CompareTag("Player"))
+        {
+            Player player = hitbox.GetComponent<Player>();
+            if (player != null)
+            {
                 // Check if player is from the enemy team
-                if (player.GetTeam() != team) {
+                if (player.GetTeam() != team)
+                {
                     player.TakeDamage(damage);
                     done = true; // Doesn't pierce
                 }
@@ -58,14 +73,43 @@ public class Bullet : NetworkBehaviour
         }
     }
 
+    // Get current position given current tick using initial state of bullet
+    Vector3 GetMovePosition(int currentTick)
+    {
+        float time = (currentTick - initialTick) * Runner.DeltaTime;
+
+        if (time <= 0.0f)
+            return initialPosition;
+
+        Vector2 position = initialPosition + velocity * time;
+
+        return new Vector3(position.x, position.y);
+    }
+
     // Update function (called from the game controller on all clients and server with the list of all currently active bullets)
     public void BulletUpdate()
     {
-        gameObject.transform.position += new Vector3(velocity.x, velocity.y) * Runner.DeltaTime;
+        // Set current position of bullet
+        Vector3 currentPosition = GetMovePosition(Runner.Tick);
+        gameObject.transform.position = currentPosition;
 
+        // Check if bullet's lifespan has been reached
         lifespan -= Runner.DeltaTime;
         if (lifespan <= 0.0f) {
             done = true;
+        }
+
+        // Calculate position in previous tick and how the bullet traveled since then (to be used for lag-compensated hit detection)
+        Vector3 previousPosition = GetMovePosition(Runner.Tick - 1);
+        Vector3 direction = currentPosition - previousPosition;
+
+        // Lag-compensated hit detection
+        int hitMask = -1;
+        HitOptions options = HitOptions.IgnoreInputAuthority;
+        if (Runner.LagCompensation.Raycast(previousPosition, direction, direction.magnitude, Object.InputAuthority, out LagCompensatedHit hit, hitMask, options))
+        {
+            // Resolve collision
+            OnCollisionHitbox(hit.Hitbox);
         }
     }
 }

@@ -619,6 +619,7 @@ GameObject:
   - component: {fileID: 1717420569}
   - component: {fileID: 1717420568}
   - component: {fileID: 1717420570}
+  - component: {fileID: 1717420571}
   m_Layer: 0
   m_Name: Game Controller
   m_TagString: GameController
@@ -698,6 +699,21 @@ MonoBehaviour:
   ClientPhysicsSimulation: 0
   DeltaTimeMultiplier: 1
   SetUnityFixedTimestep: 0
+--- !u!114 &1717420571
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1717420565}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -49887739, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  BVHDepth: 0
+  BVHNodes: 0
+  TotalHitboxes: 0
 --- !u!1 &1874622254
 GameObject:
   m_ObjectHideFlags: 0
