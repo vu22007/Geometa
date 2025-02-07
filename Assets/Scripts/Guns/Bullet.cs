@@ -50,42 +50,6 @@ public class Bullet : NetworkBehaviour
         }
     }
 
-    // On colliding with a collider
-    void OnTriggerEnter2D(Collider2D other) { }
-
-    // On colliding with a lag-compensated hitbox (runs on all clients and server, but only the server has the authority to make the
-    // bullet done and to damage the player (since only the server can modify the networked properties))
-    void OnCollisionHitbox(Hitbox hitbox)
-    {
-        // Check if object is a player
-        if (hitbox.CompareTag("Player"))
-        {
-            Player player = hitbox.GetComponent<Player>();
-            if (player != null)
-            {
-                // Check if player is from the enemy team
-                if (player.GetTeam() != team)
-                {
-                    player.TakeDamage(damage);
-                    done = true; // Doesn't pierce
-                }
-            }
-        }
-    }
-
-    // Get current position given current tick using initial state of bullet
-    Vector3 GetMovePosition(int currentTick)
-    {
-        float time = (currentTick - initialTick) * Runner.DeltaTime;
-
-        if (time <= 0.0f)
-            return initialPosition;
-
-        Vector2 position = initialPosition + velocity * time;
-
-        return new Vector3(position.x, position.y);
-    }
-
     // Update function (called from the game controller on all clients and server with the list of all currently active bullets)
     public void BulletUpdate()
     {
@@ -105,11 +69,63 @@ public class Bullet : NetworkBehaviour
 
         // Lag-compensated hit detection
         int hitMask = -1;
-        HitOptions options = HitOptions.IgnoreInputAuthority;
+        HitOptions options = HitOptions.IncludeBox2D | HitOptions.IgnoreInputAuthority;
         if (Runner.LagCompensation.Raycast(previousPosition, direction, direction.magnitude, Object.InputAuthority, out LagCompensatedHit hit, hitMask, options))
         {
             // Resolve collision
+            OnCollision(hit);
+        }
+    }
+
+    // Get current position given current tick using initial state of bullet
+    Vector3 GetMovePosition(int currentTick)
+    {
+        float time = (currentTick - initialTick) * Runner.DeltaTime;
+
+        if (time <= 0.0f)
+            return initialPosition;
+
+        Vector2 position = initialPosition + velocity * time;
+
+        return new Vector3(position.x, position.y);
+    }
+
+    // To be called when a lag-compensated hit occurs
+    void OnCollision(LagCompensatedHit hit)
+    {
+        // Check if collision is with a Hitbox or Collider2D
+        if (hit.Hitbox != null)
             OnCollisionHitbox(hit.Hitbox);
+        else if (hit.Collider2D != null)
+            OnCollisionCollider2D(hit.Collider2D);
+    }
+
+    // On colliding with a hitbox (e.g. a player)
+    void OnCollisionHitbox(Hitbox hitbox)
+    {
+        // Check if object is a player
+        if (hitbox.CompareTag("Player"))
+        {
+            Player player = hitbox.GetComponent<Player>();
+            if (player != null)
+            {
+                // Check if player is from the enemy team
+                if (player.GetTeam() != team)
+                {
+                    player.TakeDamage(damage);
+                    done = true; // Doesn't pierce
+                }
+            }
+        }
+    }
+
+    // On colliding with a Collider2D (e.g. a wall)
+    void OnCollisionCollider2D(Collider2D collider)
+    {
+        // Check if object is not a player (i.e. it is an obstacle that should destroy the bullet)
+        if (!collider.CompareTag("Player"))
+        {
+            done = true; // Doesn't pierce
         }
     }
 }
