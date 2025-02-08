@@ -11,6 +11,7 @@ public class ShapeController : NetworkBehaviour
     private Vector3 cursorWorldPoint;
     private float angle; // angle of cursor wrt y axis unit vector
     [SerializeField] float plusAngle = 0;
+    [Networked] public bool isActive { get; set; }
     [Networked] private bool isPlacing { get; set; }
     [Networked] private float cooldown { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
@@ -24,6 +25,8 @@ public class ShapeController : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
+        if (!isActive) return;
+
         // TODO: Need cooldown for every shape separately
         cooldown = (cooldown > 0) ? cooldown - Runner.DeltaTime : 0;
 

@@ -59,6 +59,8 @@ public class Player : NetworkBehaviour
     // Player initialisation (called on each client and server when player is spawned on network)
     public override void Spawned()
     {
+        Runner.SetIsSimulated(Object, true);
+
         // Disable the camera if client does not control this player
         if (!HasInputAuthority)
         {
@@ -113,6 +115,12 @@ public class Player : NetworkBehaviour
 
         // Set the ammo counter
         ammoText.text = "Bullets: " + currentAmmo;
+
+        // Activate the shape controller
+        gameObject.GetComponentInChildren<ShapeController>().isActive = true;
+
+        // Restore rigidbody
+        rb.bodyType = RigidbodyType2D.Dynamic;
     }
 
     // Update function (called from the game controller on all clients and server)
@@ -225,10 +233,21 @@ public class Player : NetworkBehaviour
 
     void Die()
     {
-        if (HasInputAuthority) Debug.Log("You died :(("); // Only show message for client who controls this player
         isAlive = false;
-        rb.linearVelocity = new Vector2(0, 0); // Stop player from moving
-        healthBar.fillAmount = 0.0f; // Ensure health bar is empty
+
+        // Only show message for client who controls this player
+        if (HasInputAuthority)
+            Debug.Log("You died :((");
+        
+        // Ensure health bar is empty
+        healthBar.fillAmount = 0.0f;
+
+        // Disable the shape controller
+        gameObject.GetComponentInChildren<ShapeController>().isActive = false;
+
+        // Stop player from moving and from being pushed
+        rb.linearVelocity = new Vector2(0, 0);
+        rb.bodyType = RigidbodyType2D.Kinematic;
     }
 
     void Reload()
