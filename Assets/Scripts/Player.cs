@@ -59,8 +59,6 @@ public class Player : NetworkBehaviour
     // Player initialisation (called on each client and server when player is spawned on network)
     public override void Spawned()
     {
-        Runner.SetIsSimulated(Object, true);
-
         // Disable the camera if client does not control this player
         if (!HasInputAuthority)
         {

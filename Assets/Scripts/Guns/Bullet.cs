@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
 
@@ -53,27 +54,26 @@ public class Bullet : NetworkBehaviour
     // Update function (called from the game controller on all clients and server with the list of all currently active bullets)
     public void BulletUpdate()
     {
-        // Set current position of bullet
-        Vector3 currentPosition = GetMovePosition(Runner.Tick);
-        gameObject.transform.position = currentPosition;
-
         // Check if bullet's lifespan has been reached
         lifespan -= Runner.DeltaTime;
-        if (lifespan <= 0.0f) {
+        if (lifespan <= 0.0f)
+        {
             done = true;
+            return;
         }
 
-        // Calculate position in previous tick and how the bullet traveled since then (to be used for lag-compensated hit detection)
-        Vector3 previousPosition = GetMovePosition(Runner.Tick - 1);
-        Vector3 direction = currentPosition - previousPosition;
+        // Set current position of bullet
+        Vector3 position = GetMovePosition(Runner.Tick);
+        gameObject.transform.position = position;
 
         // Lag-compensated hit detection
-        int hitMask = LayerMask.GetMask("Default"); // Only register collisions with colliders and hitboxes on the "Default" layer
+        int layerMask = LayerMask.GetMask("Default"); // Only register collisions with colliders and hitboxes on the "Default" layer
         HitOptions options = HitOptions.IncludeBox2D | HitOptions.IgnoreInputAuthority;
-        if (Runner.LagCompensation.Raycast(previousPosition, direction, direction.magnitude, Object.InputAuthority, out LagCompensatedHit hit, hitMask, options))
+        List<LagCompensatedHit> hits = new List<LagCompensatedHit>();
+        if (Runner.LagCompensation.OverlapBox(position, new Vector3(0.07f, 0.13f, 0), rotation, Object.InputAuthority, hits, layerMask, options) != 0)
         {
             // Resolve collision
-            OnCollision(hit);
+            OnCollision(hits[0]);
         }
     }
 
