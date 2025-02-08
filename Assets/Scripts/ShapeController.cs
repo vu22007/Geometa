@@ -19,6 +19,7 @@ public class ShapeController : NetworkBehaviour
     // Shape controller intialisation (called on each client and server when shape controller is spawned on network)
     public override void Spawned()
     {
+        isActive = true;
         isPlacing = false;
         cooldown = 0;
     }

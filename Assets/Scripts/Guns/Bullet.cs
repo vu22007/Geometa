@@ -122,6 +122,9 @@ public class Bullet : NetworkBehaviour
     // On colliding with a Collider2D (e.g. a wall)
     void OnCollisionCollider2D(Collider2D collider)
     {
+        // Ignore shape corner colliders
+        if (collider.CompareTag("CircleCornerCollider")) return;
+
         done = true; // Doesn't pierce
     }
 }
