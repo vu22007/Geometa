@@ -1,14 +1,55 @@
 using System.Collections.Generic;
+using Fusion;
 using UnityEngine;
-using UnityEngine.U2D;
 
-public abstract class Shape : MonoBehaviour
+public abstract class Shape : NetworkBehaviour
 {
     [SerializeField] CircleCornerCollider circleColliderPrefab;
     protected CircleCornerCollider[] corners;
     protected Dictionary<CircleCornerCollider, Player> playersAtCorners = new Dictionary<CircleCornerCollider, Player>();
     protected bool buffActivated = false;
     [SerializeField] public bool cornersInitialised = false;
+    [Networked] PlayerRef playerRef { get; set; }
+    [Networked, OnChangedRender(nameof(OnIsPreviewChanged))] public bool isPreview { get; set; }
+
+    // Shape intialisation (called from shape controller on server when creating the shape)
+    public void OnCreated(PlayerRef playerRef, bool isPreview)
+    {
+        this.playerRef = playerRef;
+        this.isPreview = isPreview;
+    }
+
+    // Shape initialisation (called on each client and server when shape is spawned on network)
+    public override void Spawned()
+    {
+        // Look over all shape controllers and assign this shape to the shape controller of the player that created this shape
+        foreach (GameObject shapeControllerObject in GameObject.FindGameObjectsWithTag("ShapeController"))
+        {
+            ShapeController shapeController = shapeControllerObject.GetComponent<ShapeController>();
+            if (shapeController.playerRef.Equals(playerRef))
+            {
+                // This shape belongs to this shape controller for this client, so add the shape to controller
+                shapeController.previewShape = gameObject;
+                shapeController.currentShape = this;
+            }
+        }
+
+        OnIsPreviewChanged();
+    }
+
+    // Called when the isPreview networked property is changed
+    void OnIsPreviewChanged()
+    {
+        // If the client does not own this shape, then make it invisible if the shape is a preview
+        if (!HasInputAuthority)
+        {
+            bool isVisisble = !isPreview;
+            foreach (Renderer renderer in gameObject.GetComponentsInChildren<Renderer>())
+            {
+                renderer.enabled = isVisisble;
+            }
+        }
+    }
 
     public abstract float Cooldown();
 

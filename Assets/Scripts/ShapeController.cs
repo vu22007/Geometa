@@ -1,126 +1,118 @@
+using Fusion;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
-public class ShapeController : MonoBehaviour
+public class ShapeController : NetworkBehaviour
 {
     [SerializeField] GameObject trianglePrefab;
     [SerializeField] GameObject squarePrefab;
     [SerializeField] GameObject pentagonPrefab;
-    private Shape currentShape;
-    private GameObject previewShape;    
+    [HideInInspector] public Shape currentShape;
+    [HideInInspector] public GameObject previewShape;
 
-    public PlayerInputActions playerInputActions;    
-    private InputAction actionTriangle;
-    private InputAction actionSquare;
-    private InputAction actionPentagon;   
-    private InputAction placeShape;
-
-    private bool isPlacing = false;
-    private Camera cam;
+    [Networked] private bool isPlacing { get; set; }
+    private Vector3 cursorWorldPoint;
     private float angle; // angle of cursor wrt y axis unit vector
     [SerializeField] float plusAngle = 0;
-    private float cooldown = 0;
+    [Networked] private float cooldown { get; set; }
+    [Networked] NetworkButtons previousButtons { get; set; }
+    [Networked, HideInInspector] public PlayerRef playerRef { get; set; }
 
-    private void OnEnable()
+    // Shape controller intialisation (called on each client and server when shape controller is spawned on network)
+    public override void Spawned()
     {
-        if (playerInputActions == null)
-        {
-            playerInputActions = new PlayerInputActions();
-        }
-        actionTriangle = playerInputActions.Player.Triangle;
-        actionSquare = playerInputActions.Player.Square;
-        actionPentagon = playerInputActions.Player.Pentagon;        
-        placeShape = playerInputActions.Player.PlaceShape;
+        isPlacing = false;
+        cooldown = 0;
 
-        // What function should be ran when action is performed(when a key is pressed)
-        actionTriangle.performed += trianglePerformed;
-        actionSquare.performed += squarePerformed;
-        actionPentagon.performed += pentagonPerformed;
-        placeShape.performed += placeShapePerformed;    
-
-        actionTriangle.Enable();
-        actionSquare.Enable();
-        actionPentagon.Enable();
-        placeShape.Enable(); 
+        // Set the reference for the player who owns this shape controller (the player this shape controller is a child of)
+        playerRef = gameObject.GetComponentInParent<Player>().playerRef;
     }
 
-    private void OnDisable()
+    public override void FixedUpdateNetwork()
     {
-        actionTriangle.Disable();
-        actionSquare.Disable();
-        actionPentagon.Disable();
-        placeShape.Disable();
-    }
+        // TODO: Need cooldown for every shape separately
+        cooldown = (cooldown > 0) ? cooldown - Runner.DeltaTime : 0;
 
-    void Start()
-    {
-        cam = GetComponentInParent<Camera>();
-        if(cam == null)
+        // GetInput will return true on the StateAuthority (the server) and the InputAuthority (the client who controls this shape controller)
+        // So the following is ran for just the server and the client who controls this shape controller
+        if (GetInput(out NetworkInputData input))
         {
-            Debug.LogError("Triangle controller doesn't have a Camera in parent");
-        }
-    }
+            cursorWorldPoint = new Vector3(input.cursorWorldPoint.x, input.cursorWorldPoint.y);
+            Vector3 direction = new Vector3(input.aimDirection.x, input.aimDirection.y);
+            angle = CalculateAngle(direction);
 
-    void Update()
-    {
-        // Need cooldown for every shape separately
-        cooldown = (cooldown > 0) ? cooldown - Time.deltaTime : 0;
-        if (!actionTriangle.IsPressed() && !actionSquare.IsPressed() && !actionPentagon.IsPressed())
-        {
-            isPlacing = false;
-            Destroy(previewShape);   
-            return;
-        }
-        if (isPlacing)
-        {
-            Vector2 mousePos = Input.mousePosition;
-            // World point of the cursor
-            Vector3 cursorWorldPoint = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
-            float angle = CalculateAngle(cursorWorldPoint);
+            // On key down for specific shape (only on moment when key is pressed down)
+            if (input.buttons.WasPressed(previousButtons, InputButtons.Triangle)) TrianglePerformed();
+            if (input.buttons.WasPressed(previousButtons, InputButtons.Square)) SquarePerformed();
+            if (input.buttons.WasPressed(previousButtons, InputButtons.Pentagon)) PentagonPerformed();
 
-            previewShape.transform.position = cursorWorldPoint;
-            previewShape.transform.rotation = Quaternion.Euler(0, 0, angle);
+            // Place down the shape if PlaceShape button pressed
+            if (input.buttons.WasPressed(previousButtons, InputButtons.PlaceShape)) PlaceShapePerformed();
+
+            // If all shape keys are released
+            if (!input.buttons.IsSet(InputButtons.Triangle) && !input.buttons.IsSet(InputButtons.Square) && !input.buttons.IsSet(InputButtons.Pentagon))
+            {
+                isPlacing = false;
+                if (previewShape != null)
+                {
+                    // Despawn the shape (only the server can do this)
+                    if (HasStateAuthority)
+                    {
+                        Runner.Despawn(previewShape.GetComponent<NetworkObject>());
+                    }
+                    previewShape = null;
+                }
+            }
+
+            // If a shape key is still held down
+            if (isPlacing && previewShape != null)
+            {
+                previewShape.transform.position = cursorWorldPoint;
+                previewShape.transform.rotation = Quaternion.Euler(0, 0, angle);
+            }
+
+            previousButtons = input.buttons;
         }
     }
     
-    private void trianglePerformed(InputAction.CallbackContext context)
+    private void TrianglePerformed()
     {
         if (!isPlacing && cooldown == 0)
         {
             plusAngle = 0;
-            InstantiateShape(trianglePrefab);
+            SpawnShape(trianglePrefab);
         }
     }
 
-    private void squarePerformed(InputAction.CallbackContext context)
+    private void SquarePerformed()
     {
         if (!isPlacing && cooldown == 0)
         {
             plusAngle = 45;
-            InstantiateShape(squarePrefab);
+            SpawnShape(squarePrefab);
         }
     }
 
-    private void pentagonPerformed(InputAction.CallbackContext context)
+    private void PentagonPerformed()
     {
         if (!isPlacing && cooldown == 0)
         {
             plusAngle = 0;
-            InstantiateShape(pentagonPrefab);
+            SpawnShape(pentagonPrefab);
         }
     }
 
-    private void InstantiateShape(GameObject shapePrefab)
+    private void SpawnShape(GameObject shapePrefab)
     {
+        // Only the server can spawn shapes
+        if (!HasStateAuthority) return;
+
         isPlacing = true;
 
-        Vector2 mousePos = Input.mousePosition;
-        Vector3 cursorWorldPoint = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
-        angle = CalculateAngle(cursorWorldPoint);
-
-        // Instantiate an object of the shape prefab. The default colliders are dissable and they
-        // are enable once the shape is placed
-        previewShape = Instantiate(shapePrefab, cursorWorldPoint, Quaternion.Euler(0, 0, angle));
+        // Spawn an object of the shape prefab as a preview. The default colliders are disabled and they
+        // are enabled once the shape is placed
+        bool isPreview = true;
+        NetworkObject shapeNetworkObject = PrefabFactory.SpawnShape(Runner, playerRef, shapePrefab, cursorWorldPoint, Quaternion.Euler(0, 0, angle), isPreview);
+        previewShape = shapeNetworkObject.gameObject;
 
         currentShape = previewShape.GetComponent<Shape>();
         if (currentShape == null)
@@ -129,7 +121,7 @@ public class ShapeController : MonoBehaviour
         }
     }
 
-    private void placeShapePerformed(InputAction.CallbackContext context)
+    private void PlaceShapePerformed()
     {
         // Place shape if right clicked while holding Q
         if (!isPlacing || cooldown > 0)
@@ -138,23 +130,20 @@ public class ShapeController : MonoBehaviour
             return;
         }
 
+        if (currentShape == null) return;
+
+        // Shape is placed so it no longer is a preview
+        currentShape.isPreview = false;
+
         cooldown = currentShape.Cooldown();
         isPlacing = false;
 
         currentShape.EnableCorners();
         previewShape = null;
-        
-        return;
     }
 
-    private float CalculateAngle(Vector3 cursorWorldPoint)
+    private float CalculateAngle(Vector3 direction)
     {
-        Vector3 direction = cursorWorldPoint - transform.position;
-        // This wont be needed with an orthographic camera maybe
-        direction.z = 0;
-
-        angle = Vector3.SignedAngle(Vector3.up, direction, Vector3.forward) - 180 + plusAngle;
-
-        return angle;
+        return Vector3.SignedAngle(Vector3.up, direction, Vector3.forward) - 180 + plusAngle;
     }
 }

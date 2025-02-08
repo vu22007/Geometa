@@ -87,9 +87,18 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Triangle",
+                    "name": "Shoot",
                     "type": "Button",
-                    "id": "9e9b074c-6f2a-4477-aa2d-09e5ff9c1ffd",
+                    "id": "3a7c7e8b-f693-4034-a547-f00cef9d5383",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Reload",
+                    "type": "Button",
+                    "id": "59f72f2d-43ae-42bc-877d-f71609cc75b4",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -99,6 +108,15 @@
                     "name": "Place Shape",
                     "type": "Button",
                     "id": "4378aca6-6709-45f3-9e1e-13c5249121f0",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Triangle",
+                    "type": "Button",
+                    "id": "9e9b074c-6f2a-4477-aa2d-09e5ff9c1ffd",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -550,6 +568,28 @@
                     "processors": "",
                     "groups": "",
                     "action": "Pentagon",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "fa0434e2-e9a2-445a-831d-7312ac6a97c0",
+                    "path": "<Keyboard>/#(R)",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Reload",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "ac031aaa-f89e-480d-97c1-ec136a31d033",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Shoot",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
