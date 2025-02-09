@@ -9,24 +9,24 @@ public static class PrefabFactory
         {
             // Initialise the player (this is called before the player is spawned)
             Player player = networkObject.GetComponent<Player>();
-            player.OnCreated(playerRef, characterPath, spawnPosition, team);
+            player.OnCreated(characterPath, spawnPosition, team);
             runner.SetPlayerObject(playerRef, networkObject);
         });
 
         return networkPlayerObject;
     }
 
-    public static NetworkObject SpawnBullet(NetworkRunner runner, GameObject prefab, Vector3 spawnPosition, Vector2 moveDirection, float speed, float damage, int team){
+    public static NetworkObject SpawnBullet(NetworkRunner runner, PlayerRef playerRef, GameObject prefab, Vector3 spawnPosition, Vector2 moveDirection, float speed, float damage, int team){
         // Get rotation
         Vector3 direction = new Vector3(moveDirection.x, moveDirection.y);
         Quaternion rotation = Quaternion.LookRotation(Vector3.forward, direction);
 
         // Spawn the bullet network object
-        NetworkObject networkBulletObject = runner.Spawn(prefab, spawnPosition, rotation, null, (runner, networkObject) =>
+        NetworkObject networkBulletObject = runner.Spawn(prefab, spawnPosition, rotation, playerRef, (runner, networkObject) =>
         {
             // Initialise the bullet (this is called before the bullet is spawned)
             Bullet bullet = networkObject.GetComponent<Bullet>();
-            bullet.OnCreated(moveDirection, speed, damage, team);
+            bullet.OnCreated(spawnPosition, moveDirection, rotation, speed, damage, team);
         });
 
         return networkBulletObject;
@@ -39,7 +39,7 @@ public static class PrefabFactory
         {
             // Initialise the shape (this is called before the shape is spawned)
             Shape shape = networkObject.GetComponent<Shape>();
-            shape.OnCreated(playerRef, isPreview);
+            shape.OnCreated(isPreview);
         });
 
         return networkShapeObject;
