@@ -14,6 +14,7 @@ public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
     private InputAction actionTriangle;
     private InputAction actionSquare;
     private InputAction actionPentagon;
+    private InputAction actionPickup;
 
     private void OnEnable()
     {
@@ -28,6 +29,7 @@ public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
         actionTriangle = playerInputActions.Player.Triangle;
         actionSquare = playerInputActions.Player.Square;
         actionPentagon = playerInputActions.Player.Pentagon;
+        actionPickup = playerInputActions.Player.Pickup;
 
         actionShoot.Enable();
         actionReload.Enable();
@@ -35,6 +37,7 @@ public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
         actionTriangle.Enable();
         actionSquare.Enable();
         actionPentagon.Enable();
+        actionPickup.Enable();
     }
 
     private void OnDisable()
@@ -45,6 +48,7 @@ public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
         actionTriangle.Disable();
         actionSquare.Disable();
         actionPentagon.Disable();
+        actionPickup.Disable();
     }
 
     public void OnInput(NetworkRunner runner, NetworkInput input)
@@ -58,6 +62,7 @@ public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
         data.buttons.Set(InputButtons.Triangle, actionTriangle.IsPressed());
         data.buttons.Set(InputButtons.Square, actionSquare.IsPressed());
         data.buttons.Set(InputButtons.Pentagon, actionPentagon.IsPressed());
+        data.buttons.Set(InputButtons.Pickup, actionPickup.IsPressed());
 
         // Set movement direction vector
         float speedX = Input.GetAxisRaw("Horizontal");

@@ -24,12 +24,15 @@ public class Player : NetworkBehaviour
     [Networked, Capacity(50)] string characterPath { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
     [Networked, HideInInspector] public PlayerRef playerRef { get; set; }
+    [Networked] private GameObject carriedObject { get; set; }
+    [Networked] private bool isCarrying { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
     SpriteRenderer spriteRenderer;
     public Image healthBar;
     public TextMeshProUGUI ammoText;
+    public Transform holdPosition;
 
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(PlayerRef playerRef, string characterPath, Vector3 respawnPoint, int team)
@@ -72,6 +75,14 @@ public class Player : NetworkBehaviour
         // Set sprite from resource path
         Character character = Resources.Load(characterPath) as Character;
         spriteRenderer.sprite = character.Sprite;
+
+        // Initialize hold position (create an empty GameObject as a child of the player)
+        if (holdPosition == null)
+        {
+            holdPosition = new GameObject("HoldPosition").transform;
+            holdPosition.SetParent(transform);
+            holdPosition.localPosition = new Vector3(0.5f, 0.5f, 0); // Adjust as needed
+        }
 
         // Initialise player
         Respawn();
@@ -138,6 +149,19 @@ public class Player : NetworkBehaviour
                 Reload();
             }
 
+            // Pickup/drop object with 'C'
+            if (input.buttons.WasPressed(previousButtons, InputButtons.Pickup))
+            {
+                if (isCarrying)
+                {
+                    DropObject();
+                }
+                else
+                {
+                    TryPickup();
+                }
+            }
+
             previousButtons = input.buttons;
         }
 
@@ -147,6 +171,12 @@ public class Player : NetworkBehaviour
 
         // Update the health bar
         healthBar.fillAmount = currentHealth / maxHealth;
+
+        // Move the carried object to the hold position
+        if (isCarrying && carriedObject != null)
+        {
+            carriedObject.transform.position = holdPosition.position;
+        }
     }
 
     // Player moves according to key presses and player speed
@@ -230,6 +260,41 @@ public class Player : NetworkBehaviour
         timeToWaitForBullet = reloadTime;
         currentAmmo = maxAmmo;
         ammoText.text = "Bullets: " + currentAmmo;
+    }
+
+    void TryPickup()
+    {
+        // Raycast to detect objects in front of the player
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, transform.right, 2f);
+        if (hit.collider != null && hit.collider.CompareTag("Pickupable"))
+        {
+            carriedObject = hit.collider.gameObject;
+            PickupObject();
+        }
+    }
+
+    void PickupObject()
+    {
+        if (carriedObject != null)
+        {
+            // Disable physics and set parent to hold position
+            carriedObject.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Kinematic;
+            carriedObject.transform.SetParent(holdPosition);
+            carriedObject.transform.position = holdPosition.position;
+            isCarrying = true;
+        }
+    }
+
+    void DropObject()
+    {
+        if (carriedObject != null)
+        {
+            // Re-enable physics and remove parent
+            carriedObject.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Dynamic;
+            carriedObject.transform.SetParent(null);
+            isCarrying = false;
+            carriedObject = null;
+        }
     }
 
     public bool RespawnTimerDone()
