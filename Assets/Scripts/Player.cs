@@ -23,6 +23,7 @@ public class Player : NetworkBehaviour
     [Networked] bool spriteIsFlipped { get; set; }
     [Networked, Capacity(50)] string characterPath { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
+    [Networked] bool isMoving { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
@@ -181,6 +182,12 @@ public class Player : NetworkBehaviour
 
         // Flip the player sprite if necessary (this is done on all clients and server)
         spriteRenderer.flipX = spriteIsFlipped;
+
+        // Play idle or walking animation
+        if (isMoving)
+            animator.SetFloat("Speed", 0.02f);
+        else
+            animator.SetFloat("Speed", 0f);
     }
 
     // Player moves according to key presses and player speed
@@ -190,14 +197,7 @@ public class Player : NetworkBehaviour
         Vector2 velocity = moveDirection.normalized * speed;
         rb.linearVelocity = velocity;
 
-        if (velocity.x != 0 || velocity.y != 0)
-        {
-            animator.SetFloat("Speed", 0.02f);
-        }
-        else if (velocity.x == 0 && velocity.y == 0)
-        {
-            animator.SetFloat("Speed", 0f);
-        }
+        isMoving = velocity.x != 0 || velocity.y != 0;
 
         // Flip sprite to face direction the player is moving in
         // Note: This sets a networked property so all clients can set the sprite correctly for this player
