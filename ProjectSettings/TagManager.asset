@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 3
   tags:
   - ShapeController
+  - Pickupable
   layers:
   - Default
   - TransparentFX

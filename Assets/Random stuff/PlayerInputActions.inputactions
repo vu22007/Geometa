@@ -608,7 +608,7 @@
                     "path": "<Keyboard>/#(C)",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": ";Keyboard&Mouse",
                     "action": "Pickup",
                     "isComposite": false,
                     "isPartOfComposite": false

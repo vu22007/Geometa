@@ -24,7 +24,7 @@ public class Player : NetworkBehaviour
     [Networked, Capacity(50)] string characterPath { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
     [Networked, HideInInspector] public PlayerRef playerRef { get; set; }
-    [Networked] private GameObject carriedObject { get; set; }
+    [Networked] private NetworkObject carriedObject { get; set; }
     [Networked] private bool isCarrying { get; set; }
 
     public Camera cam;
@@ -156,10 +156,6 @@ public class Player : NetworkBehaviour
                 {
                     DropObject();
                 }
-                else
-                {
-                    TryPickup();
-                }
             }
 
             previousButtons = input.buttons;
@@ -262,38 +258,33 @@ public class Player : NetworkBehaviour
         ammoText.text = "Bullets: " + currentAmmo;
     }
 
-    void TryPickup()
-    {
-        // Raycast to detect objects in front of the player
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, transform.right, 2f);
-        if (hit.collider != null && hit.collider.CompareTag("Pickupable"))
-        {
-            carriedObject = hit.collider.gameObject;
-            PickupObject();
-        }
-    }
-
-    void PickupObject()
-    {
-        if (carriedObject != null)
-        {
-            // Disable physics and set parent to hold position
-            carriedObject.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Kinematic;
-            carriedObject.transform.SetParent(holdPosition);
-            carriedObject.transform.position = holdPosition.position;
-            isCarrying = true;
-        }
-    }
+    // void TryPickup()
+    // {
+    //     // Raycast to detect objects in front of the player
+    //     RaycastHit2D hit = Physics2D.Raycast(transform.position, transform.right, 2f);
+    //     if (hit.collider != null && hit.collider.CompareTag("Pickupable"))
+    //     {
+    //         pickupFlag pickupable = hit.collider.GetComponent<pickupFlag>();
+    //         if (pickupable != null)
+    //         {
+    //             pickupable.Pickup(this); // Call the Pickup method on the pickupable object
+    //             carriedObject = hit.collider.GetComponent<NetworkObject>();
+    //             isCarrying = true;
+    //         }
+    //     }
+    // }
 
     void DropObject()
     {
         if (carriedObject != null)
         {
-            // Re-enable physics and remove parent
-            carriedObject.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Dynamic;
-            carriedObject.transform.SetParent(null);
-            isCarrying = false;
+            pickupFlag flag = carriedObject.GetComponent<pickupFlag>();
+            if (flag != null)
+            {
+                flag.Drop(); // Call the Drop method on the pickupable object
+            }
             carriedObject = null;
+            isCarrying = false;
         }
     }
 

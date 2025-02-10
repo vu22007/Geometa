@@ -39,6 +39,13 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
         {
             GameObject pickupPrefab = Resources.Load("Prefabs/Pickup") as GameObject;
             PrefabFactory.SpawnPickup(Runner, pickupPrefab, new Vector3(5f, 5f, 0f), 0, 20);
+            
+            GameObject flagPrefab = Resources.Load("Prefabs/Flag1") as GameObject;
+            if (flagPrefab != null)
+            {
+                PrefabFactory.SpawnFlag(Runner, flagPrefab, new Vector3(20f, 20f, 0f));
+                Debug.Log("Flag spawned successfully!");
+            }
         }
     }
 
