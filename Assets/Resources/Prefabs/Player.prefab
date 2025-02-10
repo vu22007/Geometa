@@ -186,6 +186,7 @@ MonoBehaviour:
   cam: {fileID: 3093333144043118080}
   healthBar: {fileID: 8395293536219763284}
   ammoText: {fileID: 9126663489822556632}
+  holdPosition: {fileID: 0}
 --- !u!50 &-5256008576835943960
 Rigidbody2D:
   serializedVersion: 5

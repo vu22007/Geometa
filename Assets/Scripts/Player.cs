@@ -149,7 +149,7 @@ public class Player : NetworkBehaviour
                 Reload();
             }
 
-            // Pickup/drop object with 'C'
+            // drop object with 'C'
             if (input.buttons.WasPressed(previousButtons, InputButtons.Pickup))
             {
                 if (isCarrying)
@@ -192,6 +192,14 @@ public class Player : NetworkBehaviour
         {
             spriteIsFlipped = false;
         }
+    }
+
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        carriedObject = other.GetComponent<NetworkObject>();
+        isCarrying = true;
+        Debug.Log("Player is carrying the flag");
+        
     }
 
     // Shoots a bullet by spawning the prefab on the network
@@ -258,22 +266,6 @@ public class Player : NetworkBehaviour
         ammoText.text = "Bullets: " + currentAmmo;
     }
 
-    // void TryPickup()
-    // {
-    //     // Raycast to detect objects in front of the player
-    //     RaycastHit2D hit = Physics2D.Raycast(transform.position, transform.right, 2f);
-    //     if (hit.collider != null && hit.collider.CompareTag("Pickupable"))
-    //     {
-    //         pickupFlag pickupable = hit.collider.GetComponent<pickupFlag>();
-    //         if (pickupable != null)
-    //         {
-    //             pickupable.Pickup(this); // Call the Pickup method on the pickupable object
-    //             carriedObject = hit.collider.GetComponent<NetworkObject>();
-    //             isCarrying = true;
-    //         }
-    //     }
-    // }
-
     void DropObject()
     {
         if (carriedObject != null)
@@ -285,6 +277,7 @@ public class Player : NetworkBehaviour
             }
             carriedObject = null;
             isCarrying = false;
+            Debug.Log("Dropped the flag!");
         }
     }
 
