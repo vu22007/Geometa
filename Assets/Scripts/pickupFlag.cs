@@ -22,7 +22,7 @@ public class pickupFlag : NetworkBehaviour
         if (other.CompareTag("Player"))
         {
             Player player = other.GetComponent<Player>();
-            if (player != null && !isPickedUp)
+            if (player != null && !isPickedUp && player.carry == false)
             {
                 Pickup(player);
             }

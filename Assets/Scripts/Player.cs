@@ -33,6 +33,7 @@ public class Player : NetworkBehaviour
     public Image healthBar;
     public TextMeshProUGUI ammoText;
     public Transform holdPosition;
+    public bool carry;
 
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(PlayerRef playerRef, string characterPath, Vector3 respawnPoint, int team)
@@ -198,6 +199,7 @@ public class Player : NetworkBehaviour
     {
         carriedObject = other.GetComponent<NetworkObject>();
         isCarrying = true;
+        carry = true;
         Debug.Log("Player is carrying the flag");
         
     }
@@ -277,6 +279,7 @@ public class Player : NetworkBehaviour
             }
             carriedObject = null;
             isCarrying = false;
+            carry = false;
             Debug.Log("Dropped the flag!");
         }
     }
