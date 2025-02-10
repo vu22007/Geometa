@@ -9,13 +9,11 @@ public abstract class Shape : NetworkBehaviour
     protected Dictionary<CircleCornerCollider, Player> playersAtCorners = new Dictionary<CircleCornerCollider, Player>();
     protected bool buffActivated = false;
     [SerializeField] public bool cornersInitialised = false;
-    [Networked] PlayerRef playerRef { get; set; }
     [Networked, OnChangedRender(nameof(OnIsPreviewChanged))] public bool isPreview { get; set; }
 
     // Shape intialisation (called from shape controller on server when creating the shape)
-    public void OnCreated(PlayerRef playerRef, bool isPreview)
+    public void OnCreated(bool isPreview)
     {
-        this.playerRef = playerRef;
         this.isPreview = isPreview;
     }
 
@@ -26,7 +24,11 @@ public abstract class Shape : NetworkBehaviour
         foreach (GameObject shapeControllerObject in GameObject.FindGameObjectsWithTag("ShapeController"))
         {
             ShapeController shapeController = shapeControllerObject.GetComponent<ShapeController>();
-            if (shapeController.playerRef.Equals(playerRef))
+
+            PlayerRef shapeOwner = Object.InputAuthority;
+            PlayerRef shapeControllerOwner = shapeController.Object.InputAuthority;
+
+            if (shapeControllerOwner.Equals(shapeOwner))
             {
                 // This shape belongs to this shape controller for this client, so add the shape to controller
                 shapeController.previewShape = gameObject;

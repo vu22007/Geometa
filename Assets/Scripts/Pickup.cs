@@ -24,7 +24,7 @@ public class Pickup : NetworkBehaviour
     void OnTriggerEnter2D(Collider2D other){
         // Check if object is a player
         if (other.CompareTag("Player")){
-            Player player = other.GetComponent<Player>();
+            Player player = other.GetComponentInParent<Player>();
             if (player != null) {
                 // Check if player is from the enemy team
                 switch (type)
