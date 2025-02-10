@@ -60,15 +60,7 @@ public static class PrefabFactory
 
     public static NetworkObject SpawnFlag(NetworkRunner runner, GameObject prefab, Vector3 spawnPosition)
     {
-        NetworkObject networkFlagObject = runner.Spawn(prefab, spawnPosition, Quaternion.identity, null, (runner, networkObject) =>
-        {
-            // Initialize the flag
-            pickupFlag flag = networkObject.GetComponent<pickupFlag>();
-            if (flag != null)
-            {
-                Debug.Log("Flag spawned successfully!");
-            }
-        });
+        NetworkObject networkFlagObject = runner.Spawn(prefab, spawnPosition, Quaternion.identity, null);
 
         return networkFlagObject;
     }

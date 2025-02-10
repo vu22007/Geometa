@@ -24,7 +24,7 @@ public class Player : NetworkBehaviour
     [Networked, Capacity(50)] string characterPath { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
     [Networked] private NetworkObject carriedObject { get; set; }
-    [Networked] private bool isCarrying { get; set; }
+    [Networked, HideInInspector] public bool isCarrying { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
@@ -32,8 +32,7 @@ public class Player : NetworkBehaviour
     Animator animator;
     public Image healthBar;
     public TextMeshProUGUI ammoText;
-    public Transform holdPosition;
-    public bool carry;
+    [HideInInspector] public Transform holdPosition;
 
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(string characterPath, Vector3 respawnPoint, int team)
@@ -59,6 +58,7 @@ public class Player : NetworkBehaviour
         currentRespawn = 0.0f;
         timeToWaitForBullet = 0.0f;
         spriteIsFlipped = false;
+        isCarrying = false;
     }
 
     // Player initialisation (called on each client and server when player is spawned on network)
@@ -171,7 +171,7 @@ public class Player : NetworkBehaviour
                 Reload();
             }
 
-            // drop object with 'C'
+            // Drop object with 'C'
             if (input.buttons.WasPressed(previousButtons, InputButtons.Pickup))
             {
                 if (isCarrying)
@@ -179,6 +179,7 @@ public class Player : NetworkBehaviour
                     DropObject();
                 }
             }
+
             // Testing damage
             if (input.buttons.WasPressed(previousButtons, InputButtons.TakeDamage))
             {
@@ -191,11 +192,11 @@ public class Player : NetworkBehaviour
         // Flip the player sprite if necessary (this is done on all clients and server)
         spriteRenderer.flipX = spriteIsFlipped;
 
-        // Move the carried object to the hold position
-        if (isCarrying && carriedObject != null)
-        {
-            carriedObject.transform.position = holdPosition.position;
-        }
+        //// Move the carried object to the hold position
+        //if (isCarrying && carriedObject != null)
+        //{
+        //    carriedObject.transform.position = holdPosition.position;
+        //}
     }
 
     // Player moves according to key presses and player speed
@@ -215,14 +216,6 @@ public class Player : NetworkBehaviour
         {
             spriteIsFlipped = false;
         }
-    }
-
-    void OnTriggerEnter2D(Collider2D other)
-    {
-        carriedObject = other.GetComponent<NetworkObject>();
-        isCarrying = true;
-        carry = true;
-        Debug.Log("Player is carrying the flag");
     }
 
     // Shoots a bullet by spawning the prefab on the network
@@ -309,19 +302,25 @@ public class Player : NetworkBehaviour
         ammoText.text = "Bullets: " + currentAmmo;
     }
 
+    public void CarryObject(NetworkObject networkObject)
+    {
+        carriedObject = networkObject;
+        isCarrying = true;
+        Debug.Log("Player is carrying the flag");
+    }
+
     void DropObject()
     {
         if (carriedObject != null)
         {
-            pickupFlag flag = carriedObject.GetComponent<pickupFlag>();
+            PickupFlag flag = carriedObject.GetComponent<PickupFlag>();
             if (flag != null)
             {
                 flag.Drop(); // Call the Drop method on the pickupable object
             }
             carriedObject = null;
             isCarrying = false;
-            carry = false;
-            flag.transform.position += new Vector3(0.5f, 0, 0); 
+            flag.transform.position += new Vector3(0.5f, 0, 0);
             FindFirstObjectByType<GameController>()?.CheckForWinCondition();
             Debug.Log("Dropped the flag!");
         }

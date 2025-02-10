@@ -17,14 +17,14 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
 
     private List<Pickup> pickups;
 
-
     // For server to use only so that it can manage the spawn and despawn of players
     private Dictionary<PlayerRef, NetworkObject> spawnedPlayers = new Dictionary<PlayerRef, NetworkObject>();
 
     // For server to use to keep track of what team to assign to a new player when they join
     int nextTeam = 1;
+
     // Flags list 
-    private List<pickupFlag> flags = new List<pickupFlag>();
+    private List<PickupFlag> flags;
 
     // Initialisation
     void Start()
@@ -32,36 +32,32 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
         bullets = new List<Bullet>();
         players = new List<Player>();
         pickups = new List<Pickup>();
+        flags = new List<PickupFlag>();
     }
 
+    // Scene initialisation
     public void SceneLoadStart(SceneRef sceneRef)
     {
-        // Spawn a pickup (only the server can do this)
+        // Spawn initial items (only the server can do this)
         if (Runner.IsServer)
         {
+            // Spawn pickup
             GameObject pickupPrefab = Resources.Load("Prefabs/Pickup") as GameObject;
             PrefabFactory.SpawnPickup(Runner, pickupPrefab, new Vector3(5f, 5f, 0f), 0, 20);
             
+            // Spawn flag 1
             GameObject flag1Prefab = Resources.Load("Prefabs/Flag1") as GameObject;
-            if (flag1Prefab != null)
-            {
-                NetworkObject flag1Obj = PrefabFactory.SpawnFlag(Runner, flag1Prefab, new Vector3(20f, 20f, 0f));
-                pickupFlag flag1 = flag1Obj.GetComponent<pickupFlag>();
-                flags.Add(flag1);
-                Debug.Log("Flag1 spawned successfully!");
-            }
+            NetworkObject flag1Obj = PrefabFactory.SpawnFlag(Runner, flag1Prefab, new Vector3(20f, 20f, 0f));
+            PickupFlag flag1 = flag1Obj.GetComponent<PickupFlag>();
+            flags.Add(flag1);
 
+            // Spawn flag 2
             GameObject flag2Prefab = Resources.Load("Prefabs/Flag2") as GameObject;
-            if (flag2Prefab != null)
-            {
-                NetworkObject flag2Obj = PrefabFactory.SpawnFlag(Runner, flag2Prefab, new Vector3(-20f, -20f, 0f));
-                pickupFlag flag2 = flag2Obj.GetComponent<pickupFlag>();
-                flags.Add(flag2);
-                Debug.Log("Flag2 spawned successfully!");
-            }
+            NetworkObject flag2Obj = PrefabFactory.SpawnFlag(Runner, flag2Prefab, new Vector3(-20f, -20f, 0f));
+            PickupFlag flag2 = flag2Obj.GetComponent<PickupFlag>();
+            flags.Add(flag2);
         }
     }
-
 
     // Update for every server simulation tick
     public override void FixedUpdateNetwork()

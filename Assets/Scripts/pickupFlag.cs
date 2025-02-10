@@ -1,19 +1,16 @@
 using Fusion;
 using UnityEngine;
 
-public class pickupFlag : NetworkBehaviour
+public class PickupFlag : NetworkBehaviour
 {
     [Networked] private NetworkBool isPickedUp { get; set; } // Track if the object is picked up
     [Networked] private Player picker { get; set; } // Track which player picked up the object
-    private Rigidbody2D rb;
-    private SpriteRenderer spriteRenderer;
+
     public override void Spawned()
     {
         // Initialize the object's state when it spawns
         isPickedUp = false;
         picker = null;
-        rb = GetComponent<Rigidbody2D>();
-        spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -21,8 +18,8 @@ public class pickupFlag : NetworkBehaviour
         // Check if the colliding object is a player
         if (other.CompareTag("Player"))
         {
-            Player player = other.GetComponent<Player>();
-            if (player != null && !isPickedUp && player.carry == false)
+            Player player = other.GetComponentInParent<Player>();
+            if (player != null && !isPickedUp && !player.isCarrying)
             {
                 Pickup(player);
             }
@@ -34,9 +31,9 @@ public class pickupFlag : NetworkBehaviour
         {
             isPickedUp = true;
             picker = player;
-            rb.bodyType = RigidbodyType2D.Kinematic; // Stop physics movement
             transform.SetParent(player.holdPosition);
             transform.localPosition = new Vector3(0.7f, 0, 0);
+            player.CarryObject(Object);
             Debug.Log($"flag has been pickup");
         }
     }
@@ -47,7 +44,6 @@ public class pickupFlag : NetworkBehaviour
         {
             isPickedUp = false;
             picker = null;
-            rb.bodyType = RigidbodyType2D.Dynamic;
             transform.SetParent(null); // Detach from the player
             Debug.Log($"flag dropped");
         }
@@ -55,10 +51,10 @@ public class pickupFlag : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
-        if (isPickedUp && picker != null)
-        {
-            // Move the object to the player's hold position
-            transform.position = picker.holdPosition.position + picker.transform.right * 0.7f;
-        }
+        //if (isPickedUp && picker != null)
+        //{
+        //    // Move the object to the player's hold position
+        //    transform.position = picker.holdPosition.position + picker.transform.right * 0.7f;
+        //}
     }
 }
