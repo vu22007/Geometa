@@ -27,7 +27,7 @@ public class Player : NetworkBehaviour
     public Camera cam;
     Rigidbody2D rb;
     SpriteRenderer spriteRenderer;
-    Animator animator;
+    public Animator animator;
     public Image healthBar;
     public TextMeshProUGUI ammoText;
 
@@ -175,6 +175,15 @@ public class Player : NetworkBehaviour
         // Move the player by setting the velocity using the supplied movement direction vector
         Vector2 velocity = moveDirection.normalized * speed;
         rb.linearVelocity = velocity;
+
+        if (velocity.x != 0 || velocity.y != 0)
+        {
+            animator.SetFloat("Speed", 0.02f);
+        }
+        else if (velocity.x == 0 && velocity.y == 0)
+        {
+            animator.SetFloat("Speed", 0f);
+        }
 
         // Flip sprite to face direction the player is moving in
         // Note: This sets a networked property so all clients can set the sprite correctly for this player

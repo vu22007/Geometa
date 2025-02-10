@@ -34,8 +34,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 105}
-  m_SizeDelta: {x: 90, y: 15}
+  m_AnchoredPosition: {x: 4.8708806, y: -302.67047}
+  m_SizeDelta: {x: 253.28, y: 15}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &358040611674166366
 CanvasRenderer:
@@ -209,6 +209,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cam: {fileID: 3093333144043118080}
+  animator: {fileID: 3838861860339599067}
   healthBar: {fileID: 8395293536219763284}
   ammoText: {fileID: 9126663489822556632}
 --- !u!50 &-5256008576835943960
@@ -355,8 +356,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 105}
-  m_SizeDelta: {x: 90, y: 15}
+  m_AnchoredPosition: {x: 4.8708334, y: -302.67047}
+  m_SizeDelta: {x: 253.28, y: 15}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4994502411417939029
 CanvasRenderer:
@@ -567,8 +568,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 105}
-  m_SizeDelta: {x: 100, y: 25}
+  m_AnchoredPosition: {x: 4.870842, y: -302.67047}
+  m_SizeDelta: {x: 263.15, y: 25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3017576049083305417
 CanvasRenderer:
