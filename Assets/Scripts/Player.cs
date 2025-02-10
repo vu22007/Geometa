@@ -280,6 +280,8 @@ public class Player : NetworkBehaviour
             carriedObject = null;
             isCarrying = false;
             carry = false;
+            flag.transform.position += new Vector3(0.5f, 0, 0); 
+            FindFirstObjectByType<GameController>()?.CheckForWinCondition();
             Debug.Log("Dropped the flag!");
         }
     }

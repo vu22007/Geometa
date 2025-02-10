@@ -23,6 +23,8 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
 
     // For server to use to keep track of what team to assign to a new player when they join
     int nextTeam = 1;
+    // Flags list 
+    private List<pickupFlag> flags = new List<pickupFlag>();
 
     // Initialisation
     void Start()
@@ -43,15 +45,19 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
             GameObject flag1Prefab = Resources.Load("Prefabs/Flag1") as GameObject;
             if (flag1Prefab != null)
             {
-                PrefabFactory.SpawnFlag(Runner, flag1Prefab, new Vector3(20f, 20f, 0f));
-                Debug.Log("Flag spawned successfully!");
+                NetworkObject flag1Obj = PrefabFactory.SpawnFlag(Runner, flag1Prefab, new Vector3(20f, 20f, 0f));
+                pickupFlag flag1 = flag1Obj.GetComponent<pickupFlag>();
+                flags.Add(flag1);
+                Debug.Log("Flag1 spawned successfully!");
             }
 
             GameObject flag2Prefab = Resources.Load("Prefabs/Flag2") as GameObject;
             if (flag2Prefab != null)
             {
-                PrefabFactory.SpawnFlag(Runner, flag2Prefab, new Vector3(-20f, -20f, 0f));
-                Debug.Log("Flag spawned successfully!");
+                NetworkObject flag2Obj = PrefabFactory.SpawnFlag(Runner, flag2Prefab, new Vector3(-20f, -20f, 0f));
+                pickupFlag flag2 = flag2Obj.GetComponent<pickupFlag>();
+                flags.Add(flag2);
+                Debug.Log("Flag2 spawned successfully!");
             }
         }
     }
@@ -158,4 +164,26 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
             }
         }
     }
+
+    // Check if two flags are near each other
+    public void CheckForWinCondition()
+    {
+        if (flags.Count < 2) return; // Need at least two flags to check
+
+        float checkRadius = 8.0f; // Radius to check for nearby flags
+
+        for (int i = 0; i < flags.Count; i++)
+        {
+            for (int j = i + 1; j < flags.Count; j++)
+            {
+                if (Vector2.Distance(flags[i].transform.position, flags[j].transform.position) <= checkRadius)
+                {
+                    // Trigger win condition
+                    Debug.Log("Player wins! Two flags are near each other.");
+                    return;
+                }
+            }
+        }
+    }
+
 }
