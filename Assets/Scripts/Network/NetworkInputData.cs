@@ -9,6 +9,7 @@ enum InputButtons
     Triangle = 3,
     Square = 4,
     Pentagon = 5,
+    TakeDamage = 6,
 }
 
 public struct NetworkInputData : INetworkInput

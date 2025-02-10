@@ -27,6 +27,7 @@ public class Player : NetworkBehaviour
     public Camera cam;
     Rigidbody2D rb;
     SpriteRenderer spriteRenderer;
+    Animator animator;
     public Image healthBar;
     public TextMeshProUGUI ammoText;
 
@@ -75,6 +76,7 @@ public class Player : NetworkBehaviour
         // Get components
         rb = gameObject.GetComponent<Rigidbody2D>();
         spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
+        animator = gameObject.GetComponent<Animator>();
 
         // Set sprite from resource path
         Character character = Resources.Load(characterPath) as Character;
@@ -154,6 +156,12 @@ public class Player : NetworkBehaviour
                 Reload();
             }
 
+            // Testing damage
+            if (input.buttons.WasPressed(previousButtons, InputButtons.TakeDamage))
+            {
+                TakeDamage(10);
+            }
+
             previousButtons = input.buttons;
         }
 
@@ -209,9 +217,17 @@ public class Player : NetworkBehaviour
     {
         currentHealth -= damage;
         healthBar.fillAmount = currentHealth / maxHealth;
+
+        //Play hurt animation and sounds
+        HurtEffects();
+
         if (currentHealth <= 0.0f) {
             Die();
         }
+    }
+
+    void HurtEffects(){
+        animator.SetTrigger("Damaged");
     }
 
     //heal equal to input, includes check for max health
