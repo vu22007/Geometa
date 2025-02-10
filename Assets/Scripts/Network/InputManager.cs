@@ -63,6 +63,7 @@ public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
         data.buttons.Set(InputButtons.Square, actionSquare.IsPressed());
         data.buttons.Set(InputButtons.Pentagon, actionPentagon.IsPressed());
         data.buttons.Set(InputButtons.Pickup, actionPickup.IsPressed());
+        data.buttons.Set(InputButtons.TakeDamage, Input.GetKey(KeyCode.J));
 
         // Set movement direction vector
         float speedX = Input.GetAxisRaw("Horizontal");

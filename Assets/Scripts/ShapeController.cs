@@ -8,27 +8,26 @@ public class ShapeController : NetworkBehaviour
     [SerializeField] GameObject pentagonPrefab;
     [HideInInspector] public Shape currentShape;
     [HideInInspector] public GameObject previewShape;
-
-    [Networked] private bool isPlacing { get; set; }
     private Vector3 cursorWorldPoint;
     private float angle; // angle of cursor wrt y axis unit vector
     [SerializeField] float plusAngle = 0;
+    [Networked] public bool isActive { get; set; }
+    [Networked] private bool isPlacing { get; set; }
     [Networked] private float cooldown { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
-    [Networked, HideInInspector] public PlayerRef playerRef { get; set; }
 
     // Shape controller intialisation (called on each client and server when shape controller is spawned on network)
     public override void Spawned()
     {
+        isActive = true;
         isPlacing = false;
         cooldown = 0;
-
-        // Set the reference for the player who owns this shape controller (the player this shape controller is a child of)
-        playerRef = gameObject.GetComponentInParent<Player>().playerRef;
     }
 
     public override void FixedUpdateNetwork()
     {
+        if (!isActive) return;
+
         // TODO: Need cooldown for every shape separately
         cooldown = (cooldown > 0) ? cooldown - Runner.DeltaTime : 0;
 
@@ -111,7 +110,7 @@ public class ShapeController : NetworkBehaviour
         // Spawn an object of the shape prefab as a preview. The default colliders are disabled and they
         // are enabled once the shape is placed
         bool isPreview = true;
-        NetworkObject shapeNetworkObject = PrefabFactory.SpawnShape(Runner, playerRef, shapePrefab, cursorWorldPoint, Quaternion.Euler(0, 0, angle), isPreview);
+        NetworkObject shapeNetworkObject = PrefabFactory.SpawnShape(Runner, Object.InputAuthority, shapePrefab, cursorWorldPoint, Quaternion.Euler(0, 0, angle), isPreview);
         previewShape = shapeNetworkObject.gameObject;
 
         currentShape = previewShape.GetComponent<Shape>();

@@ -23,34 +23,42 @@ public class Player : NetworkBehaviour
     [Networked] bool spriteIsFlipped { get; set; }
     [Networked, Capacity(50)] string characterPath { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
-    [Networked, HideInInspector] public PlayerRef playerRef { get; set; }
     [Networked] private NetworkObject carriedObject { get; set; }
     [Networked] private bool isCarrying { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
     SpriteRenderer spriteRenderer;
+    Animator animator;
     public Image healthBar;
     public TextMeshProUGUI ammoText;
     public Transform holdPosition;
     public bool carry;
 
     // Player intialisation (called from game controller on server when creating the player)
-    public void OnCreated(PlayerRef playerRef, string characterPath, Vector3 respawnPoint, int team)
+    public void OnCreated(string characterPath, Vector3 respawnPoint, int team)
     {
         Character character = Resources.Load(characterPath) as Character;
+
         maxHealth = character.MaxHealth;
         speed = character.Speed;
         damage = character.Damage;
         maxAmmo = character.MaxAmmo;
         fireRate = character.FireRate;
+
         this.respawnPoint = respawnPoint;
         this.team = team;
+        this.characterPath = characterPath;
+
         points = 0;
         reloadTime = 1.0f;
         respawnTime = 10.0f;
-        this.characterPath = characterPath;
-        this.playerRef = playerRef;
+        currentAmmo = maxAmmo;
+        currentHealth = maxHealth;
+        isAlive = true;
+        currentRespawn = 0.0f;
+        timeToWaitForBullet = 0.0f;
+        spriteIsFlipped = false;
     }
 
     // Player initialisation (called on each client and server when player is spawned on network)
@@ -72,10 +80,17 @@ public class Player : NetworkBehaviour
         // Get components
         rb = gameObject.GetComponent<Rigidbody2D>();
         spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
+        animator = gameObject.GetComponent<Animator>();
 
         // Set sprite from resource path
         Character character = Resources.Load(characterPath) as Character;
         spriteRenderer.sprite = character.Sprite;
+
+        // Set the health bar
+        healthBar.fillAmount = currentHealth / maxHealth;
+
+        // Set the ammo counter
+        ammoText.text = "Bullets: " + currentAmmo;
 
         // Initialize hold position (create an empty GameObject as a child of the player)
         if (holdPosition == null)
@@ -100,7 +115,7 @@ public class Player : NetworkBehaviour
         }
     }
     
-    // Player initialisation (also used for respawning)
+    // Player initialisation when respawning
     public void Respawn()
     {
         gameObject.transform.position = respawnPoint;
@@ -109,10 +124,18 @@ public class Player : NetworkBehaviour
         isAlive = true;
         currentRespawn = 0.0f;
         timeToWaitForBullet = 0.0f;
+
         // Refill the health bar
         healthBar.fillAmount = currentHealth / maxHealth;
+
         // Set the ammo counter
         ammoText.text = "Bullets: " + currentAmmo;
+
+        // Activate the shape controller
+        gameObject.GetComponentInChildren<ShapeController>().isActive = true;
+
+        // Restore rigidbody
+        rb.bodyType = RigidbodyType2D.Dynamic;
     }
 
     // Update function (called from the game controller on all clients and server)
@@ -121,8 +144,6 @@ public class Player : NetworkBehaviour
         // If player is dead then add to respawn timer and return
         if (!isAlive)
         {
-            // Ensure health bar is empty
-            healthBar.fillAmount = 0.0f;
             // Update respawn timer
             currentRespawn += Runner.DeltaTime;
             return;
@@ -158,16 +179,17 @@ public class Player : NetworkBehaviour
                     DropObject();
                 }
             }
+            // Testing damage
+            if (input.buttons.WasPressed(previousButtons, InputButtons.TakeDamage))
+            {
+                TakeDamage(10);
+            }
 
             previousButtons = input.buttons;
         }
 
         // Flip the player sprite if necessary (this is done on all clients and server)
         spriteRenderer.flipX = spriteIsFlipped;
-
-
-        // Update the health bar
-        healthBar.fillAmount = currentHealth / maxHealth;
 
         // Move the carried object to the hold position
         if (isCarrying && carriedObject != null)
@@ -201,7 +223,6 @@ public class Player : NetworkBehaviour
         isCarrying = true;
         carry = true;
         Debug.Log("Player is carrying the flag");
-        
     }
 
     // Shoots a bullet by spawning the prefab on the network
@@ -216,7 +237,7 @@ public class Player : NetworkBehaviour
                 if (HasStateAuthority)
                 {
                     GameObject bulletPrefab = Resources.Load("Prefabs/Bullet") as GameObject;
-                    PrefabFactory.SpawnBullet(Runner, bulletPrefab, gameObject.transform.position, aimDirection, 40.0f, damage, team);
+                    PrefabFactory.SpawnBullet(Runner, Object.InputAuthority, bulletPrefab, gameObject.transform.position, aimDirection, 40.0f, damage, team);
                 }
                 currentAmmo--;
                 ammoText.text = "Bullets: " + currentAmmo;
@@ -233,9 +254,17 @@ public class Player : NetworkBehaviour
     {
         currentHealth -= damage;
         healthBar.fillAmount = currentHealth / maxHealth;
+
+        //Play hurt animation and sounds
+        HurtEffects();
+
         if (currentHealth <= 0.0f) {
             Die();
         }
+    }
+
+    void HurtEffects(){
+        animator.SetTrigger("Damaged");
     }
 
     //heal equal to input, includes check for max health
@@ -255,9 +284,21 @@ public class Player : NetworkBehaviour
 
     void Die()
     {
-        if (HasInputAuthority) Debug.Log("You died :(("); // only show message for client who controls this player
         isAlive = false;
-        rb.linearVelocity = new Vector2(0, 0); // stop player from moving
+
+        // Only show message for client who controls this player
+        if (HasInputAuthority)
+            Debug.Log("You died :((");
+        
+        // Ensure health bar is empty
+        healthBar.fillAmount = 0.0f;
+
+        // Disable the shape controller
+        gameObject.GetComponentInChildren<ShapeController>().isActive = false;
+
+        // Stop player from moving and from being pushed
+        rb.linearVelocity = new Vector2(0, 0);
+        rb.bodyType = RigidbodyType2D.Kinematic;
     }
 
     void Reload()
