@@ -28,7 +28,9 @@ public class Player : NetworkBehaviour
     Rigidbody2D rb;
     SpriteRenderer spriteRenderer;
     public Animator animator;
-    public Image healthBar;
+    [SerializeField] Image mainHealthBar;
+    [SerializeField] Image smallHealthBar;
+    Image healthBar;
     public TextMeshProUGUI ammoText;
 
     // Player intialisation (called from game controller on server when creating the player)
@@ -81,6 +83,18 @@ public class Player : NetworkBehaviour
         // Set sprite from resource path
         Character character = Resources.Load(characterPath) as Character;
         spriteRenderer.sprite = character.Sprite;
+
+        // If client controls this player then use main health bar, else use small health bar
+        if (HasInputAuthority)
+        {
+            healthBar = mainHealthBar;
+            smallHealthBar.GetComponentInParent<Canvas>().enabled = false;
+        }
+        else
+        {
+            healthBar = smallHealthBar;
+            mainHealthBar.GetComponentInParent<Canvas>().enabled = false;
+        }
 
         // Set the health bar
         healthBar.fillAmount = currentHealth / maxHealth;
