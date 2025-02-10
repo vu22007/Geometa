@@ -299,6 +299,13 @@ public class Player : NetworkBehaviour
         // Stop player from moving and from being pushed
         rb.linearVelocity = new Vector2(0, 0);
         rb.bodyType = RigidbodyType2D.Kinematic;
+
+        if (isCarrying)
+        {
+            // Player will drop the flag if they died
+            DropObject();
+        }
+        
     }
 
     void Reload()
