@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class PickupFlag : NetworkBehaviour
 {
-    [Networked] private NetworkBool isPickedUp { get; set; } // Track if the object is picked up
+    [Networked, OnChangedRender(nameof(OnPickupChange))] private NetworkBool isPickedUp { get; set; } // Track if the object is picked up
     [Networked] private Player picker { get; set; } // Track which player picked up the object
 
     public override void Spawned()
@@ -46,6 +46,19 @@ public class PickupFlag : NetworkBehaviour
             picker = null;
             transform.SetParent(null); // Detach from the player
             Debug.Log($"flag dropped");
+        }
+    }
+
+    void OnPickupChange()
+    {
+        if (isPickedUp)
+        {
+            transform.SetParent(picker.holdPosition); // Attach to the player
+            transform.localPosition = new Vector3(0.7f, 0, 0);
+        }
+        else
+        {
+            transform.SetParent(null); // Detach from the player
         }
     }
 
