@@ -191,11 +191,18 @@ public class Player : NetworkBehaviour
                 TakeDamage(10);
             }
 
+            //Character rotates to mouse position
+            Vector2 lookDirection = input.aimDirection.normalized;
+            Quaternion wantedRotation = Quaternion.LookRotation(transform.forward, lookDirection);
+            gameObject.transform.rotation = wantedRotation;
+
+            cam.gameObject.transform.rotation = Quaternion.identity;
+
             previousButtons = input.buttons;
         }
 
         // Flip the player sprite if necessary (this is done on all clients and server)
-        spriteRenderer.flipX = spriteIsFlipped;
+        //spriteRenderer.flipX = spriteIsFlipped;
 
         // Play idle or walking animation
         if (isMoving)
@@ -219,16 +226,16 @@ public class Player : NetworkBehaviour
 
         isMoving = velocity.x != 0 || velocity.y != 0;
 
-        // Flip sprite to face direction the player is moving in
-        // Note: This sets a networked property so all clients can set the sprite correctly for this player
-        if (velocity.x < 0)
-        {
-            spriteIsFlipped = true;
-        }
-        else if (velocity.x > 0)
-        {
-            spriteIsFlipped = false;
-        }
+        // // Flip sprite to face direction the player is moving in
+        // // Note: This sets a networked property so all clients can set the sprite correctly for this player
+        // if (velocity.x < 0)
+        // {
+        //     spriteIsFlipped = true;
+        // }
+        // else if (velocity.x > 0)
+        // {
+        //     spriteIsFlipped = false;
+        // }
     }
 
     // Shoots a bullet by spawning the prefab on the network

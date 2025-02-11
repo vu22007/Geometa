@@ -160,10 +160,10 @@ TextureImporter:
       name: Handgun_Idle_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 648
-        width: 253
-        height: 216
+        x: 39
+        y: 1045
+        width: 153
+        height: 209
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -182,10 +182,10 @@ TextureImporter:
       name: Handgun_Idle_1
       rect:
         serializedVersion: 2
-        x: 253
-        y: 648
-        width: 253
-        height: 216
+        x: 254
+        y: 1045
+        width: 152
+        height: 209
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -204,10 +204,10 @@ TextureImporter:
       name: Handgun_Idle_2
       rect:
         serializedVersion: 2
-        x: 506
-        y: 648
-        width: 253
-        height: 216
+        x: 471
+        y: 1045
+        width: 152
+        height: 209
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -226,10 +226,10 @@ TextureImporter:
       name: Handgun_Idle_3
       rect:
         serializedVersion: 2
-        x: 759
-        y: 648
-        width: 253
-        height: 216
+        x: 688
+        y: 1045
+        width: 154
+        height: 210
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -248,10 +248,10 @@ TextureImporter:
       name: Handgun_Idle_4
       rect:
         serializedVersion: 2
-        x: 1012
-        y: 648
-        width: 253
-        height: 216
+        x: 39
+        y: 792
+        width: 154
+        height: 209
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -270,10 +270,10 @@ TextureImporter:
       name: Handgun_Idle_5
       rect:
         serializedVersion: 2
-        x: 0
-        y: 432
-        width: 253
-        height: 216
+        x: 254
+        y: 792
+        width: 153
+        height: 209
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -292,10 +292,10 @@ TextureImporter:
       name: Handgun_Idle_6
       rect:
         serializedVersion: 2
-        x: 253
-        y: 432
-        width: 253
-        height: 216
+        x: 470
+        y: 792
+        width: 153
+        height: 209
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -314,10 +314,10 @@ TextureImporter:
       name: Handgun_Idle_7
       rect:
         serializedVersion: 2
-        x: 506
-        y: 432
-        width: 253
-        height: 216
+        x: 687
+        y: 792
+        width: 154
+        height: 210
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -336,10 +336,10 @@ TextureImporter:
       name: Handgun_Idle_8
       rect:
         serializedVersion: 2
-        x: 759
-        y: 432
-        width: 253
-        height: 216
+        x: 39
+        y: 539
+        width: 154
+        height: 210
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -358,10 +358,10 @@ TextureImporter:
       name: Handgun_Idle_9
       rect:
         serializedVersion: 2
-        x: 1012
-        y: 432
-        width: 253
-        height: 216
+        x: 254
+        y: 539
+        width: 153
+        height: 209
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -380,10 +380,10 @@ TextureImporter:
       name: Handgun_Idle_10
       rect:
         serializedVersion: 2
-        x: 0
-        y: 216
-        width: 253
-        height: 216
+        x: 470
+        y: 539
+        width: 153
+        height: 209
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -402,10 +402,10 @@ TextureImporter:
       name: Handgun_Idle_11
       rect:
         serializedVersion: 2
-        x: 253
-        y: 216
-        width: 253
-        height: 216
+        x: 687
+        y: 539
+        width: 154
+        height: 209
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -424,10 +424,10 @@ TextureImporter:
       name: Handgun_Idle_12
       rect:
         serializedVersion: 2
-        x: 506
-        y: 216
-        width: 253
-        height: 216
+        x: 40
+        y: 286
+        width: 154
+        height: 210
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -446,10 +446,10 @@ TextureImporter:
       name: Handgun_Idle_13
       rect:
         serializedVersion: 2
-        x: 759
-        y: 216
-        width: 253
-        height: 216
+        x: 255
+        y: 286
+        width: 152
+        height: 209
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -468,10 +468,10 @@ TextureImporter:
       name: Handgun_Idle_14
       rect:
         serializedVersion: 2
-        x: 1012
-        y: 216
-        width: 253
-        height: 216
+        x: 470
+        y: 286
+        width: 152
+        height: 209
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -490,10 +490,10 @@ TextureImporter:
       name: Handgun_Idle_15
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 253
-        height: 216
+        x: 687
+        y: 286
+        width: 153
+        height: 209
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -512,10 +512,10 @@ TextureImporter:
       name: Handgun_Idle_16
       rect:
         serializedVersion: 2
-        x: 253
-        y: 0
-        width: 253
-        height: 216
+        x: 40
+        y: 33
+        width: 154
+        height: 210
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -534,10 +534,10 @@ TextureImporter:
       name: Handgun_Idle_17
       rect:
         serializedVersion: 2
-        x: 506
-        y: 0
-        width: 253
-        height: 216
+        x: 255
+        y: 33
+        width: 153
+        height: 209
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -556,10 +556,10 @@ TextureImporter:
       name: Handgun_Idle_18
       rect:
         serializedVersion: 2
-        x: 759
-        y: 0
-        width: 253
-        height: 216
+        x: 470
+        y: 33
+        width: 152
+        height: 209
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -578,10 +578,10 @@ TextureImporter:
       name: Handgun_Idle_19
       rect:
         serializedVersion: 2
-        x: 1012
-        y: 0
-        width: 253
-        height: 216
+        x: 687
+        y: 33
+        width: 153
+        height: 209
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
