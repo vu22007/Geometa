@@ -6,6 +6,7 @@ TagManager:
   tags:
   - ShapeController
   - Pickupable
+  - Wall
   layers:
   - Default
   - TransparentFX
