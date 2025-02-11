@@ -601,7 +601,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Config: 3
-  BroadRadius: 1.3221753
+  BroadRadius: 1.2989517
   Offset: {x: 0, y: 0, z: 0}
   GizmosColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   Hitboxes:
@@ -621,9 +621,9 @@ MonoBehaviour:
   Type: 1
   SphereRadius: 0
   CapsuleRadius: 0
-  BoxExtents: {x: 0.95, y: 0.75, z: 0}
+  BoxExtents: {x: 0.79, y: 0.82, z: 0}
   CapsuleExtents: 0
-  Offset: {x: 0.05, y: -0.1, z: 0}
+  Offset: {x: 0.01, y: -0.16, z: 0}
   Root: {fileID: -8433905836698240597}
   GizmosColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
 --- !u!1 &4041437489423129511
