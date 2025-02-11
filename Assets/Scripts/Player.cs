@@ -25,12 +25,15 @@ public class Player : NetworkBehaviour
     [Networked] NetworkButtons previousButtons { get; set; }
     [Networked] private NetworkObject carriedObject { get; set; }
     [Networked, HideInInspector] public bool isCarrying { get; set; }
+    [Networked] bool isMoving { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
     SpriteRenderer spriteRenderer;
-    Animator animator;
-    public Image healthBar;
+    public Animator animator;
+    [SerializeField] Image mainHealthBar;
+    [SerializeField] Image smallHealthBar;
+    Image healthBar;
     public TextMeshProUGUI ammoText;
     [HideInInspector] public Transform holdPosition;
 
@@ -38,7 +41,6 @@ public class Player : NetworkBehaviour
     public void OnCreated(string characterPath, Vector3 respawnPoint, int team)
     {
         Character character = Resources.Load(characterPath) as Character;
-
         maxHealth = character.MaxHealth;
         speed = character.Speed;
         damage = character.Damage;
@@ -100,8 +102,37 @@ public class Player : NetworkBehaviour
             holdPosition.localPosition = new Vector3(0.5f, 0.5f, 0); // Adjust as needed
         }
 
-        // Initialise player
-        Respawn();
+        // Set the health bar
+        healthBar.fillAmount = currentHealth / maxHealth;
+
+        // Set the ammo counter
+        ammoText.text = "Bullets: " + currentAmmo;
+
+        // Initialize hold position (create an empty GameObject as a child of the player)
+        if (holdPosition == null)
+        {
+            holdPosition = new GameObject("HoldPosition").transform;
+            holdPosition.SetParent(transform);
+            holdPosition.localPosition = new Vector3(0.5f, 0.5f, 0); // Adjust as needed
+        }
+
+        // If client controls this player then use main health bar, else use small health bar
+        if (HasInputAuthority)
+        {
+            healthBar = mainHealthBar;
+            smallHealthBar.GetComponentInParent<Canvas>().enabled = false;
+        }
+        else
+        {
+            healthBar = smallHealthBar;
+            mainHealthBar.GetComponentInParent<Canvas>().enabled = false;
+        }
+
+        // Set the health bar
+        healthBar.fillAmount = currentHealth / maxHealth;
+
+        // Set the ammo counter
+        ammoText.text = "Bullets: " + currentAmmo;
     }
 
     // Called on each client and server when player is despawned from network
@@ -192,11 +223,11 @@ public class Player : NetworkBehaviour
         // Flip the player sprite if necessary (this is done on all clients and server)
         spriteRenderer.flipX = spriteIsFlipped;
 
-        //// Move the carried object to the hold position
-        //if (isCarrying && carriedObject != null)
-        //{
-        //    carriedObject.transform.position = holdPosition.position;
-        //}
+        // Play idle or walking animation
+        if (isMoving)
+            animator.SetFloat("Speed", 0.02f);
+        else
+            animator.SetFloat("Speed", 0f);
     }
 
     // Player moves according to key presses and player speed
@@ -205,6 +236,8 @@ public class Player : NetworkBehaviour
         // Move the player by setting the velocity using the supplied movement direction vector
         Vector2 velocity = moveDirection.normalized * speed;
         rb.linearVelocity = velocity;
+
+        isMoving = velocity.x != 0 || velocity.y != 0;
 
         // Flip sprite to face direction the player is moving in
         // Note: This sets a networked property so all clients can set the sprite correctly for this player
