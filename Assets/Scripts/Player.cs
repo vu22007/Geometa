@@ -23,12 +23,15 @@ public class Player : NetworkBehaviour
     [Networked] bool spriteIsFlipped { get; set; }
     [Networked, Capacity(50)] string characterPath { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
+    [Networked] bool isMoving { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
     SpriteRenderer spriteRenderer;
-    Animator animator;
-    public Image healthBar;
+    public Animator animator;
+    [SerializeField] Image mainHealthBar;
+    [SerializeField] Image smallHealthBar;
+    Image healthBar;
     public TextMeshProUGUI ammoText;
 
     // Player intialisation (called from game controller on server when creating the player)
@@ -81,6 +84,18 @@ public class Player : NetworkBehaviour
         // Set sprite from resource path
         Character character = Resources.Load(characterPath) as Character;
         spriteRenderer.sprite = character.Sprite;
+
+        // If client controls this player then use main health bar, else use small health bar
+        if (HasInputAuthority)
+        {
+            healthBar = mainHealthBar;
+            smallHealthBar.GetComponentInParent<Canvas>().enabled = false;
+        }
+        else
+        {
+            healthBar = smallHealthBar;
+            mainHealthBar.GetComponentInParent<Canvas>().enabled = false;
+        }
 
         // Set the health bar
         healthBar.fillAmount = currentHealth / maxHealth;
@@ -167,6 +182,12 @@ public class Player : NetworkBehaviour
 
         // Flip the player sprite if necessary (this is done on all clients and server)
         spriteRenderer.flipX = spriteIsFlipped;
+
+        // Play idle or walking animation
+        if (isMoving)
+            animator.SetFloat("Speed", 0.02f);
+        else
+            animator.SetFloat("Speed", 0f);
     }
 
     // Player moves according to key presses and player speed
@@ -175,6 +196,8 @@ public class Player : NetworkBehaviour
         // Move the player by setting the velocity using the supplied movement direction vector
         Vector2 velocity = moveDirection.normalized * speed;
         rb.linearVelocity = velocity;
+
+        isMoving = velocity.x != 0 || velocity.y != 0;
 
         // Flip sprite to face direction the player is moving in
         // Note: This sets a networked property so all clients can set the sprite correctly for this player
