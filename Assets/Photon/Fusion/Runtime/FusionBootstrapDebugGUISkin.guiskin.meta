@@ -6,3 +6,10 @@ NativeFormatImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 267958
+  packageName: Photon Fusion
+  packageVersion: 2.0.4
+  assetPath: Assets/Photon/Fusion/Runtime/FusionBootstrapDebugGUISkin.guiskin
+  uploadId: 718271

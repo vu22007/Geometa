@@ -57,4 +57,17 @@ public static class PrefabFactory
 
         return networkPickupObject;
     }
+
+    public static NetworkObject SpawnFlag(NetworkRunner runner, GameObject prefab, Vector3 spawnPosition)
+    {
+        NetworkObject networkFlagObject = runner.Spawn(prefab, spawnPosition, Quaternion.identity, null, (runner, networkObject) =>
+        {
+            // Initialise the pickup (this is called before the pickup is spawned)
+            PickupFlag flag = networkObject.GetComponent<PickupFlag>();
+            flag.OnCreated();
+        });
+
+        return networkFlagObject;
+    }
+
 }
