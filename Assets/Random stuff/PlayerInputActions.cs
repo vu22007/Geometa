@@ -225,6 +225,15 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Pickup"",
+                    ""type"": ""Button"",
+                    ""id"": ""039238ac-50e3-4ae6-9a20-512bd9b926a4"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -676,6 +685,17 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Shoot"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""19104e2f-c3e1-449b-945f-190e6b4e7dc3"",
+                    ""path"": ""<Keyboard>/#(C)"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Pickup"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1278,6 +1298,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         m_Player_Triangle = m_Player.FindAction("Triangle", throwIfNotFound: true);
         m_Player_Square = m_Player.FindAction("Square", throwIfNotFound: true);
         m_Player_Pentagon = m_Player.FindAction("Pentagon", throwIfNotFound: true);
+        m_Player_Pickup = m_Player.FindAction("Pickup", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -1386,6 +1407,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Triangle;
     private readonly InputAction m_Player_Square;
     private readonly InputAction m_Player_Pentagon;
+    private readonly InputAction m_Player_Pickup;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -1458,6 +1480,10 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// </summary>
         public InputAction @Pentagon => m_Wrapper.m_Player_Pentagon;
         /// <summary>
+        /// Provides access to the underlying input action "Player/Pickup".
+        /// </summary>
+        public InputAction @Pickup => m_Wrapper.m_Player_Pickup;
+        /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
         public InputActionMap Get() { return m_Wrapper.m_Player; }
@@ -1528,6 +1554,9 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @Pentagon.started += instance.OnPentagon;
             @Pentagon.performed += instance.OnPentagon;
             @Pentagon.canceled += instance.OnPentagon;
+            @Pickup.started += instance.OnPickup;
+            @Pickup.performed += instance.OnPickup;
+            @Pickup.canceled += instance.OnPickup;
         }
 
         /// <summary>
@@ -1584,6 +1613,9 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @Pentagon.started -= instance.OnPentagon;
             @Pentagon.performed -= instance.OnPentagon;
             @Pentagon.canceled -= instance.OnPentagon;
+            @Pickup.started -= instance.OnPickup;
+            @Pickup.performed -= instance.OnPickup;
+            @Pickup.canceled -= instance.OnPickup;
         }
 
         /// <summary>
@@ -1989,6 +2021,13 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnPentagon(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Pickup" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnPickup(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.

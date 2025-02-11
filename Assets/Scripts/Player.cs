@@ -2,6 +2,7 @@ using Fusion;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using Fusion.Addons.Physics;
 
 public class Player : NetworkBehaviour
 {
@@ -23,6 +24,8 @@ public class Player : NetworkBehaviour
     [Networked] bool spriteIsFlipped { get; set; }
     [Networked, Capacity(50)] string characterPath { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
+    [Networked] private NetworkObject carriedObject { get; set; }
+    [Networked, HideInInspector] public bool isCarrying { get; set; }
     [Networked] bool isMoving { get; set; }
 
     public Camera cam;
@@ -33,12 +36,12 @@ public class Player : NetworkBehaviour
     [SerializeField] Image smallHealthBar;
     Image healthBar;
     public TextMeshProUGUI ammoText;
+    [HideInInspector] public Transform holdPosition;
 
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(string characterPath, Vector3 respawnPoint, int team)
     {
         Character character = Resources.Load(characterPath) as Character;
-
         maxHealth = character.MaxHealth;
         speed = character.Speed;
         damage = character.Damage;
@@ -58,6 +61,7 @@ public class Player : NetworkBehaviour
         currentRespawn = 0.0f;
         timeToWaitForBullet = 0.0f;
         spriteIsFlipped = false;
+        isCarrying = false;
     }
 
     // Player initialisation (called on each client and server when player is spawned on network)
@@ -118,7 +122,8 @@ public class Player : NetworkBehaviour
     // Player initialisation when respawning
     public void Respawn()
     {
-        gameObject.transform.position = respawnPoint;
+        //gameObject.transform.position = respawnPoint;
+        gameObject.GetComponent<NetworkRigidbody2D>().Teleport(respawnPoint);
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
         isAlive = true;
@@ -171,6 +176,15 @@ public class Player : NetworkBehaviour
                 Reload();
             }
 
+            // Drop object with 'C'
+            if (input.buttons.WasPressed(previousButtons, InputButtons.Pickup))
+            {
+                if (isCarrying)
+                {
+                    DropObject();
+                }
+            }
+
             // Testing damage
             if (input.buttons.WasPressed(previousButtons, InputButtons.TakeDamage))
             {
@@ -188,6 +202,12 @@ public class Player : NetworkBehaviour
             animator.SetFloat("Speed", 0.02f);
         else
             animator.SetFloat("Speed", 0f);
+
+        // If carrying an object, move it to player's position
+        if (isCarrying && carriedObject != null)
+        {
+            carriedObject.transform.position = transform.position;
+        }
     }
 
     // Player moves according to key presses and player speed
@@ -285,6 +305,13 @@ public class Player : NetworkBehaviour
         // Stop player from moving and from being pushed
         rb.linearVelocity = new Vector2(0, 0);
         rb.bodyType = RigidbodyType2D.Kinematic;
+
+        if (isCarrying)
+        {
+            // Player will drop the flag if they died
+            DropObject();
+        }
+        
     }
 
     void Reload()
@@ -293,6 +320,30 @@ public class Player : NetworkBehaviour
         timeToWaitForBullet = reloadTime;
         currentAmmo = maxAmmo;
         ammoText.text = "Bullets: " + currentAmmo;
+    }
+
+    public void CarryObject(NetworkObject networkObject)
+    {
+        carriedObject = networkObject;
+        isCarrying = true;
+        Debug.Log("Player is carrying the flag");
+    }
+
+    void DropObject()
+    {
+        if (carriedObject != null)
+        {
+            PickupFlag flag = carriedObject.GetComponent<PickupFlag>();
+            if (flag != null)
+            {
+                flag.Drop(); // Call the Drop method on the pickupable object
+            }
+            carriedObject = null;
+            isCarrying = false;
+            flag.transform.position = transform.position + new Vector3(2.0f, 0, 0);
+            FindFirstObjectByType<GameController>()?.CheckForWinCondition();
+            Debug.Log("Dropped the flag!");
+        }
     }
 
     public bool RespawnTimerDone()
