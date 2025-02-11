@@ -194,7 +194,6 @@ public class Player : NetworkBehaviour
             //Character rotates to mouse position
             Vector2 lookDirection = input.aimDirection.normalized;
             Quaternion wantedRotation = Quaternion.LookRotation(transform.forward, lookDirection);
-            Debug.Log(wantedRotation);
             gameObject.transform.rotation = wantedRotation;
 
             cam.gameObject.transform.rotation = Quaternion.identity;

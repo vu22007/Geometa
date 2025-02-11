@@ -87,6 +87,7 @@ GameObject:
   - component: {fileID: 4117010713157504591}
   - component: {fileID: 7689524251095513056}
   - component: {fileID: 7725935848611326950}
+  - component: {fileID: 5728312084209684097}
   m_Layer: 5
   m_Name: Health Bar (Small)
   m_TagString: Untagged
@@ -101,20 +102,20 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 468119023043856613}
-  m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 90}
-  m_LocalScale: {x: 0.019861994, y: 0.02474609, z: 0.026048517}
+  m_LocalScale: {x: 0.019861994, y: 0.00958911, z: 0.026048517}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2514203392622498059}
   - {fileID: 7811384323055945294}
   - {fileID: 6907698818350658758}
   m_Father: {fileID: 981996023074110673}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 90}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0.07, y: 0}
-  m_SizeDelta: {x: 800.00006, y: 380.69272}
+  m_AnchoredPosition: {x: 0, y: 0.5}
+  m_SizeDelta: {x: 50, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!223 &4117010713157504591
 Canvas:
@@ -179,6 +180,19 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!114 &5728312084209684097
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 468119023043856613}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f2b36c576e96b64d9a7aed326104bc6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lockRelativePosition: 1
 --- !u!1 &2233341911562473909
 GameObject:
   m_ObjectHideFlags: 0
@@ -495,11 +509,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 353e13b90929a4bae92837e83a85b75f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _isCarrying: 0
   cam: {fileID: 3093333144043118080}
   animator: {fileID: 3838861860339599067}
   mainHealthBar: {fileID: 8395293536219763284}
   smallHealthBar: {fileID: 8623719664100579951}
   ammoText: {fileID: 9126663489822556632}
+  holdPosition: {fileID: 0}
 --- !u!50 &-5256008576835943960
 Rigidbody2D:
   serializedVersion: 5
@@ -835,6 +851,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f2b36c576e96b64d9a7aed326104bc6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  lockRelativePosition: 0
 --- !u!1 &5513433632829803138
 GameObject:
   m_ObjectHideFlags: 0
