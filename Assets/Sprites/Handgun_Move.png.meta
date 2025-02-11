@@ -160,10 +160,10 @@ TextureImporter:
       name: Handgun_Move_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 660
-        width: 258
-        height: 220
+        x: 40
+        y: 1069
+        width: 155
+        height: 210
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -182,10 +182,10 @@ TextureImporter:
       name: Handgun_Move_1
       rect:
         serializedVersion: 2
-        x: 258
-        y: 660
-        width: 258
-        height: 220
+        x: 262
+        y: 1067
+        width: 156
+        height: 212
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -204,10 +204,10 @@ TextureImporter:
       name: Handgun_Move_2
       rect:
         serializedVersion: 2
-        x: 516
-        y: 660
-        width: 258
-        height: 220
+        x: 481
+        y: 1068
+        width: 155
+        height: 211
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -226,10 +226,10 @@ TextureImporter:
       name: Handgun_Move_3
       rect:
         serializedVersion: 2
-        x: 774
-        y: 660
-        width: 258
-        height: 220
+        x: 699
+        y: 1070
+        width: 154
+        height: 210
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -248,10 +248,10 @@ TextureImporter:
       name: Handgun_Move_4
       rect:
         serializedVersion: 2
-        x: 1032
-        y: 660
-        width: 258
-        height: 220
+        x: 40
+        y: 811
+        width: 154
+        height: 210
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -270,10 +270,10 @@ TextureImporter:
       name: Handgun_Move_5
       rect:
         serializedVersion: 2
-        x: 0
-        y: 440
-        width: 258
-        height: 220
+        x: 262
+        y: 809
+        width: 156
+        height: 212
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -292,10 +292,10 @@ TextureImporter:
       name: Handgun_Move_6
       rect:
         serializedVersion: 2
-        x: 258
-        y: 440
-        width: 258
-        height: 220
+        x: 481
+        y: 809
+        width: 156
+        height: 212
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -314,10 +314,10 @@ TextureImporter:
       name: Handgun_Move_7
       rect:
         serializedVersion: 2
-        x: 516
-        y: 440
-        width: 258
-        height: 220
+        x: 699
+        y: 812
+        width: 154
+        height: 210
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -336,10 +336,10 @@ TextureImporter:
       name: Handgun_Move_8
       rect:
         serializedVersion: 2
-        x: 774
-        y: 440
-        width: 258
-        height: 220
+        x: 39
+        y: 554
+        width: 154
+        height: 210
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -358,10 +358,10 @@ TextureImporter:
       name: Handgun_Move_9
       rect:
         serializedVersion: 2
-        x: 1032
-        y: 440
-        width: 258
-        height: 220
+        x: 261
+        y: 551
+        width: 156
+        height: 212
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -380,10 +380,10 @@ TextureImporter:
       name: Handgun_Move_10
       rect:
         serializedVersion: 2
-        x: 0
-        y: 220
-        width: 258
-        height: 220
+        x: 482
+        y: 551
+        width: 156
+        height: 212
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -402,10 +402,10 @@ TextureImporter:
       name: Handgun_Move_11
       rect:
         serializedVersion: 2
-        x: 258
-        y: 220
-        width: 258
-        height: 220
+        x: 700
+        y: 553
+        width: 154
+        height: 210
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -424,10 +424,10 @@ TextureImporter:
       name: Handgun_Move_12
       rect:
         serializedVersion: 2
-        x: 516
-        y: 220
-        width: 258
-        height: 220
+        x: 39
+        y: 296
+        width: 154
+        height: 210
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -446,10 +446,10 @@ TextureImporter:
       name: Handgun_Move_13
       rect:
         serializedVersion: 2
-        x: 774
-        y: 220
-        width: 258
-        height: 220
+        x: 261
+        y: 294
+        width: 155
+        height: 211
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -468,10 +468,10 @@ TextureImporter:
       name: Handgun_Move_14
       rect:
         serializedVersion: 2
-        x: 1032
-        y: 220
-        width: 258
-        height: 220
+        x: 482
+        y: 293
+        width: 156
+        height: 212
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -490,10 +490,10 @@ TextureImporter:
       name: Handgun_Move_15
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 258
-        height: 220
+        x: 700
+        y: 295
+        width: 155
+        height: 210
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -512,10 +512,10 @@ TextureImporter:
       name: Handgun_Move_16
       rect:
         serializedVersion: 2
-        x: 258
-        y: 0
-        width: 258
-        height: 220
+        x: 39
+        y: 38
+        width: 154
+        height: 210
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -534,10 +534,10 @@ TextureImporter:
       name: Handgun_Move_17
       rect:
         serializedVersion: 2
-        x: 516
-        y: 0
-        width: 258
-        height: 220
+        x: 260
+        y: 36
+        width: 156
+        height: 211
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -556,10 +556,10 @@ TextureImporter:
       name: Handgun_Move_18
       rect:
         serializedVersion: 2
-        x: 774
-        y: 0
-        width: 258
-        height: 220
+        x: 482
+        y: 35
+        width: 157
+        height: 212
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -578,10 +578,10 @@ TextureImporter:
       name: Handgun_Move_19
       rect:
         serializedVersion: 2
-        x: 1032
-        y: 0
-        width: 258
-        height: 220
+        x: 700
+        y: 36
+        width: 156
+        height: 211
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
