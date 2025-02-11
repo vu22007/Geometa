@@ -88,26 +88,6 @@ public class Player : NetworkBehaviour
         Character character = Resources.Load(characterPath) as Character;
         spriteRenderer.sprite = character.Sprite;
 
-        // Set the health bar
-        healthBar.fillAmount = currentHealth / maxHealth;
-
-        // Set the ammo counter
-        ammoText.text = "Bullets: " + currentAmmo;
-
-        // Initialize hold position (create an empty GameObject as a child of the player)
-        if (holdPosition == null)
-        {
-            holdPosition = new GameObject("HoldPosition").transform;
-            holdPosition.SetParent(transform);
-            holdPosition.localPosition = new Vector3(0.5f, 0.5f, 0); // Adjust as needed
-        }
-
-        // Set the health bar
-        healthBar.fillAmount = currentHealth / maxHealth;
-
-        // Set the ammo counter
-        ammoText.text = "Bullets: " + currentAmmo;
-
         // Initialize hold position (create an empty GameObject as a child of the player)
         if (holdPosition == null)
         {
