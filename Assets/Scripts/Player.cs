@@ -2,6 +2,7 @@ using Fusion;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using Fusion.Addons.Physics;
 
 public class Player : NetworkBehaviour
 {
@@ -88,14 +89,6 @@ public class Player : NetworkBehaviour
         Character character = Resources.Load(characterPath) as Character;
         spriteRenderer.sprite = character.Sprite;
 
-        // Initialize hold position (create an empty GameObject as a child of the player)
-        if (holdPosition == null)
-        {
-            holdPosition = new GameObject("HoldPosition").transform;
-            holdPosition.SetParent(transform);
-            holdPosition.localPosition = new Vector3(0.5f, 0.5f, 0); // Adjust as needed
-        }
-
         // If client controls this player then use main health bar, else use small health bar
         if (HasInputAuthority)
         {
@@ -129,7 +122,8 @@ public class Player : NetworkBehaviour
     // Player initialisation when respawning
     public void Respawn()
     {
-        gameObject.transform.position = respawnPoint;
+        //gameObject.transform.position = respawnPoint;
+        gameObject.GetComponent<NetworkRigidbody2D>().Teleport(respawnPoint);
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
         isAlive = true;
@@ -208,6 +202,12 @@ public class Player : NetworkBehaviour
             animator.SetFloat("Speed", 0.02f);
         else
             animator.SetFloat("Speed", 0f);
+
+        // If carrying an object, move it to player's position
+        if (isCarrying && carriedObject != null)
+        {
+            carriedObject.transform.position = transform.position;
+        }
     }
 
     // Player moves according to key presses and player speed
@@ -340,7 +340,7 @@ public class Player : NetworkBehaviour
             }
             carriedObject = null;
             isCarrying = false;
-            flag.transform.position += new Vector3(0.5f, 0, 0);
+            flag.transform.position = transform.position + new Vector3(2.0f, 0, 0);
             FindFirstObjectByType<GameController>()?.CheckForWinCondition();
             Debug.Log("Dropped the flag!");
         }

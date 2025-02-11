@@ -6,11 +6,17 @@ public class PickupFlag : NetworkBehaviour
     [Networked, OnChangedRender(nameof(OnPickupChange))] private NetworkBool isPickedUp { get; set; } // Track if the object is picked up
     [Networked] private Player picker { get; set; } // Track which player picked up the object
 
-    public override void Spawned()
+    public void OnCreated()
     {
-        // Initialize the object's state when it spawns
+        // Initialize the object's state
         isPickedUp = false;
         picker = null;
+    }
+
+    public override void Spawned()
+    {
+        // Set state depending on isPickedUp networked variable
+        OnPickupChange();
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -19,7 +25,7 @@ public class PickupFlag : NetworkBehaviour
         if (other.CompareTag("Player"))
         {
             Player player = other.GetComponentInParent<Player>();
-            if (player != null && !isPickedUp && !player.isCarrying)
+            if (player != null && !isPickedUp && !player.isCarrying && player.IsAlive())
             {
                 Pickup(player);
             }
@@ -31,9 +37,8 @@ public class PickupFlag : NetworkBehaviour
         {
             isPickedUp = true;
             picker = player;
-            transform.SetParent(player.holdPosition);
-            transform.localPosition = new Vector3(0.7f, 0, 0);
             player.CarryObject(Object);
+            SetActive(false);
             Debug.Log($"flag has been pickup");
         }
     }
@@ -44,30 +49,23 @@ public class PickupFlag : NetworkBehaviour
         {
             isPickedUp = false;
             picker = null;
-            transform.SetParent(null); // Detach from the player
+            SetActive(true);
             Debug.Log($"flag dropped");
         }
     }
 
-    void OnPickupChange()
+    void SetActive(bool active)
     {
-        if (isPickedUp)
-        {
-            transform.SetParent(picker.holdPosition); // Attach to the player
-            transform.localPosition = new Vector3(0.7f, 0, 0);
-        }
-        else
-        {
-            transform.SetParent(null); // Detach from the player
-        }
+        gameObject.GetComponent<Renderer>().enabled = active;
+        gameObject.GetComponent<Collider2D>().enabled = active;
     }
 
-    public override void FixedUpdateNetwork()
+    void OnPickupChange()
     {
-        //if (isPickedUp && picker != null)
-        //{
-        //    // Move the object to the player's hold position
-        //    transform.position = picker.holdPosition.position + picker.transform.right * 0.7f;
-        //}
+        // Disable flag if picked up, otherwise enable flag
+        if (isPickedUp)
+            SetActive(false);
+        else
+            SetActive(true);
     }
 }
