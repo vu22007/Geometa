@@ -21,7 +21,6 @@ public class Player : NetworkBehaviour
     [Networked] bool isAlive { get; set; }
     [Networked] float respawnTime { get; set; }
     [Networked] float currentRespawn { get; set; }
-    [Networked] bool spriteIsFlipped { get; set; }
     [Networked, Capacity(50)] string characterPath { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
     [Networked] private NetworkObject carriedObject { get; set; }
@@ -60,7 +59,6 @@ public class Player : NetworkBehaviour
         isAlive = true;
         currentRespawn = 0.0f;
         timeToWaitForBullet = 0.0f;
-        spriteIsFlipped = false;
         isCarrying = false;
     }
 
@@ -212,9 +210,6 @@ public class Player : NetworkBehaviour
             previousButtons = input.buttons;
         }
 
-        // Flip the player sprite if necessary (this is done on all clients and server)
-        //spriteRenderer.flipX = spriteIsFlipped;
-
         // Play idle or walking animation
         if (isMoving)
             animator.SetFloat("Speed", 0.02f);
@@ -224,7 +219,7 @@ public class Player : NetworkBehaviour
         // If carrying an object, move it to player's position
         if (isCarrying && carriedObject != null)
         {
-            carriedObject.transform.position = transform.position;
+            carriedObject.transform.position = transform.position + new Vector3(2.0f, 0, 0);
         }
     }
 
@@ -345,7 +340,6 @@ public class Player : NetworkBehaviour
             }
             carriedObject = null;
             isCarrying = false;
-            flag.transform.position = transform.position + new Vector3(2.0f, 0, 0);
             FindFirstObjectByType<GameController>()?.CheckForWinCondition();
             Debug.Log("Dropped the flag!");
         }
