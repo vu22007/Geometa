@@ -88,10 +88,15 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
             {
                 bullets.Remove(bullet);
 
-                // Despawn bullet from network (only the server can do this)
                 if (Runner.IsServer)
                 {
+                    // Despawn bullet from network (only the server can do this)
                     Runner.Despawn(bullet.GetComponent<NetworkObject>());
+                }
+                else
+                {
+                    // Disable the bullet locally so that it isn't frozen while the client waits for the server to despawn it
+                    bullet.gameObject.SetActive(false);
                 }
             }
         }
