@@ -148,19 +148,20 @@ public class Player : NetworkBehaviour
 
         // Activate the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = true;
-
-        // Restore rigidbody
-        rb.bodyType = RigidbodyType2D.Dynamic;
     }
 
     // Update function (called from the game controller on all clients and server)
     public void PlayerUpdate()
     {
-        // If player is dead then add to respawn timer and return
+        // Check if player is dead
         if (!isAlive)
         {
             // Update respawn timer
             currentRespawn += Runner.DeltaTime;
+
+            // Stop player movement and prevent player from infinitely sliding when pushed by another player
+            rb.linearVelocity = new Vector2(0, 0);
+
             return;
         }
 
@@ -311,16 +312,11 @@ public class Player : NetworkBehaviour
         // Disable the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = false;
 
-        // Stop player from moving and from being pushed
-        rb.linearVelocity = new Vector2(0, 0);
-        rb.bodyType = RigidbodyType2D.Kinematic;
-
         if (isCarrying)
         {
             // Player will drop the flag if they died
             DropObject();
         }
-        
     }
 
     void Reload()

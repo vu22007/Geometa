@@ -6,8 +6,6 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
 {
     [SerializeField] Vector3Int respawnPoint1;
     //[SerializeField] Vector3Int respawnPoint2;
-    [SerializeField] CaptureFlag flag1;
-    //[SerializeField] CaptureFlag flag2;
 
     [SerializeField] float maxTime = 480.0f; //8 minute games
     [SerializeField] float currentTime = 0.0f;

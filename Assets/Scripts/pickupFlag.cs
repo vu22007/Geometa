@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class PickupFlag : NetworkBehaviour
 {
-    [Networked, OnChangedRender(nameof(OnPickupChange))] private NetworkBool isPickedUp { get; set; } // Track if the object is picked up
+    [Networked, OnChangedRender(nameof(OnPickupChanged))] private NetworkBool isPickedUp { get; set; } // Track if the object is picked up
     [Networked] private Player picker { get; set; } // Track which player picked up the object
 
     public void OnCreated()
@@ -16,7 +16,7 @@ public class PickupFlag : NetworkBehaviour
     public override void Spawned()
     {
         // Set state depending on isPickedUp networked variable
-        OnPickupChange();
+        OnPickupChanged();
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -60,7 +60,7 @@ public class PickupFlag : NetworkBehaviour
         gameObject.GetComponent<Collider2D>().enabled = active;
     }
 
-    void OnPickupChange()
+    void OnPickupChanged()
     {
         // Disable flag if picked up, otherwise enable flag
         if (isPickedUp)
