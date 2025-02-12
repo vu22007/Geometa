@@ -89,20 +89,29 @@ public class Player : NetworkBehaviour
         Character character = Resources.Load(characterPath) as Character;
         spriteRenderer.sprite = character.Sprite;
 
-        // If client controls this player then use main health bar, else use small health bar
+        // If client controls this player then use main health bar
         if (HasInputAuthority)
         {
             healthBar = mainHealthBar;
             smallHealthBar.GetComponentInParent<Canvas>().enabled = false;
         }
-        else
+        // If this player is on the other team to the client's player then use small health bar
+        else if (Runner.GetPlayerObject(Runner.LocalPlayer).GetComponent<Player>().GetTeam() != team)
         {
             healthBar = smallHealthBar;
             mainHealthBar.GetComponentInParent<Canvas>().enabled = false;
         }
+        // If this player is on the same team to the client's player then use no health bar
+        else
+        {
+            healthBar = null;
+            mainHealthBar.GetComponentInParent<Canvas>().enabled = false;
+            smallHealthBar.GetComponentInParent<Canvas>().enabled = false;
+        }
 
         // Set the health bar
-        healthBar.fillAmount = currentHealth / maxHealth;
+        if (healthBar != null)
+            healthBar.fillAmount = currentHealth / maxHealth;
 
         // Set the ammo counter
         ammoText.text = "Bullets: " + currentAmmo;
@@ -131,7 +140,8 @@ public class Player : NetworkBehaviour
         timeToWaitForBullet = 0.0f;
 
         // Refill the health bar
-        healthBar.fillAmount = currentHealth / maxHealth;
+        if (healthBar != null)
+            healthBar.fillAmount = currentHealth / maxHealth;
 
         // Set the ammo counter
         ammoText.text = "Bullets: " + currentAmmo;
@@ -225,17 +235,6 @@ public class Player : NetworkBehaviour
         rb.linearVelocity = velocity;
 
         isMoving = velocity.x != 0 || velocity.y != 0;
-
-        // // Flip sprite to face direction the player is moving in
-        // // Note: This sets a networked property so all clients can set the sprite correctly for this player
-        // if (velocity.x < 0)
-        // {
-        //     spriteIsFlipped = true;
-        // }
-        // else if (velocity.x > 0)
-        // {
-        //     spriteIsFlipped = false;
-        // }
     }
 
     // Shoots a bullet by spawning the prefab on the network
@@ -266,7 +265,8 @@ public class Player : NetworkBehaviour
     public void TakeDamage(float damage)
     {
         currentHealth -= damage;
-        healthBar.fillAmount = currentHealth / maxHealth;
+        if (healthBar != null)
+            healthBar.fillAmount = currentHealth / maxHealth;
 
         //Play hurt animation and sounds
         HurtEffects();
@@ -284,7 +284,8 @@ public class Player : NetworkBehaviour
     public void Heal(float amount)
     {
         currentHealth += amount;
-        healthBar.fillAmount = currentHealth / maxHealth;
+        if (healthBar != null)
+            healthBar.fillAmount = currentHealth / maxHealth;
         if (currentHealth >= maxHealth) {
             currentHealth = maxHealth;
         }
@@ -304,7 +305,8 @@ public class Player : NetworkBehaviour
             Debug.Log("You died :((");
         
         // Ensure health bar is empty
-        healthBar.fillAmount = 0.0f;
+        if (healthBar != null)
+            healthBar.fillAmount = 0.0f;
 
         // Disable the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = false;
