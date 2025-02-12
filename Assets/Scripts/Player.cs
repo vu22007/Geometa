@@ -89,16 +89,24 @@ public class Player : NetworkBehaviour
         Character character = Resources.Load(characterPath) as Character;
         spriteRenderer.sprite = character.Sprite;
 
-        // If client controls this player then use main health bar, else use small health bar
+        // If client controls this player then use main health bar
         if (HasInputAuthority)
         {
             healthBar = mainHealthBar;
             smallHealthBar.GetComponentInParent<Canvas>().enabled = false;
         }
-        else
+        // If this player is on the other team to the client's player then use small health bar
+        else if (Runner.GetPlayerObject(Runner.LocalPlayer).GetComponent<Player>().GetTeam() != team)
         {
             healthBar = smallHealthBar;
             mainHealthBar.GetComponentInParent<Canvas>().enabled = false;
+        }
+        // If this player is on the same team to the client's player then use no health bar
+        else
+        {
+            healthBar = null;
+            mainHealthBar.GetComponentInParent<Canvas>().enabled = false;
+            smallHealthBar.GetComponentInParent<Canvas>().enabled = false;
         }
 
         // Set the health bar
