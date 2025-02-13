@@ -5,7 +5,7 @@ using UnityEngine;
 public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, ISceneLoadStart
 {
     [SerializeField] Vector3Int respawnPoint1;
-    //[SerializeField] Vector3Int respawnPoint2;
+    [SerializeField] Vector3Int respawnPoint2;
 
     [SerializeField] float maxTime = 480.0f; //8 minute games
     [SerializeField] float currentTime = 0.0f;
@@ -45,13 +45,13 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
             
             // Spawn flag 1
             GameObject flag1Prefab = Resources.Load("Prefabs/Flag1") as GameObject;
-            NetworkObject flag1Obj = PrefabFactory.SpawnFlag(Runner, flag1Prefab, new Vector3(20f, 20f, 0f));
+            NetworkObject flag1Obj = PrefabFactory.SpawnFlag(Runner, flag1Prefab, respawnPoint1 + new Vector3Int(0, -5, 0));
             PickupFlag flag1 = flag1Obj.GetComponent<PickupFlag>();
             flags.Add(flag1);
 
             // Spawn flag 2
             GameObject flag2Prefab = Resources.Load("Prefabs/Flag2") as GameObject;
-            NetworkObject flag2Obj = PrefabFactory.SpawnFlag(Runner, flag2Prefab, new Vector3(-20f, -20f, 0f));
+            NetworkObject flag2Obj = PrefabFactory.SpawnFlag(Runner, flag2Prefab, respawnPoint2 + new Vector3Int(0, 5, 0));
             PickupFlag flag2 = flag2Obj.GetComponent<PickupFlag>();
             flags.Add(flag2);
         }
@@ -140,7 +140,9 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
             string characterPath = "ScriptableObjects/Characters/Army Vet";
 
             // Spawn the player network object
-            NetworkObject networkPlayerObject = PrefabFactory.SpawnPlayer(Runner, player, playerPrefab, respawnPoint1, characterPath, nextTeam);
+            int team = nextTeam;
+            Vector3Int respawnPoint = (team == 1) ? respawnPoint1 : respawnPoint2;
+            NetworkObject networkPlayerObject = PrefabFactory.SpawnPlayer(Runner, player, playerPrefab, respawnPoint, characterPath, team);
 
             // Flip the next team so the next player to join will be on the other team
             nextTeam = (nextTeam == 1) ? 2 : 1;
