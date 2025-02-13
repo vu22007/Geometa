@@ -324,9 +324,13 @@ public class Player : NetworkBehaviour
 
     public void CarryObject(NetworkObject networkObject)
     {
-        carriedObject = networkObject;
-        isCarrying = true;
-        Debug.Log("Player is carrying the flag");
+        if (carriedObject == null)
+        {
+            carriedObject = networkObject;
+            isCarrying = true;
+            speed /= 2;
+            Debug.Log("Player is carrying the flag");
+        }
     }
 
     void DropObject()
@@ -340,6 +344,7 @@ public class Player : NetworkBehaviour
             }
             carriedObject = null;
             isCarrying = false;
+            speed *= 2;
             FindFirstObjectByType<GameController>()?.CheckForWinCondition();
             Debug.Log("Dropped the flag!");
         }
