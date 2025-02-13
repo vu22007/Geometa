@@ -6,8 +6,6 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
 {
     [SerializeField] Vector3Int respawnPoint1;
     //[SerializeField] Vector3Int respawnPoint2;
-    [SerializeField] CaptureFlag flag1;
-    //[SerializeField] CaptureFlag flag2;
 
     [SerializeField] float maxTime = 480.0f; //8 minute games
     [SerializeField] float currentTime = 0.0f;
@@ -88,10 +86,15 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
             {
                 bullets.Remove(bullet);
 
-                // Despawn bullet from network (only the server can do this)
                 if (Runner.IsServer)
                 {
+                    // Despawn bullet from network (only the server can do this)
                     Runner.Despawn(bullet.GetComponent<NetworkObject>());
+                }
+                else
+                {
+                    // Disable the bullet locally so that it isn't frozen while the client waits for the server to despawn it
+                    bullet.gameObject.SetActive(false);
                 }
             }
         }

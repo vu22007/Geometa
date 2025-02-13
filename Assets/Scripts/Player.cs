@@ -21,7 +21,6 @@ public class Player : NetworkBehaviour
     [Networked] bool isAlive { get; set; }
     [Networked] float respawnTime { get; set; }
     [Networked] float currentRespawn { get; set; }
-    [Networked] bool spriteIsFlipped { get; set; }
     [Networked, Capacity(50)] string characterPath { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
     [Networked] private NetworkObject carriedObject { get; set; }
@@ -60,7 +59,6 @@ public class Player : NetworkBehaviour
         isAlive = true;
         currentRespawn = 0.0f;
         timeToWaitForBullet = 0.0f;
-        spriteIsFlipped = false;
         isCarrying = false;
     }
 
@@ -148,19 +146,20 @@ public class Player : NetworkBehaviour
 
         // Activate the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = true;
-
-        // Restore rigidbody
-        rb.bodyType = RigidbodyType2D.Dynamic;
     }
 
     // Update function (called from the game controller on all clients and server)
     public void PlayerUpdate()
     {
-        // If player is dead then add to respawn timer and return
+        // Check if player is dead
         if (!isAlive)
         {
             // Update respawn timer
             currentRespawn += Runner.DeltaTime;
+
+            // Stop player movement and prevent player from infinitely sliding when pushed by another player
+            rb.linearVelocity = new Vector2(0, 0);
+
             return;
         }
 
@@ -211,9 +210,6 @@ public class Player : NetworkBehaviour
             previousButtons = input.buttons;
         }
 
-        // Flip the player sprite if necessary (this is done on all clients and server)
-        //spriteRenderer.flipX = spriteIsFlipped;
-
         // Play idle or walking animation
         if (isMoving)
             animator.SetFloat("Speed", 0.02f);
@@ -223,7 +219,7 @@ public class Player : NetworkBehaviour
         // If carrying an object, move it to player's position
         if (isCarrying && carriedObject != null)
         {
-            carriedObject.transform.position = transform.position;
+            carriedObject.transform.position = transform.position + new Vector3(2.0f, 0, 0);
         }
     }
 
@@ -311,16 +307,11 @@ public class Player : NetworkBehaviour
         // Disable the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = false;
 
-        // Stop player from moving and from being pushed
-        rb.linearVelocity = new Vector2(0, 0);
-        rb.bodyType = RigidbodyType2D.Kinematic;
-
         if (isCarrying)
         {
             // Player will drop the flag if they died
             DropObject();
         }
-        
     }
 
     void Reload()
@@ -349,7 +340,6 @@ public class Player : NetworkBehaviour
             }
             carriedObject = null;
             isCarrying = false;
-            flag.transform.position = transform.position + new Vector3(2.0f, 0, 0);
             FindFirstObjectByType<GameController>()?.CheckForWinCondition();
             Debug.Log("Dropped the flag!");
         }
