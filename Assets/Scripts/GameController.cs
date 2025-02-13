@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, ISceneLoadStart
 {
-    [SerializeField] Vector3Int respawnPoint1;
-    [SerializeField] Vector3Int respawnPoint2;
+    [SerializeField] Vector3 respawnPoint1;
+    [SerializeField] Vector3 respawnPoint2;
 
     [SerializeField] float maxTime = 480.0f; //8 minute games
     [SerializeField] float currentTime = 0.0f;
@@ -21,8 +21,9 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
     // For server to use to keep track of what team to assign to a new player when they join
     int nextTeam = 1;
 
-    // Flags list 
-    private List<PickupFlag> flags;
+    // Flags
+    private PickupFlag team1Flag;
+    private PickupFlag team2Flag;
 
     // Initialisation
     void Start()
@@ -30,7 +31,6 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
         bullets = new List<Bullet>();
         players = new List<Player>();
         pickups = new List<Pickup>();
-        flags = new List<PickupFlag>();
     }
 
     // Scene initialisation
@@ -43,17 +43,15 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
             GameObject pickupPrefab = Resources.Load("Prefabs/Pickup") as GameObject;
             PrefabFactory.SpawnPickup(Runner, pickupPrefab, new Vector3(5f, 5f, 0f), 0, 20);
             
-            // Spawn flag 1
+            // Spawn team 1 flag
             GameObject flag1Prefab = Resources.Load("Prefabs/Flag1") as GameObject;
-            NetworkObject flag1Obj = PrefabFactory.SpawnFlag(Runner, flag1Prefab, respawnPoint1 + new Vector3Int(0, -5, 0));
-            PickupFlag flag1 = flag1Obj.GetComponent<PickupFlag>();
-            flags.Add(flag1);
+            NetworkObject flag1Obj = PrefabFactory.SpawnFlag(Runner, flag1Prefab, respawnPoint1 + new Vector3(0, -5, 0), 1);
+            team1Flag = flag1Obj.GetComponent<PickupFlag>();
 
-            // Spawn flag 2
+            // Spawn team 2 flag
             GameObject flag2Prefab = Resources.Load("Prefabs/Flag2") as GameObject;
-            NetworkObject flag2Obj = PrefabFactory.SpawnFlag(Runner, flag2Prefab, respawnPoint2 + new Vector3Int(0, 5, 0));
-            PickupFlag flag2 = flag2Obj.GetComponent<PickupFlag>();
-            flags.Add(flag2);
+            NetworkObject flag2Obj = PrefabFactory.SpawnFlag(Runner, flag2Prefab, respawnPoint2 + new Vector3(0, 5, 0), 2);
+            team2Flag = flag2Obj.GetComponent<PickupFlag>();
         }
     }
 
@@ -141,7 +139,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
 
             // Spawn the player network object
             int team = nextTeam;
-            Vector3Int respawnPoint = (team == 1) ? respawnPoint1 : respawnPoint2;
+            Vector3 respawnPoint = (team == 1) ? respawnPoint1 : respawnPoint2;
             NetworkObject networkPlayerObject = PrefabFactory.SpawnPlayer(Runner, player, playerPrefab, respawnPoint, characterPath, team);
 
             // Flip the next team so the next player to join will be on the other team
@@ -169,20 +167,20 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
     // Check if two flags are near each other
     public void CheckForWinCondition()
     {
-        if (flags.Count < 2) return; // Need at least two flags to check
-
-        float checkRadius = 8.0f; // Radius to check for nearby flags
-
-        for (int i = 0; i < flags.Count; i++)
+        if (Runner.IsServer)
         {
-            for (int j = i + 1; j < flags.Count; j++)
+            // Max distance for flags to be from a base to count as a win
+            float maxDistance = 8.0f;
+
+            // If team 2's flag is close enough to team 1's base, then team 1 wins
+            if (Vector2.Distance(team2Flag.transform.position, respawnPoint1) <= maxDistance)
             {
-                if (Vector2.Distance(flags[i].transform.position, flags[j].transform.position) <= checkRadius)
-                {
-                    // Trigger win condition
-                    Debug.Log("Player wins! Two flags are near each other.");
-                    return;
-                }
+                Debug.Log("Team 1 wins!");
+            }
+            // If team 1's flag is close enough to team 2's base, then team 2 wins
+            else if (Vector2.Distance(team1Flag.transform.position, respawnPoint2) <= maxDistance)
+            {
+                Debug.Log("Team 2 wins!");
             }
         }
     }

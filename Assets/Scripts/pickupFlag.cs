@@ -5,12 +5,14 @@ public class PickupFlag : NetworkBehaviour
 {
     [Networked, OnChangedRender(nameof(OnPickupChanged))] private NetworkBool isPickedUp { get; set; } // Track if the object is picked up
     [Networked] private Player picker { get; set; } // Track which player picked up the object
+    [Networked] int team { get; set; }
 
-    public void OnCreated()
+    public void OnCreated(int team)
     {
         // Initialize the object's state
         isPickedUp = false;
         picker = null;
+        this.team = team;
     }
 
     public override void Spawned()
