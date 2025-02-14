@@ -100,6 +100,7 @@ public class Player : NetworkBehaviour
         else if (Runner.GetPlayerObject(Runner.LocalPlayer).GetComponent<Player>().GetTeam() != team)
         {
             healthBar = smallHealthBar;
+            Debug.Log("Testing this runs");
             mainHealthBar.transform.parent.gameObject.SetActive(false);
         }
         // If this player is on the same team to the client's player then use no health bar
@@ -349,7 +350,9 @@ public class Player : NetworkBehaviour
     }
 
     public void ShowMessage(string message, float speed, Color color){
-        StartCoroutine(popUpText.QueuePopUp(message, speed, color));
+        if(HasInputAuthority){
+            popUpText.MakePopupText(message, speed, color);
+        } 
     }
 
     public bool RespawnTimerDone()
