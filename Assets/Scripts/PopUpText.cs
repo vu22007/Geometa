@@ -27,6 +27,8 @@ public class PopUpText : MonoBehaviour
             yield return new WaitForSeconds(0.1f);
         }
 
+        Debug.Log("IT gets here");
+
         StartCoroutine(MakePopupText(message, speed, textColor));
     }
 }

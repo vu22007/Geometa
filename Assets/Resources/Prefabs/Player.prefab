@@ -446,6 +446,7 @@ MonoBehaviour:
   animator: {fileID: 3838861860339599067}
   mainHealthBar: {fileID: 8395293536219763284}
   smallHealthBar: {fileID: 8623719664100579951}
+  popUpText: {fileID: 5274057264464900876}
   ammoText: {fileID: 9126663489822556632}
   holdPosition: {fileID: 0}
 --- !u!50 &-5256008576835943960

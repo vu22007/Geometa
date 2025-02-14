@@ -3,6 +3,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Fusion.Addons.Physics;
+using Unity.VisualScripting;
+using System;
 
 public class Player : NetworkBehaviour
 {
@@ -33,6 +35,7 @@ public class Player : NetworkBehaviour
     public Animator animator;
     [SerializeField] Image mainHealthBar;
     [SerializeField] Image smallHealthBar;
+    [SerializeField] PopUpText popUpText;
     Image healthBar;
     public TextMeshProUGUI ammoText;
     [HideInInspector] public Transform holdPosition;
@@ -252,7 +255,7 @@ public class Player : NetworkBehaviour
             }
             else
             {
-                Debug.Log("Press R to reload!!");
+                ShowMessage("Press R to reload!!", 0.2f, Color.white);
             }
         }
     }
@@ -296,9 +299,9 @@ public class Player : NetworkBehaviour
     {
         isAlive = false;
 
-        // Only show message for client who controls this player
-        if (HasInputAuthority)
-            Debug.Log("You died :((");
+        // // Only show message for client who controls this player
+        // if (HasInputAuthority)
+        ShowMessage("You died :((", 0.1f, Color.red);
         
         // Ensure health bar is empty
         if (healthBar != null)
@@ -316,7 +319,7 @@ public class Player : NetworkBehaviour
 
     void Reload()
     {
-        Debug.Log("Reloading");
+        ShowMessage("Reloading", 0.3f, Color.green);
         timeToWaitForBullet = reloadTime;
         currentAmmo = maxAmmo;
         ammoText.text = "Bullets: " + currentAmmo;
@@ -343,6 +346,10 @@ public class Player : NetworkBehaviour
             FindFirstObjectByType<GameController>()?.CheckForWinCondition();
             Debug.Log("Dropped the flag!");
         }
+    }
+
+    public void ShowMessage(string message, float speed, Color color){
+        StartCoroutine(popUpText.QueuePopUp(message, speed, color));
     }
 
     public bool RespawnTimerDone()
