@@ -35,7 +35,9 @@ public class Player : NetworkBehaviour
     [SerializeField] Image smallHealthBar;
     Image healthBar;
     public TextMeshProUGUI ammoText;
+    public TextMeshProUGUI timeText;
     [HideInInspector] public Transform holdPosition;
+    GameController gameController;
 
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(string characterPath, Vector3 respawnPoint, int team)
@@ -71,12 +73,14 @@ public class Player : NetworkBehaviour
             cam.gameObject.SetActive(false);
         }
 
-        // Add this player to game controller player list (do this for all found game controllers to ensure that it is added to the correct one)
-        foreach (GameObject gameControllerObject in GameObject.FindGameObjectsWithTag("GameController"))
-        {
-            GameController gameController = gameControllerObject.GetComponent<GameController>();
-            gameController.RegisterPlayer(this);
-        }
+        // Find game controller component (Fusion creates copies of the game controller object so we need to choose the correct one)
+        if (GameObject.Find("Host") != null)
+            gameController = GameObject.Find("Host").GetComponent<GameController>();
+        else
+            gameController = GameObject.Find("Client A").GetComponent<GameController>();
+
+        // Add this player to game controller player list
+        gameController.RegisterPlayer(this);
 
         // Get components
         rb = gameObject.GetComponent<Rigidbody2D>();
@@ -118,12 +122,8 @@ public class Player : NetworkBehaviour
     // Called on each client and server when player is despawned from network
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
-        // Remove this player from game controller player list (do this for all found game controllers to ensure that it is removed from the correct one)
-        foreach (GameObject gameControllerObject in GameObject.FindGameObjectsWithTag("GameController"))
-        {
-            GameController gameController = gameControllerObject.GetComponent<GameController>();
-            gameController.UnregisterPlayer(this);
-        }
+        // Remove this player from game controller player list
+        gameController.UnregisterPlayer(this);
     }
     
     // Player initialisation when respawning
@@ -185,7 +185,7 @@ public class Player : NetworkBehaviour
                 Reload();
             }
 
-            // Drop object with 'C'
+            // Drop object
             if (input.buttons.WasPressed(previousButtons, InputButtons.Pickup))
             {
                 if (isCarrying)
@@ -220,6 +220,16 @@ public class Player : NetworkBehaviour
         if (isCarrying && carriedObject != null)
         {
             carriedObject.transform.position = transform.position + new Vector3(2.0f, 0, 0);
+        }
+
+        // Update the time left in the UI if the client controls this player
+        if (HasInputAuthority)
+        {
+            float timeLeft = gameController.maxTime - gameController.currentTime;
+            int secondsLeft = (int) Mathf.Ceil(timeLeft);
+            int mins = secondsLeft / 60;
+            int secs = secondsLeft % 60;
+            timeText.text = "Time Left: " + mins + ":" + secs.ToString("00");
         }
     }
 

@@ -7,8 +7,8 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
     [SerializeField] Vector3 respawnPoint1;
     [SerializeField] Vector3 respawnPoint2;
 
-    [SerializeField] float maxTime = 480.0f; //8 minute games
-    [SerializeField] float currentTime = 0.0f;
+    public float maxTime = 480.0f; // 8 minute games
+    [HideInInspector] public float currentTime = 0.0f;
 
     private List<Bullet> bullets;
     private List<Player> players;
@@ -58,7 +58,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
     // Update for every server simulation tick
     public override void FixedUpdateNetwork()
     {
-        currentTime += Runner.DeltaTime;
+        currentTime = Runner.Tick * Runner.DeltaTime;
         if (currentTime >= maxTime)
         {
             //end game
