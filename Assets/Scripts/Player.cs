@@ -91,20 +91,20 @@ public class Player : NetworkBehaviour
         if (HasInputAuthority)
         {
             healthBar = mainHealthBar;
-            smallHealthBar.GetComponentInParent<Canvas>().enabled = false;
+            smallHealthBar.transform.parent.gameObject.SetActive(false);
         }
         // If this player is on the other team to the client's player then use small health bar
         else if (Runner.GetPlayerObject(Runner.LocalPlayer).GetComponent<Player>().GetTeam() != team)
         {
             healthBar = smallHealthBar;
-            mainHealthBar.GetComponentInParent<Canvas>().enabled = false;
+            mainHealthBar.transform.parent.gameObject.SetActive(false);
         }
         // If this player is on the same team to the client's player then use no health bar
         else
         {
             healthBar = null;
-            mainHealthBar.GetComponentInParent<Canvas>().enabled = false;
-            smallHealthBar.GetComponentInParent<Canvas>().enabled = false;
+            mainHealthBar.transform.parent.gameObject.SetActive(false);
+            smallHealthBar.transform.parent.gameObject.SetActive(false);
         }
 
         // Set the health bar
