@@ -1218,8 +1218,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ef476de2eef2b4277b2945d6685418de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  popUpTextPrefab: {fileID: 0}
-  popUpText: {fileID: 0}
+  popUpTextPrefab: {fileID: 2075306469595700386, guid: b548b5ef87d184627bcf594c3c5f7acb, type: 3}
+  popUpText: {fileID: 2040430487038617038, guid: b548b5ef87d184627bcf594c3c5f7acb, type: 3}
 --- !u!1 &8940913868998988815
 GameObject:
   m_ObjectHideFlags: 0
