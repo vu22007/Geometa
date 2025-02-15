@@ -13,6 +13,8 @@ public class Bullet : NetworkBehaviour
     [Networked] float lifespan { get; set; }
     [Networked] int team { get; set; }
 
+    GameController gameController;
+
     // Bullet intialisation (called from a player object on server when creating the bullet)
     public void OnCreated(Vector2 position, Vector2 direction, Quaternion rotation, float speed, float damage, int team)
     {
@@ -29,12 +31,14 @@ public class Bullet : NetworkBehaviour
     // Bullet initialisation (called on each client and server when bullet is spawned on network)
     public override void Spawned()
     {
-        // Add this bullet to game controller bullet list (do this for all found game controllers to ensure that it is added to the correct one)
-        foreach (GameObject gameControllerObject in GameObject.FindGameObjectsWithTag("GameController"))
-        {
-            GameController gameController = gameControllerObject.GetComponent<GameController>();
-            gameController.RegisterBullet(this);
-        }
+        // Find game controller component (Fusion creates copies of the game controller object so we need to choose the correct one)
+        if (GameObject.Find("Host") != null)
+            gameController = GameObject.Find("Host").GetComponent<GameController>();
+        else
+            gameController = GameObject.Find("Client A").GetComponent<GameController>();
+
+        // Add this bullet to game controller bullet list
+        gameController.RegisterBullet(this);
 
         // Rotate the bullet into the correct orientation
         transform.rotation = rotation;
@@ -43,12 +47,8 @@ public class Bullet : NetworkBehaviour
     // Called on each client and server when bullet is despawned from network
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
-        // Remove this bullet from game controller bullet list (do this for all found game controllers to ensure that it is removed from the correct one)
-        foreach (GameObject gameControllerObject in GameObject.FindGameObjectsWithTag("GameController"))
-        {
-            GameController gameController = gameControllerObject.GetComponent<GameController>();
-            gameController.UnregisterBullet(this);
-        }
+        // Remove this bullet from game controller bullet list
+        gameController.UnregisterBullet(this);
     }
 
     // Update function (called from the game controller on all clients and server with the list of all currently active bullets)
