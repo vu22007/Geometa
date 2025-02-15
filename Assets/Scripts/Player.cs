@@ -3,8 +3,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Fusion.Addons.Physics;
-using Unity.VisualScripting;
-using System;
 
 public class Player : NetworkBehaviour
 {
@@ -35,10 +33,9 @@ public class Player : NetworkBehaviour
     public Animator animator;
     [SerializeField] Image mainHealthBar;
     [SerializeField] Image smallHealthBar;
-    [SerializeField] PopUpText popUpText;
     Image healthBar;
     public TextMeshProUGUI ammoText;
-    public TextMeshProUGUI timeLeftText;
+    public TextMeshProUGUI timeText;
     [HideInInspector] public Transform holdPosition;
     GameController gameController;
 
@@ -98,21 +95,20 @@ public class Player : NetworkBehaviour
         if (HasInputAuthority)
         {
             healthBar = mainHealthBar;
-            smallHealthBar.transform.parent.gameObject.SetActive(false);
+            smallHealthBar.GetComponentInParent<Canvas>().enabled = false;
         }
         // If this player is on the other team to the client's player then use small health bar
         else if (Runner.GetPlayerObject(Runner.LocalPlayer).GetComponent<Player>().GetTeam() != team)
         {
             healthBar = smallHealthBar;
-            Debug.Log("Testing this runs");
-            mainHealthBar.transform.parent.gameObject.SetActive(false);
+            mainHealthBar.GetComponentInParent<Canvas>().enabled = false;
         }
         // If this player is on the same team to the client's player then use no health bar
         else
         {
             healthBar = null;
-            mainHealthBar.transform.parent.gameObject.SetActive(false);
-            smallHealthBar.transform.parent.gameObject.SetActive(false);
+            mainHealthBar.GetComponentInParent<Canvas>().enabled = false;
+            smallHealthBar.GetComponentInParent<Canvas>().enabled = false;
         }
 
         // Set the health bar
@@ -233,7 +229,7 @@ public class Player : NetworkBehaviour
             int secondsLeft = (int) Mathf.Ceil(timeLeft);
             int mins = secondsLeft / 60;
             int secs = secondsLeft % 60;
-            timeLeftText.text = "Time Left: " + mins + ":" + secs.ToString("00");
+            timeText.text = "Time Left: " + mins + ":" + secs.ToString("00");
         }
     }
 
@@ -266,7 +262,7 @@ public class Player : NetworkBehaviour
             }
             else
             {
-                ShowMessage("Press R to reload!!", 0.2f, Color.white);
+                Debug.Log("Press R to reload!!");
             }
         }
     }
@@ -310,9 +306,9 @@ public class Player : NetworkBehaviour
     {
         isAlive = false;
 
-        // // Only show message for client who controls this player
-        // if (HasInputAuthority)
-        ShowMessage("You died :((", 0.1f, Color.red);
+        // Only show message for client who controls this player
+        if (HasInputAuthority)
+            Debug.Log("You died :((");
         
         // Ensure health bar is empty
         if (healthBar != null)
@@ -330,7 +326,7 @@ public class Player : NetworkBehaviour
 
     void Reload()
     {
-        ShowMessage("Reloading", 0.3f, Color.green);
+        Debug.Log("Reloading");
         timeToWaitForBullet = reloadTime;
         currentAmmo = maxAmmo;
         ammoText.text = "Bullets: " + currentAmmo;
@@ -362,12 +358,6 @@ public class Player : NetworkBehaviour
             FindFirstObjectByType<GameController>()?.CheckForWinCondition();
             Debug.Log("Dropped the flag!");
         }
-    }
-
-    public void ShowMessage(string message, float speed, Color color){
-        if(HasInputAuthority){
-            popUpText.MakePopupText(message, speed, color);
-        } 
     }
 
     public bool RespawnTimerDone()
