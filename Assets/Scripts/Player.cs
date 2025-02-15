@@ -38,7 +38,7 @@ public class Player : NetworkBehaviour
     [SerializeField] PopUpText popUpText;
     Image healthBar;
     public TextMeshProUGUI ammoText;
-    public TextMeshProUGUI timeText;
+    public TextMeshProUGUI timeLeftText;
     [HideInInspector] public Transform holdPosition;
     GameController gameController;
 
@@ -233,7 +233,7 @@ public class Player : NetworkBehaviour
             int secondsLeft = (int) Mathf.Ceil(timeLeft);
             int mins = secondsLeft / 60;
             int secs = secondsLeft % 60;
-            timeText.text = "Time Left: " + mins + ":" + secs.ToString("00");
+            timeLeftText.text = "Time Left: " + mins + ":" + secs.ToString("00");
         }
     }
 
