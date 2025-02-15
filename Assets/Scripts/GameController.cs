@@ -185,4 +185,22 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
         }
     }
 
+    void BroadCastMessageToAll(string message, float speed, Color color)
+    {
+        foreach (Player player in players)
+        {
+            player.ShowMessage(message, speed, color);
+        }
+    }
+
+    void BroadCastMessageToTeam(int team, string message, float speed, Color color)
+    {
+        foreach (Player player in players)
+        {
+            if (player.GetTeam() == team){
+                player.ShowMessage(message, speed, color);
+            }
+        }
+    }
+
 }
