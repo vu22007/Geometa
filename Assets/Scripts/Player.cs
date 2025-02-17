@@ -406,6 +406,11 @@ public class Player : NetworkBehaviour
 
     void Reload()
     {
+        if (currentAmmo >= maxAmmo)
+        {
+            ShowMessage("Ammo is full!", 0.1f, Color.white);
+            return; 
+        }
         if (reloadTimer <= 0)
         {
             ShowMessage("Reloading", 0.3f, Color.green);
@@ -419,7 +424,7 @@ public class Player : NetworkBehaviour
         }
         else
         {
-            ShowMessage("still reloading", 0.3f, Color.green);
+            ShowMessage("still reloading", 0.3f, Color.white);
         }
     }
 
