@@ -31,6 +31,9 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
         bullets = new List<Bullet>();
         players = new List<Player>();
         pickups = new List<Pickup>();
+
+        //StartCoroutine(Map.LoadFromBoundingBox(51.453990, -2.605788, 51.456203, -2.598647));
+        Map.LoadMapFromBoundingBox(51.453990, -2.605788, 51.456203, -2.598647);
     }
 
     // Scene initialisation
