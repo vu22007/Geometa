@@ -23,7 +23,7 @@ public class Player : NetworkBehaviour
     [Networked] bool isAlive { get; set; }
     [Networked] float respawnTime { get; set; }
     [Networked] float currentRespawn { get; set; }
-    [Networked, Capacity(50)] string characterPath { get; set; }
+    [Networked, Capacity(50)] string characterPath { get; set; } = "ScriptableObjects/Characters/Army Vet";
     [Networked] NetworkButtons previousButtons { get; set; }
     [Networked] private NetworkObject carriedObject { get; set; }
     [Networked, HideInInspector] public bool isCarrying { get; set; }
@@ -83,6 +83,7 @@ public class Player : NetworkBehaviour
             gameController = GameObject.Find("Client A").GetComponent<GameController>();
 
         // Add this player to game controller player list
+        // Also registers player in alivePlayers
         gameController.RegisterPlayer(this);
 
         // Get components
@@ -150,6 +151,7 @@ public class Player : NetworkBehaviour
 
         // Activate the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = true;
+        gameController.RegisterAlivePlayer(this);
     }
 
     // Update function (called from the game controller on all clients and server)
@@ -320,6 +322,7 @@ public class Player : NetworkBehaviour
 
         // Disable the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = false;
+        gameController.UnregisterAlivePlayer(this);
 
         if (isCarrying)
         {

@@ -16,9 +16,17 @@ public class ShapeController : NetworkBehaviour
     [Networked] private float cooldown { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
 
+    GameController gameController { get; set; }
+
     // Shape controller intialisation (called on each client and server when shape controller is spawned on network)
     public override void Spawned()
     {
+        // Find game controller component (Fusion creates copies of the game controller object so we need to choose the correct one)
+        if (GameObject.Find("Host") != null)
+            gameController = GameObject.Find("Host").GetComponent<GameController>();
+        else
+            gameController = GameObject.Find("Client A").GetComponent<GameController>();
+
         isActive = true;
         isPlacing = false;
         cooldown = 0;
@@ -75,6 +83,8 @@ public class ShapeController : NetworkBehaviour
     
     private void TrianglePerformed()
     {
+        gameController.GetClosestPlayers(GetComponentInParent<Player>(), 2);
+
         if (!isPlacing && cooldown == 0)
         {
             plusAngle = 0;

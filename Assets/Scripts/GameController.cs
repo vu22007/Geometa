@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Fusion;
 using UnityEngine;
 
@@ -12,6 +13,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
 
     private List<Bullet> bullets;
     private List<Player> players;
+    private List<Player> alivePlayers;
 
     private List<Pickup> pickups;
 
@@ -31,6 +33,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
         bullets = new List<Bullet>();
         players = new List<Player>();
         pickups = new List<Pickup>();
+        alivePlayers = new List<Player>();
     }
 
     // Scene initialisation
@@ -52,6 +55,21 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
             GameObject flag2Prefab = Resources.Load("Prefabs/Flag2") as GameObject;
             NetworkObject flag2Obj = PrefabFactory.SpawnFlag(Runner, flag2Prefab, respawnPoint2 + new Vector3(0, 5, 0), 2);
             team2Flag = flag2Obj.GetComponent<PickupFlag>();
+
+            GameObject playerPrefab = Resources.Load("Prefabs/Player") as GameObject;
+            string characterPath = "ScriptableObjects/Characters/Army Vet";
+
+            // Spawn the player network object
+            int team = nextTeam;
+            Vector3 respawnPoint = (team == 1) ? respawnPoint1 : respawnPoint2;
+            NetworkObject networkPlayerObject = Runner.Spawn(playerPrefab, respawnPoint, Quaternion.identity, null, (runner, networkObject) =>
+            {
+                // Initialise the player (this is called before the player is spawned)
+                Player player = networkObject.GetComponent<Player>();
+                player.OnCreated(characterPath, respawnPoint, team);
+            });
+            // Flip the next team so the next player to join will be on the other team
+            // nextTeam = (nextTeam == 1) ? 2 : 1;
         }
     }
 
@@ -101,6 +119,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
     public void RegisterPlayer(Player player)
     {
         players.Add(player);
+        RegisterAlivePlayer(player);
     }
 
     public void UnregisterPlayer(Player player)
@@ -126,6 +145,16 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
     public void UnregisterPickup(Pickup pickup)
     {
         pickups.Remove(pickup);
+    }
+
+    public void RegisterAlivePlayer(Player player)
+    {
+        alivePlayers.Add(player);
+    }
+
+    public void UnregisterAlivePlayer(Player player)
+    {
+        alivePlayers.Remove(player);
     }
 
     public void PlayerJoined(PlayerRef player)
@@ -162,6 +191,22 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
                 spawnedPlayers.Remove(player);
             }
         }
+    }
+
+    public List<Player> GetClosestPlayers(Player currentPlayer, int count)
+    {
+        // This can be optimised by having alive players separately
+        // if it slows down runtime
+        List<Player> closestPlayers = new List<Player>(alivePlayers).FindAll(a => a.GetTeam() == currentPlayer.GetTeam());
+        closestPlayers.Remove(currentPlayer);   
+        Vector3 position = currentPlayer.transform.position;
+
+        //Sorting players by distance, 
+        closestPlayers.Sort((a, b) =>
+            Vector3.Distance(position, b.transform.position).CompareTo(Vector3.Distance(position, a.transform.position))
+        );
+        closestPlayers.ForEach(a => Debug.Log(a.transform.position));
+        return closestPlayers.Take(count).ToList();
     }
 
     // Check if two flags are near each other
