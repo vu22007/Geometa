@@ -10,7 +10,9 @@ public class Character : ScriptableObject
     [SerializeField] Sprite sprite;
     [SerializeField] int maxAmmo;
     [SerializeField] float fireRate;
-
+    [SerializeField] float dashSpeed;
+    [SerializeField] float dashDuration;
+    [SerializeField] float dashCooldown;
     public float Speed{
         get{return speed;}
     }
@@ -31,6 +33,16 @@ public class Character : ScriptableObject
     }
     public float FireRate{
         get{return fireRate;}
+    }
+
+    public float DashSpeed{
+        get{return dashSpeed;}
+    }
+    public float DashDuration{
+        get{return dashDuration;}
+    }
+    public float DashCooldown{
+        get{return dashCooldown;}
     }
 
 }
