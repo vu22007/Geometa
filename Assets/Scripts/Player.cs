@@ -96,7 +96,8 @@ public class Player : NetworkBehaviour
         spriteRenderer.sprite = character.Sprite;
 
         // If client controls this player then use main health bar
-        if (HasInputAuthority)
+        // CHANGE to HasInputAuthority later
+        if (true)
         {
             healthBar = mainHealthBar;
             smallHealthBar.transform.parent.gameObject.SetActive(false);

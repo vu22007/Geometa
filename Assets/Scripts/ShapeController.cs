@@ -1,4 +1,7 @@
+using System.Collections.Generic;
+using System.Linq;
 using Fusion;
+using NUnit.Framework;
 using UnityEngine;
 
 public class ShapeController : NetworkBehaviour
@@ -83,13 +86,75 @@ public class ShapeController : NetworkBehaviour
     
     private void TrianglePerformed()
     {
-        gameController.GetClosestPlayers(GetComponentInParent<Player>(), 2);
+        int vertices = 3;
+        List<Player> closestPlayers = gameController.GetClosestPlayers(GetComponentInParent<Player>(), 2);
+        List<Vector3> playerPositions = new List<Vector3>();
+        playerPositions.Add(GetComponentInParent<Player>().transform.position);
+        foreach (Player player in closestPlayers)
+        {
+            playerPositions.Add(player.transform.position);
+        }
+
+        if (playerPositions.Count < vertices)
+        {
+            Debug.Log("Not enough players to activate shape");
+            return;
+        }
+
+        CheckConvex(playerPositions);
 
         if (!isPlacing && cooldown == 0)
         {
             plusAngle = 0;
             SpawnShape(trianglePrefab);
         }
+    }
+
+    List<Vector3> SortVerticesAroundCentroid(List<Vector3> vertices)
+    {
+        Vector3 centroid = Vector3.zero;
+        foreach (var v in vertices)
+        {
+            centroid += v;
+        }
+        centroid /= vertices.Count;
+
+        // Sort by angle relative to centroid  - Counterclockwise
+        return vertices.OrderBy(v => Mathf.Atan2(v.y - centroid.y, v.x - centroid.x)).ToList();
+    }
+
+    bool CheckConvex(List<Vector3> vertices)
+    {
+        List<float> angles = new List<float>();
+        int count = vertices.Count;
+        foreach (var v in vertices)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                List<Vector3> angleVertices = new List<Vector3>();
+                for (int j = -1; j <= 1; j++)
+                {
+                    Debug.Log((i + j + count) % count);
+                    angleVertices.Add(vertices[(i + j + count) % count]);
+                }
+                angle = GetAngle(angleVertices);
+                if(angle > 180) return false;
+            }
+        }
+        return true;
+    }
+
+    float GetAngle(List<Vector3> vertices)
+    {
+        if(vertices.Count != 3)
+        {
+            Debug.LogError("3 vertices not given to calculate angle");
+        }
+        Vector3 direction1 = (vertices[0] - vertices[1]).normalized;
+        Vector3 direction2 = (vertices[2] - vertices[1]).normalized;
+        float angle = Vector3.Angle(direction1, direction2);
+        Debug.Log(angle);
+        return angle;
     }
 
     private void SquarePerformed()
