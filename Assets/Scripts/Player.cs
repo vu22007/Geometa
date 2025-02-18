@@ -54,6 +54,8 @@ public class Player : NetworkBehaviour
     public TextMeshProUGUI timeLeftText;
     [HideInInspector] public Transform holdPosition;
     GameController gameController;
+    [SerializeField] GameObject deathOverlay;
+    [SerializeField] TextMeshProUGUI respawnTimerTxt; 
 
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(string characterPath, Vector3 respawnPoint, int team)
@@ -135,6 +137,10 @@ public class Player : NetworkBehaviour
         if (healthBar != null)
             healthBar.fillAmount = currentHealth / maxHealth;
 
+        if (deathOverlay != null)
+        {
+            deathOverlay.SetActive(false);
+        }
         // Set the ammo counter
         ammoText.text = "Bullets: " + currentAmmo;
     }
@@ -166,6 +172,12 @@ public class Player : NetworkBehaviour
 
         // Activate the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = true;
+
+        // Disable the death overlay
+        if (HasInputAuthority && deathOverlay != null)
+        {
+            deathOverlay.SetActive(false);
+        }
     }
 
     // Update function (called from the game controller on all clients and server)
@@ -180,7 +192,29 @@ public class Player : NetworkBehaviour
             // Stop player movement and prevent player from infinitely sliding when pushed by another player
             rb.linearVelocity = new Vector2(0, 0);
 
+            // Enable the death overlay and update the respawn timer text
+            if (HasInputAuthority) // Only show for the local player
+            {
+                if (deathOverlay != null)
+                {
+                    deathOverlay.SetActive(true); // Enable the overlay
+                }
+
+                if (respawnTimerTxt != null)
+                {
+                    // Calculate the remaining respawn time
+                    float remainingTime = respawnTime - currentRespawn;
+                    respawnTimerTxt.text = $"Respawning in {Mathf.CeilToInt(remainingTime)}s";
+                }
+            }
             return;
+        }
+        else
+        {
+            if (HasInputAuthority && deathOverlay != null)
+            {
+                deathOverlay.SetActive(false);
+            }
         }
 
         // Decrease bullet timer and clamp to 0 if below 0
@@ -388,7 +422,7 @@ public class Player : NetworkBehaviour
 
         // // Only show message for client who controls this player
         // if (HasInputAuthority)
-        ShowMessage("You died :((", 0.1f, Color.red);
+        //ShowMessage("You died :((", 0.1f, Color.red);
         
         // Ensure health bar is empty
         if (healthBar != null)
