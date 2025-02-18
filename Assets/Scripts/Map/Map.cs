@@ -9,7 +9,7 @@ public class Map : MonoBehaviour
         StartCoroutine(LoadMapFromBoundingBox(51.453990, -2.605788, 51.456203, -2.598647));
     }
 
-    public static IEnumerator LoadMapFromBoundingBox(double lowLat, double lowLong, double highLat, double highLong)
+    IEnumerator LoadMapFromBoundingBox(double lowLat, double lowLong, double highLat, double highLong)
     {
         // Construct request body
         // Note: We are fetching buildings (both as ways and as relations) and roads
@@ -46,7 +46,7 @@ public class Map : MonoBehaviour
 
         // Calculate horizontal shift, vertical shift and scale required to convert GPS coords into scene position
         double xShift = lowLong + (highLong - lowLong) / 2;
-        double yShift = lowLat + (highLat - lowLat) / 2;
+        double yShift = LatToY(lowLat) + (LatToY(highLat) - LatToY(lowLat)) / 2;
         double scale = 20000;
 
         // Add map elements to scene
@@ -62,7 +62,7 @@ public class Map : MonoBehaviour
                 {
                     MapElement.Coords coords = element.geometry[i];
                     double xPos = (coords.lon - xShift) * scale;
-                    double yPos = (coords.lat - yShift) * scale;
+                    double yPos = (LatToY(coords.lat) - yShift) * scale;
                     vertices[i] = new Vector2((float)xPos, (float)yPos);
                 }
 
@@ -76,7 +76,16 @@ public class Map : MonoBehaviour
 
                 // Set the polygon collider's points to the building's vertices
                 collider.points = vertices;
+
+                // TODO: Make the buildings visible
             }
         }
+    }
+
+    double LatToY(double latitude)
+    {
+        return System.Math.Log(System.Math.Tan(
+            (latitude + 90) / 360 * System.Math.PI
+        )) / System.Math.PI * 180;
     }
 }
