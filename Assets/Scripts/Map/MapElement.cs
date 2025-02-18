@@ -30,6 +30,9 @@ public class MapElement
         public string building;
         public string buildingLevels;
         public string highway;
+        public string landuse;
+        public string natural;
+        public string leisure;
     }
 
     [Serializable]

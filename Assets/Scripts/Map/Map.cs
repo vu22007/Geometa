@@ -8,6 +8,7 @@ public class Map : MonoBehaviour
     [SerializeField] GameObject backgroundPrefab;
     [SerializeField] GameObject buildingPrefab;
     [SerializeField] GameObject roadPrefab;
+    [SerializeField] GameObject grassPrefab;
 
     void Start()
     {
@@ -24,6 +25,11 @@ public class Map : MonoBehaviour
             "  way[building];" +
             "  rel[building];" +
             "  way[highway];" +
+            "  way[landuse=grass];" +
+            "  way[natural=wood];" +
+            "  way[leisure=park];" +
+            "  way[leisure=garden];" +
+            "  way[leisure=nature_reserve];" +
             ");" +
             "out geom;");
 
@@ -47,7 +53,7 @@ public class Map : MonoBehaviour
         // Parse JSON
         MapData mapData = JsonUtility.FromJson<MapData>(jsonResponse);
 
-        // Calculate horizontal shift, vertical shift and scale required to convert GPS coords into scene point
+        // Calculate horizontal shift, vertical shift and scale required to convert GPS coords into world space
         double xShift = lowLong + (highLong - lowLong) / 2;
         double yShift = LatToY(lowLat) + (LatToY(highLat) - LatToY(lowLat)) / 2;
         double scale = 80000;
@@ -61,23 +67,29 @@ public class Map : MonoBehaviour
         // Add map elements to scene
         foreach (MapElement element in mapData.elements)
         {
-            // Deal with buildings (but only ways and not relations)
-            if (IsBuilding(element))
+            // Deal with ways
+            if (element.type == "way")
             {
-                // Get scene positions for each building vertex using GPS coords
-                Vector2[] vertices = GetPointsFromGPSCoords(element.geometry, xShift, yShift, scale);
+                // Get points in world space from GPS coords
+                Vector2[] points = GetPointsFromGPSCoords(element.geometry, xShift, yShift, scale);
 
-                // Create and add building to scene
-                AddBuildingToScene(vertices);
-            }
-            // Deal with roads
-            else if (IsRoad(element))
-            {
-                // Get scene positions for each road node using GPS coords
-                Vector2[] nodes = GetPointsFromGPSCoords(element.geometry, xShift, yShift, scale);
-
-                // Create and add road to scene
-                AddRoadToScene(nodes);
+                // Deal with buildings (but only ways and not relations)
+                if (IsBuilding(element))
+                {
+                    // Create and add building to scene
+                    AddBuildingToScene(points);
+                }
+                // Deal with roads
+                else if (IsRoad(element))
+                {
+                    // Create and add road to scene
+                    AddRoadToScene(points);
+                }
+                else if (IsGrass(element))
+                {
+                    // Create and add patch of grass to scene
+                    AddGrassToScene(points);
+                }
             }
         }
     }
@@ -119,6 +131,15 @@ public class Map : MonoBehaviour
                element.tags.highway == "steps";
     }
 
+    bool IsGrass(MapElement element)
+    {
+        return element.tags.landuse == "grass" ||
+               element.tags.natural == "wood" ||
+               element.tags.leisure == "park" ||
+               element.tags.leisure == "garden" ||
+               element.tags.leisure == "nature_reserve";
+    }
+
     void AddBuildingToScene(Vector2[] vertices)
     {
         // Instantiate building from prefab with the map as the parent
@@ -155,6 +176,25 @@ public class Map : MonoBehaviour
             spline.InsertPointAt(i, nodes[i]);
             spline.SetTangentMode(i, ShapeTangentMode.Continuous);
             spline.SetHeight(i, 4.0f); // Thickness of road
+        }
+    }
+
+    void AddGrassToScene(Vector2[] vertices)
+    {
+        // Instantiate grass patch from prefab with the map as the parent
+        GameObject grass = Instantiate(grassPrefab, new Vector3(0, 0, 0), Quaternion.identity, transform);
+
+        // Get components
+        SpriteShapeController spriteShapeController = grass.GetComponent<SpriteShapeController>();
+        Spline spline = spriteShapeController.spline;
+
+        // Add grass vertices to sprite shape (ignore last vertex since it is the same as the first)
+        spline.Clear();
+        for (int i = 0; i < vertices.Length - 1; i++)
+        {
+            // Add point to sprite shape
+            spline.InsertPointAt(i, vertices[i]);
+            spline.SetTangentMode(i, ShapeTangentMode.Linear);
         }
     }
 }
