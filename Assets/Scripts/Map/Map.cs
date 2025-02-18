@@ -1,9 +1,12 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.U2D;
 
 public class Map : MonoBehaviour
 {
+    [SerializeField] GameObject buildingPrefab;
+
     void Start()
     {
         StartCoroutine(LoadMapFromBoundingBox(51.453990, -2.605788, 51.456203, -2.598647));
@@ -50,7 +53,6 @@ public class Map : MonoBehaviour
         double scale = 20000;
 
         // Add map elements to scene
-        GameObject map = GameObject.Find("Map");
         foreach (MapElement element in mapData.elements)
         {
             // Deal with buildings (but only ways and not relations)
@@ -66,18 +68,26 @@ public class Map : MonoBehaviour
                     vertices[i] = new Vector2((float)xPos, (float)yPos);
                 }
 
-                // Create building game object and assign it as parent of map object
-                GameObject building = new GameObject("Building");
-                building.transform.parent = map.transform;
+                // Instantiate building from prefab with the map as the parent
+                GameObject building = Instantiate(buildingPrefab, new Vector3(0, 0, 0), Quaternion.identity, transform);
 
-                // Create and get polygon collider component
-                building.AddComponent<PolygonCollider2D>();
+                // Get components
                 PolygonCollider2D collider = building.GetComponent<PolygonCollider2D>();
+                SpriteShapeController spriteShapeController = building.GetComponent<SpriteShapeController>();
+                Spline spline = spriteShapeController.spline;
 
                 // Set the polygon collider's points to the building's vertices
-                collider.points = vertices;
+                //collider.points = vertices;
 
-                // TODO: Make the buildings visible
+                // Add building vertices to sprite shape (ignore last vertex since it is the same as the first)
+                spline.Clear();
+                for (int i = 0; i < vertices.Length - 1; i++)
+                {
+                    Debug.Log("On point: " + i);
+                    spline.InsertPointAt(i, vertices[i]);
+                    spline.SetTangentMode(i, ShapeTangentMode.Linear);
+                    spline.SetCorner(i, false);
+                }
             }
         }
     }
