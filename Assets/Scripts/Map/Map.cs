@@ -5,6 +5,7 @@ using UnityEngine.U2D;
 
 public class Map : MonoBehaviour
 {
+    [SerializeField] GameObject backgroundPrefab;
     [SerializeField] GameObject buildingPrefab;
     [SerializeField] GameObject roadPrefab;
 
@@ -50,6 +51,12 @@ public class Map : MonoBehaviour
         double xShift = lowLong + (highLong - lowLong) / 2;
         double yShift = LatToY(lowLat) + (LatToY(highLat) - LatToY(lowLat)) / 2;
         double scale = 80000;
+
+        // Add background to scene (scaled to cover whole map)
+        GameObject background = Instantiate(backgroundPrefab, new Vector3(0, 0, 0), Quaternion.identity, transform);
+        double xScale = (highLong - lowLong) * scale;
+        double yScale = (LatToY(highLat) - LatToY(lowLat)) * scale;
+        background.transform.localScale = new Vector3((float)xScale, (float)yScale, 1);
 
         // Add map elements to scene
         foreach (MapElement element in mapData.elements)
