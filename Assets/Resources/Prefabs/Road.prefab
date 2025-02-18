@@ -11,9 +11,8 @@ GameObject:
   - component: {fileID: 4373097218521871907}
   - component: {fileID: 2944051065061783022}
   - component: {fileID: 6014050156912707874}
-  - component: {fileID: -2419561911038752215}
   m_Layer: 0
-  m_Name: Building
+  m_Name: Road
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -29,7 +28,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.9919, y: 0.9955, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -79,10 +78,11 @@ SpriteShapeRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Color: {r: 0.85098046, g: 0.81568635, b: 0.78823537, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_MaskInteraction: 0
   m_ShapeTexture: {fileID: 2800000, guid: b281b91a70a624a0da1c43adc1c30c7b, type: 3}
   m_Sprites:
+  - {fileID: 21300000, guid: 0ae2b74b1edd14bb18dd7b65ae916a54, type: 3}
   - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
   - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
   - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
@@ -92,8 +92,8 @@ SpriteShapeRenderer:
   - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
   - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
   m_LocalAABB:
-    m_Center: {x: 0.0008108616, y: 0.086500525, z: 0}
-    m_Extent: {x: 2.0039434, y: 0.9134996, z: 0}
+    m_Center: {x: 0.46559596, y: 0.18318814, z: 0}
+    m_Extent: {x: 4.1032667, y: 0.9339633, z: 0}
   m_SpriteSortPoint: 0
 --- !u!114 &6014050156912707874
 MonoBehaviour:
@@ -108,41 +108,41 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Spline:
-    m_IsOpenEnded: 0
+    m_IsOpenEnded: 1
     m_ControlPoints:
-    - position: {x: -2, y: 1, z: 0}
+    - position: {x: -3.3879628, y: 0.61618, z: 0}
       leftTangent: {x: 0, y: 0, z: 0}
-      rightTangent: {x: 0, y: 0, z: 0}
-      mode: 0
+      rightTangent: {x: 1.3333035, y: 0, z: 0}
+      mode: 1
       height: 1
       spriteIndex: 0
       corner: 1
       m_CornerMode: 1
-    - position: {x: 2, y: 1, z: 0}
-      leftTangent: {x: 0, y: 0, z: 0}
-      rightTangent: {x: 0, y: 0, z: 0}
-      mode: 0
+    - position: {x: -0.7362422, y: -0.33207983, z: 0}
+      leftTangent: {x: -1.3357273, y: 0.00084653497, z: 0}
+      rightTangent: {x: 1.4110162, y: -0.0008942485, z: 0}
+      mode: 1
       height: 1
       spriteIndex: 0
       corner: 1
       m_CornerMode: 1
-    - position: {x: 2.004754, y: -0.82616043, z: 0}
-      leftTangent: {x: 0, y: 0, z: 0}
-      rightTangent: {x: 0, y: 0, z: 0}
-      mode: 0
+    - position: {x: 2.0443034, y: 0.86716825, z: 0}
+      leftTangent: {x: -1.148871, y: -0.013922989, z: 0}
+      rightTangent: {x: 1.3382833, y: 0.016218424, z: 0}
+      mode: 1
       height: 1
       spriteIndex: 0
       corner: 1
       m_CornerMode: 1
-    - position: {x: -2.0031326, y: -0.82699907, z: 0}
-      leftTangent: {x: 0, y: 0, z: 0}
+    - position: {x: 4.313144, y: -0.4826837, z: 0}
+      leftTangent: {x: -2.0006883, y: 0.051072687, z: 0}
       rightTangent: {x: 0, y: 0, z: 0}
-      mode: 0
+      mode: 2
       height: 1
       spriteIndex: 0
       corner: 1
       m_CornerMode: 1
-  m_SpriteShape: {fileID: 11400000, guid: 94d035f9e11e70d4bb74207417920331, type: 2}
+  m_SpriteShape: {fileID: 11400000, guid: 300c28f5de27cc846ab828ee87ee264c, type: 2}
   m_FillPixelPerUnit: 256
   m_StretchTiling: 1
   m_SplineDetail: 16
@@ -163,61 +163,32 @@ MonoBehaviour:
   m_Creator: {fileID: 0}
   m_Modifiers: []
   m_ColliderSegment:
-  - {x: -2, y: 1}
-  - {x: 2, y: 1}
-  - {x: 2.004754, y: -0.82616043}
-  - {x: -2.0031326, y: -0.82699907}
-  - {x: -2, y: 1}
+  - {x: -2.2498329, y: 1.2392206}
+  - {x: -1.748076, y: 1.2609544}
+  - {x: -1.206977, y: 1.33644}
+  - {x: -0.009215817, y: 1.5795468}
+  - {x: 0.54856825, y: 1.6559997}
+  - {x: 0.8406093, y: 1.6684783}
+  - {x: 1.1287277, y: 1.6535156}
+  - {x: 1.4109342, y: 1.6038744}
+  - {x: 1.6836662, y: 1.5119624}
+  - {x: 1.9411697, y: 1.371092}
+  - {x: 2.1744745, y: 1.1789508}
+  - {x: 2.3662033, y: 0.92666996}
+  - {x: 2.4916275, y: 0.63798934}
+  - {x: 2.559507, y: 0.3275507}
+  - {x: 2.5736756, y: 0.008026445}
+  - {x: 2.5347633, y: -0.3086732}
+  - {x: 2.4403908, y: -0.6104301}
+  - {x: 2.2846987, y: -0.883333}
+  - {x: 2.1217744, y: -1.0546659}
+  - {x: 1.9512196, y: -1.1983815}
+  - {x: 1.6292803, y: -1.3797638}
+  - {x: 1.4309106, y: -1.4613503}
+  - {x: 1.082176, y: -1.5484116}
+  - {x: 0.8628925, y: -1.5829252}
+  - {x: 0.5321348, y: -1.6043808}
+  - {x: -0.030566335, y: -1.5918746}
+  - {x: -1.5399837, y: -1.4394236}
+  - {x: -2.2870538, y: -1.4088719}
   m_ShadowSegment: []
---- !u!60 &-2419561911038752215
-PolygonCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4365782147537462995}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 0
-  m_UsedByEffector: 0
-  m_CompositeOperation: 0
-  m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
-  m_SpriteTilingProperty:
-    border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0, y: 0}
-    oldSize: {x: 0, y: 0}
-    newSize: {x: 0, y: 0}
-    adaptiveTilingThreshold: 0
-    drawMode: 0
-    adaptiveTiling: 0
-  m_AutoTiling: 0
-  m_Points:
-    m_Paths:
-    - - {x: -2, y: 1}
-      - {x: 2, y: 1}
-      - {x: 2.004754, y: -0.82616043}
-      - {x: -2.0031326, y: -0.82699907}
-      - {x: -2, y: 1}
-  m_UseDelaunayMesh: 0

@@ -2,10 +2,13 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.U2D;
+using UnityEngine.UIElements;
+using static UnityEditor.Searcher.SearcherWindow.Alignment;
 
 public class Map : MonoBehaviour
 {
     [SerializeField] GameObject buildingPrefab;
+    [SerializeField] GameObject roadPrefab;
 
     void Start()
     {
@@ -50,13 +53,13 @@ public class Map : MonoBehaviour
         // Calculate horizontal shift, vertical shift and scale required to convert GPS coords into scene position
         double xShift = lowLong + (highLong - lowLong) / 2;
         double yShift = LatToY(lowLat) + (LatToY(highLat) - LatToY(lowLat)) / 2;
-        double scale = 20000;
+        double scale = 80000;
 
         // Add map elements to scene
         foreach (MapElement element in mapData.elements)
         {
             // Deal with buildings (but only ways and not relations)
-            if (element.type == "way" && element.tags.building != null)
+            if (IsBuilding(element))
             {
                 // Get scene positions for each building vertex using GPS coords
                 Vector2[] vertices = new Vector2[element.geometry.Length];
@@ -72,21 +75,46 @@ public class Map : MonoBehaviour
                 GameObject building = Instantiate(buildingPrefab, new Vector3(0, 0, 0), Quaternion.identity, transform);
 
                 // Get components
-                PolygonCollider2D collider = building.GetComponent<PolygonCollider2D>();
                 SpriteShapeController spriteShapeController = building.GetComponent<SpriteShapeController>();
                 Spline spline = spriteShapeController.spline;
-
-                // Set the polygon collider's points to the building's vertices
-                //collider.points = vertices;
 
                 // Add building vertices to sprite shape (ignore last vertex since it is the same as the first)
                 spline.Clear();
                 for (int i = 0; i < vertices.Length - 1; i++)
                 {
-                    Debug.Log("On point: " + i);
+                    // Add point to sprite shape
                     spline.InsertPointAt(i, vertices[i]);
                     spline.SetTangentMode(i, ShapeTangentMode.Linear);
-                    spline.SetCorner(i, false);
+                }
+            }
+            // Deal with roads
+            else if (IsRoad(element))
+            {
+                // Get scene positions for each road node using GPS coords
+                Vector2[] nodes = new Vector2[element.geometry.Length];
+                for (int i = 0; i < nodes.Length; i++)
+                {
+                    MapElement.Coords coords = element.geometry[i];
+                    double xPos = (coords.lon - xShift) * scale;
+                    double yPos = (LatToY(coords.lat) - yShift) * scale;
+                    nodes[i] = new Vector2((float)xPos, (float)yPos);
+                }
+
+                // Instantiate road from prefab with the map as the parent
+                GameObject road = Instantiate(roadPrefab, new Vector3(0, 0, 0), Quaternion.identity, transform);
+
+                // Get components
+                SpriteShapeController spriteShapeController = road.GetComponent<SpriteShapeController>();
+                Spline spline = spriteShapeController.spline;
+
+                // Add road nodes to sprite shape
+                spline.Clear();
+                for (int i = 0; i < nodes.Length; i++)
+                {
+                    // Add point to sprite shape
+                    spline.InsertPointAt(i, nodes[i]);
+                    spline.SetTangentMode(i, ShapeTangentMode.Continuous);
+                    spline.SetHeight(i, 4.0f); // Thickness of road
                 }
             }
         }
@@ -97,5 +125,22 @@ public class Map : MonoBehaviour
         return System.Math.Log(System.Math.Tan(
             (latitude + 90) / 360 * System.Math.PI
         )) / System.Math.PI * 180;
+    }
+
+    bool IsBuilding(MapElement element)
+    {
+        return element.type == "way" && element.tags.building != null;
+    }
+
+    bool IsRoad(MapElement element)
+    {
+        return element.type == "way" && element.tags.highway != null && !IsPath(element);
+    }
+
+    bool IsPath(MapElement element)
+    {
+        return element.tags.highway == "footway" ||
+               element.tags.highway == "pedestrian" ||
+               element.tags.highway == "steps";
     }
 }
