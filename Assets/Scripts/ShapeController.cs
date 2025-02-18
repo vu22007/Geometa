@@ -2,7 +2,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Fusion;
 using NUnit.Framework;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.SocialPlatforms.Impl;
 
 public class ShapeController : NetworkBehaviour
 {
@@ -86,8 +88,8 @@ public class ShapeController : NetworkBehaviour
     
     private void TrianglePerformed()
     {
-        int vertices = 3;
-        List<Player> closestPlayers = gameController.GetClosestPlayers(GetComponentInParent<Player>(), 2);
+        int vertices = 5;
+        List<Player> closestPlayers = gameController.GetClosestPlayers(GetComponentInParent<Player>(), 4);
         List<Vector3> playerPositions = new List<Vector3>();
         playerPositions.Add(GetComponentInParent<Player>().transform.position);
         foreach (Player player in closestPlayers)
@@ -101,7 +103,15 @@ public class ShapeController : NetworkBehaviour
             return;
         }
 
-        CheckConvex(playerPositions);
+        // Debug.Log(string.Join(", ", playerPositions));
+        playerPositions = SortVerticesAroundCentroid(playerPositions);
+        // Debug.Log(string.Join(", ", playerPositions));
+
+        List<float> angles = GetAngles(playerPositions);
+        Debug.Log("Vetices number: " + vertices);
+        if(!IsConvex(angles, vertices)){
+            Debug.Log("Shape is non-convex - can't activate buff!");
+        }
 
         if (!isPlacing && cooldown == 0)
         {
@@ -120,41 +130,73 @@ public class ShapeController : NetworkBehaviour
         centroid /= vertices.Count;
 
         // Sort by angle relative to centroid  - Counterclockwise
-        return vertices.OrderBy(v => Mathf.Atan2(v.y - centroid.y, v.x - centroid.x)).ToList();
+        vertices = vertices.OrderBy(v => Mathf.Atan2(v.y - centroid.y, v.x - centroid.x)).ToList<Vector3>();
+        return vertices;
     }
 
-    bool CheckConvex(List<Vector3> vertices)
+    List<float> GetAngles(List<Vector3> vertices)
     {
         List<float> angles = new List<float>();
         int count = vertices.Count;
-        foreach (var v in vertices)
+
+        for (int i = 0; i < count; i++)
         {
-            for (int i = 0; i < count; i++)
+            List<Vector3> angleVertices = new List<Vector3>();
+            for (int j = -1; j <= 1; j++)
             {
-                List<Vector3> angleVertices = new List<Vector3>();
-                for (int j = -1; j <= 1; j++)
-                {
-                    Debug.Log((i + j + count) % count);
-                    angleVertices.Add(vertices[(i + j + count) % count]);
-                }
-                angle = GetAngle(angleVertices);
-                if(angle > 180) return false;
+                angleVertices.Add(vertices[(i + j + count) % count]);
             }
-        }
+            angle = GetAngle(angleVertices);
+            angles.Add(angle);
+        } 
+
+        return angles;
+    }
+
+    bool IsConvex(List<float> angles, int count)
+    {
+        float sum = angles.Sum();
+        Debug.Log("Sum: " + sum);
+        Debug.Log("Count: " + count);
+        Debug.Log("Sum needed: " + (count - 2) * 180);
+        if(Mathf.Abs(sum - ((count - 2) * 180f)) > Mathf.Epsilon)
+        {
+            return false;
+        } 
         return true;
     }
 
+    // Getting the angle between 3 vertices for the angle on the second element (vertices[1])
     float GetAngle(List<Vector3> vertices)
     {
         if(vertices.Count != 3)
         {
             Debug.LogError("3 vertices not given to calculate angle");
         }
+
         Vector3 direction1 = (vertices[0] - vertices[1]).normalized;
         Vector3 direction2 = (vertices[2] - vertices[1]).normalized;
         float angle = Vector3.Angle(direction1, direction2);
-        Debug.Log(angle);
+        // Debug.Log(angle);
+        
         return angle;
+    }
+
+    float CalculateScore(List<float> angles, int count)
+    {
+        float score = 0;
+        // The angle for a regular polygon
+        float regularAngle = (count - 2) * 180;
+        
+        // Adding how much each angle is close to a regular angle
+        foreach (float angle in angles)
+        {
+            score += Mathf.Abs(angle - regularAngle);
+        }
+        // Getting the inverse because the value will be smaller the more regular the shape is
+        // And we divide by count so shapes with more vertices are not penalised
+        score = 1 / (1 + score/count); 
+        return score;
     }
 
     private void SquarePerformed()
