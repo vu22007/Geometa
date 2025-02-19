@@ -8,7 +8,9 @@ public class Map : MonoBehaviour
     [SerializeField] GameObject backgroundPrefab;
     [SerializeField] GameObject buildingPrefab;
     [SerializeField] GameObject roadPrefab;
+    [SerializeField] GameObject pathPrefab;
     [SerializeField] GameObject grassPrefab;
+    [SerializeField] GameObject waterPrefab;
 
     void Start()
     {
@@ -30,6 +32,7 @@ public class Map : MonoBehaviour
             "  way[leisure=park];" +
             "  way[leisure=garden];" +
             "  way[leisure=nature_reserve];" +
+            "  way[natural=water];" +
             ");" +
             "out geom;");
 
@@ -85,10 +88,20 @@ public class Map : MonoBehaviour
                     // Create and add road to scene
                     AddRoadToScene(points);
                 }
+                else if (IsPath(element))
+                {
+                    // Create and add path to scene
+                    AddPathToScene(points);
+                }
                 else if (IsGrass(element))
                 {
-                    // Create and add patch of grass to scene
+                    // Create and add grass to scene
                     AddGrassToScene(points);
+                }
+                else if (IsWater(element))
+                {
+                    // Create and add water to scene
+                    AddWaterToScene(points);
                 }
             }
         }
@@ -140,6 +153,11 @@ public class Map : MonoBehaviour
                element.tags.leisure == "nature_reserve";
     }
 
+    bool IsWater(MapElement element)
+    {
+        return element.tags.natural == "water";
+    }
+
     void AddBuildingToScene(Vector2[] vertices)
     {
         // Instantiate building from prefab with the map as the parent
@@ -179,9 +197,29 @@ public class Map : MonoBehaviour
         }
     }
 
+    void AddPathToScene(Vector2[] nodes)
+    {
+        // Instantiate path from prefab with the map as the parent
+        GameObject path = Instantiate(pathPrefab, new Vector3(0, 0, 0), Quaternion.identity, transform);
+
+        // Get components
+        SpriteShapeController spriteShapeController = path.GetComponent<SpriteShapeController>();
+        Spline spline = spriteShapeController.spline;
+
+        // Add path nodes to sprite shape
+        spline.Clear();
+        for (int i = 0; i < nodes.Length; i++)
+        {
+            // Add point to sprite shape
+            spline.InsertPointAt(i, nodes[i]);
+            spline.SetTangentMode(i, ShapeTangentMode.Continuous);
+            spline.SetHeight(i, 1.0f); // Thickness of path
+        }
+    }
+
     void AddGrassToScene(Vector2[] vertices)
     {
-        // Instantiate grass patch from prefab with the map as the parent
+        // Instantiate grass from prefab with the map as the parent
         GameObject grass = Instantiate(grassPrefab, new Vector3(0, 0, 0), Quaternion.identity, transform);
 
         // Get components
@@ -189,6 +227,25 @@ public class Map : MonoBehaviour
         Spline spline = spriteShapeController.spline;
 
         // Add grass vertices to sprite shape (ignore last vertex since it is the same as the first)
+        spline.Clear();
+        for (int i = 0; i < vertices.Length - 1; i++)
+        {
+            // Add point to sprite shape
+            spline.InsertPointAt(i, vertices[i]);
+            spline.SetTangentMode(i, ShapeTangentMode.Linear);
+        }
+    }
+
+    void AddWaterToScene(Vector2[] vertices)
+    {
+        // Instantiate water from prefab with the map as the parent
+        GameObject water = Instantiate(waterPrefab, new Vector3(0, 0, 0), Quaternion.identity, transform);
+
+        // Get components
+        SpriteShapeController spriteShapeController = water.GetComponent<SpriteShapeController>();
+        Spline spline = spriteShapeController.spline;
+
+        // Add water vertices to sprite shape (ignore last vertex since it is the same as the first)
         spline.Clear();
         for (int i = 0; i < vertices.Length - 1; i++)
         {
