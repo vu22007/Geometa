@@ -7,6 +7,7 @@ public class Map : MonoBehaviour
 {
     [SerializeField] GameObject backgroundPrefab;
     [SerializeField] GameObject buildingPrefab;
+    [SerializeField] GameObject buildingHolePrefab;
     [SerializeField] GameObject roadPrefab;
     [SerializeField] GameObject pathPrefab;
     [SerializeField] GameObject grassPrefab;
@@ -104,6 +105,33 @@ public class Map : MonoBehaviour
                     AddWaterToScene(points);
                 }
             }
+            // Deal with relations
+            else if (element.type == "relation")
+            {
+                if (IsBuilding(element))
+                {
+                    // Building relations have an "outer" way and a number of "inner" ways (holes in the polygon)
+                    foreach (MapElement.RelationMember member in element.members)
+                    {
+                        if (member.type == "way")
+                        {
+                            // Get points in world space from GPS coords
+                            Vector2[] points = GetPointsFromGPSCoords(member.geometry, xShift, yShift, scale);
+
+                            if (member.role == "outer")
+                            {
+                                // Create and add building to scene
+                                AddBuildingToScene(points);
+                            }
+                            else if (member.role == "inner")
+                            {
+                                // Create and add building hole to scene
+                                AddBuildingHoleToScene(points);
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -129,12 +157,12 @@ public class Map : MonoBehaviour
 
     bool IsBuilding(MapElement element)
     {
-        return element.type == "way" && element.tags.building != null;
+        return element.tags.building != null;
     }
 
     bool IsRoad(MapElement element)
     {
-        return element.type == "way" && element.tags.highway != null && !IsPath(element);
+        return element.tags.highway != null && !IsPath(element);
     }
 
     bool IsPath(MapElement element)
@@ -168,6 +196,25 @@ public class Map : MonoBehaviour
         Spline spline = spriteShapeController.spline;
 
         // Add building vertices to sprite shape (ignore last vertex since it is the same as the first)
+        spline.Clear();
+        for (int i = 0; i < vertices.Length - 1; i++)
+        {
+            // Add point to sprite shape
+            spline.InsertPointAt(i, vertices[i]);
+            spline.SetTangentMode(i, ShapeTangentMode.Linear);
+        }
+    }
+
+    void AddBuildingHoleToScene(Vector2[] vertices)
+    {
+        // Instantiate building hole from prefab with the map as the parent
+        GameObject hole = Instantiate(buildingHolePrefab, new Vector3(0, 0, 0), Quaternion.identity, transform);
+
+        // Get components
+        SpriteShapeController spriteShapeController = hole.GetComponent<SpriteShapeController>();
+        Spline spline = spriteShapeController.spline;
+
+        // Add building hole vertices to sprite shape (ignore last vertex since it is the same as the first)
         spline.Clear();
         for (int i = 0; i < vertices.Length - 1; i++)
         {
