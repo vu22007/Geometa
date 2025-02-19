@@ -72,6 +72,16 @@ public class ShapeController : NetworkBehaviour
         previewShape(3);
     }
 
+    private void SquarePerformed()
+    {
+        previewShape(4);
+    }
+
+    private void PentagonPerformed()
+    {
+        previewShape(5);
+    }
+
     void previewShape(int nVertices)
     {
         // Preview shape only locally 
@@ -80,6 +90,7 @@ public class ShapeController : NetworkBehaviour
         {
             List<Player> closestPlayers = gameController.GetClosestPlayers(GetComponentInParent<Player>(), nVertices - 1);
 
+            // Making a list of vector3 positions of the players
             List<Vector3> playerPositions = new List<Vector3>();
             playerPositions.Add(GetComponentInParent<Player>().transform.position);
             foreach (Player player in closestPlayers)
@@ -87,15 +98,20 @@ public class ShapeController : NetworkBehaviour
                 playerPositions.Add(player.transform.position);
             }
 
+            // Checking if there is enough players
             if (playerPositions.Count < nVertices)
             {
                 Debug.Log("Not enough players to activate shape");
                 return;
             }
 
+            // Sort by angle relative to centroid, counterclockwise. If this isn't done 
+            // we might connect the diagonal of square instead of the edge
             playerPositions = SortVerticesAroundCentroid(playerPositions);
 
+            // Calculate the angles for each vertice of the shape
             List<float> angles = GetAngles(playerPositions);
+            // If it's not convex don't activate
             if (!IsConvex(angles))
             {
                 Debug.Log("Shape is non-convex - can't activate buff!");
@@ -105,14 +121,22 @@ public class ShapeController : NetworkBehaviour
             float score = CalculateScore(angles);
             Debug.Log(score);
 
-            lineRenderer.positionCount = nVertices + 1;
-            lineRenderer.SetPosition(0, playerPositions[nVertices - 1]);
-            for (int i = 0; i < nVertices; i++)
-            {
-                lineRenderer.SetPosition(i + 1, playerPositions[i]);
-            }
-            lineRenderer.enabled = true;
+            DrawLines(playerPositions);
         }
+    }
+
+    void DrawLines(List<Vector3> vertices)
+    {
+        int nVertices = vertices.Count;
+        lineRenderer.positionCount = nVertices + 1;
+        // Lines are drawn between the adjacent vertices. The last vertice is added first so there
+        // is a line between 0th and (nVertices - 1)th vertice
+        lineRenderer.SetPosition(0, vertices[nVertices - 1]);
+        for (int i = 0; i < nVertices; i++)
+        {
+            lineRenderer.SetPosition(i + 1, vertices[i]);
+        }
+        lineRenderer.enabled = true;
     }
 
     List<Vector3> SortVerticesAroundCentroid(List<Vector3> vertices)
@@ -124,7 +148,7 @@ public class ShapeController : NetworkBehaviour
         }
         centroid /= vertices.Count;
 
-        // Sort by angle relative to centroid  - Counterclockwise
+        // Sort by angle relative to centroid - Counterclockwise
         vertices = vertices.OrderBy(v => Mathf.Atan2(v.y - centroid.y, v.x - centroid.x)).ToList<Vector3>();
         return vertices;
     }
@@ -193,16 +217,6 @@ public class ShapeController : NetworkBehaviour
         // And we divide by count so shapes with more vertices are not penalised
         score = 1 / (1 + score/count); 
         return score;
-    }
-
-    private void SquarePerformed()
-    {
-        previewShape(4);
-    }
-
-    private void PentagonPerformed()
-    {
-        previewShape(5);
     }
 
     private void SpawnShape(GameObject shapePrefab)
