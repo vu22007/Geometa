@@ -2,7 +2,6 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.U2D;
-using static UnityEditor.Searcher.SearcherWindow.Alignment;
 
 public class Map : MonoBehaviour
 {
@@ -198,7 +197,7 @@ public class Map : MonoBehaviour
         {
             // Add point to sprite shape
             spline.InsertPointAt(i, vertices[i]);
-            spline.SetTangentMode(i, ShapeTangentMode.Linear);
+            spline.SetTangentMode(i, tangentMode);
 
             // Set thickness of way at this point (if open-ended e.g. for a road or path but not for a building)
             if (isOpenEnded)
