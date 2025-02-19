@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.U2D;
+using static UnityEditor.Searcher.SearcherWindow.Alignment;
 
 public class Map : MonoBehaviour
 {
@@ -15,13 +16,13 @@ public class Map : MonoBehaviour
 
     void Start()
     {
-        StartCoroutine(LoadMapFromBoundingBox(51.453990, -2.605788, 51.456203, -2.598647));
+        StartCoroutine(LoadMapFromBoundingBox(51.453232, -2.612708, 51.461628, -2.588997));
     }
 
     IEnumerator LoadMapFromBoundingBox(double lowLat, double lowLong, double highLat, double highLong)
     {
         // Construct request body
-        // Note: We are fetching buildings (both as ways and as relations) and roads
+        // Note: We are fetching buildings (both as ways and as relations), roads, paths, grass and water
         string data = "data=" + UnityWebRequest.EscapeURL("" +
             $"[out:json][timeout:25][bbox:{lowLat},{lowLong},{highLat},{highLong}];" +
             "(" +
@@ -74,37 +75,30 @@ public class Map : MonoBehaviour
             // Deal with ways
             if (element.type == "way")
             {
-                // Get points in world space from GPS coords
-                Vector2[] points = GetPointsFromGPSCoords(element.geometry, xShift, yShift, scale);
+                // Get way vertices in world space from GPS coords
+                Vector2[] vertices = GetPointsFromGPSCoords(element.geometry, xShift, yShift, scale);
 
-                // Deal with buildings (but only ways and not relations)
+                // Create and add building to scene (but only if it is a way and not a relation)
                 if (IsBuilding(element))
-                {
-                    // Create and add building to scene
-                    AddBuildingToScene(points);
-                }
-                // Deal with roads
+                    AddWayToScene(vertices, buildingPrefab, false);
+
+                // Create and add road to scene
                 else if (IsRoad(element))
-                {
-                    // Create and add road to scene
-                    AddRoadToScene(points);
-                }
+                    AddWayToScene(vertices, roadPrefab, true, 4.0f);
+
+                // Create and add path to scene
                 else if (IsPath(element))
-                {
-                    // Create and add path to scene
-                    AddPathToScene(points);
-                }
+                    AddWayToScene(vertices, pathPrefab, true, 2.0f);
+
+                // Create and add grass to scene
                 else if (IsGrass(element))
-                {
-                    // Create and add grass to scene
-                    AddGrassToScene(points);
-                }
+                    AddWayToScene(vertices, grassPrefab, false);
+
+                // Create and add water to scene
                 else if (IsWater(element))
-                {
-                    // Create and add water to scene
-                    AddWaterToScene(points);
-                }
+                    AddWayToScene(vertices, waterPrefab, false);
             }
+
             // Deal with relations
             else if (element.type == "relation")
             {
@@ -116,18 +110,15 @@ public class Map : MonoBehaviour
                         if (member.type == "way")
                         {
                             // Get points in world space from GPS coords
-                            Vector2[] points = GetPointsFromGPSCoords(member.geometry, xShift, yShift, scale);
+                            Vector2[] vertices = GetPointsFromGPSCoords(member.geometry, xShift, yShift, scale);
 
+                            // Create and add building to scene
                             if (member.role == "outer")
-                            {
-                                // Create and add building to scene
-                                AddBuildingToScene(points);
-                            }
+                                AddWayToScene(vertices, buildingPrefab, false);
+
+                            // Create and add building hole to scene
                             else if (member.role == "inner")
-                            {
-                                // Create and add building hole to scene
-                                AddBuildingHoleToScene(points);
-                            }
+                                AddWayToScene(vertices, buildingHolePrefab, false);
                         }
                     }
                 }
@@ -186,119 +177,32 @@ public class Map : MonoBehaviour
         return element.tags.natural == "water";
     }
 
-    void AddBuildingToScene(Vector2[] vertices)
+    void AddWayToScene(Vector2[] vertices, GameObject prefab, bool isOpenEnded, float thickness = 1.0f)
     {
-        // Instantiate building from prefab with the map as the parent
-        GameObject building = Instantiate(buildingPrefab, new Vector3(0, 0, 0), Quaternion.identity, transform);
+        // Instantiate way from prefab with the map as the parent
+        GameObject way = Instantiate(prefab, new Vector3(0, 0, 0), Quaternion.identity, transform);
 
         // Get components
-        SpriteShapeController spriteShapeController = building.GetComponent<SpriteShapeController>();
+        SpriteShapeController spriteShapeController = way.GetComponent<SpriteShapeController>();
         Spline spline = spriteShapeController.spline;
 
-        // Add building vertices to sprite shape (ignore last vertex since it is the same as the first)
+        // If the way is close-ended, we need to ignore the last vertex since it is the same as the first
+        int numVertices = isOpenEnded ? vertices.Length : vertices.Length - 1;
+
+        // If the way is open-ended (e.g. a road or path) then make it smoother by setting the tangent mode to continuous
+        ShapeTangentMode tangentMode = isOpenEnded ? ShapeTangentMode.Continuous : ShapeTangentMode.Linear;
+
+        // Add way vertices to sprite shape
         spline.Clear();
-        for (int i = 0; i < vertices.Length - 1; i++)
+        for (int i = 0; i < numVertices; i++)
         {
             // Add point to sprite shape
             spline.InsertPointAt(i, vertices[i]);
             spline.SetTangentMode(i, ShapeTangentMode.Linear);
-        }
-    }
 
-    void AddBuildingHoleToScene(Vector2[] vertices)
-    {
-        // Instantiate building hole from prefab with the map as the parent
-        GameObject hole = Instantiate(buildingHolePrefab, new Vector3(0, 0, 0), Quaternion.identity, transform);
-
-        // Get components
-        SpriteShapeController spriteShapeController = hole.GetComponent<SpriteShapeController>();
-        Spline spline = spriteShapeController.spline;
-
-        // Add building hole vertices to sprite shape (ignore last vertex since it is the same as the first)
-        spline.Clear();
-        for (int i = 0; i < vertices.Length - 1; i++)
-        {
-            // Add point to sprite shape
-            spline.InsertPointAt(i, vertices[i]);
-            spline.SetTangentMode(i, ShapeTangentMode.Linear);
-        }
-    }
-
-    void AddRoadToScene(Vector2[] nodes)
-    {
-        // Instantiate road from prefab with the map as the parent
-        GameObject road = Instantiate(roadPrefab, new Vector3(0, 0, 0), Quaternion.identity, transform);
-
-        // Get components
-        SpriteShapeController spriteShapeController = road.GetComponent<SpriteShapeController>();
-        Spline spline = spriteShapeController.spline;
-
-        // Add road nodes to sprite shape
-        spline.Clear();
-        for (int i = 0; i < nodes.Length; i++)
-        {
-            // Add point to sprite shape
-            spline.InsertPointAt(i, nodes[i]);
-            spline.SetTangentMode(i, ShapeTangentMode.Continuous);
-            spline.SetHeight(i, 4.0f); // Thickness of road
-        }
-    }
-
-    void AddPathToScene(Vector2[] nodes)
-    {
-        // Instantiate path from prefab with the map as the parent
-        GameObject path = Instantiate(pathPrefab, new Vector3(0, 0, 0), Quaternion.identity, transform);
-
-        // Get components
-        SpriteShapeController spriteShapeController = path.GetComponent<SpriteShapeController>();
-        Spline spline = spriteShapeController.spline;
-
-        // Add path nodes to sprite shape
-        spline.Clear();
-        for (int i = 0; i < nodes.Length; i++)
-        {
-            // Add point to sprite shape
-            spline.InsertPointAt(i, nodes[i]);
-            spline.SetTangentMode(i, ShapeTangentMode.Continuous);
-            spline.SetHeight(i, 1.0f); // Thickness of path
-        }
-    }
-
-    void AddGrassToScene(Vector2[] vertices)
-    {
-        // Instantiate grass from prefab with the map as the parent
-        GameObject grass = Instantiate(grassPrefab, new Vector3(0, 0, 0), Quaternion.identity, transform);
-
-        // Get components
-        SpriteShapeController spriteShapeController = grass.GetComponent<SpriteShapeController>();
-        Spline spline = spriteShapeController.spline;
-
-        // Add grass vertices to sprite shape (ignore last vertex since it is the same as the first)
-        spline.Clear();
-        for (int i = 0; i < vertices.Length - 1; i++)
-        {
-            // Add point to sprite shape
-            spline.InsertPointAt(i, vertices[i]);
-            spline.SetTangentMode(i, ShapeTangentMode.Linear);
-        }
-    }
-
-    void AddWaterToScene(Vector2[] vertices)
-    {
-        // Instantiate water from prefab with the map as the parent
-        GameObject water = Instantiate(waterPrefab, new Vector3(0, 0, 0), Quaternion.identity, transform);
-
-        // Get components
-        SpriteShapeController spriteShapeController = water.GetComponent<SpriteShapeController>();
-        Spline spline = spriteShapeController.spline;
-
-        // Add water vertices to sprite shape (ignore last vertex since it is the same as the first)
-        spline.Clear();
-        for (int i = 0; i < vertices.Length - 1; i++)
-        {
-            // Add point to sprite shape
-            spline.InsertPointAt(i, vertices[i]);
-            spline.SetTangentMode(i, ShapeTangentMode.Linear);
+            // Set thickness of way at this point (if open-ended e.g. for a road or path but not for a building)
+            if (isOpenEnded)
+                spline.SetHeight(i, thickness);
         }
     }
 }
