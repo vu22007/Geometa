@@ -196,20 +196,9 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
         }
     }
 
-    public List<Player> GetClosestPlayers(Player currentPlayer, int count)
+    public List<Player> GetAlivePlayers()
     {
-        // This can be optimised by having alive players separately
-        // if it slows down runtime
-        List<Player> closestPlayers = new List<Player>(alivePlayers).FindAll(a => a.GetTeam() == currentPlayer.GetTeam());
-        closestPlayers.Remove(currentPlayer);   
-        Vector3 position = currentPlayer.transform.position;
-
-        //Sorting players by distance, 
-        closestPlayers.Sort((b, a) =>
-            Vector3.Distance(position, b.transform.position).CompareTo(Vector3.Distance(position, a.transform.position))
-        );
-        // closestPlayers.ForEach(a => Debug.Log(a.transform.position));
-        return closestPlayers.Take(count).ToList();
+        return alivePlayers;
     }
 
     // Check if two flags are near each other
