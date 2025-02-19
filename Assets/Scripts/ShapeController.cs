@@ -1,10 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Fusion;
-using NUnit.Framework;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.SocialPlatforms.Impl;
 
 public class ShapeController : NetworkBehaviour
 {
@@ -12,7 +9,7 @@ public class ShapeController : NetworkBehaviour
     [SerializeField] GameObject squarePrefab;
     [SerializeField] GameObject pentagonPrefab;
     [HideInInspector] public Shape currentShape;
-    [HideInInspector] public GameObject previewShape;
+    // [HideInInspector] public GameObject previewShape;
     private Vector3 cursorWorldPoint;
     private float angle; // angle of cursor wrt y axis unit vector
     [SerializeField] float plusAngle = 0;
@@ -23,6 +20,8 @@ public class ShapeController : NetworkBehaviour
 
     GameController gameController { get; set; }
 
+    private LineRenderer lineRenderer;
+
     // Shape controller intialisation (called on each client and server when shape controller is spawned on network)
     public override void Spawned()
     {
@@ -31,6 +30,9 @@ public class ShapeController : NetworkBehaviour
             gameController = GameObject.Find("Host").GetComponent<GameController>();
         else
             gameController = GameObject.Find("Client A").GetComponent<GameController>();
+        
+        lineRenderer = GetComponent<LineRenderer>();
+        lineRenderer.enabled = false;
 
         isActive = true;
         isPlacing = false;
@@ -53,70 +55,63 @@ public class ShapeController : NetworkBehaviour
             angle = CalculateAngle(direction);
 
             // On key down for specific shape (only on moment when key is pressed down)
-            if (input.buttons.WasPressed(previousButtons, InputButtons.Triangle)) TrianglePerformed();
-            if (input.buttons.WasPressed(previousButtons, InputButtons.Square)) SquarePerformed();
-            if (input.buttons.WasPressed(previousButtons, InputButtons.Pentagon)) PentagonPerformed();
+            if (input.buttons.IsSet(InputButtons.Triangle)) TrianglePerformed();
+            if (input.buttons.IsSet(InputButtons.Square)) SquarePerformed();
+            if (input.buttons.IsSet(InputButtons.Pentagon)) PentagonPerformed();
 
-            // Place down the shape if PlaceShape button pressed
-            if (input.buttons.WasPressed(previousButtons, InputButtons.PlaceShape)) PlaceShapePerformed();
-
-            // If all shape keys are released
-            if (!input.buttons.IsSet(InputButtons.Triangle) && !input.buttons.IsSet(InputButtons.Square) && !input.buttons.IsSet(InputButtons.Pentagon))
-            {
-                isPlacing = false;
-                if (previewShape != null)
-                {
-                    // Despawn the shape (only the server can do this)
-                    if (HasStateAuthority)
-                    {
-                        Runner.Despawn(previewShape.GetComponent<NetworkObject>());
-                    }
-                    previewShape = null;
-                }
-            }
-
-            // If a shape key is still held down
-            if (isPlacing && previewShape != null)
-            {
-                previewShape.transform.position = cursorWorldPoint;
-                previewShape.transform.rotation = Quaternion.Euler(0, 0, angle);
-            }
+            if(input.buttons.WasReleased(previousButtons, InputButtons.Triangle)) lineRenderer.enabled = false;
+            if (input.buttons.WasReleased(previousButtons, InputButtons.Square)) lineRenderer.enabled = false;
+            if (input.buttons.WasReleased(previousButtons, InputButtons.Pentagon)) lineRenderer.enabled = false;
 
             previousButtons = input.buttons;
         }
     }
     
     private void TrianglePerformed()
+    {   
+        previewShape(3);
+    }
+
+    void previewShape(int nVertices)
     {
-        int vertices = 5;
-        List<Player> closestPlayers = gameController.GetClosestPlayers(GetComponentInParent<Player>(), 4);
-        List<Vector3> playerPositions = new List<Vector3>();
-        playerPositions.Add(GetComponentInParent<Player>().transform.position);
-        foreach (Player player in closestPlayers)
+        // Preview shape only locally 
+        // The line renderer will be disable for all others
+        if (HasInputAuthority)
         {
-            playerPositions.Add(player.transform.position);
-        }
+            List<Player> closestPlayers = gameController.GetClosestPlayers(GetComponentInParent<Player>(), nVertices - 1);
 
-        if (playerPositions.Count < vertices)
-        {
-            Debug.Log("Not enough players to activate shape");
-            return;
-        }
+            List<Vector3> playerPositions = new List<Vector3>();
+            playerPositions.Add(GetComponentInParent<Player>().transform.position);
+            foreach (Player player in closestPlayers)
+            {
+                playerPositions.Add(player.transform.position);
+            }
 
-        // Debug.Log(string.Join(", ", playerPositions));
-        playerPositions = SortVerticesAroundCentroid(playerPositions);
-        // Debug.Log(string.Join(", ", playerPositions));
+            if (playerPositions.Count < nVertices)
+            {
+                Debug.Log("Not enough players to activate shape");
+                return;
+            }
 
-        List<float> angles = GetAngles(playerPositions);
-        Debug.Log("Vetices number: " + vertices);
-        if(!IsConvex(angles, vertices)){
-            Debug.Log("Shape is non-convex - can't activate buff!");
-        }
+            playerPositions = SortVerticesAroundCentroid(playerPositions);
 
-        if (!isPlacing && cooldown == 0)
-        {
-            plusAngle = 0;
-            SpawnShape(trianglePrefab);
+            List<float> angles = GetAngles(playerPositions);
+            if (!IsConvex(angles))
+            {
+                Debug.Log("Shape is non-convex - can't activate buff!");
+                return;
+            }
+
+            float score = CalculateScore(angles);
+            Debug.Log(score);
+
+            lineRenderer.positionCount = nVertices + 1;
+            lineRenderer.SetPosition(0, playerPositions[nVertices - 1]);
+            for (int i = 0; i < nVertices; i++)
+            {
+                lineRenderer.SetPosition(i + 1, playerPositions[i]);
+            }
+            lineRenderer.enabled = true;
         }
     }
 
@@ -153,13 +148,13 @@ public class ShapeController : NetworkBehaviour
         return angles;
     }
 
-    bool IsConvex(List<float> angles, int count)
+    bool IsConvex(List<float> angles)
     {
+        int count = angles.Count;
         float sum = angles.Sum();
-        Debug.Log("Sum: " + sum);
-        Debug.Log("Count: " + count);
-        Debug.Log("Sum needed: " + (count - 2) * 180);
-        if(Mathf.Abs(sum - ((count - 2) * 180f)) > Mathf.Epsilon)
+
+        // sum is a sum of floating points so we put 0.01 as an allowed error margin
+        if(Mathf.Abs(sum - ((count - 2) * 180f)) > 0.01)
         {
             return false;
         } 
@@ -182,9 +177,10 @@ public class ShapeController : NetworkBehaviour
         return angle;
     }
 
-    float CalculateScore(List<float> angles, int count)
+    float CalculateScore(List<float> angles)
     {
         float score = 0;
+        int count = angles.Count;
         // The angle for a regular polygon
         float regularAngle = (count - 2) * 180;
         
@@ -201,20 +197,12 @@ public class ShapeController : NetworkBehaviour
 
     private void SquarePerformed()
     {
-        if (!isPlacing && cooldown == 0)
-        {
-            plusAngle = 45;
-            SpawnShape(squarePrefab);
-        }
+        previewShape(4);
     }
 
     private void PentagonPerformed()
     {
-        if (!isPlacing && cooldown == 0)
-        {
-            plusAngle = 0;
-            SpawnShape(pentagonPrefab);
-        }
+        previewShape(5);
     }
 
     private void SpawnShape(GameObject shapePrefab)
@@ -228,13 +216,13 @@ public class ShapeController : NetworkBehaviour
         // are enabled once the shape is placed
         bool isPreview = true;
         NetworkObject shapeNetworkObject = PrefabFactory.SpawnShape(Runner, Object.InputAuthority, shapePrefab, cursorWorldPoint, Quaternion.Euler(0, 0, angle), isPreview);
-        previewShape = shapeNetworkObject.gameObject;
+        //previewShape = shapeNetworkObject.gameObject;
 
-        currentShape = previewShape.GetComponent<Shape>();
-        if (currentShape == null)
-        {
-            Debug.LogError("Shape prefab doesn't have a Shape component");
-        }
+        //currentShape = previewShape.GetComponent<Shape>();
+        //if (currentShape == null)
+        //{
+        //    Debug.LogError("Shape prefab doesn't have a Shape component");
+        //}
     }
 
     private void PlaceShapePerformed()
@@ -255,7 +243,7 @@ public class ShapeController : NetworkBehaviour
         isPlacing = false;
 
         currentShape.EnableCorners();
-        previewShape = null;
+        // previewShape = null;
     }
 
     private float CalculateAngle(Vector3 direction)

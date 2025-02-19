@@ -31,7 +31,7 @@ public abstract class Shape : NetworkBehaviour
             if (shapeControllerOwner.Equals(shapeOwner))
             {
                 // This shape belongs to this shape controller for this client, so add the shape to controller
-                shapeController.previewShape = gameObject;
+                // shapeController.previewShape = gameObject;
                 shapeController.currentShape = this;
             }
         }

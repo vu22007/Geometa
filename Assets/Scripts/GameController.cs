@@ -208,7 +208,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
         closestPlayers.Sort((b, a) =>
             Vector3.Distance(position, b.transform.position).CompareTo(Vector3.Distance(position, a.transform.position))
         );
-        closestPlayers.ForEach(a => Debug.Log(a.transform.position));
+        // closestPlayers.ForEach(a => Debug.Log(a.transform.position));
         return closestPlayers.Take(count).ToList();
     }
 
