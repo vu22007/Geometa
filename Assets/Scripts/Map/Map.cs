@@ -203,5 +203,23 @@ public class Map : MonoBehaviour
             if (isOpenEnded)
                 spline.SetHeight(i, thickness);
         }
+
+
+        // The above code creates sprite shapes that have their origin at the centre of the world, and this causes them to not be loaded
+        // until the centre of the world is on-screen, so we need to set the bounding volume of the sprite shape geometry to ensure that
+        // the sprite shape is visible at all times
+        SetSpriteShapeBoundingVolume(spriteShapeController);
+    }
+
+    void SetSpriteShapeBoundingVolume(SpriteShapeController spriteShapeController)
+    {
+        Spline spline = spriteShapeController.spline;
+        Bounds localBounds = new Bounds(spline.GetPosition(0), Vector2.zero);
+        for (int i = 1; i < spline.GetPointCount(); i++)
+        {
+            Vector3 pos = spline.GetPosition(i);
+            localBounds.Encapsulate(pos);
+        }
+        spriteShapeController.spriteShapeRenderer.SetLocalAABB(localBounds);
     }
 }
