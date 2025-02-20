@@ -63,15 +63,24 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
             {
                 // Spawn the player network object
                 int team = nextTeam;
-                Vector3 respawnPoint = (team == 1) ? respawnPoint1 : respawnPoint2;
-                NetworkObject networkPlayerObject = Runner.Spawn(playerPrefab, respawnPoint + new Vector3(0.3f, 0.3f, 0.3f)*i, Quaternion.identity, null, (runner, networkObject) =>
+                NetworkObject networkPlayerObject = Runner.Spawn(playerPrefab, respawnPoint1 + new Vector3(0f, 1f, 0f)*i, Quaternion.identity, null, (runner, networkObject) =>
                 {
                     // Initialise the player (this is called before the player is spawned)
                     Player player = networkObject.GetComponent<Player>();
-                    player.OnCreated(characterPath, respawnPoint, team);
+                    player.OnCreated(characterPath, respawnPoint1, team);
                 });
-                // Flip the next team so the next player to join will be on the other team
-                // nextTeam = (nextTeam == 1) ? 2 : 1;
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                // Spawn the player network object
+                int team = nextTeam;
+                NetworkObject networkPlayerObject = Runner.Spawn(playerPrefab, respawnPoint1 + new Vector3(0.5f, 0.5f, 0f) * i, Quaternion.identity, null, (runner, networkObject) =>
+                {
+                    // Initialise the player (this is called before the player is spawned)
+                    Player player = networkObject.GetComponent<Player>();
+                    player.OnCreated(characterPath, respawnPoint1, 0);
+                });
             }
         }
     }

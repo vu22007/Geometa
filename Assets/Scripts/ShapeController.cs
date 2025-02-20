@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Fusion;
@@ -18,6 +19,7 @@ public class ShapeController : NetworkBehaviour
 
     private LineRenderer lineRenderer;
     private EdgeCollider2D edgeCollider;
+    private TriangleCollider triangleCollider;
 
     // Shape controller intialisation (called on each client and server when shape controller is spawned on network)
     public override void Spawned()
@@ -36,7 +38,7 @@ public class ShapeController : NetworkBehaviour
         NetworkObject triangleColliderObject = PrefabFactory.SpawnWorldCollider(Runner, worldColliderPrefab);
         
         // This is the script of the object
-        TriangleCollider triangleCollider = triangleColliderObject.GetComponent<TriangleCollider>();
+        triangleCollider = triangleColliderObject.GetComponent<TriangleCollider>();
         triangleCollider.team = transform.GetComponentInParent<Player>().GetTeam();
         
         // This is the collider of the object 
@@ -71,14 +73,23 @@ public class ShapeController : NetworkBehaviour
 
             if (input.buttons.WasReleased(previousButtons, InputButtons.Triangle))
             {
-                lineRenderer.enabled = false;
-                edgeCollider.enabled = false;
+                TriangleActivated();
             }
             if (input.buttons.WasReleased(previousButtons, InputButtons.Square)) lineRenderer.enabled = false;
             if (input.buttons.WasReleased(previousButtons, InputButtons.Pentagon)) lineRenderer.enabled = false;
 
             previousButtons = input.buttons;
         }
+    }
+
+    // IEnumerator should be imported from Collections not Collections.Generic
+    IEnumerator DelayDisable(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        // Debug.Log("disabled");
+        lineRenderer.enabled = false;
+        edgeCollider.enabled = false;
+        triangleCollider.RestartCollider();
     }
     
     private void TrianglePerformed()
@@ -87,7 +98,7 @@ public class ShapeController : NetworkBehaviour
         // The line renderer will be disable for all others
         if (HasInputAuthority)
         {
-            previewShape(3, true);
+            previewShape(3, false);
         }
     }
 
@@ -111,15 +122,16 @@ public class ShapeController : NetworkBehaviour
     {
         // Preview shape only locally 
         // The line renderer will be disable for all others
-        if (HasInputAuthority)
+        if (HasStateAuthority)
         {
             previewShape(3, true);
+            StartCoroutine(DelayDisable(0.1f));
         }
     }
 
     private void SquareActivated()
     {
-        if (HasInputAuthority)
+        if (HasStateAuthority)
         {
             previewShape(4, true);
         }
@@ -127,7 +139,7 @@ public class ShapeController : NetworkBehaviour
 
     private void PentagonActivated()
     {
-        if (HasInputAuthority)
+        if (HasStateAuthority)
         {
             previewShape(5, true);
         }
@@ -169,8 +181,9 @@ public class ShapeController : NetworkBehaviour
         // Debug.Log(score);
 
         // Give buffs/do damage if the player activates the ability
-        if (activate)
+        if (activate && HasStateAuthority)
         {
+            DrawLines(playerPositions);
             if (nVertices == 3)
             {
                 List<Vector2> points = new List<Vector2>();
@@ -184,8 +197,6 @@ public class ShapeController : NetworkBehaviour
                 edgeCollider.enabled = true;
             }
         }
-
-        // DrawLines(playerPositions);
     }
 
     // Here in case we want the a thicker edge collider. But it's 90% done*.

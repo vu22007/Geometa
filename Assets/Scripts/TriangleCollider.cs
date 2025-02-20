@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
 
@@ -6,6 +7,8 @@ public class TriangleCollider : NetworkBehaviour
     // [Networked] EdgeCollider2D edgeCollider { get; set; }
     [Networked] public int team { get; set; }
     [Networked] float score { get; set; }
+
+    List<Player> zappedPlayers { get; set; } = new List<Player>();
 
     // This object is created with no parent because it should be static with a 
     // position in (0, 0, 0). If the object is attached to the ShapeController the
@@ -20,14 +23,21 @@ public class TriangleCollider : NetworkBehaviour
         if(collider.gameObject.tag == "Player")
         {
             Player player = collider.GetComponentInParent<Player>();
-            Debug.Log("Edge team: " + team);
-            Debug.Log("Player team: " + player.GetTeam());
-            // Debug.Log("Collided with teamate");
-            if (player.GetTeam() != team)
+
+            // This doesn't allow players to be damaged twice from the same ability
+            // because the collider exists for 0.1 seconds and multiple frames
+            if (player.GetTeam() != team && !zappedPlayers.Contains(player))
             {
                 Debug.Log("Collided with enemy");
                 //player.TakeDamage(10f * score);
+                zappedPlayers.Add(player);
             }
         }
+    }
+
+    // Restart the collider after the ability is finished
+    public void RestartCollider()
+    {
+        zappedPlayers = new List<Player>();
     }
 }
