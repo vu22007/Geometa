@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Fusion;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class ShapeController : NetworkBehaviour
@@ -31,8 +30,17 @@ public class ShapeController : NetworkBehaviour
         
         lineRenderer = GetComponent<LineRenderer>();
         lineRenderer.enabled = false;
-        GameObject worldColliderPrefab = Resources.Load("Prefabs/WorldCollider") as GameObject;
-        edgeCollider = PrefabFactory.SpawnWorldCollider(Runner, worldColliderPrefab).GetComponent<EdgeCollider2D>();
+
+        // This is the object
+        GameObject worldColliderPrefab = Resources.Load("Prefabs/TriangleCollider") as GameObject;
+        NetworkObject triangleColliderObject = PrefabFactory.SpawnWorldCollider(Runner, worldColliderPrefab);
+        
+        // This is the script of the object
+        TriangleCollider triangleCollider = triangleColliderObject.GetComponent<TriangleCollider>();
+        triangleCollider.team = transform.GetComponentInParent<Player>().GetTeam();
+        
+        // This is the collider of the object 
+        edgeCollider = triangleColliderObject.GetComponent<EdgeCollider2D>();
         edgeCollider.enabled = false;
         edgeCollider.isTrigger = true;
 
@@ -99,6 +107,32 @@ public class ShapeController : NetworkBehaviour
         }
     }
 
+    private void TriangleActivated()
+    {
+        // Preview shape only locally 
+        // The line renderer will be disable for all others
+        if (HasInputAuthority)
+        {
+            previewShape(3, true);
+        }
+    }
+
+    private void SquareActivated()
+    {
+        if (HasInputAuthority)
+        {
+            previewShape(4, true);
+        }
+    }
+
+    private void PentagonActivated()
+    {
+        if (HasInputAuthority)
+        {
+            previewShape(5, true);
+        }
+    }
+
     void previewShape(int nVertices, bool activate)
     {
         List<Player> closestPlayers = GetClosestPlayers(GetComponentInParent<Player>(), nVertices - 1);
@@ -111,7 +145,7 @@ public class ShapeController : NetworkBehaviour
             playerPositions.Add(player.transform.position);
         }
 
-        // Checking if there is enough players
+        // Checking if there is enough players for each vertice
         if (playerPositions.Count < nVertices)
         {
             Debug.Log("Not enough players to activate shape");
@@ -134,84 +168,75 @@ public class ShapeController : NetworkBehaviour
         float score = CalculateScore(angles);
         // Debug.Log(score);
 
+        // Give buffs/do damage if the player activates the ability
         if (activate)
         {
-            List<Vector2> points = new List<Vector2>();
-            foreach (Vector3 position in playerPositions) 
-            { 
-                points.Add(new Vector2(position.x, position.y));
+            if (nVertices == 3)
+            {
+                List<Vector2> points = new List<Vector2>();
+                points.Add(playerPositions[nVertices - 1]);
+                foreach (Vector3 position in playerPositions)
+                {
+                    points.Add(new Vector2(position.x, position.y));
+                }
+
+                edgeCollider.SetPoints(points);
+                edgeCollider.enabled = true;
             }
-
-            edgeCollider.SetPoints(points);
-            edgeCollider.enabled = true;
-            //// float lineThickness = lineRenderer.startWidth;
-            //float lineThickness = 1;
-
-            //Debug.Log("Position count" + lineRenderer.positionCount);
-
-            //if (lineRenderer.positionCount < 2)
-            //{
-            //    Debug.Log("No valid line");
-            //    return;
-            //}
-
-            //List<Vector2> colliderPoints = new List<Vector2>();
-            //List<Vector2> newColliderPoints = new List<Vector2>();
-
-            //// Get half-width offset
-            //float halfWidth = lineThickness / 2f;
-
-            //// Get perpendicular direction to the line for thickness
-            //for (int i = 0; i < lineRenderer.positionCount - 1; i++)
-            //{
-            //    Vector2 start = lineRenderer.GetPosition(i);
-            //    Vector2 end = lineRenderer.GetPosition(i + 1);
-            //    Vector2 direction = (end - start).normalized;
-            //    Vector2 perpendicular = new Vector2(-direction.y, direction.x); // Rotate 90 degrees
-
-            //    // Create thickness by adding and subtracting perpendicularly 
-            //    Vector2 top1 = (Vector2)start + perpendicular * halfWidth;
-            //    Vector2 bottom1 = (Vector2)start - perpendicular * halfWidth;
-            //    Vector2 top2 = (Vector2)end + perpendicular * halfWidth;
-            //    Vector2 bottom2 = (Vector2)end - perpendicular * halfWidth;
-
-            //    colliderPoints.Add(top1);
-            //    colliderPoints.Add(bottom1);
-            //    colliderPoints.Add(bottom2);
-            //    colliderPoints.Add(top2);
-            //    colliderPoints = SortVerticesAroundCentroid(colliderPoints);
-            //    //foreach(var colliderPoint in colliderPoints)
-            //    //{
-            //    //    newColliderPoints.Add(new Vector2(colliderPoint.x, colliderPoint.y));
-            //    //}
-            //}
-            //polygonCollider.pathCount = 0;  
-            //polygonCollider.pathCount = 1;
-            //polygonCollider.SetPath(0, colliderPoints);
-            //polygonCollider.enabled = true;
         }
 
-        DrawLines(playerPositions);
+        // DrawLines(playerPositions);
     }
 
-     void OnTriggerStay2D(Collider2D collider)
-    {
-        Debug.Log("Collider works");
-        if(collider.gameObject.tag == "Player")
-        {
-            Debug.Log("On collider");
-        }
-    }
+    // Here in case we want the a thicker edge collider. But it's 90% done*.
 
-    private void ActivateTriangle(List<Vector3> vertices, int team)
-    {
-        List<Player> alivePlayers = gameController.GetAlivePlayers();
-        List<Player> enemyPlayers = new List<Player>(alivePlayers).FindAll(a => a.GetTeam() != team);
-        foreach (Player player in enemyPlayers)
-        {
+    //void CreatePolygonCollider()
+    //{
+    //    float lineThickness = lineRenderer.startWidth;
+    //    float lineThickness = 1;
 
-        }
-    }
+    //    Debug.Log("Position count" + lineRenderer.positionCount);
+    //    if (lineRenderer.positionCount < 2)
+    //    {
+    //        Debug.Log("No valid line");
+    //        return;
+    //    }
+
+    //    List<Vector2> colliderPoints = new List<Vector2>();
+    //    List<Vector2> newColliderPoints = new List<Vector2>();
+
+    //    // Get half-width offset
+    //    float halfWidth = lineThickness / 2f;
+
+    //    // Get perpendicular direction to the line for thickness
+    //    for (int i = 0; i < lineRenderer.positionCount - 1; i++)
+    //    {
+    //        Vector2 start = lineRenderer.GetPosition(i);
+    //        Vector2 end = lineRenderer.GetPosition(i + 1);
+    //        Vector2 direction = (end - start).normalized;
+    //        Vector2 perpendicular = new Vector2(-direction.y, direction.x); // Rotate 90 degrees
+
+    //        // Create thickness by adding and subtracting perpendicularly 
+    //        Vector2 top1 = (Vector2)start + perpendicular * halfWidth;
+    //        Vector2 bottom1 = (Vector2)start - perpendicular * halfWidth;
+    //        Vector2 top2 = (Vector2)end + perpendicular * halfWidth;
+    //        Vector2 bottom2 = (Vector2)end - perpendicular * halfWidth;
+
+    //        colliderPoints.Add(top1);
+    //        colliderPoints.Add(bottom1);
+    //        colliderPoints.Add(bottom2);
+    //        colliderPoints.Add(top2);
+    //        colliderPoints = SortVerticesAroundCentroid(colliderPoints);
+    //        //foreach(var colliderPoint in colliderPoints)
+    //        //{
+    //        //    newColliderPoints.Add(new Vector2(colliderPoint.x, colliderPoint.y));
+    //        //}
+    //    }
+    //    polygonCollider.pathCount = 0;
+    //    polygonCollider.pathCount = 1;
+    //    polygonCollider.SetPath(0, colliderPoints);
+    //    polygonCollider.enabled = true;
+    //}
 
     private List<Player> GetClosestPlayers(Player currentPlayer, int count)
     {
@@ -296,8 +321,8 @@ public class ShapeController : NetworkBehaviour
         int count = angles.Count;
         float sum = angles.Sum();
 
-        // sum is a sum of floating points so we put 0.01 as an allowed error margin
-        if(Mathf.Abs(sum - ((count - 2) * 180f)) > 0.01)
+        // sum is a sum of floating points so we put 0.1 as an allowed error margin
+        if(Mathf.Abs(sum - ((count - 2) * 180f)) > 0.1)
         {
             return false;
         } 
