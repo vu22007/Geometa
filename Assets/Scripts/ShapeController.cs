@@ -81,8 +81,14 @@ public class ShapeController : NetworkBehaviour
             {
                 TriangleActivated();
             }
-            if (input.buttons.WasReleased(previousButtons, InputButtons.Square)) lineRenderer.enabled = false;
-            if (input.buttons.WasReleased(previousButtons, InputButtons.Pentagon)) lineRenderer.enabled = false;
+            if (input.buttons.WasReleased(previousButtons, InputButtons.Square))
+            {
+                SquareActivated();
+            }
+            if (input.buttons.WasReleased(previousButtons, InputButtons.Pentagon))
+            {
+                PentagonActivated();
+            }
 
             previousButtons = input.buttons;
         }
@@ -130,17 +136,7 @@ public class ShapeController : NetworkBehaviour
         // The line renderer will be disable for all others
         if (HasStateAuthority)
         {
-            Debug.Log(parentPlayer.GetPoints());
-            if (parentPlayer.GetPoints() >= triangleCost)
-            {
-                Debug.Log("Activated triangle");
-                previewShape(3, true);
-                StartCoroutine(DelayDisable(0.1f));
-            } else
-            {
-                lineRenderer.enabled = false;
-                Debug.Log("You don't have enough points to activate a triangle");
-            }
+            previewShape(3, true);
         }
     }
 
@@ -148,15 +144,7 @@ public class ShapeController : NetworkBehaviour
     {
         if (HasStateAuthority)
         {
-            if (parentPlayer.GetPoints() >= squareCost)
-            {
-                previewShape(4, true);
-            }
-            else
-            {
-                lineRenderer.enabled = false;
-                Debug.Log("You don't have enough points to activate a square");
-            }
+            previewShape(4, true);
         }
     }
 
@@ -164,15 +152,7 @@ public class ShapeController : NetworkBehaviour
     {
         if (HasStateAuthority)
         {
-            if (parentPlayer.GetPoints() >= triangleCost)
-            {
-                previewShape(5, true);
-            }
-            else
-            {
-                lineRenderer.enabled = false;
-                Debug.Log("You don't have enough points to activate a pentagon");
-            }
+            previewShape(5, true);
         }
     }
 
@@ -201,12 +181,6 @@ public class ShapeController : NetworkBehaviour
 
         // Calculate the angles for each vertice of the shape
         List<float> angles = GetAngles(playerPositions);
-        // If it's not convex don't activate
-        if (!IsConvex(angles))
-        {
-            Debug.Log("Shape is non-convex - can't activate buff!");
-            return;
-        }
 
         float score = CalculateScore(angles);
         // Debug.Log(score);
@@ -219,25 +193,66 @@ public class ShapeController : NetworkBehaviour
             DrawLines(playerPositions);
             if (nVertices == 3)
             {
-                List<Vector2> points = new List<Vector2>();
-                points.Add(playerPositions[nVertices - 1]);
-                foreach (Vector3 position in playerPositions)
+                if (parentPlayer.GetPoints() >= triangleCost)
                 {
-                    points.Add(new Vector2(position.x, position.y));
+                    List<Vector2> points = new List<Vector2>();
+                    points.Add(playerPositions[nVertices - 1]);
+                    foreach (Vector3 position in playerPositions)
+                    {
+                        points.Add(new Vector2(position.x, position.y));
+                    }
+
+                    edgeCollider.SetPoints(points);
+                    edgeCollider.enabled = true;
+
+                    parentPlayer.LosePoints(triangleCost);
+                    StartCoroutine(DelayDisable(0.1f));
                 }
-
-                edgeCollider.SetPoints(points);
-                edgeCollider.enabled = true;
-
-                parentPlayer.LosePoints(triangleCost);
+                else
+                {
+                    lineRenderer.enabled = false;
+                    Debug.Log("You don't have enough points to activate a triangle");
+                }
             }
             else if (nVertices == 4)
             {
-                parentPlayer.LosePoints(squareCost);
+                if (parentPlayer.GetPoints() < squareCost)
+                {
+                    lineRenderer.enabled = false;
+                    Debug.Log("You don't have enough points to activate a square");
+                }
+                // If it's not convex don't activate it
+                else if (!IsConvex(angles))
+                {
+                    lineRenderer.enabled = false;
+                    Debug.Log("Shape is not convex - can't activate buff!");
+                    return;
+                }
+                else
+                {
+                    parentPlayer.LosePoints(squareCost);
+                    StartCoroutine(DelayDisable(0.1f));
+                }
+
             }
             else if (nVertices == 5)
             {
-                parentPlayer.LosePoints(pentagonCost);
+                if (parentPlayer.GetPoints() < pentagonCost)
+                {
+                    lineRenderer.enabled = false;
+                    Debug.Log("You don't have enough points to activate a pentagon");
+                }
+                else if (!IsConvex(angles))
+                {
+                    lineRenderer.enabled = false;
+                    Debug.Log("Shape is not convex - can't activate buff!");
+                    return;
+                }
+                else
+                {
+                    parentPlayer.LosePoints(pentagonCost);
+                    StartCoroutine(DelayDisable(0.1f));
+                }
             }
         }
 
