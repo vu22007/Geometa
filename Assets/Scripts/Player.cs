@@ -56,7 +56,7 @@ public class Player : NetworkBehaviour
         this.team = team;
         this.characterPath = characterPath;
 
-        points = 0;
+        points = 10;
         reloadTime = 1.0f;
         respawnTime = 10.0f;
         currentAmmo = maxAmmo;
@@ -309,6 +309,16 @@ public class Player : NetworkBehaviour
         points += amount;
     }
 
+    public void LosePoints(int amount)
+    {
+        if(amount > points)
+        {
+            Debug.Log("You don't have enough points");
+        }
+        points -= amount;
+        Debug.Log("Lose points" + points);
+    }
+
     void Die()
     {
         isAlive = false;
@@ -387,5 +397,10 @@ public class Player : NetworkBehaviour
     public int GetTeam()
     {
         return team;
+    }
+
+    public int GetPoints()
+    {
+        return points;
     }
 }

@@ -15,7 +15,12 @@ public class ShapeController : NetworkBehaviour
     [Networked] private float cooldown { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
 
+    private int triangleCost = 3;
+    private int squareCost = 5;
+    private int pentagonCost = 8;
+
     GameController gameController { get; set; }
+    Player parentPlayer { get; set; }
 
     private LineRenderer lineRenderer;
     private EdgeCollider2D edgeCollider;
@@ -30,6 +35,8 @@ public class ShapeController : NetworkBehaviour
         else
             gameController = GameObject.Find("Client A").GetComponent<GameController>();
         
+        parentPlayer = GetComponentInParent<Player>();
+
         lineRenderer = GetComponent<LineRenderer>();
         lineRenderer.enabled = false;
 
@@ -124,8 +131,17 @@ public class ShapeController : NetworkBehaviour
         // The line renderer will be disable for all others
         if (HasStateAuthority)
         {
-            previewShape(3, true);
-            StartCoroutine(DelayDisable(0.1f));
+            Debug.Log(parentPlayer.GetPoints());
+            if (parentPlayer.GetPoints() >= triangleCost)
+            {
+                Debug.Log("Activated triangle");
+                previewShape(3, true);
+                StartCoroutine(DelayDisable(0.1f));
+            } else
+            {
+                lineRenderer.enabled = false;
+                Debug.Log("You don't have enough points to activate a triangle");
+            }
         }
     }
 
@@ -133,7 +149,15 @@ public class ShapeController : NetworkBehaviour
     {
         if (HasStateAuthority)
         {
-            previewShape(4, true);
+            if (parentPlayer.GetPoints() >= squareCost)
+            {
+                previewShape(4, true);
+            }
+            else
+            {
+                lineRenderer.enabled = false;
+                Debug.Log("You don't have enough points to activate a square");
+            }
         }
     }
 
@@ -141,17 +165,25 @@ public class ShapeController : NetworkBehaviour
     {
         if (HasStateAuthority)
         {
-            previewShape(5, true);
+            if (parentPlayer.GetPoints() >= triangleCost)
+            {
+                previewShape(5, true);
+            }
+            else
+            {
+                lineRenderer.enabled = false;
+                Debug.Log("You don't have enough points to activate a pentagon");
+            }
         }
     }
 
     void previewShape(int nVertices, bool activate)
     {
-        List<Player> closestPlayers = GetClosestPlayers(GetComponentInParent<Player>(), nVertices - 1);
+        List<Player> closestPlayers = GetClosestPlayers(parentPlayer, nVertices - 1);
 
         // Making a list of vector3 positions of the players
         List<Vector3> playerPositions = new List<Vector3>();
-        playerPositions.Add(GetComponentInParent<Player>().transform.position);
+        playerPositions.Add(parentPlayer.transform.position);
         foreach (Player player in closestPlayers)
         {
             playerPositions.Add(player.transform.position);
@@ -197,6 +229,16 @@ public class ShapeController : NetworkBehaviour
 
                 edgeCollider.SetPoints(points);
                 edgeCollider.enabled = true;
+
+                parentPlayer.LosePoints(triangleCost);
+            }
+            else if (nVertices == 4)
+            {
+                parentPlayer.LosePoints(squareCost);
+            }
+            else if (nVertices == 5)
+            {
+                parentPlayer.LosePoints(pentagonCost);
             }
         }
 
