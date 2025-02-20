@@ -183,6 +183,8 @@ public class ShapeController : NetworkBehaviour
         // Give buffs/do damage if the player activates the ability
         if (activate && HasStateAuthority)
         {
+            // When activated the server will draw the lines
+            // TODO: MAke the lines darker for activate and lighter for preview
             DrawLines(playerPositions);
             if (nVertices == 3)
             {
@@ -196,6 +198,12 @@ public class ShapeController : NetworkBehaviour
                 edgeCollider.SetPoints(points);
                 edgeCollider.enabled = true;
             }
+        }
+
+        // Draw lines locally when just preview
+        if(HasInputAuthority && !activate)
+        {
+            DrawLines(playerPositions);
         }
     }
 
