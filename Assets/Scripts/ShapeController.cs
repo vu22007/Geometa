@@ -6,7 +6,6 @@ using UnityEngine;
 
 public class ShapeController : NetworkBehaviour
 {
-    [HideInInspector] public Shape currentShape;
     private Vector3 cursorWorldPoint;
     private float angle; // angle of cursor wrt y axis unit vector
     [SerializeField] float plusAngle = 0;
@@ -422,27 +421,6 @@ public class ShapeController : NetworkBehaviour
         // And we divide by count so shapes with more vertices are not penalised
         score = 1 / (1 + score/count); 
         return score;
-    }
-
-    private void PlaceShapePerformed()
-    {
-        // Place shape if right clicked while holding Q
-        if (!isPlacing || cooldown > 0)
-        {
-            Debug.Log("Triangle cooldown remaning: " + cooldown.ToString());
-            return;
-        }
-
-        if (currentShape == null) return;
-
-        // Shape is placed so it no longer is a preview
-        currentShape.isPreview = false;
-
-        cooldown = currentShape.Cooldown();
-        isPlacing = false;
-
-        currentShape.EnableCorners();
-        // previewShape = null;
     }
 
     private float CalculateAngle(Vector3 direction)

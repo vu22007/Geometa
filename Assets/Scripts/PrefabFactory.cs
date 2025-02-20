@@ -37,19 +37,6 @@ public static class PrefabFactory
         return networkBulletObject;
     }
 
-    public static NetworkObject SpawnShape(NetworkRunner runner, PlayerRef playerRef, GameObject prefab, Vector3 spawnPosition, Quaternion rotation, bool isPreview)
-    {
-        // Spawn the shape network object
-        NetworkObject networkShapeObject = runner.Spawn(prefab, spawnPosition, rotation, playerRef, (runner, networkObject) =>
-        {
-            // Initialise the shape (this is called before the shape is spawned)
-            Shape shape = networkObject.GetComponent<Shape>();
-            shape.OnCreated(isPreview);
-        });
-
-        return networkShapeObject;
-    }
-
     //For type: 0 is health, 1 is points
     public static NetworkObject SpawnPickup(NetworkRunner runner, GameObject prefab, Vector3 spawnPosition, int type, int amount){
 
