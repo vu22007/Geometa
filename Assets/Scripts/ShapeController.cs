@@ -18,12 +18,13 @@ public class ShapeController : NetworkBehaviour
     Player parentPlayer { get; set; }
 
     private LineRenderer lineRenderer;
-    private EdgeCollider2D edgeCollider;
-    private TriangleCollider triangleCollider;
+    private LineRenderer triangleLineRenderer;
+    private LineRenderer squareLineRenderer;
+    private LineRenderer pentagonLineRenderer;
 
     private TriangleShape triangleShape;
-    //private SquareShape squareShape;
-    //private PentagonShape pentagonShape;
+    private SquareShape squareShape;
+    private PentagonShape pentagonShape;
 
     // Shape controller intialisation (called on each client and server when shape controller is spawned on network)
     public override void Spawned()
@@ -35,11 +36,17 @@ public class ShapeController : NetworkBehaviour
             gameController = GameObject.Find("Client A").GetComponent<GameController>();
         
         parentPlayer = GetComponentInParent<Player>();
-
-        lineRenderer = GetComponent<LineRenderer>();
-        lineRenderer.enabled = false;
    
         triangleShape = GetComponentInChildren<TriangleShape>();
+        squareShape = GetComponentInChildren<SquareShape>();
+        pentagonShape = GetComponentInChildren<PentagonShape>();
+
+        triangleLineRenderer = triangleShape.GetComponent<LineRenderer>();
+        triangleLineRenderer.enabled = false; 
+        squareLineRenderer = squareShape.GetComponent<LineRenderer>();
+        squareLineRenderer.enabled = false;
+        pentagonLineRenderer = pentagonShape.GetComponent<LineRenderer>();
+        pentagonLineRenderer.enabled = false;
 
         isActive = true;
         cooldown = 0;
@@ -168,13 +175,13 @@ public class ShapeController : NetworkBehaviour
             {
                 if (parentPlayer.GetPoints() >= triangleCost)
                 {
-                    triangleShape.CastAbility(playerPositions);
-                    lineRenderer.enabled = false;
+                    triangleShape.CastAbility(playerPositions, score);
+                    StartCoroutine(DelayDisable(0.1f));
                     parentPlayer.SpendPoints(triangleCost);
                 }
                 else
                 {
-                    StartCoroutine(DelayDisable(0.1f));
+                    lineRenderer.enabled = false;
                     Debug.Log("You don't have enough points to activate a triangle");
                 }
             }
@@ -236,56 +243,6 @@ public class ShapeController : NetworkBehaviour
         }
     }
 
-    // Here in case we want the a thicker edge collider. But it's 90% done*.
-
-    //void CreatePolygonCollider()
-    //{
-    //    float lineThickness = lineRenderer.startWidth;
-    //    float lineThickness = 1;
-
-    //    Debug.Log("Position count" + lineRenderer.positionCount);
-    //    if (lineRenderer.positionCount < 2)
-    //    {
-    //        Debug.Log("No valid line");
-    //        return;
-    //    }
-
-    //    List<Vector2> colliderPoints = new List<Vector2>();
-    //    List<Vector2> newColliderPoints = new List<Vector2>();
-
-    //    // Get half-width offset
-    //    float halfWidth = lineThickness / 2f;
-
-    //    // Get perpendicular direction to the line for thickness
-    //    for (int i = 0; i < lineRenderer.positionCount - 1; i++)
-    //    {
-    //        Vector2 start = lineRenderer.GetPosition(i);
-    //        Vector2 end = lineRenderer.GetPosition(i + 1);
-    //        Vector2 direction = (end - start).normalized;
-    //        Vector2 perpendicular = new Vector2(-direction.y, direction.x); // Rotate 90 degrees
-
-    //        // Create thickness by adding and subtracting perpendicularly 
-    //        Vector2 top1 = (Vector2)start + perpendicular * halfWidth;
-    //        Vector2 bottom1 = (Vector2)start - perpendicular * halfWidth;
-    //        Vector2 top2 = (Vector2)end + perpendicular * halfWidth;
-    //        Vector2 bottom2 = (Vector2)end - perpendicular * halfWidth;
-
-    //        colliderPoints.Add(top1);
-    //        colliderPoints.Add(bottom1);
-    //        colliderPoints.Add(bottom2);
-    //        colliderPoints.Add(top2);
-    //        colliderPoints = SortVerticesAroundCentroid(colliderPoints);
-    //        //foreach(var colliderPoint in colliderPoints)
-    //        //{
-    //        //    newColliderPoints.Add(new Vector2(colliderPoint.x, colliderPoint.y));
-    //        //}
-    //    }
-    //    polygonCollider.pathCount = 0;
-    //    polygonCollider.pathCount = 1;
-    //    polygonCollider.SetPath(0, colliderPoints);
-    //    polygonCollider.enabled = true;
-    //}
-
     private List<Player> GetClosestPlayers(Player currentPlayer, int count)
     {
         List<Player> alivePlayers = gameController.GetAlivePlayers();
@@ -306,6 +263,8 @@ public class ShapeController : NetworkBehaviour
     void DrawLines(List<Vector3> vertices)
     {
         int nVertices = vertices.Count;
+        // Choose different lines for different abilities
+        ChooseLineRenderer(nVertices);
         lineRenderer.positionCount = nVertices + 1;
         // Lines are drawn between the adjacent vertices. The last vertice is added first so there
         // is a line between 0th and (nVertices - 1)th vertice
@@ -403,5 +362,21 @@ public class ShapeController : NetworkBehaviour
     {
         yield return new WaitForSeconds(delay);
         lineRenderer.enabled = false;
+    }
+
+    void ChooseLineRenderer(int nVertices)
+    {
+        if (nVertices == 3)
+        {
+            lineRenderer = triangleLineRenderer;
+        }
+        else if (nVertices == 4)
+        {
+            lineRenderer = squareLineRenderer;
+        }
+        else if (nVertices == 5)
+        {
+            lineRenderer = pentagonLineRenderer;
+        }
     }
 }

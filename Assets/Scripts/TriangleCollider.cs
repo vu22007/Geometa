@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class TriangleCollider : NetworkBehaviour
 {
-    [Networked] public int team { get; set; }
+    [Networked, HideInInspector] public int team { get; set; }
     [Networked] float score { get; set; }
 
     private EdgeCollider2D edgeCollider;
@@ -22,8 +22,24 @@ public class TriangleCollider : NetworkBehaviour
         edgeCollider.enabled = false;
         edgeCollider.isTrigger = true;
     }
+    //void OnCollisionHitbox(Hitbox hitbox)
+    //{
+    //    // Check if object is a player
+    //    if (hitbox.CompareTag("Player"))
+    //    {
+    //        Player player = hitbox.GetComponent<Player>();
+    //        if (player != null)
+    //        {
+    //            // Check if player is from the enemy team
+    //            if (player.GetTeam() != team)
+    //            {
+    //                player.TakeDamage(10f * score);
+    //            }
+    //        }
+    //    }
+    //}
 
-    void OnTriggerStay2D(Collider2D collider)
+    void OnTriggerEnter2D(Collider2D collider)
     {
         if(collider.gameObject.tag == "Player")
         {
@@ -44,5 +60,10 @@ public class TriangleCollider : NetworkBehaviour
     public void RestartCollider()
     {
         zappedPlayers = new List<Player>();
+    }
+
+    public void SetScore(float score)
+    {
+        this.score = score;
     }
 }

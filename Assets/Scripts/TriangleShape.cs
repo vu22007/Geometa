@@ -20,7 +20,7 @@ public class TriangleShape : NetworkBehaviour
         edgeCollider = triangleCollider.GetComponent<EdgeCollider2D>();
     }
 
-    public void CastAbility(List<Vector3> playerPositions)
+    public void CastAbility(List<Vector3> playerPositions, float score)
     {
         List<Vector2> points = new List<Vector2>();
         points.Add(playerPositions[2]);
@@ -29,6 +29,7 @@ public class TriangleShape : NetworkBehaviour
             points.Add(new Vector2(position.x, position.y));
         }
 
+        triangleCollider.SetScore(score);
         edgeCollider.SetPoints(points);
         edgeCollider.enabled = true;
         StartCoroutine(DelayDisable(0.1f));

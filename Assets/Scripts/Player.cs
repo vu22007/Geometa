@@ -95,15 +95,24 @@ public class Player : NetworkBehaviour
         Character character = Resources.Load(characterPath) as Character;
         spriteRenderer.sprite = character.Sprite;
 
+        Player localPlayer = Runner.GetPlayerObject(Runner.LocalPlayer)?.GetComponent<Player>();
+
         // If client controls this player then use main health bar
         // CHANGE to HasInputAuthority later
-        if (true)
+        if (HasInputAuthority)
         {
             healthBar = mainHealthBar;
             smallHealthBar.transform.parent.gameObject.SetActive(false);
         }
+        // Added this in case the player is an NPC
+        else if(localPlayer == null)
+        {
+            healthBar = smallHealthBar;
+            Debug.Log("Testing this runs");
+            mainHealthBar.transform.parent.gameObject.SetActive(false);
+        }
         // If this player is on the other team to the client's player then use small health bar
-        else if (Runner.GetPlayerObject(Runner.LocalPlayer).GetComponent<Player>().GetTeam() != team)
+        else if (localPlayer.GetComponent<Player>().GetTeam() != team)
         {
             healthBar = smallHealthBar;
             Debug.Log("Testing this runs");
@@ -316,7 +325,6 @@ public class Player : NetworkBehaviour
             Debug.Log("You don't have enough points");
         }
         points -= amount;
-        Debug.Log("Remaining points: " + points);
     }
 
     void Die()
