@@ -1,12 +1,14 @@
+using System.Collections;
 using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
 
 public class TriangleCollider : NetworkBehaviour
 {
-    // [Networked] EdgeCollider2D edgeCollider { get; set; }
     [Networked] public int team { get; set; }
     [Networked] float score { get; set; }
+
+    private EdgeCollider2D edgeCollider;
 
     List<Player> zappedPlayers { get; set; } = new List<Player>();
 
@@ -14,8 +16,11 @@ public class TriangleCollider : NetworkBehaviour
     // position in (0, 0, 0). If the object is attached to the ShapeController the
     // edge collider works with local coordinates and the coordinates of the vertices
     // change with the rotation of the player which is a problem
-    void Spawn()
+    public override void Spawned()
     {
+        edgeCollider = GetComponent<EdgeCollider2D>();
+        edgeCollider.enabled = false;
+        edgeCollider.isTrigger = true;
     }
 
     void OnTriggerStay2D(Collider2D collider)
@@ -29,7 +34,7 @@ public class TriangleCollider : NetworkBehaviour
             if (player.GetTeam() != team && !zappedPlayers.Contains(player))
             {
                 Debug.Log("Collided with enemy");
-                //player.TakeDamage(10f * score);
+                player.TakeDamage(10f * score);
                 zappedPlayers.Add(player);
             }
         }

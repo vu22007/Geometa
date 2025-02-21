@@ -6,11 +6,7 @@ using UnityEngine;
 
 public class ShapeController : NetworkBehaviour
 {
-    private Vector3 cursorWorldPoint;
-    private float angle; // angle of cursor wrt y axis unit vector
-    [SerializeField] float plusAngle = 0;
     [Networked] public bool isActive { get; set; }
-    [Networked] private bool isPlacing { get; set; }
     [Networked] private float cooldown { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
 
@@ -25,6 +21,10 @@ public class ShapeController : NetworkBehaviour
     private EdgeCollider2D edgeCollider;
     private TriangleCollider triangleCollider;
 
+    private TriangleShape triangleShape;
+    //private SquareShape squareShape;
+    //private PentagonShape pentagonShape;
+
     // Shape controller intialisation (called on each client and server when shape controller is spawned on network)
     public override void Spawned()
     {
@@ -38,24 +38,12 @@ public class ShapeController : NetworkBehaviour
 
         lineRenderer = GetComponent<LineRenderer>();
         lineRenderer.enabled = false;
-
-        // This is the object
-        GameObject worldColliderPrefab = Resources.Load("Prefabs/TriangleCollider") as GameObject;
-        NetworkObject triangleColliderObject = PrefabFactory.SpawnWorldCollider(Runner, worldColliderPrefab);
-        
-        // This is the script of the object
-        triangleCollider = triangleColliderObject.GetComponent<TriangleCollider>();
-        triangleCollider.team = transform.GetComponentInParent<Player>().GetTeam();
-        
-        // This is the collider of the object 
-        edgeCollider = triangleColliderObject.GetComponent<EdgeCollider2D>();
-        edgeCollider.enabled = false;
-        edgeCollider.isTrigger = true;
+   
+        triangleShape = GetComponentInChildren<TriangleShape>();
 
         isActive = true;
-        isPlacing = false;
         cooldown = 0;
-    }
+    }   
 
     public override void FixedUpdateNetwork()
     {
@@ -68,10 +56,6 @@ public class ShapeController : NetworkBehaviour
         // So the following is ran for just the server and the client who controls this shape controller
         if (GetInput(out NetworkInputData input))
         {
-            cursorWorldPoint = new Vector3(input.cursorWorldPoint.x, input.cursorWorldPoint.y);
-            Vector3 direction = new Vector3(input.aimDirection.x, input.aimDirection.y);
-            angle = CalculateAngle(direction);
-
             // On key down for specific shape (only on moment when key is pressed down)
             if (input.buttons.IsSet(InputButtons.Triangle)) TrianglePerformed();
             if (input.buttons.IsSet(InputButtons.Square)) SquarePerformed();
@@ -92,16 +76,6 @@ public class ShapeController : NetworkBehaviour
 
             previousButtons = input.buttons;
         }
-    }
-
-    // IEnumerator should be imported from Collections not Collections.Generic
-    IEnumerator DelayDisable(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        // Debug.Log("disabled");
-        lineRenderer.enabled = false;
-        edgeCollider.enabled = false;
-        triangleCollider.RestartCollider();
     }
     
     private void TrianglePerformed()
@@ -183,7 +157,6 @@ public class ShapeController : NetworkBehaviour
         List<float> angles = GetAngles(playerPositions);
 
         float score = CalculateScore(angles);
-        // Debug.Log(score);
 
         // Give buffs/do damage if the player activates the ability
         if (activate && HasStateAuthority)
@@ -195,22 +168,13 @@ public class ShapeController : NetworkBehaviour
             {
                 if (parentPlayer.GetPoints() >= triangleCost)
                 {
-                    List<Vector2> points = new List<Vector2>();
-                    points.Add(playerPositions[nVertices - 1]);
-                    foreach (Vector3 position in playerPositions)
-                    {
-                        points.Add(new Vector2(position.x, position.y));
-                    }
-
-                    edgeCollider.SetPoints(points);
-                    edgeCollider.enabled = true;
-
-                    parentPlayer.LosePoints(triangleCost);
-                    StartCoroutine(DelayDisable(0.1f));
+                    triangleShape.CastAbility(playerPositions);
+                    lineRenderer.enabled = false;
+                    parentPlayer.SpendPoints(triangleCost);
                 }
                 else
                 {
-                    lineRenderer.enabled = false;
+                    StartCoroutine(DelayDisable(0.1f));
                     Debug.Log("You don't have enough points to activate a triangle");
                 }
             }
@@ -230,7 +194,7 @@ public class ShapeController : NetworkBehaviour
                 }
                 else
                 {
-                    parentPlayer.LosePoints(squareCost);
+                    parentPlayer.SpendPoints(squareCost);
                     StartCoroutine(DelayDisable(0.1f));
                 }
 
@@ -250,7 +214,16 @@ public class ShapeController : NetworkBehaviour
                 }
                 else
                 {
-                    parentPlayer.LosePoints(pentagonCost);
+                    Vector3 centroid = Vector3.zero;
+                    foreach (var v in playerPositions)
+                    {
+                        centroid += v;
+                    }
+                    centroid /= playerPositions.Count;
+
+                    // TODO: Spawn creature in the center
+
+                    parentPlayer.SpendPoints(pentagonCost);
                     StartCoroutine(DelayDisable(0.1f));
                 }
             }
@@ -323,7 +296,7 @@ public class ShapeController : NetworkBehaviour
         Vector3 position = currentPlayer.transform.position;
 
         //Sorting players by distance, 
-        closestPlayers.Sort((a, b) =>
+        closestPlayers.Sort((b, a) =>
             Vector3.Distance(position, b.transform.position).CompareTo(Vector3.Distance(position, a.transform.position))
         );
         // closestPlayers.ForEach(a => Debug.Log(a.transform.position));
@@ -358,20 +331,7 @@ public class ShapeController : NetworkBehaviour
         return vertices;
     }
 
-    List<Vector2> SortVerticesAroundCentroid(List<Vector2> vertices)
-    {
-        Vector2 centroid = Vector2.zero;
-        foreach (var v in vertices)
-        {
-            centroid += v;
-        }
-        centroid /= vertices.Count;
-
-        // Sort by angle relative to centroid - Counterclockwise
-        vertices = vertices.OrderBy(v => Mathf.Atan2(v.y - centroid.y, v.x - centroid.x)).ToList<Vector2>();
-        return vertices;
-    }
-
+    // Calculate the angles for each vertice of the shape
     List<float> GetAngles(List<Vector3> vertices)
     {
         List<float> angles = new List<float>();
@@ -384,7 +344,7 @@ public class ShapeController : NetworkBehaviour
             {
                 angleVertices.Add(vertices[(i + j + count) % count]);
             }
-            angle = GetAngle(angleVertices);
+            float angle = GetAngle(angleVertices);
             angles.Add(angle);
         } 
 
@@ -414,9 +374,7 @@ public class ShapeController : NetworkBehaviour
 
         Vector3 direction1 = (vertices[0] - vertices[1]).normalized;
         Vector3 direction2 = (vertices[2] - vertices[1]).normalized;
-        float angle = Vector3.Angle(direction1, direction2);
-        // Debug.Log(angle);
-        
+        float angle = Vector3.Angle(direction1, direction2);       
         return angle;
     }
 
@@ -425,7 +383,7 @@ public class ShapeController : NetworkBehaviour
         float score = 0;
         int count = angles.Count;
         // The angle for a regular polygon
-        float regularAngle = (count - 2) * 180;
+        float regularAngle = ((count - 2) * 180)/count;
         
         // Adding how much each angle is close to a regular angle
         foreach (float angle in angles)
@@ -434,12 +392,16 @@ public class ShapeController : NetworkBehaviour
         }
         // Getting the inverse because the value will be smaller the more regular the shape is
         // And we divide by count so shapes with more vertices are not penalised
-        score = 1 / (1 + score/count); 
+        score = 1 / (1 + score/((count-2)*180)); 
         return score;
     }
 
-    private float CalculateAngle(Vector3 direction)
+    // This function delays the disabling of the line renderer so the players can see 
+    // the lines for a moment.
+    // TODO: Should be replaced with an animation
+    IEnumerator DelayDisable(float delay)
     {
-        return Vector3.SignedAngle(Vector3.up, direction, Vector3.forward) - 180 + plusAngle;
+        yield return new WaitForSeconds(delay);
+        lineRenderer.enabled = false;
     }
 }
