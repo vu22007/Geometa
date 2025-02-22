@@ -15,7 +15,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
 
     private List<Pickup> pickups;
 
-    // For server to use only so that it can manage the spawn and despawn of players
+    // For only the server to use so that it can manage the spawn and despawn of players
     private Dictionary<PlayerRef, NetworkObject> spawnedPlayers = new Dictionary<PlayerRef, NetworkObject>();
 
     // For server to use to keep track of what team to assign to a new player when they join
@@ -24,6 +24,9 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
     // Flags
     private PickupFlag team1Flag;
     private PickupFlag team2Flag;
+
+    // For only the server to use when broadcasting messages
+    private bool gameOver = false;
 
     // Initialisation
     void Start()
@@ -173,12 +176,14 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
         // If team 2's flag is close enough to team 1's base, then team 1 wins
         if (Vector2.Distance(team2Flag.transform.position, respawnPoint1) <= maxDistance)
         {
+            gameOver = true;
             BroadcastMessageToTeam(1, "You win!", 0.1f, Color.green);
             BroadcastMessageToTeam(2, "You lose!", 0.1f, Color.red);
         }
         // If team 1's flag is close enough to team 2's base, then team 2 wins
         else if (Vector2.Distance(team1Flag.transform.position, respawnPoint2) <= maxDistance)
         {
+            gameOver = true;
             BroadcastMessageToTeam(2, "You win!", 0.1f, Color.green);
             BroadcastMessageToTeam(1, "You lose!", 0.1f, Color.red);
         }
@@ -186,6 +191,8 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
 
     public void BroadcastCarryFlag(int playerTeam, int flagTeam)
     {
+        if (gameOver) return;
+
         int otherTeam = playerTeam == 1 ? 2 : 1;
         if (flagTeam == playerTeam)
         {
@@ -201,6 +208,8 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
 
     public void BroadcastDropFlag(int playerTeam, int flagTeam)
     {
+        if (gameOver) return;
+
         int otherTeam = playerTeam == 1 ? 2 : 1;
         if (flagTeam == playerTeam)
         {
