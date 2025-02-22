@@ -175,12 +175,14 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
             // If team 2's flag is close enough to team 1's base, then team 1 wins
             if (Vector2.Distance(team2Flag.transform.position, respawnPoint1) <= maxDistance)
             {
-                Debug.Log("Team 1 wins!");
+                BroadCastMessageToTeam(1, "You win!", 0.1f, Color.green);
+                BroadCastMessageToTeam(2, "You lose!", 0.1f, Color.red);
             }
             // If team 1's flag is close enough to team 2's base, then team 2 wins
             else if (Vector2.Distance(team1Flag.transform.position, respawnPoint2) <= maxDistance)
             {
-                Debug.Log("Team 2 wins!");
+                BroadCastMessageToTeam(2, "You win!", 0.1f, Color.green);
+                BroadCastMessageToTeam(1, "You lose!", 0.1f, Color.red);
             }
         }
     }
@@ -189,7 +191,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
     {
         foreach (Player player in players)
         {
-            player.ShowMessage(message, speed, color);
+            player.RPC_ShowMessage(message, speed, color);
         }
     }
 
@@ -198,9 +200,8 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
         foreach (Player player in players)
         {
             if (player.GetTeam() == team){
-                player.ShowMessage(message, speed, color);
+                player.RPC_ShowMessage(message, speed, color);
             }
         }
     }
-
 }

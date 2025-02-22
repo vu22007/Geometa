@@ -491,9 +491,16 @@ public class Player : NetworkBehaviour
     }
 
     public void ShowMessage(string message, float speed, Color color){
-        if(HasInputAuthority){
+        if (HasInputAuthority) {
             popUpText.MakePopupText(message, speed, color);
         }
+    }
+
+    // Only server can call this RPC, and it will run only on the client that controls this player
+    [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.InputAuthority)]
+    public void RPC_ShowMessage(string message, float speed, Color color)
+    {
+        ShowMessage(message, speed, color);
     }
 
     public bool RespawnTimerDone()
