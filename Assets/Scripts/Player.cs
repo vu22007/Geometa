@@ -101,7 +101,7 @@ public class Player : NetworkBehaviour
             gameController = GameObject.Find("Client A").GetComponent<GameController>();
 
         // Add this player to game controller player list
-            gameController.RegisterPlayer(this);
+        gameController.RegisterPlayer(this);
 
         // Get components
         rb = gameObject.GetComponent<Rigidbody2D>();
@@ -466,10 +466,11 @@ public class Player : NetworkBehaviour
     {
         if (carriedObject == null)
         {
-        carriedObject = networkObject;
-        isCarrying = true;
-        speed /= 2;
-        ShowMessage("You have the flag", 0.1f, Color.white);
+            carriedObject = networkObject;
+            isCarrying = true;
+            speed /= 2;
+            PickupFlag flag = carriedObject.GetComponent<PickupFlag>();
+            gameController.BroadcastCarryFlag(team, flag.team);
         }
     }
 
@@ -485,12 +486,12 @@ public class Player : NetworkBehaviour
             carriedObject = null;
             isCarrying = false;
             speed *= 2;
-            FindFirstObjectByType<GameController>()?.CheckForWinCondition();
-            ShowMessage("Flag dropped", 0.1f, Color.white);
+            gameController.CheckForWinCondition();
+            gameController.BroadcastDropFlag(team, flag.team);
         }
     }
 
-    public void ShowMessage(string message, float speed, Color color){
+    public void ShowMessage(string message, float speed, Color color) {
         if (HasInputAuthority) {
             popUpText.MakePopupText(message, speed, color);
         }

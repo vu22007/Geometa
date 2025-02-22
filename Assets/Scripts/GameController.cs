@@ -167,36 +167,67 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
     // Check if two flags are near each other
     public void CheckForWinCondition()
     {
-        if (Runner.IsServer)
-        {
-            // Max distance for flags to be from a base to count as a win
-            float maxDistance = 8.0f;
+        // Max distance for flags to be from a base to count as a win
+        float maxDistance = 8.0f;
 
-            // If team 2's flag is close enough to team 1's base, then team 1 wins
-            if (Vector2.Distance(team2Flag.transform.position, respawnPoint1) <= maxDistance)
-            {
-                BroadCastMessageToTeam(1, "You win!", 0.1f, Color.green);
-                BroadCastMessageToTeam(2, "You lose!", 0.1f, Color.red);
-            }
-            // If team 1's flag is close enough to team 2's base, then team 2 wins
-            else if (Vector2.Distance(team1Flag.transform.position, respawnPoint2) <= maxDistance)
-            {
-                BroadCastMessageToTeam(2, "You win!", 0.1f, Color.green);
-                BroadCastMessageToTeam(1, "You lose!", 0.1f, Color.red);
-            }
+        // If team 2's flag is close enough to team 1's base, then team 1 wins
+        if (Vector2.Distance(team2Flag.transform.position, respawnPoint1) <= maxDistance)
+        {
+            BroadcastMessageToTeam(1, "You win!", 0.1f, Color.green);
+            BroadcastMessageToTeam(2, "You lose!", 0.1f, Color.red);
+        }
+        // If team 1's flag is close enough to team 2's base, then team 2 wins
+        else if (Vector2.Distance(team1Flag.transform.position, respawnPoint2) <= maxDistance)
+        {
+            BroadcastMessageToTeam(2, "You win!", 0.1f, Color.green);
+            BroadcastMessageToTeam(1, "You lose!", 0.1f, Color.red);
         }
     }
 
-    void BroadCastMessageToAll(string message, float speed, Color color)
+    public void BroadcastCarryFlag(int playerTeam, int flagTeam)
     {
+        int otherTeam = playerTeam == 1 ? 2 : 1;
+        if (flagTeam == playerTeam)
+        {
+            BroadcastMessageToTeam(playerTeam, "Your team has taken back its flag!", 0.1f, Color.green);
+            BroadcastMessageToTeam(otherTeam, "The enemy has taken back their flag!", 0.1f, Color.red);
+        }
+        else
+        {
+            BroadcastMessageToTeam(playerTeam, "Your team has captured the enemy's flag!", 0.1f, Color.green);
+            BroadcastMessageToTeam(otherTeam, "The enemy has captured your team's flag!", 0.1f, Color.red);
+        }
+    }
+
+    public void BroadcastDropFlag(int playerTeam, int flagTeam)
+    {
+        int otherTeam = playerTeam == 1 ? 2 : 1;
+        if (flagTeam == playerTeam)
+        {
+            BroadcastMessageToTeam(playerTeam, "Your team has dropped its flag!", 0.1f, Color.white);
+            BroadcastMessageToTeam(otherTeam, "The enemy has dropped their flag!", 0.1f, Color.white);
+        }
+        else
+        {
+            BroadcastMessageToTeam(playerTeam, "Your team has dropped the enemy's flag!", 0.1f, Color.white);
+            BroadcastMessageToTeam(otherTeam, "The enemy has dropped your team's flag!", 0.1f, Color.white);
+        }
+    }
+
+    public void BroadcastMessageToAll(string message, float speed, Color color)
+    {
+        if (!Runner.IsServer) return;
+
         foreach (Player player in players)
         {
             player.RPC_ShowMessage(message, speed, color);
         }
     }
 
-    void BroadCastMessageToTeam(int team, string message, float speed, Color color)
+    public void BroadcastMessageToTeam(int team, string message, float speed, Color color)
     {
+        if (!Runner.IsServer) return;
+
         foreach (Player player in players)
         {
             if (player.GetTeam() == team){
