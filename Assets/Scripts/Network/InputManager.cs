@@ -58,6 +58,7 @@ public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
         actionPentagon.Disable();
         actionPickup.Disable();
         actionDash.Disable();
+        actionMenu.Disable();
     }
 
     public void OnInput(NetworkRunner runner, NetworkInput input)
@@ -74,7 +75,7 @@ public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
         data.buttons.Set(InputButtons.Pickup, actionPickup.IsPressed());
         data.buttons.Set(InputButtons.TakeDamage, Input.GetKey(KeyCode.J));
         data.buttons.Set(InputButtons.Dash, actionDash.IsPressed());
-        data.buttons.Set(InputButtons.Menu, actionDash.IsPressed());
+        data.buttons.Set(InputButtons.Menu, actionMenu.IsPressed());
 
         // Set movement direction vector
         float speedX = Input.GetAxisRaw("Horizontal");
