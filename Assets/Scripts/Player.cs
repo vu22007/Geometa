@@ -13,8 +13,11 @@ public class Player : NetworkBehaviour
     [Networked] float damage { get; set; }
     [Networked] int maxAmmo { get; set; }
     [Networked] int currentAmmo { get; set; }
+    [Networked] int missingAmmo { get; set; }
     [Networked] float fireRate { get; set; }
     [Networked] float reloadTime { get; set; }
+    [Networked] float reloadTimer { get; set; }
+    [Networked] float reloadFraction { get; set; }
     [Networked] int points { get; set; }
     [Networked] float timeToWaitForBullet { get; set; }
     [Networked] float currentHealth { get; set; }
@@ -28,6 +31,12 @@ public class Player : NetworkBehaviour
     [Networked] private NetworkObject carriedObject { get; set; }
     [Networked, HideInInspector] public bool isCarrying { get; set; }
     [Networked] bool isMoving { get; set; }
+    [Networked] bool isDashing { get; set; }
+    [Networked] float dashTimer { get; set; }
+    [Networked] float dashCooldownTimer { get; set; }
+    [Networked] float dashSpeed { get; set; }
+    [Networked] float dashDuration { get; set; }
+    [Networked] float dashCooldown { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
@@ -36,11 +45,17 @@ public class Player : NetworkBehaviour
     [SerializeField] Image mainHealthBar;
     [SerializeField] Image smallHealthBar;
     [SerializeField] PopUpText popUpText;
+    [SerializeField] cooldownHandler dashCDHandler;
+    [SerializeField] cooldownHandler reloadHandler;
+    [SerializeField] Image reloadIcon;
+    [SerializeField] Image reloadIconLayer;
     Image healthBar;
     public TextMeshProUGUI ammoText;
     public TextMeshProUGUI timeLeftText;
     [HideInInspector] public Transform holdPosition;
     GameController gameController;
+    [SerializeField] GameObject deathOverlay;
+    [SerializeField] TextMeshProUGUI respawnTimerTxt; 
 
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(string characterPath, Vector3 respawnPoint, int team)
@@ -51,13 +66,16 @@ public class Player : NetworkBehaviour
         damage = character.Damage;
         maxAmmo = character.MaxAmmo;
         fireRate = character.FireRate;
+        dashSpeed = character.DashSpeed;
+        dashDuration = character.DashDuration;
+        dashCooldown = character.DashCooldown;
 
         this.respawnPoint = respawnPoint;
         this.team = team;
         this.characterPath = characterPath;
 
         points = 0;
-        reloadTime = 1.0f;
+        reloadTime = 3.0f;
         respawnTime = 10.0f;
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
@@ -83,7 +101,7 @@ public class Player : NetworkBehaviour
             gameController = GameObject.Find("Client A").GetComponent<GameController>();
 
         // Add this player to game controller player list
-        gameController.RegisterPlayer(this);
+            gameController.RegisterPlayer(this);
 
         // Get components
         rb = gameObject.GetComponent<Rigidbody2D>();
@@ -119,6 +137,10 @@ public class Player : NetworkBehaviour
         if (healthBar != null)
             healthBar.fillAmount = currentHealth / maxHealth;
 
+        if (deathOverlay != null)
+        {
+            deathOverlay.SetActive(false);
+        }
         // Set the ammo counter
         ammoText.text = "Bullets: " + currentAmmo;
     }
@@ -150,6 +172,12 @@ public class Player : NetworkBehaviour
 
         // Activate the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = true;
+
+        // Disable the death overlay
+        if (HasInputAuthority && deathOverlay != null)
+        {
+            deathOverlay.SetActive(false);
+        }
     }
 
     // Update function (called from the game controller on all clients and server)
@@ -164,11 +192,69 @@ public class Player : NetworkBehaviour
             // Stop player movement and prevent player from infinitely sliding when pushed by another player
             rb.linearVelocity = new Vector2(0, 0);
 
+            // Enable the death overlay and update the respawn timer text
+            if (HasInputAuthority) // Only show for the local player
+            {
+                if (deathOverlay != null)
+                {
+                    deathOverlay.SetActive(true); // Enable the overlay
+                }
+
+                if (respawnTimerTxt != null)
+                {
+                    // Calculate the remaining respawn time
+                    float remainingTime = respawnTime - currentRespawn;
+                    respawnTimerTxt.text = $"Respawning in {Mathf.CeilToInt(remainingTime)}s";
+                }
+            }
             return;
+        }
+        else
+        {
+            if (HasInputAuthority && deathOverlay != null)
+            {
+                deathOverlay.SetActive(false);
+            }
         }
 
         // Decrease bullet timer and clamp to 0 if below 0
         timeToWaitForBullet = (timeToWaitForBullet > 0) ? timeToWaitForBullet - Runner.DeltaTime : 0;
+
+        // Handle reloading
+        if (reloadTimer > 0)
+        {
+            reloadTimer -= Runner.DeltaTime;
+            if (reloadTimer <= 0)
+            {
+                // Reloading is complete, update ammo
+                currentAmmo = maxAmmo;
+                ammoText.text = "Bullets: " + currentAmmo;
+                reloadIcon.enabled = false;
+                reloadIconLayer.enabled = false;
+            }
+        }
+
+        // Handle dash cooldown
+        if (dashCooldownTimer > 0)
+        {
+            dashCooldownTimer -= Runner.DeltaTime;
+        }
+
+        // Handle dash duration
+        if (isDashing)
+        {
+            dashTimer -= Runner.DeltaTime;
+            if (dashTimer <= 0)
+            {
+                isDashing = false; // End dash
+            }
+        }
+
+        // auto reload 
+        if (currentAmmo == 0 && reloadTimer <= 0) 
+        {
+            Reload();
+        }
 
         // GetInput will return true on the StateAuthority (the server) and the InputAuthority (the client who controls this player)
         // So the following is ran for just the server and the client who controls this player
@@ -202,6 +288,12 @@ public class Player : NetworkBehaviour
             if (input.buttons.WasPressed(previousButtons, InputButtons.TakeDamage))
             {
                 TakeDamage(10);
+            }
+
+            // Dash with 'space'
+            if (input.buttons.WasPressed(previousButtons, InputButtons.Dash))
+            {
+                Dash(input.moveDirection);
             }
 
             //Character rotates to mouse position
@@ -240,11 +332,29 @@ public class Player : NetworkBehaviour
     // Player moves according to key presses and player speed
     void PlayerMovement(Vector2 moveDirection)
     {
+        // If dashing, use dash speed; otherwise, use normal speed
+        float currentSpeed = isDashing ? speed * dashSpeed : speed;
         // Move the player by setting the velocity using the supplied movement direction vector
-        Vector2 velocity = moveDirection.normalized * speed;
+        Vector2 velocity = moveDirection.normalized * currentSpeed;
         rb.linearVelocity = velocity;
 
         isMoving = velocity.x != 0 || velocity.y != 0;
+    }
+
+    // Dash mechanic
+    void Dash(Vector2 moveDirection)
+    {
+        if (dashCooldownTimer <= 0) // Only allow dash if cooldown is over
+        {
+            isDashing = true;
+            dashTimer = dashDuration;
+            dashCooldownTimer = dashCooldown;
+            dashCDHandler.StartCooldown(dashCooldown);
+        }
+        else
+        {
+            ShowMessage("Dash in cooldown", 0.2f, Color.white);
+        }
     }
 
     // Shoots a bullet by spawning the prefab on the network
@@ -264,10 +374,10 @@ public class Player : NetworkBehaviour
                 currentAmmo--;
                 ammoText.text = "Bullets: " + currentAmmo;
             }
-            else
-            {
-                ShowMessage("Press R to reload!!", 0.2f, Color.white);
-            }
+            // else
+            // {
+            //     ShowMessage("Press R to reload!!", 0.2f, Color.white);
+            // }
         }
     }
 
@@ -312,7 +422,7 @@ public class Player : NetworkBehaviour
 
         // // Only show message for client who controls this player
         // if (HasInputAuthority)
-        ShowMessage("You died :((", 0.1f, Color.red);
+        //ShowMessage("You died :((", 0.1f, Color.red);
         
         // Ensure health bar is empty
         if (healthBar != null)
@@ -330,20 +440,36 @@ public class Player : NetworkBehaviour
 
     void Reload()
     {
-        ShowMessage("Reloading", 0.3f, Color.green);
-        timeToWaitForBullet = reloadTime;
-        currentAmmo = maxAmmo;
-        ammoText.text = "Bullets: " + currentAmmo;
+        if (currentAmmo >= maxAmmo)
+        {
+            ShowMessage("Ammo is full!", 0.1f, Color.white);
+            return; 
+        }
+        if (reloadTimer <= 0)
+        {
+            ShowMessage("Reloading", 0.3f, Color.green);
+            missingAmmo = maxAmmo - currentAmmo;
+            reloadFraction = (float)missingAmmo / maxAmmo;
+            reloadTimer = reloadTime * reloadFraction;
+            timeToWaitForBullet = reloadTimer;
+            reloadIcon.enabled = true;
+            reloadIconLayer.enabled = true;
+            reloadHandler.StartCooldown(reloadTimer);
+        }
+        else
+        {
+            ShowMessage("still reloading", 0.3f, Color.white);
+        }
     }
 
     public void CarryObject(NetworkObject networkObject)
     {
         if (carriedObject == null)
         {
-            carriedObject = networkObject;
-            isCarrying = true;
-            speed /= 2;
-            Debug.Log("Player is carrying the flag");
+        carriedObject = networkObject;
+        isCarrying = true;
+        speed /= 2;
+        ShowMessage("You have the flag", 0.1f, Color.white);
         }
     }
 
@@ -360,14 +486,14 @@ public class Player : NetworkBehaviour
             isCarrying = false;
             speed *= 2;
             FindFirstObjectByType<GameController>()?.CheckForWinCondition();
-            Debug.Log("Dropped the flag!");
+            ShowMessage("Flag dropped", 0.1f, Color.white);
         }
     }
 
     public void ShowMessage(string message, float speed, Color color){
         if(HasInputAuthority){
             popUpText.MakePopupText(message, speed, color);
-        } 
+        }
     }
 
     public bool RespawnTimerDone()
