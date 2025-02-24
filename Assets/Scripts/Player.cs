@@ -3,8 +3,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Fusion.Addons.Physics;
-using Unity.VisualScripting;
-using System;
 
 public class Player : NetworkBehaviour
 {
@@ -29,7 +27,7 @@ public class Player : NetworkBehaviour
     [Networked, Capacity(50)] string characterPath { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
     [Networked] private NetworkObject carriedObject { get; set; }
-    [Networked, HideInInspector] public bool isCarrying { get; set; }
+    [Networked, OnChangedRender(nameof(OnCarryingChanged)), HideInInspector] public bool isCarrying { get; set; }
     [Networked] bool isMoving { get; set; }
     [Networked] bool isDashing { get; set; }
     [Networked] float dashTimer { get; set; }
@@ -55,7 +53,8 @@ public class Player : NetworkBehaviour
     [HideInInspector] public Transform holdPosition;
     GameController gameController;
     [SerializeField] GameObject deathOverlay;
-    [SerializeField] TextMeshProUGUI respawnTimerTxt; 
+    [SerializeField] TextMeshProUGUI respawnTimerTxt;
+    [SerializeField] GameObject flagIndicator;
 
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(string characterPath, Vector3 respawnPoint, int team)
@@ -141,8 +140,12 @@ public class Player : NetworkBehaviour
         {
             deathOverlay.SetActive(false);
         }
+
         // Set the ammo counter
         ammoText.text = "Bullets: " + currentAmmo;
+
+        // Set the flag indicator visibility
+        flagIndicator.SetActive(isCarrying);
     }
 
     // Called on each client and server when player is despawned from network
@@ -489,6 +492,11 @@ public class Player : NetworkBehaviour
             gameController.CheckForWinCondition();
             gameController.BroadcastDropFlag(team, flag.team);
         }
+    }
+
+    void OnCarryingChanged()
+    {
+        flagIndicator.SetActive(isCarrying);
     }
 
     public void ShowMessage(string message, float speed, Color color) {
