@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
 
-public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, ISceneLoadStart
+public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
 {
     [SerializeField] Vector3 respawnPoint1;
     [SerializeField] Vector3 respawnPoint2;
@@ -28,6 +28,8 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
     // For only the server to use when broadcasting messages
     private bool gameOver = false;
 
+    private bool spawnedItems = false;
+
     // Initialisation
     void Start()
     {
@@ -36,9 +38,10 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
         pickups = new List<Pickup>();
     }
 
-    // Scene initialisation
-    public void SceneLoadStart(SceneRef sceneRef)
+    void SpawnItems()
     {
+        spawnedItems = true;
+
         // Spawn initial items (only the server can do this)
         if (Runner.IsServer)
         {
@@ -47,13 +50,12 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
             PrefabFactory.SpawnPickup(Runner, pickupPrefab, new Vector3(5f, 5f, 0f), 0, 20);
             
             // Spawn team 1 flag
-            GameObject flag1Prefab = Resources.Load("Prefabs/Flag1") as GameObject;
-            NetworkObject flag1Obj = PrefabFactory.SpawnFlag(Runner, flag1Prefab, respawnPoint1 + new Vector3(0, -5, 0), 1);
+            GameObject flagPrefab = Resources.Load("Prefabs/Flag") as GameObject;
+            NetworkObject flag1Obj = PrefabFactory.SpawnFlag(Runner, flagPrefab, respawnPoint1 + new Vector3(0, -5, 0), 1);
             team1Flag = flag1Obj.GetComponent<PickupFlag>();
 
             // Spawn team 2 flag
-            GameObject flag2Prefab = Resources.Load("Prefabs/Flag2") as GameObject;
-            NetworkObject flag2Obj = PrefabFactory.SpawnFlag(Runner, flag2Prefab, respawnPoint2 + new Vector3(0, 5, 0), 2);
+            NetworkObject flag2Obj = PrefabFactory.SpawnFlag(Runner, flagPrefab, respawnPoint2 + new Vector3(0, 5, 0), 2);
             team2Flag = flag2Obj.GetComponent<PickupFlag>();
         }
     }
@@ -61,6 +63,8 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
     // Update for every server simulation tick
     public override void FixedUpdateNetwork()
     {
+        if (!spawnedItems) SpawnItems();
+
         currentTime = Runner.Tick * Runner.DeltaTime;
         if (currentTime >= maxTime)
         {
