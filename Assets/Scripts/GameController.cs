@@ -174,6 +174,8 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
     // Check if two flags are near each other
     public void CheckForWinCondition()
     {
+        if (!Runner.IsServer) return;
+
         // Max distance for flags to be from a base to count as a win
         float maxDistance = 8.0f;
 
@@ -195,7 +197,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
 
     public void BroadcastCarryFlag(int playerTeam, int flagTeam)
     {
-        if (gameOver) return;
+        if (!Runner.IsServer || gameOver) return;
 
         int otherTeam = playerTeam == 1 ? 2 : 1;
         if (flagTeam == playerTeam)
@@ -212,7 +214,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
 
     public void BroadcastDropFlag(int playerTeam, int flagTeam)
     {
-        if (gameOver) return;
+        if (!Runner.IsServer || gameOver) return;
 
         int otherTeam = playerTeam == 1 ? 2 : 1;
         if (flagTeam == playerTeam)
