@@ -54,7 +54,7 @@ public class Player : NetworkBehaviour
     GameController gameController;
     [SerializeField] GameObject deathOverlay;
     [SerializeField] TextMeshProUGUI respawnTimerTxt;
-    [SerializeField] GameObject flagIndicator;
+    [SerializeField] FlagIndicator flagIndicator;
 
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(string characterPath, Vector3 respawnPoint, int team)
@@ -111,6 +111,8 @@ public class Player : NetworkBehaviour
         Character character = Resources.Load(characterPath) as Character;
         spriteRenderer.sprite = character.Sprite;
 
+        int localPlayerTeam = Runner.GetPlayerObject(Runner.LocalPlayer).GetComponent<Player>().GetTeam();
+
         // If client controls this player then use main health bar
         if (HasInputAuthority)
         {
@@ -118,7 +120,7 @@ public class Player : NetworkBehaviour
             smallHealthBar.transform.parent.gameObject.SetActive(false);
         }
         // If this player is on the other team to the client's player then use small health bar
-        else if (Runner.GetPlayerObject(Runner.LocalPlayer).GetComponent<Player>().GetTeam() != team)
+        else if (localPlayerTeam != team)
         {
             healthBar = smallHealthBar;
             mainHealthBar.transform.parent.gameObject.SetActive(false);
@@ -143,8 +145,11 @@ public class Player : NetworkBehaviour
         // Set the ammo counter
         ammoText.text = "Bullets: " + currentAmmo;
 
-        // Set the flag indicator visibility
-        flagIndicator.SetActive(isCarrying);
+        // Pass the local player's team to the flag indicator
+        flagIndicator.SetLocalPlayerTeam(localPlayerTeam);
+
+        // Set the initial flag indicator visibility
+        OnCarryingChanged();
     }
 
     // Called on each client and server when player is despawned from network
@@ -495,7 +500,12 @@ public class Player : NetworkBehaviour
 
     void OnCarryingChanged()
     {
-        flagIndicator.SetActive(isCarrying);
+        flagIndicator.GetComponent<Image>().enabled = isCarrying;
+        if (carriedObject != null)
+        {
+            PickupFlag flag = carriedObject.GetComponent<PickupFlag>();
+            flagIndicator.SetColour(flag.team);
+        }
     }
 
     public void ShowMessage(string message, float speed, Color color) {
