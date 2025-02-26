@@ -56,7 +56,8 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
             NetworkObject flag2Obj = PrefabFactory.SpawnFlag(Runner, flag2Prefab, respawnPoint2 + new Vector3(0, 5, 0), 2);
             team2Flag = flag2Obj.GetComponent<PickupFlag>();
 
-            spawnPlayersForTesting(3, 3);
+            // Spawn NPCs for testing - WORKS IF YOU PLAY AS A HOST :)
+            //spawnPlayersForTesting(3, 3);
         }
     }
 

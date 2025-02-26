@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,11 +14,9 @@ public class ShapeController : NetworkBehaviour
     private int triangleCost = 3;
     private int squareCost = 5;
     private int pentagonCost = 8;
-
     GameController gameController { get; set; }
     Player parentPlayer { get; set; }
 
-    private LineRenderer lineRenderer;
     private LineRenderer triangleLineRenderer;
     private LineRenderer squareLineRenderer;
     private LineRenderer pentagonLineRenderer;
@@ -170,18 +169,18 @@ public class ShapeController : NetworkBehaviour
         {
             // When activated the server will draw the lines
             // TODO: MAke the lines darker for activate and lighter for preview
-            DrawLines(playerPositions);
+            DrawLines(playerPositions, true);
             if (nVertices == 3)
             {
                 if (parentPlayer.GetPoints() >= triangleCost)
                 {
                     triangleShape.CastAbility(playerPositions, score);
-                    StartCoroutine(DelayDisable(0.1f));
+                    // StartCoroutine(DelayDisable(0.1f));
                     parentPlayer.SpendPoints(triangleCost);
                 }
                 else
                 {
-                    lineRenderer.enabled = false;
+                    triangleLineRenderer.enabled = false;
                     Debug.Log("You don't have enough points to activate a triangle");
                 }
             }
@@ -189,20 +188,19 @@ public class ShapeController : NetworkBehaviour
             {
                 if (parentPlayer.GetPoints() < squareCost)
                 {
-                    lineRenderer.enabled = false;
+                    squareLineRenderer.enabled = false;
                     Debug.Log("You don't have enough points to activate a square");
                 }
                 // If it's not convex don't activate it
                 else if (!IsConvex(angles))
                 {
-                    lineRenderer.enabled = false;
+                    squareLineRenderer.enabled = false;
                     Debug.Log("Shape is not convex - can't activate buff!");
                     return;
                 }
                 else
                 {
                     parentPlayer.SpendPoints(squareCost);
-                    StartCoroutine(DelayDisable(0.1f));
                 }
 
             }
@@ -210,12 +208,12 @@ public class ShapeController : NetworkBehaviour
             {
                 if (parentPlayer.GetPoints() < pentagonCost)
                 {
-                    lineRenderer.enabled = false;
+                    pentagonLineRenderer.enabled = false;
                     Debug.Log("You don't have enough points to activate a pentagon");
                 }
                 else if (!IsConvex(angles))
                 {
-                    lineRenderer.enabled = false;
+                    pentagonLineRenderer.enabled = false;
                     Debug.Log("Shape is not convex - can't activate buff!");
                     return;
                 }
@@ -231,7 +229,6 @@ public class ShapeController : NetworkBehaviour
                     // TODO: Spawn creature in the center
 
                     parentPlayer.SpendPoints(pentagonCost);
-                    StartCoroutine(DelayDisable(0.1f));
                 }
             }
         }
@@ -239,15 +236,14 @@ public class ShapeController : NetworkBehaviour
         // Draw lines locally when just preview
         if(HasInputAuthority && !activate)
         {
-            DrawLines(playerPositions);
+            DrawLines(playerPositions, false);
         }
     }
 
     private List<Player> GetClosestPlayers(Player currentPlayer, int count)
     {
         List<Player> alivePlayers = gameController.GetAlivePlayers();
-        // This can be optimised by having alive players separately
-        // if it slows down runtime
+        // This can be optimised by having alive players separately if it slows down runtime
         List<Player> closestPlayers = new List<Player>(alivePlayers).FindAll(a => a.GetTeam() == currentPlayer.GetTeam());
         closestPlayers.Remove(currentPlayer);
         Vector3 position = currentPlayer.transform.position;
@@ -256,15 +252,14 @@ public class ShapeController : NetworkBehaviour
         closestPlayers.Sort((b, a) =>
             Vector3.Distance(position, b.transform.position).CompareTo(Vector3.Distance(position, a.transform.position))
         );
-        // closestPlayers.ForEach(a => Debug.Log(a.transform.position));
         return closestPlayers.Take(count).ToList();
     }
 
-    void DrawLines(List<Vector3> vertices)
+    void DrawLines(List<Vector3> vertices, bool activate)
     {
         int nVertices = vertices.Count;
         // Choose different lines for different abilities
-        ChooseLineRenderer(nVertices);
+        LineRenderer lineRenderer = ChooseLineRenderer(nVertices);
         lineRenderer.positionCount = nVertices + 1;
         // Lines are drawn between the adjacent vertices. The last vertice is added first so there
         // is a line between 0th and (nVertices - 1)th vertice
@@ -273,7 +268,70 @@ public class ShapeController : NetworkBehaviour
         {
             lineRenderer.SetPosition(i + 1, vertices[i]);
         }
+
+        lineRenderer.startWidth = 0.5f;
+        Color startColor = lineRenderer.startColor;
+        Color endColor = lineRenderer.endColor;
+        if (activate)
+        {
+            startColor.a = 1f;
+            endColor.a = 1f;
+        }
+        // More transparent color for preview
+        else
+        {
+
+            startColor.a = 0.3f;
+            endColor.a = 0.3f;
+        }
+
+        lineRenderer.startColor = startColor;
+        lineRenderer.endColor = endColor;   
         lineRenderer.enabled = true;
+
+        if (activate)
+        {
+            StartCoroutine(DelayDisable(0.3f, lineRenderer));
+        }
+    }
+
+    // This function gradually increases the transparency of the line renderer 
+    IEnumerator DelayDisable(float delay, LineRenderer lineRenderer)
+    {
+        float timer = 0f;
+        Color startColor = lineRenderer.startColor;
+        Color endColor = lineRenderer.endColor;
+
+        while (timer < delay)
+        {
+            timer += Time.deltaTime;
+
+            // Calculate a new alpha based on the elapsed time
+            float newAlpha = Mathf.Lerp(startColor.a, 0f, timer / delay);
+
+            startColor.a = endColor.a = newAlpha;
+
+            lineRenderer.startColor = startColor;
+            lineRenderer.endColor = endColor;
+            yield return null;
+        }
+        lineRenderer.enabled = false;
+    }
+
+    LineRenderer ChooseLineRenderer(int nVertices)
+    {
+        if (nVertices == 3)
+        {
+            return triangleLineRenderer;
+        }
+        else if (nVertices == 4)
+        {
+            return squareLineRenderer;
+        }
+        else
+        {
+            return pentagonLineRenderer;
+        }
     }
 
     List<Vector3> SortVerticesAroundCentroid(List<Vector3> vertices)
@@ -353,30 +411,5 @@ public class ShapeController : NetworkBehaviour
         // And we divide by count so shapes with more vertices are not penalised
         score = 1 / (1 + score/((count-2)*180)); 
         return score;
-    }
-
-    // This function delays the disabling of the line renderer so the players can see 
-    // the lines for a moment.
-    // TODO: Should be replaced with an animation
-    IEnumerator DelayDisable(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        lineRenderer.enabled = false;
-    }
-
-    void ChooseLineRenderer(int nVertices)
-    {
-        if (nVertices == 3)
-        {
-            lineRenderer = triangleLineRenderer;
-        }
-        else if (nVertices == 4)
-        {
-            lineRenderer = squareLineRenderer;
-        }
-        else if (nVertices == 5)
-        {
-            lineRenderer = pentagonLineRenderer;
-        }
     }
 }
