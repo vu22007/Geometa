@@ -124,9 +124,9 @@ public class Player : NetworkBehaviour
         // Added this in case the player is an NPC
         else if(localPlayer == null)
         {
-            healthBar = smallHealthBar;
-            Debug.Log("Testing this runs");
+            healthBar = teamHealthBar;
             mainHealthBar.transform.parent.gameObject.SetActive(false);
+            enemyHealthBar.transform.parent.gameObject.SetActive(false);
         }
         // If this player is on the other team to the client's player then use small health bar
         else if (localPlayer.GetComponent<Player>().GetTeam() != team)
