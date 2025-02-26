@@ -98,7 +98,6 @@ public class Player : NetworkBehaviour
         Player localPlayer = Runner.GetPlayerObject(Runner.LocalPlayer)?.GetComponent<Player>();
 
         // If client controls this player then use main health bar
-        // CHANGE to HasInputAuthority later
         if (HasInputAuthority)
         {
             healthBar = mainHealthBar;
