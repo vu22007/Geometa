@@ -16,6 +16,11 @@ public static class PrefabFactory
         return networkPlayerObject;
     }
 
+    public static NetworkObject SpawnWorldCollider(NetworkRunner runner, GameObject prefab)
+    {
+        NetworkObject worldCollider = runner.Spawn(prefab, Vector3.zero);
+        return worldCollider;
+    }
     public static NetworkObject SpawnBullet(NetworkRunner runner, PlayerRef playerRef, GameObject prefab, Vector3 spawnPosition, Vector2 moveDirection, float speed, float damage, int team){
         // Get rotation
         Vector3 direction = new Vector3(moveDirection.x, moveDirection.y);
@@ -30,19 +35,6 @@ public static class PrefabFactory
         });
 
         return networkBulletObject;
-    }
-
-    public static NetworkObject SpawnShape(NetworkRunner runner, PlayerRef playerRef, GameObject prefab, Vector3 spawnPosition, Quaternion rotation, bool isPreview)
-    {
-        // Spawn the shape network object
-        NetworkObject networkShapeObject = runner.Spawn(prefab, spawnPosition, rotation, playerRef, (runner, networkObject) =>
-        {
-            // Initialise the shape (this is called before the shape is spawned)
-            Shape shape = networkObject.GetComponent<Shape>();
-            shape.OnCreated(isPreview);
-        });
-
-        return networkShapeObject;
     }
 
     //For type: 0 is health, 1 is points
