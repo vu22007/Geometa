@@ -400,7 +400,23 @@ public class Player : NetworkBehaviour
         if (aoeCooldownTimer <= 0) // Only allow AoE if cooldown is over
         {
             // Get the cursor position in world coordinates
-            Vector2 cursorPosition = cam.ScreenToWorldPoint(Input.mousePosition);
+            Vector2 cursorPosition = (cam.ScreenToWorldPoint(Input.mousePosition)).normalized;
+            // cursorPosition = cursorPosition.normalized;
+
+            // // Get the cursor position in screen coordinates
+            // Vector2 screenPosition = Input.mousePosition;
+
+            // // Normalize the cursor position based on the screen size
+            // Vector2 normalizedPosition = new Vector2(
+            //     screenPosition.x / Screen.width,
+            //     screenPosition.y / Screen.height
+            // );
+
+            // // Convert to world coordinates
+            // Vector2 cursorPosition = cam.ScreenToWorldPoint(new Vector2(
+            //     normalizedPosition.x * Screen.width,
+            //     normalizedPosition.y * Screen.height
+            // ));
 
             // Spawn AoE effect (only the server can do this)
             if (HasStateAuthority)
