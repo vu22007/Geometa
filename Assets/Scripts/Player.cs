@@ -506,6 +506,11 @@ public class Player : NetworkBehaviour
         }
     }
 
+    public void Quit(){
+        Debug.Log("Exiting");
+        Application.Quit();
+    }
+
     public bool RespawnTimerDone()
     {
         return currentRespawn >= respawnTime;
