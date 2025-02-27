@@ -24,7 +24,7 @@ public class Player : NetworkBehaviour
     [Networked] bool isAlive { get; set; }
     [Networked] float respawnTime { get; set; }
     [Networked] float currentRespawn { get; set; }
-    [Networked, Capacity(50)] string characterPath { get; set; }
+    [Networked, Capacity(50)] string characterPath { get; set; } = "ScriptableObjects/Characters/Army Vet";
     [Networked] NetworkButtons previousButtons { get; set; }
     [Networked] private NetworkObject carriedObject { get; set; }
     [Networked, OnChangedRender(nameof(OnCarryingChanged)), HideInInspector] public bool isCarrying { get; set; }
@@ -73,8 +73,7 @@ public class Player : NetworkBehaviour
         this.respawnPoint = respawnPoint;
         this.team = team;
         this.characterPath = characterPath;
-
-        points = 0;
+        points = 100;
         reloadTime = 3.0f;
         respawnTime = 10.0f;
         currentAmmo = maxAmmo;
@@ -112,7 +111,8 @@ public class Player : NetworkBehaviour
         Character character = Resources.Load(characterPath) as Character;
         spriteRenderer.sprite = character.Sprite;
 
-        int localPlayerTeam = Runner.GetPlayerObject(Runner.LocalPlayer).GetComponent<Player>().GetTeam();
+        Player localPlayer = Runner.GetPlayerObject(Runner.LocalPlayer)?.GetComponent<Player>();
+        int localPlayerTeam = localPlayer.GetTeam();
 
         // If client controls this player then use main health bar
         if (HasInputAuthority)
@@ -182,6 +182,7 @@ public class Player : NetworkBehaviour
 
         // Activate the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = true;
+        gameController.RegisterAlivePlayer(this);
 
         // Disable the death overlay
         if (HasInputAuthority && deathOverlay != null)
@@ -426,6 +427,15 @@ public class Player : NetworkBehaviour
         points += amount;
     }
 
+    public void SpendPoints(int amount)
+    {
+        if(amount > points)
+        {
+            Debug.Log("You don't have enough points");
+        }
+        points -= amount;
+    }
+
     void Die()
     {
         isAlive = false;
@@ -440,6 +450,7 @@ public class Player : NetworkBehaviour
 
         // Disable the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = false;
+        gameController.UnregisterAlivePlayer(this);
 
         if (isCarrying)
         {
@@ -537,5 +548,10 @@ public class Player : NetworkBehaviour
     public int GetTeam()
     {
         return team;
+    }
+
+    public int GetPoints()
+    {
+        return points;
     }
 }

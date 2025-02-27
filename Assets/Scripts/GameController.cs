@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Fusion;
 using UnityEngine;
 
@@ -12,6 +13,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
 
     private List<Bullet> bullets;
     private List<Player> players;
+    private List<Player> alivePlayers;
 
     private List<Pickup> pickups;
 
@@ -36,6 +38,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
         bullets = new List<Bullet>();
         players = new List<Player>();
         pickups = new List<Pickup>();
+        alivePlayers = new List<Player>();
     }
 
     void SpawnItems()
@@ -57,6 +60,9 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
             // Spawn team 2 flag
             NetworkObject flag2Obj = PrefabFactory.SpawnFlag(Runner, flagPrefab, respawnPoint2 + new Vector3(0, 5, 0), 2);
             team2Flag = flag2Obj.GetComponent<PickupFlag>();
+
+            // Spawn NPCs for testing - WORKS IF YOU PLAY AS A HOST :)
+            SpawnPlayersForTesting(3, 3);
         }
     }
 
@@ -108,6 +114,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
     public void RegisterPlayer(Player player)
     {
         players.Add(player);
+        RegisterAlivePlayer(player);
     }
 
     public void UnregisterPlayer(Player player)
@@ -133,6 +140,16 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
     public void UnregisterPickup(Pickup pickup)
     {
         pickups.Remove(pickup);
+    }
+
+    public void RegisterAlivePlayer(Player player)
+    {
+        alivePlayers.Add(player);
+    }
+
+    public void UnregisterAlivePlayer(Player player)
+    {
+        alivePlayers.Remove(player);
     }
 
     public void PlayerJoined(PlayerRef player)
@@ -169,6 +186,11 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
                 spawnedPlayers.Remove(player);
             }
         }
+    }
+
+    public List<Player> GetAlivePlayers()
+    {
+        return alivePlayers;
     }
 
     // Check if two flags are near each other
@@ -249,5 +271,34 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
                 player.RPC_ShowMessage(message, speed, color);
             }
         }
+    }
+
+    void SpawnPlayersForTesting(int allies, int enemies)
+    {
+        GameObject playerPrefab = Resources.Load("Prefabs/Player") as GameObject;
+        string characterPath = "ScriptableObjects/Characters/Army Vet";
+
+        for (int i = 0; i < allies; i++)
+        {
+            // Spawn the player network object
+            NetworkObject networkPlayerObject = Runner.Spawn(playerPrefab, respawnPoint1 + new Vector3(0f, 5f, 0f) * i, Quaternion.identity, null, (runner, networkObject) =>
+            {
+                // Initialise the player (this is called before the player is spawned)
+                Player player = networkObject.GetComponent<Player>();
+                player.OnCreated(characterPath, respawnPoint1, 1);
+            });
+        }
+
+        for (int i = 0; i < enemies; i++)
+        {
+            // Spawn the player network object
+            NetworkObject networkPlayerObject = Runner.Spawn(playerPrefab, respawnPoint1 + new Vector3(2f, 2f, 0f) * i, Quaternion.identity, null, (runner, networkObject) =>
+            {
+                // Initialise the player (this is called before the player is spawned)
+                Player player = networkObject.GetComponent<Player>();
+                player.OnCreated(characterPath, respawnPoint1, 2);
+            });
+        }
+
     }
 }
