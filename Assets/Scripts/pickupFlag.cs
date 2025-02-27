@@ -5,7 +5,7 @@ public class PickupFlag : NetworkBehaviour
 {
     [Networked, OnChangedRender(nameof(OnPickupChanged))] private NetworkBool isPickedUp { get; set; } // Track if the object is picked up
     [Networked] private Player picker { get; set; } // Track which player picked up the object
-    [Networked] int team { get; set; }
+    [Networked] public int team { get; set; }
 
     public void OnCreated(int team)
     {
@@ -19,6 +19,19 @@ public class PickupFlag : NetworkBehaviour
     {
         // Set state depending on isPickedUp networked variable
         OnPickupChanged();
+
+        // Set flag sprite depending on local player's team
+        if (Runner.TryGetPlayerObject(Runner.LocalPlayer, out NetworkObject networkPlayerObject))
+        {
+            Player localPlayer = networkPlayerObject.GetComponent<Player>();
+            int playerTeam = localPlayer.GetTeam();
+
+            // Blue for local player's team flag, red for enemy's flag
+            string spritePath = playerTeam == team ? "Sprites/BlueFlag" : "Sprites/RedFlag";
+
+            SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
+            spriteRenderer.sprite = Resources.Load<Sprite>(spritePath);
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D other)
