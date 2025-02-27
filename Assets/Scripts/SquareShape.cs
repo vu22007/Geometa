@@ -1,27 +1,7 @@
-using System.Collections.Generic;
+using Fusion;
 using UnityEngine;
 
-public class SquareShape : Shape
+public class SquareShape : NetworkBehaviour
 {
-    private int nCorners = 4;
-    [SerializeField] float radius = 4.5f;
-    [SerializeField] float cooldown = 5;
-
-    // Awake is used because with Start runs before the whole object is initialised. 
-    void Awake()
-    {
-        // eulerAngles represent rotations relative to world coordinates
-        CalculateTriangleCorners(transform.position, radius, transform.rotation.eulerAngles.z + 45, nCorners, transform);
-    }
-
-    public override float Cooldown()
-    {
-        return cooldown;
-    }
-
-    public override void ActivateBuff()
-    {
-        buffActivated = true;
-        Debug.Log("Buff Activated");
-    }
+    
 }

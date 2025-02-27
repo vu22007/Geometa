@@ -3,8 +3,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Fusion.Addons.Physics;
-using Unity.VisualScripting;
-using System;
 
 public class Player : NetworkBehaviour
 {
@@ -26,10 +24,10 @@ public class Player : NetworkBehaviour
     [Networked] bool isAlive { get; set; }
     [Networked] float respawnTime { get; set; }
     [Networked] float currentRespawn { get; set; }
-    [Networked, Capacity(50)] string characterPath { get; set; }
+    [Networked, Capacity(50)] string characterPath { get; set; } = "ScriptableObjects/Characters/Army Vet";
     [Networked] NetworkButtons previousButtons { get; set; }
     [Networked] private NetworkObject carriedObject { get; set; }
-    [Networked, HideInInspector] public bool isCarrying { get; set; }
+    [Networked, OnChangedRender(nameof(OnCarryingChanged)), HideInInspector] public bool isCarrying { get; set; }
     [Networked] bool isMoving { get; set; }
     [Networked] bool isDashing { get; set; }
     [Networked] float dashTimer { get; set; }
@@ -43,7 +41,8 @@ public class Player : NetworkBehaviour
     SpriteRenderer spriteRenderer;
     public Animator animator;
     [SerializeField] Image mainHealthBar;
-    [SerializeField] Image smallHealthBar;
+    [SerializeField] Image teamHealthBar;
+    [SerializeField] Image enemyHealthBar;
     [SerializeField] PopUpText popUpText;
     [SerializeField] cooldownHandler dashCDHandler;
     [SerializeField] cooldownHandler reloadHandler;
@@ -56,7 +55,8 @@ public class Player : NetworkBehaviour
     [HideInInspector] public Transform holdPosition;
     GameController gameController;
     [SerializeField] GameObject deathOverlay;
-    [SerializeField] TextMeshProUGUI respawnTimerTxt; 
+    [SerializeField] TextMeshProUGUI respawnTimerTxt;
+    [SerializeField] FlagIndicator flagIndicator;
 
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(string characterPath, Vector3 respawnPoint, int team)
@@ -74,8 +74,7 @@ public class Player : NetworkBehaviour
         this.respawnPoint = respawnPoint;
         this.team = team;
         this.characterPath = characterPath;
-
-        points = 0;
+        points = 100;
         reloadTime = 3.0f;
         respawnTime = 10.0f;
         currentAmmo = maxAmmo;
@@ -102,7 +101,7 @@ public class Player : NetworkBehaviour
             gameController = GameObject.Find("Client A").GetComponent<GameController>();
 
         // Add this player to game controller player list
-            gameController.RegisterPlayer(this);
+        gameController.RegisterPlayer(this);
 
         // Get components
         rb = gameObject.GetComponent<Rigidbody2D>();
@@ -113,25 +112,29 @@ public class Player : NetworkBehaviour
         Character character = Resources.Load(characterPath) as Character;
         spriteRenderer.sprite = character.Sprite;
 
+        Player localPlayer = Runner.GetPlayerObject(Runner.LocalPlayer)?.GetComponent<Player>();
+        int localPlayerTeam = localPlayer.GetTeam();
+
         // If client controls this player then use main health bar
         if (HasInputAuthority)
         {
             healthBar = mainHealthBar;
-            smallHealthBar.transform.parent.gameObject.SetActive(false);
+            teamHealthBar.transform.parent.gameObject.SetActive(false);
+            enemyHealthBar.transform.parent.gameObject.SetActive(false);
         }
         // If this player is on the other team to the client's player then use small health bar
-        else if (Runner.GetPlayerObject(Runner.LocalPlayer).GetComponent<Player>().GetTeam() != team)
+        else if (localPlayerTeam != team)
         {
-            healthBar = smallHealthBar;
-            Debug.Log("Testing this runs");
+            healthBar = enemyHealthBar;
             mainHealthBar.transform.parent.gameObject.SetActive(false);
+            teamHealthBar.transform.parent.gameObject.SetActive(false);
         }
         // If this player is on the same team to the client's player then use no health bar
         else
         {
-            healthBar = null;
+            healthBar = teamHealthBar;
             mainHealthBar.transform.parent.gameObject.SetActive(false);
-            smallHealthBar.transform.parent.gameObject.SetActive(false);
+            enemyHealthBar.transform.parent.gameObject.SetActive(false);
         }
 
         // Set the health bar
@@ -142,8 +145,15 @@ public class Player : NetworkBehaviour
         {
             deathOverlay.SetActive(false);
         }
+
         // Set the ammo counter
         ammoText.text = "Bullets: " + currentAmmo;
+
+        // Pass the local player's team to the flag indicator
+        flagIndicator.SetLocalPlayerTeam(localPlayerTeam);
+
+        // Set the initial flag indicator visibility
+        OnCarryingChanged();
     }
 
     // Called on each client and server when player is despawned from network
@@ -173,6 +183,7 @@ public class Player : NetworkBehaviour
 
         // Activate the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = true;
+        gameController.RegisterAlivePlayer(this);
 
         // Disable the death overlay
         if (HasInputAuthority && deathOverlay != null)
@@ -426,6 +437,15 @@ public class Player : NetworkBehaviour
         points += amount;
     }
 
+    public void SpendPoints(int amount)
+    {
+        if(amount > points)
+        {
+            Debug.Log("You don't have enough points");
+        }
+        points -= amount;
+    }
+
     void Die()
     {
         isAlive = false;
@@ -440,6 +460,7 @@ public class Player : NetworkBehaviour
 
         // Disable the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = false;
+        gameController.UnregisterAlivePlayer(this);
 
         if (isCarrying)
         {
@@ -476,10 +497,11 @@ public class Player : NetworkBehaviour
     {
         if (carriedObject == null)
         {
-        carriedObject = networkObject;
-        isCarrying = true;
-        speed /= 2;
-        ShowMessage("You have the flag", 0.1f, Color.white);
+            carriedObject = networkObject;
+            isCarrying = true;
+            speed /= 2;
+            PickupFlag flag = carriedObject.GetComponent<PickupFlag>();
+            gameController.BroadcastCarryFlag(team, flag.team);
         }
     }
 
@@ -495,20 +517,38 @@ public class Player : NetworkBehaviour
             carriedObject = null;
             isCarrying = false;
             speed *= 2;
-            FindFirstObjectByType<GameController>()?.CheckForWinCondition();
-            ShowMessage("Flag dropped", 0.1f, Color.white);
+            gameController.CheckForWinCondition();
+            gameController.BroadcastDropFlag(team, flag.team);
         }
     }
 
-    public void ShowMessage(string message, float speed, Color color){
-        if(HasInputAuthority){
+    void OnCarryingChanged()
+    {
+        flagIndicator.GetComponent<Image>().enabled = isCarrying;
+        if (carriedObject != null)
+        {
+            PickupFlag flag = carriedObject.GetComponent<PickupFlag>();
+            flagIndicator.SetColour(flag.team);
+        }
+    }
+
+    public void ShowMessage(string message, float speed, Color color) {
+        if (HasInputAuthority) {
             popUpText.MakePopupText(message, speed, color);
         }
     }
 
-    public void Quit(){
+    public void Quit()
+    {
         Debug.Log("Exiting");
         Application.Quit();
+    }
+    
+    // Only server can call this RPC, and it will run only on the client that controls this player
+    [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.InputAuthority)]
+    public void RPC_ShowMessage(string message, float speed, Color color)
+    {
+        ShowMessage(message, speed, color);
     }
 
     public bool RespawnTimerDone()
@@ -524,5 +564,10 @@ public class Player : NetworkBehaviour
     public int GetTeam()
     {
         return team;
+    }
+
+    public int GetPoints()
+    {
+        return points;
     }
 }
