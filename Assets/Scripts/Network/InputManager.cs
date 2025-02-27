@@ -16,6 +16,7 @@ public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
     private InputAction actionPentagon;
     private InputAction actionPickup;
     private InputAction actionDash;
+    private InputAction actionAoE;
 
     private void OnEnable()
     {
@@ -32,6 +33,7 @@ public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
         actionPentagon = playerInputActions.Player.Pentagon;
         actionPickup = playerInputActions.Player.Pickup;
         actionDash = playerInputActions.Player.Dash;
+        actionAoE = playerInputActions.Player.AoE;
 
         actionShoot.Enable();
         actionReload.Enable();
@@ -41,6 +43,7 @@ public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
         actionPentagon.Enable();
         actionPickup.Enable();
         actionDash.Enable();
+        actionAoE.Enable();
 
     }
 
@@ -54,6 +57,7 @@ public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
         actionPentagon.Disable();
         actionPickup.Disable();
         actionDash.Disable();
+        actionAoE.Disable();
     }
 
     public void OnInput(NetworkRunner runner, NetworkInput input)
@@ -70,6 +74,7 @@ public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
         data.buttons.Set(InputButtons.Pickup, actionPickup.IsPressed());
         data.buttons.Set(InputButtons.TakeDamage, Input.GetKey(KeyCode.J));
         data.buttons.Set(InputButtons.Dash, actionDash.IsPressed());
+        data.buttons.Set(InputButtons.AoE, actionAoE.IsPressed());
 
         // Set movement direction vector
         float speedX = Input.GetAxisRaw("Horizontal");
