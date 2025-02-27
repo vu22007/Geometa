@@ -41,7 +41,8 @@ public class Player : NetworkBehaviour
     SpriteRenderer spriteRenderer;
     public Animator animator;
     [SerializeField] Image mainHealthBar;
-    [SerializeField] Image smallHealthBar;
+    [SerializeField] Image teamHealthBar;
+    [SerializeField] Image enemyHealthBar;
     [SerializeField] PopUpText popUpText;
     [SerializeField] cooldownHandler dashCDHandler;
     [SerializeField] cooldownHandler reloadHandler;
@@ -117,20 +118,22 @@ public class Player : NetworkBehaviour
         if (HasInputAuthority)
         {
             healthBar = mainHealthBar;
-            smallHealthBar.transform.parent.gameObject.SetActive(false);
+            teamHealthBar.transform.parent.gameObject.SetActive(false);
+            enemyHealthBar.transform.parent.gameObject.SetActive(false);
         }
         // If this player is on the other team to the client's player then use small health bar
         else if (localPlayerTeam != team)
         {
-            healthBar = smallHealthBar;
+            healthBar = enemyHealthBar;
             mainHealthBar.transform.parent.gameObject.SetActive(false);
+            teamHealthBar.transform.parent.gameObject.SetActive(false);
         }
         // If this player is on the same team to the client's player then use no health bar
         else
         {
-            healthBar = null;
+            healthBar = teamHealthBar;
             mainHealthBar.transform.parent.gameObject.SetActive(false);
-            smallHealthBar.transform.parent.gameObject.SetActive(false);
+            enemyHealthBar.transform.parent.gameObject.SetActive(false);
         }
 
         // Set the health bar
