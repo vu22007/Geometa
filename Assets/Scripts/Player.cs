@@ -331,7 +331,7 @@ public class Player : NetworkBehaviour
             // Activate AoE skill with 'T'
             if (input.buttons.WasPressed(previousButtons, InputButtons.AoE))
             {
-                ActivateAoE(input.aimDirection);
+                ActivateAoE(input.cursorWorldPoint);
             }
             //Character rotates to mouse position
             Vector2 lookDirection = input.aimDirection.normalized;
@@ -395,35 +395,16 @@ public class Player : NetworkBehaviour
     }
 
     // Activate AoE skill
-    void ActivateAoE(Vector2 aimDirection)
+    void ActivateAoE(Vector2 cursorWorldPoint)
     {
         if (aoeCooldownTimer <= 0) // Only allow AoE if cooldown is over
         {
-            // Get the cursor position in world coordinates
-            Vector2 cursorPosition = (cam.ScreenToWorldPoint(Input.mousePosition)).normalized;
-            // cursorPosition = cursorPosition.normalized;
-
-            // // Get the cursor position in screen coordinates
-            // Vector2 screenPosition = Input.mousePosition;
-
-            // // Normalize the cursor position based on the screen size
-            // Vector2 normalizedPosition = new Vector2(
-            //     screenPosition.x / Screen.width,
-            //     screenPosition.y / Screen.height
-            // );
-
-            // // Convert to world coordinates
-            // Vector2 cursorPosition = cam.ScreenToWorldPoint(new Vector2(
-            //     normalizedPosition.x * Screen.width,
-            //     normalizedPosition.y * Screen.height
-            // ));
-
             // Spawn AoE effect (only the server can do this)
             if (HasStateAuthority)
             {
                 GameObject aoeEffect = Resources.Load("Prefabs/AoE1") as GameObject;
                 // Spawn the AoE prefab
-                NetworkObject aoeObject = Runner.Spawn(aoeEffect, cursorPosition, Quaternion.identity, null, (runner, networkObject) =>
+                NetworkObject aoeObject = Runner.Spawn(aoeEffect, cursorWorldPoint, Quaternion.identity, null, (runner, networkObject) =>
                 {
                     AoESpell aoeSpell = networkObject.GetComponent<AoESpell>();
                     if (aoeSpell != null)

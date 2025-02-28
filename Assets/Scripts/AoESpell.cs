@@ -24,18 +24,15 @@ public class AoESpell : NetworkBehaviour
         // Check if the despawn timer has expired
         if (despawnTimer.Expired(Runner))
         {
-            Debug.Log("Despawning AoE effect");
             Runner.Despawn(Object);
         }
     }
 
     private void OnTriggerStay2D(Collider2D other)
     {
-        Debug.Log("OnTriggerEnter2D called"); 
         // Check if the colliding object is a player
         if (other.CompareTag("Player"))
         {
-            
             Player player = other.GetComponentInParent<Player>();
 
             if (player != null)

@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      aoeIcon_0: 351059904661981119
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
