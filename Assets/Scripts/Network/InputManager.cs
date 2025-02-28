@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Fusion;
 using Fusion.Sockets;
 using UnityEngine;
+using UnityEngine.Assertions.Must;
 using UnityEngine.InputSystem;
 
 public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
@@ -16,6 +17,7 @@ public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
     private InputAction actionPentagon;
     private InputAction actionPickup;
     private InputAction actionDash;
+    private InputAction actionMenu;
 
     private void OnEnable()
     {
@@ -32,6 +34,7 @@ public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
         actionPentagon = playerInputActions.Player.Pentagon;
         actionPickup = playerInputActions.Player.Pickup;
         actionDash = playerInputActions.Player.Dash;
+        actionMenu = playerInputActions.Player.Menu;
 
         actionShoot.Enable();
         actionReload.Enable();
@@ -41,6 +44,7 @@ public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
         actionPentagon.Enable();
         actionPickup.Enable();
         actionDash.Enable();
+        actionMenu.Enable();
 
     }
 
@@ -54,6 +58,7 @@ public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
         actionPentagon.Disable();
         actionPickup.Disable();
         actionDash.Disable();
+        actionMenu.Disable();
     }
 
     public void OnInput(NetworkRunner runner, NetworkInput input)
@@ -70,6 +75,7 @@ public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
         data.buttons.Set(InputButtons.Pickup, actionPickup.IsPressed());
         data.buttons.Set(InputButtons.TakeDamage, Input.GetKey(KeyCode.J));
         data.buttons.Set(InputButtons.Dash, actionDash.IsPressed());
+        data.buttons.Set(InputButtons.Menu, actionMenu.IsPressed());
 
         // Set movement direction vector
         float speedX = Input.GetAxisRaw("Horizontal");
