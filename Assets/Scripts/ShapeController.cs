@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +9,8 @@ public class ShapeController : NetworkBehaviour
     [Networked] public bool isActive { get; set; }
     [Networked] private float cooldown { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
+    [Networked, OnChangedRender(nameof(OnShapeActiveChanged))] private bool shapeIsActive { get; set; }
+    [Networked, Capacity(5)] private NetworkLinkedList<Vector3> vertices { get; }
 
     private int triangleCost = 3;
     private int squareCost = 5;
@@ -49,7 +50,19 @@ public class ShapeController : NetworkBehaviour
 
         isActive = true;
         cooldown = 0;
-    }   
+
+        shapeIsActive = false;
+    }
+
+    void OnShapeActiveChanged()
+    {
+        // Draw shape for everyone when shape is active
+        if (shapeIsActive)
+        {
+            DrawLines(vertices.ToList(), true);
+            shapeIsActive = false;
+        }
+    }
 
     public override void FixedUpdateNetwork()
     {
@@ -90,53 +103,64 @@ public class ShapeController : NetworkBehaviour
         // The line renderer will be disable for all others
         if (HasInputAuthority)
         {
-            previewShape(3, false);
+            PreviewShape(3, false);
         }
     }
 
     private void SquarePerformed()
     {
+        // Preview shape only locally 
+        // The line renderer will be disable for all others
         if (HasInputAuthority)
         {
-            previewShape(4, false);
+            PreviewShape(4, false);
         }
     }
 
     private void PentagonPerformed()
     {
+        // Preview shape only locally 
+        // The line renderer will be disable for all others
         if (HasInputAuthority)
         {
-            previewShape(5, false);
+            PreviewShape(5, false);
         }
     }
 
     private void TriangleActivated()
     {
-        // Preview shape only locally 
-        // The line renderer will be disable for all others
-        if (HasStateAuthority)
-        {
-            previewShape(3, true);
-        }
+        if (HasInputAuthority && !HasStateAuthority)
+            triangleLineRenderer.enabled = false;
+
+        //if (HasStateAuthority)
+        //{
+            PreviewShape(3, true);
+        //}
     }
 
     private void SquareActivated()
     {
+        if (HasInputAuthority && !HasStateAuthority)
+            squareLineRenderer.enabled = false;
+
         if (HasStateAuthority)
         {
-            previewShape(4, true);
+            PreviewShape(4, true);
         }
     }
 
     private void PentagonActivated()
     {
+        if (HasInputAuthority && !HasStateAuthority)
+            pentagonLineRenderer.enabled = false;
+
         if (HasStateAuthority)
         {
-            previewShape(5, true);
+            PreviewShape(5, true);
         }
     }
 
-    void previewShape(int nVertices, bool activate)
+    void PreviewShape(int nVertices, bool activate)
     {
         List<Player> closestPlayers = GetClosestPlayers(parentPlayer, nVertices - 1);
 
@@ -164,77 +188,88 @@ public class ShapeController : NetworkBehaviour
 
         float score = CalculateScore(angles);
 
-        // Give buffs/do damage if the player activates the ability
-        if (activate && HasStateAuthority)
+        // Give buffs/do damage if the player activates the ability, and make shape visible to everyone
+        if (activate)
         {
-            // When activated the server will draw the lines
-            // TODO: MAke the lines darker for activate and lighter for preview
+            // Draw the lines for both server and input authority
+            // TODO: Make the lines darker for activate and lighter for preview
             DrawLines(playerPositions, true);
-            if (nVertices == 3)
-            {
-                if (parentPlayer.GetPoints() >= triangleCost)
-                {
-                    triangleShape.CastAbility(playerPositions, score);
-                    // StartCoroutine(DelayDisable(0.1f));
-                    parentPlayer.SpendPoints(triangleCost);
-                }
-                else
-                {
-                    triangleLineRenderer.enabled = false;
-                    Debug.Log("You don't have enough points to activate a triangle");
-                }
-            }
-            else if (nVertices == 4)
-            {
-                if (parentPlayer.GetPoints() < squareCost)
-                {
-                    squareLineRenderer.enabled = false;
-                    Debug.Log("You don't have enough points to activate a square");
-                }
-                // If it's not convex don't activate it
-                else if (!IsConvex(angles))
-                {
-                    squareLineRenderer.enabled = false;
-                    Debug.Log("Shape is not convex - can't activate buff!");
-                    return;
-                }
-                else
-                {
-                    parentPlayer.SpendPoints(squareCost);
-                }
 
-            }
-            else if (nVertices == 5)
+            // Set vertices so all clients can draw lines in OnShapeActiveChanged method
+            shapeIsActive = true;
+            vertices.Clear();
+            foreach (Vector3 position in playerPositions)
             {
-                if (parentPlayer.GetPoints() < pentagonCost)
+                vertices.Add(position);
+            }
+
+            if (HasStateAuthority)
+            {
+                if (nVertices == 3)
                 {
-                    pentagonLineRenderer.enabled = false;
-                    Debug.Log("You don't have enough points to activate a pentagon");
-                }
-                else if (!IsConvex(angles))
-                {
-                    pentagonLineRenderer.enabled = false;
-                    Debug.Log("Shape is not convex - can't activate buff!");
-                    return;
-                }
-                else
-                {
-                    Vector3 centroid = Vector3.zero;
-                    foreach (var v in playerPositions)
+                    if (parentPlayer.GetPoints() >= triangleCost)
                     {
-                        centroid += v;
+                        triangleShape.CastAbility(playerPositions, score);
+                        // StartCoroutine(DelayDisable(0.1f));
+                        parentPlayer.SpendPoints(triangleCost);
                     }
-                    centroid /= playerPositions.Count;
+                    else
+                    {
+                        triangleLineRenderer.enabled = false;
+                        Debug.Log("You don't have enough points to activate a triangle");
+                    }
+                }
+                else if (nVertices == 4)
+                {
+                    if (parentPlayer.GetPoints() < squareCost)
+                    {
+                        squareLineRenderer.enabled = false;
+                        Debug.Log("You don't have enough points to activate a square");
+                    }
+                    // If it's not convex don't activate it
+                    else if (!IsConvex(angles))
+                    {
+                        squareLineRenderer.enabled = false;
+                        Debug.Log("Shape is not convex - can't activate buff!");
+                        return;
+                    }
+                    else
+                    {
+                        parentPlayer.SpendPoints(squareCost);
+                    }
+                }
+                else if (nVertices == 5)
+                {
+                    if (parentPlayer.GetPoints() < pentagonCost)
+                    {
+                        pentagonLineRenderer.enabled = false;
+                        Debug.Log("You don't have enough points to activate a pentagon");
+                    }
+                    else if (!IsConvex(angles))
+                    {
+                        pentagonLineRenderer.enabled = false;
+                        Debug.Log("Shape is not convex - can't activate buff!");
+                        return;
+                    }
+                    else
+                    {
+                        Vector3 centroid = Vector3.zero;
+                        foreach (var v in playerPositions)
+                        {
+                            centroid += v;
+                        }
+                        centroid /= playerPositions.Count;
 
-                    // TODO: Spawn creature in the center
+                        // TODO: Spawn creature in the center
 
-                    parentPlayer.SpendPoints(pentagonCost);
+                        parentPlayer.SpendPoints(pentagonCost);
+                    }
                 }
             }
         }
 
         // Draw lines locally when just preview
-        if(HasInputAuthority && !activate)
+        if (HasInputAuthority && !activate)
         {
             DrawLines(playerPositions, false);
         }
