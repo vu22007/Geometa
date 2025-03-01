@@ -21,7 +21,7 @@ public static class PrefabFactory
         NetworkObject worldCollider = runner.Spawn(prefab, Vector3.zero);
         return worldCollider;
     }
-    public static NetworkObject SpawnBullet(NetworkRunner runner, PlayerRef playerRef, GameObject prefab, Vector3 spawnPosition, Vector2 moveDirection, float speed, float damage, int team, Player playerFiring){
+    public static NetworkObject SpawnBullet(NetworkRunner runner, PlayerRef playerRef, GameObject prefab, Vector3 spawnPosition, Vector2 moveDirection, float speed, float damage, int team, Player playerShooting){
         // Get rotation
         Vector3 direction = new Vector3(moveDirection.x, moveDirection.y);
         Quaternion rotation = Quaternion.LookRotation(Vector3.forward, direction);
@@ -31,7 +31,7 @@ public static class PrefabFactory
         {
             // Initialise the bullet (this is called before the bullet is spawned)
             Bullet bullet = networkObject.GetComponent<Bullet>();
-            bullet.OnCreated(spawnPosition, moveDirection, rotation, speed, damage, team, playerFiring);
+            bullet.OnCreated(spawnPosition, moveDirection, rotation, speed, damage, team, playerShooting);
         });
 
         return networkBulletObject;

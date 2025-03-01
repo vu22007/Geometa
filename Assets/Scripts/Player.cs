@@ -59,6 +59,7 @@ public class Player : NetworkBehaviour
     [SerializeField] FlagIndicator flagIndicator;
     private AudioClip shootSound;
     private AudioClip dyingSound;
+    private AudioClip hitSound;
     private AudioSource audioSource;
 
     // Player intialisation (called from game controller on server when creating the player)
@@ -158,6 +159,7 @@ public class Player : NetworkBehaviour
         audioSource = GetComponent<AudioSource>();
         shootSound = Resources.Load<AudioClip>("Sounds/Shoot");
         dyingSound = Resources.Load<AudioClip>("Sounds/Dying");
+        hitSound = Resources.Load<AudioClip>("Sounds/HitWizard");
 
         // Set the initial flag indicator visibility
         OnCarryingChanged();
@@ -433,6 +435,11 @@ public class Player : NetworkBehaviour
         if (currentHealth <= 0.0f) {
             Die();
         }
+    }
+
+    public void PlayHitSound()
+    {
+        audioSource.PlayOneShot(hitSound);
     }
 
     void HurtEffects(){
