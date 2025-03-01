@@ -58,6 +58,7 @@ public class Player : NetworkBehaviour
     [SerializeField] TextMeshProUGUI respawnTimerTxt;
     [SerializeField] FlagIndicator flagIndicator;
     private AudioClip shootSound;
+    private AudioClip dyingSound;
     private AudioSource audioSource;
 
     // Player intialisation (called from game controller on server when creating the player)
@@ -156,6 +157,7 @@ public class Player : NetworkBehaviour
 
         audioSource = GetComponent<AudioSource>();
         shootSound = Resources.Load<AudioClip>("Sounds/Shoot");
+        dyingSound = Resources.Load<AudioClip>("Sounds/Dying");
 
         // Set the initial flag indicator visibility
         OnCarryingChanged();
@@ -376,6 +378,10 @@ public class Player : NetworkBehaviour
             dashTimer = dashDuration;
             dashCooldownTimer = dashCooldown;
             dashCDHandler.StartCooldown(dashCooldown);
+            if (HasStateAuthority)
+            {
+                RPC_PlayDyingSound(transform.position);
+            }
         }
         else
         {
@@ -473,11 +479,35 @@ public class Player : NetworkBehaviour
         // Disable the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = false;
         gameController.UnregisterAlivePlayer(this);
+        RPC_PlayDyingSound(transform.position);
 
         if (isCarrying)
         {
             // Player will drop the flag if they died
             DropObject();
+        }
+    }
+
+    [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
+    public void RPC_PlayDyingSound(Vector3 pos)
+    {
+        Vector3 viewportPos = Camera.main.WorldToViewportPoint(pos);
+        bool onScreen =
+            viewportPos.x >= 0f && viewportPos.x <= 1f &&
+            viewportPos.y >= 0f && viewportPos.y <= 1f;
+        //// Resolve the reference to get the actual GameObject on this client
+        //if (Runner.TryGetPlayerObject(playerRef, out NetworkObject playerNetworkObject))
+        //{
+        //    // From here, you can find the AudioSource on the shooter's object
+        //    AudioSource shooterAudio = playerNetworkObject.GetComponent<AudioSource>();
+        //    if (shooterAudio)
+        //    {
+        //        shooterAudio.PlayOneShot(dyingSound);
+        //    }
+        //}
+        if (onScreen)
+        {
+            audioSource.PlayOneShot(dyingSound);
         }
     }
 
