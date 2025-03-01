@@ -402,7 +402,7 @@ public class Player : NetworkBehaviour
                 if (HasStateAuthority)
                 {
                     GameObject bulletPrefab = Resources.Load("Prefabs/Bullet") as GameObject;
-                    PrefabFactory.SpawnBullet(Runner, Object.InputAuthority, bulletPrefab, gameObject.transform.position, aimDirection, 40.0f, damage, team);
+                    PrefabFactory.SpawnBullet(Runner, Object.InputAuthority, bulletPrefab, gameObject.transform.position, aimDirection, 40.0f, damage, team, this);
                 }
                 // Just the player that shoot listens to the sound
                 if (HasInputAuthority)
@@ -495,19 +495,10 @@ public class Player : NetworkBehaviour
         bool onScreen =
             viewportPos.x >= 0f && viewportPos.x <= 1f &&
             viewportPos.y >= 0f && viewportPos.y <= 1f;
-        //// Resolve the reference to get the actual GameObject on this client
-        //if (Runner.TryGetPlayerObject(playerRef, out NetworkObject playerNetworkObject))
-        //{
-        //    // From here, you can find the AudioSource on the shooter's object
-        //    AudioSource shooterAudio = playerNetworkObject.GetComponent<AudioSource>();
-        //    if (shooterAudio)
-        //    {
-        //        shooterAudio.PlayOneShot(dyingSound);
-        //    }
-        //}
+
         if (onScreen)
         {
-            audioSource.PlayOneShot(dyingSound);
+            audioSource.PlayOneShot(dyingSound, 0.7f);
         }
     }
 

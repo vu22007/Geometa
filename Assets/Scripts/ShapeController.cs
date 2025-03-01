@@ -190,7 +190,7 @@ public class ShapeController : NetworkBehaviour
                     parentPlayer.SpendPoints(triangleCost);
 
                     // TODO: Separate for knight/wizard 
-                    RPC_PlayShootSound(playerPositions.ToArray(), 3, 0);
+                    RPC_PlayTriangleSound(playerPositions.ToArray(), 3, 0);
                 }
                 else
                 {
@@ -256,7 +256,7 @@ public class ShapeController : NetworkBehaviour
 
     // The parameter character - 0 for knight, 1 for wizard
     [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
-    public void RPC_PlayShootSound(Vector3[] playerPositions, int nVertices, int character)
+    public void RPC_PlayTriangleSound(Vector3[] playerPositions, int nVertices, int character)
     {
         // Play sound locally if the players activating are in view 
         foreach (Vector3 pos in playerPositions) {

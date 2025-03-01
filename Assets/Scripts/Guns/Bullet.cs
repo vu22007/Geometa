@@ -14,9 +14,10 @@ public class Bullet : NetworkBehaviour
     [Networked] int team { get; set; }
 
     GameController gameController;
+    private Player playerShooting;
 
     // Bullet intialisation (called from a player object on server when creating the bullet)
-    public void OnCreated(Vector2 position, Vector2 direction, Quaternion rotation, float speed, float damage, int team)
+    public void OnCreated(Vector2 position, Vector2 direction, Quaternion rotation, float speed, float damage, int team, Player playerShooting)
     {
         initialTick = Runner.Tick;
         initialPosition = position;
@@ -26,6 +27,7 @@ public class Bullet : NetworkBehaviour
         done = false;
         lifespan = 20.0f;
         this.team = team;
+        this.playerShooting = playerShooting;
     }
 
     // Bullet initialisation (called on each client and server when bullet is spawned on network)
