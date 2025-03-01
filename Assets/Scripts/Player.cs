@@ -42,7 +42,7 @@ public class Player : NetworkBehaviour
     public Animator animator;
     [SerializeField] Image mainHealthBar;
     [SerializeField] Image teamHealthBar;
-    [SerializeField] Image enemyHealthBar;
+    [SerializeField] Image enemyHealthBar; 
     [SerializeField] PopUpText popUpText;
     [SerializeField] cooldownHandler dashCDHandler;
     [SerializeField] cooldownHandler reloadHandler;
@@ -57,6 +57,8 @@ public class Player : NetworkBehaviour
     [SerializeField] GameObject deathOverlay;
     [SerializeField] TextMeshProUGUI respawnTimerTxt;
     [SerializeField] FlagIndicator flagIndicator;
+    private AudioClip shootSound;
+    private AudioSource audioSource;
 
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(string characterPath, Vector3 respawnPoint, int team)
@@ -151,6 +153,9 @@ public class Player : NetworkBehaviour
 
         // Pass the local player's team to the flag indicator
         flagIndicator.SetLocalPlayerTeam(localPlayerTeam);
+
+        audioSource = GetComponent<AudioSource>();
+        shootSound = Resources.Load<AudioClip>("Sounds/ShootSound");
 
         // Set the initial flag indicator visibility
         OnCarryingChanged();
@@ -386,20 +391,27 @@ public class Player : NetworkBehaviour
             timeToWaitForBullet = 1 / fireRate;
             if (currentAmmo != 0)
             {
+
                 // Spawn bullet (only the server can do this)
                 if (HasStateAuthority)
                 {
                     GameObject bulletPrefab = Resources.Load("Prefabs/Bullet") as GameObject;
                     PrefabFactory.SpawnBullet(Runner, Object.InputAuthority, bulletPrefab, gameObject.transform.position, aimDirection, 40.0f, damage, team);
                 }
+                // Just the player that shoot listens to the sound
+                if (HasInputAuthority)
+                {
+                    PlayShootSound();
+                }
                 currentAmmo--;
                 ammoText.text = "Bullets: " + currentAmmo;
             }
-            // else
-            // {
-            //     ShowMessage("Press R to reload!!", 0.2f, Color.white);
-            // }
         }
+    }
+
+    public void PlayShootSound()
+    {
+        audioSource.PlayOneShot(shootSound);
     }
 
     //take damage equal to input, includes check for death
