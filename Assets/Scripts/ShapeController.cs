@@ -25,6 +25,12 @@ public class ShapeController : NetworkBehaviour
     private SquareShape squareShape;
     private PentagonShape pentagonShape;
 
+    private AudioSource audioSource;
+    private AudioClip triangleKnightSound;
+    private AudioClip triangleWizardSound;
+    private AudioClip squareKnightSound;
+    private AudioClip squareWizardSound;
+
     // Shape controller intialisation (called on each client and server when shape controller is spawned on network)
     public override void Spawned()
     {
@@ -46,6 +52,12 @@ public class ShapeController : NetworkBehaviour
         squareLineRenderer.enabled = false;
         pentagonLineRenderer = pentagonShape.GetComponent<LineRenderer>();
         pentagonLineRenderer.enabled = false;
+
+        audioSource = GetComponentInParent<AudioSource>();
+        triangleKnightSound = Resources.Load<AudioClip>("Sounds/Shoot");
+        triangleWizardSound = Resources.Load<AudioClip>("Sounds/Shoot");
+        squareKnightSound = Resources.Load<AudioClip>("Sounds/Shoot");
+        squareWizardSound = Resources.Load<AudioClip>("Sounds/Shoot");
 
         isActive = true;
         cooldown = 0;
@@ -175,8 +187,10 @@ public class ShapeController : NetworkBehaviour
                 if (parentPlayer.GetPoints() >= triangleCost)
                 {
                     triangleShape.CastAbility(playerPositions, score);
-                    // StartCoroutine(DelayDisable(0.1f));
                     parentPlayer.SpendPoints(triangleCost);
+
+                    // TODO: Separate for knight/wizard 
+                    RPC_PlayShootSound(playerPositions.ToArray(), 3, 0);
                 }
                 else
                 {
@@ -240,6 +254,45 @@ public class ShapeController : NetworkBehaviour
         }
     }
 
+    // The parameter character - 0 for knight, 1 for wizard
+    [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
+    public void RPC_PlayShootSound(Vector3[] playerPositions, int nVertices, int character)
+    {
+        // Play sound locally if the players activating are in view 
+        foreach (Vector3 pos in playerPositions) {
+            Vector3 viewportPos = Camera.main.WorldToViewportPoint(pos);
+            bool onScreen =
+                viewportPos.x >= 0f && viewportPos.x <= 1f &&
+                viewportPos.y >= 0f && viewportPos.y <= 1f;
+            if (onScreen)
+            {
+                if (nVertices == 3)
+                {
+                    if (character == 0)
+                    {
+                        audioSource.PlayOneShot(triangleKnightSound);
+                    }
+                    else
+                    {
+                        audioSource.PlayOneShot(triangleWizardSound);
+                    }
+                } else if (nVertices == 4)
+                {
+                    if (character == 0)
+                    {
+                        audioSource.PlayOneShot(squareKnightSound);
+                    }
+                    else
+                    {
+                        audioSource.PlayOneShot(squareWizardSound);
+                    }
+                }
+                // If some of the players activating is on screen return
+                return;
+            }
+        }
+    }
+
     private List<Player> GetClosestPlayers(Player currentPlayer, int count)
     {
         List<Player> alivePlayers = gameController.GetAlivePlayers();
@@ -280,7 +333,6 @@ public class ShapeController : NetworkBehaviour
         // More transparent color for preview
         else
         {
-
             startColor.a = 0.3f;
             endColor.a = 0.3f;
         }

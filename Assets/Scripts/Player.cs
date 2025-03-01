@@ -155,7 +155,7 @@ public class Player : NetworkBehaviour
         flagIndicator.SetLocalPlayerTeam(localPlayerTeam);
 
         audioSource = GetComponent<AudioSource>();
-        shootSound = Resources.Load<AudioClip>("Sounds/ShootSound");
+        shootSound = Resources.Load<AudioClip>("Sounds/Shoot");
 
         // Set the initial flag indicator visibility
         OnCarryingChanged();
