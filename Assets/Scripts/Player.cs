@@ -55,6 +55,7 @@ public class Player : NetworkBehaviour
     [SerializeField] Image reloadIconLayer;
     [SerializeField] Image aoeIcon;
     [SerializeField] Image aoeIconLayer;
+    [SerializeField] GameObject escapeMenu;
     Image healthBar;
     public TextMeshProUGUI ammoText;
     public TextMeshProUGUI timeLeftText;
@@ -292,40 +293,49 @@ public class Player : NetworkBehaviour
         // So the following is ran for just the server and the client who controls this player
         if (GetInput(out NetworkInputData input))
         {
-            // WASD movement
-            PlayerMovement(input.moveDirection);
+            //If menu is not active
+            if (!escapeMenu.activeSelf){
+                // WASD movement
+                PlayerMovement(input.moveDirection);
 
-            // Firing the weapon
-            if (input.buttons.IsSet(InputButtons.Shoot))
-            {
-                Shoot(input.aimDirection);
-            }
-
-            // Reloading
-            if (input.buttons.WasPressed(previousButtons, InputButtons.Reload))
-            {
-                Reload();
-            }
-
-            // Drop object
-            if (input.buttons.WasPressed(previousButtons, InputButtons.Pickup))
-            {
-                if (isCarrying)
+                // Firing the weapon
+                if (input.buttons.IsSet(InputButtons.Shoot))
                 {
-                    DropObject();
+                    Shoot(input.aimDirection);
+                }
+
+                // Reloading
+                if (input.buttons.WasPressed(previousButtons, InputButtons.Reload))
+                {
+                    Reload();
+                }
+
+                // Drop object
+                if (input.buttons.WasPressed(previousButtons, InputButtons.Pickup))
+                {
+                    if (isCarrying)
+                    {
+                        DropObject();
+                    }
+                }
+
+                // Testing damage
+                if (input.buttons.WasPressed(previousButtons, InputButtons.TakeDamage))
+                {
+                    TakeDamage(10);
+                }
+
+                // Dash with 'space'
+                if (input.buttons.WasPressed(previousButtons, InputButtons.Dash))
+                {
+                    Dash(input.moveDirection);
                 }
             }
+            
 
-            // Testing damage
-            if (input.buttons.WasPressed(previousButtons, InputButtons.TakeDamage))
-            {
-                TakeDamage(10);
-            }
-
-            // Dash with 'space'
-            if (input.buttons.WasPressed(previousButtons, InputButtons.Dash))
-            {
-                Dash(input.moveDirection);
+            // Activate Menu
+            if (input.buttons.WasPressed(previousButtons, InputButtons.Menu)){
+                escapeMenu.SetActive(!escapeMenu.gameObject.activeSelf);
             }
 
             // Activate AoE skill with 'T'
@@ -587,6 +597,12 @@ public class Player : NetworkBehaviour
         }
     }
 
+    public void Quit()
+    {
+        Debug.Log("Exiting");
+        Application.Quit();
+    }
+    
     // Only server can call this RPC, and it will run only on the client that controls this player
     [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.InputAuthority)]
     public void RPC_ShowMessage(string message, float speed, Color color)

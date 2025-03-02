@@ -13,6 +13,7 @@ enum InputButtons
     TakeDamage = 7,
     Dash = 8,
     AoE = 9,
+    Menu = 10,
 }
 
 public struct NetworkInputData : INetworkInput
