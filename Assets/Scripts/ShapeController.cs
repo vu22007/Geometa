@@ -200,6 +200,7 @@ public class ShapeController : NetworkBehaviour
                 }
                 else
                 {
+                    squareShape.CastAbility(playerPositions, score);
                     parentPlayer.SpendPoints(squareCost);
                 }
 

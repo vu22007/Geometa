@@ -21,6 +21,13 @@ public static class PrefabFactory
         NetworkObject worldCollider = runner.Spawn(prefab, Vector3.zero);
         return worldCollider;
     }
+
+    public static NetworkObject SpawnCircleCollider(NetworkRunner runner, GameObject prefab)
+    {
+        NetworkObject circleCollider = runner.Spawn(prefab, Vector3.zero);
+        return circleCollider;
+    }
+
     public static NetworkObject SpawnBullet(NetworkRunner runner, PlayerRef playerRef, GameObject prefab, Vector3 spawnPosition, Vector2 moveDirection, float speed, float damage, int team){
         // Get rotation
         Vector3 direction = new Vector3(moveDirection.x, moveDirection.y);
