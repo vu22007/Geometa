@@ -468,7 +468,6 @@ public class Player : NetworkBehaviour
 
     void OnHealthChanged()
     {
-        Debug.Log("Receive health update!");
         UpdateHealthBar(currentHealth);
     }
 

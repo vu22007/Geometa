@@ -56,6 +56,7 @@ public class ShapeController : NetworkBehaviour
 
     void OnShapeActiveChanged()
     {
+        Debug.Log("Shape active changed!");
         // Draw shape for everyone when shape is active
         if (shapeIsActive)
         {
@@ -192,7 +193,6 @@ public class ShapeController : NetworkBehaviour
         if (activate)
         {
             // Draw the lines for both server and input authority
-            // TODO: Make the lines darker for activate and lighter for preview
             DrawLines(playerPositions, true);
 
             if (HasStateAuthority)
@@ -326,7 +326,8 @@ public class ShapeController : NetworkBehaviour
 
         if (activate)
         {
-            StartCoroutine(DelayDisable(0.3f, lineRenderer));
+            //StartCoroutine(DelayDisable(0.3f, lineRenderer));
+            StartCoroutine(DelayDisable(5.0f, lineRenderer));
         }
     }
 
@@ -336,18 +337,21 @@ public class ShapeController : NetworkBehaviour
         float timer = 0f;
         Color startColor = lineRenderer.startColor;
         Color endColor = lineRenderer.endColor;
+        float startAlpha = startColor.a;
 
         while (timer < delay)
         {
             timer += Time.deltaTime;
+            //Debug.Log(timer);
 
             // Calculate a new alpha based on the elapsed time
-            float newAlpha = Mathf.Lerp(startColor.a, 0f, timer / delay);
+            float newAlpha = Mathf.Lerp(startAlpha, 0f, timer / delay);
 
             startColor.a = endColor.a = newAlpha;
 
             lineRenderer.startColor = startColor;
             lineRenderer.endColor = endColor;
+
             yield return null;
         }
         lineRenderer.enabled = false;
