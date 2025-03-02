@@ -175,65 +175,76 @@ public class ShapeController : NetworkBehaviour
         // Give buffs/do damage if the player activates the ability, and make shape visible to everyone
         if (activate)
         {
-            // Draw the lines for both server and input authority
-            DrawLines(playerPositions, true);
-
             if (HasStateAuthority)
             {
-                // Set vertices so all clients can draw lines in OnShapeActiveChanged method
-                shapeIsActive = true;
+                // Set vertices networked property for everyone (server, input authority and all other clients) to use to draw lines in OnShapeActiveChanged method
                 vertices.Clear();
                 foreach (Vector3 position in playerPositions)
                 {
                     vertices.Add(position);
                 }
+            }
 
-                if (nVertices == 3)
+            if (nVertices == 3)
+            {
+                if (parentPlayer.GetPoints() < triangleCost)
                 {
-                    if (parentPlayer.GetPoints() >= triangleCost)
+                    triangleLineRenderer.enabled = false;
+                    Debug.Log("You don't have enough points to activate a triangle");
+                }
+                else
+                {
+                    if (HasStateAuthority)
                     {
                         triangleShape.CastAbility(playerPositions, score);
                         parentPlayer.SpendPoints(triangleCost);
-                    }
-                    else
-                    {
-                        triangleLineRenderer.enabled = false;
-                        Debug.Log("You don't have enough points to activate a triangle");
+
+                        // Set networked property so everyone can draw lines in OnShapeActiveChanged method
+                        shapeIsActive = true;
                     }
                 }
-                else if (nVertices == 4)
+            }
+            else if (nVertices == 4)
+            {
+                if (parentPlayer.GetPoints() < squareCost)
                 {
-                    if (parentPlayer.GetPoints() < squareCost)
-                    {
-                        squareLineRenderer.enabled = false;
-                        Debug.Log("You don't have enough points to activate a square");
-                    }
-                    // If it's not convex don't activate it
-                    else if (!IsConvex(angles))
-                    {
-                        squareLineRenderer.enabled = false;
-                        Debug.Log("Shape is not convex - can't activate buff!");
-                        return;
-                    }
-                    else
+                    squareLineRenderer.enabled = false;
+                    Debug.Log("You don't have enough points to activate a square");
+                }
+                // If it's not convex don't activate it
+                else if (!IsConvex(angles))
+                {
+                    squareLineRenderer.enabled = false;
+                    Debug.Log("Shape is not convex - can't activate buff!");
+                    return;
+                }
+                else
+                {
+                    if (HasStateAuthority)
                     {
                         parentPlayer.SpendPoints(squareCost);
+
+                        // Set networked property so everyone can draw lines in OnShapeActiveChanged method
+                        shapeIsActive = true;
                     }
                 }
-                else if (nVertices == 5)
+            }
+            else if (nVertices == 5)
+            {
+                if (parentPlayer.GetPoints() < pentagonCost)
                 {
-                    if (parentPlayer.GetPoints() < pentagonCost)
-                    {
-                        pentagonLineRenderer.enabled = false;
-                        Debug.Log("You don't have enough points to activate a pentagon");
-                    }
-                    else if (!IsConvex(angles))
-                    {
-                        pentagonLineRenderer.enabled = false;
-                        Debug.Log("Shape is not convex - can't activate buff!");
-                        return;
-                    }
-                    else
+                    pentagonLineRenderer.enabled = false;
+                    Debug.Log("You don't have enough points to activate a pentagon");
+                }
+                else if (!IsConvex(angles))
+                {
+                    pentagonLineRenderer.enabled = false;
+                    Debug.Log("Shape is not convex - can't activate buff!");
+                    return;
+                }
+                else
+                {
+                    if (HasStateAuthority)
                     {
                         Vector3 centroid = Vector3.zero;
                         foreach (var v in playerPositions)
@@ -245,6 +256,9 @@ public class ShapeController : NetworkBehaviour
                         // TODO: Spawn creature in the center
 
                         parentPlayer.SpendPoints(pentagonCost);
+
+                        // Set networked property so everyone can draw lines in OnShapeActiveChanged method
+                        shapeIsActive = true;
                     }
                 }
             }
@@ -291,6 +305,7 @@ public class ShapeController : NetworkBehaviour
         lineRenderer.startWidth = 0.5f;
         Color startColor = lineRenderer.startColor;
         Color endColor = lineRenderer.endColor;
+
         if (activate)
         {
             startColor.a = 1f;
@@ -299,7 +314,6 @@ public class ShapeController : NetworkBehaviour
         // More transparent color for preview
         else
         {
-
             startColor.a = 0.3f;
             endColor.a = 0.3f;
         }
