@@ -56,12 +56,10 @@ public class ShapeController : NetworkBehaviour
 
     void OnShapeActiveChanged()
     {
-        Debug.Log("Shape active changed!");
         // Draw shape for everyone when shape is active
         if (shapeIsActive)
         {
             DrawLines(vertices.ToList(), true);
-            shapeIsActive = false;
         }
     }
 
@@ -130,39 +128,24 @@ public class ShapeController : NetworkBehaviour
 
     private void TriangleActivated()
     {
-        if (HasInputAuthority && !HasStateAuthority)
-            triangleLineRenderer.enabled = false;
-
-        //if (HasStateAuthority)
-        //{
-            PreviewShape(3, true);
-        //}
+        PreviewShape(3, true);
     }
 
     private void SquareActivated()
     {
-        if (HasInputAuthority && !HasStateAuthority)
-            squareLineRenderer.enabled = false;
-
-        if (HasStateAuthority)
-        {
-            PreviewShape(4, true);
-        }
+        PreviewShape(4, true);
     }
 
     private void PentagonActivated()
     {
-        if (HasInputAuthority && !HasStateAuthority)
-            pentagonLineRenderer.enabled = false;
-
-        if (HasStateAuthority)
-        {
-            PreviewShape(5, true);
-        }
+        PreviewShape(5, true);
     }
 
     void PreviewShape(int nVertices, bool activate)
     {
+        // Do not allow shape preview or activation if shape is currently active
+        if (shapeIsActive) return;
+
         List<Player> closestPlayers = GetClosestPlayers(parentPlayer, nVertices - 1);
 
         // Making a list of vector3 positions of the players
@@ -210,7 +193,6 @@ public class ShapeController : NetworkBehaviour
                     if (parentPlayer.GetPoints() >= triangleCost)
                     {
                         triangleShape.CastAbility(playerPositions, score);
-                        // StartCoroutine(DelayDisable(0.1f));
                         parentPlayer.SpendPoints(triangleCost);
                     }
                     else
@@ -293,9 +275,11 @@ public class ShapeController : NetworkBehaviour
     void DrawLines(List<Vector3> vertices, bool activate)
     {
         int nVertices = vertices.Count;
+
         // Choose different lines for different abilities
         LineRenderer lineRenderer = ChooseLineRenderer(nVertices);
         lineRenderer.positionCount = nVertices + 1;
+
         // Lines are drawn between the adjacent vertices. The last vertice is added first so there
         // is a line between 0th and (nVertices - 1)th vertice
         lineRenderer.SetPosition(0, vertices[nVertices - 1]);
@@ -355,6 +339,7 @@ public class ShapeController : NetworkBehaviour
             yield return null;
         }
         lineRenderer.enabled = false;
+        shapeIsActive = false;
     }
 
     LineRenderer ChooseLineRenderer(int nVertices)
@@ -430,7 +415,7 @@ public class ShapeController : NetworkBehaviour
 
         Vector3 direction1 = (vertices[0] - vertices[1]).normalized;
         Vector3 direction2 = (vertices[2] - vertices[1]).normalized;
-        float angle = Vector3.Angle(direction1, direction2);       
+        float angle = Vector3.Angle(direction1, direction2);
         return angle;
     }
 
