@@ -28,13 +28,8 @@ public class SquareShape : NetworkBehaviour
     {
         for (int i=0; i<4; i++)
         {
-            circleColliders[i].ActivateCollider(playerPositions[i]);
+            circleColliders[i].ActivateCollider(playerPositions[i], score);
         }
-
-        //triangleCollider.SetScore(score);
-        //edgeCollider.SetPoints(points);
-        //edgeCollider.enabled = true;
-        //StartCoroutine(DelayDisable(0.1f));
     }
     
 }
