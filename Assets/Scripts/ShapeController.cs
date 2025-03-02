@@ -146,7 +146,7 @@ public class ShapeController : NetworkBehaviour
         {
             Debug.Log("Cooldown on triangle: " + triangleCooldown);
             return;
-        } else if(nVertices == 4)
+        } else if(nVertices == 4 && squareCooldown > 0)
         {
             Debug.Log("Cooldown on square: " + squareCooldown);
             return;
