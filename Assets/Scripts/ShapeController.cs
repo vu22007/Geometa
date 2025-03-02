@@ -195,16 +195,16 @@ public class ShapeController : NetworkBehaviour
             // TODO: Make the lines darker for activate and lighter for preview
             DrawLines(playerPositions, true);
 
-            // Set vertices so all clients can draw lines in OnShapeActiveChanged method
-            shapeIsActive = true;
-            vertices.Clear();
-            foreach (Vector3 position in playerPositions)
-            {
-                vertices.Add(position);
-            }
-
             if (HasStateAuthority)
             {
+                // Set vertices so all clients can draw lines in OnShapeActiveChanged method
+                shapeIsActive = true;
+                vertices.Clear();
+                foreach (Vector3 position in playerPositions)
+                {
+                    vertices.Add(position);
+                }
+
                 if (nVertices == 3)
                 {
                     if (parentPlayer.GetPoints() >= triangleCost)

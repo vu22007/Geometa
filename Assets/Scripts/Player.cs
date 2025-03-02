@@ -18,7 +18,7 @@ public class Player : NetworkBehaviour
     [Networked] float reloadFraction { get; set; }
     [Networked] int points { get; set; }
     [Networked] float timeToWaitForBullet { get; set; }
-    [Networked] float currentHealth { get; set; }
+    [Networked, OnChangedRender(nameof(OnHealthChanged))] float currentHealth { get; set; }
     [Networked] int team { get; set; }
     [Networked] Vector3 respawnPoint { get; set; }
     [Networked] bool isAlive { get; set; }
@@ -138,8 +138,7 @@ public class Player : NetworkBehaviour
         }
 
         // Set the health bar
-        if (healthBar != null)
-            healthBar.fillAmount = currentHealth / maxHealth;
+        UpdateHealthBar(currentHealth);
 
         if (deathOverlay != null)
         {
@@ -395,24 +394,23 @@ public class Player : NetworkBehaviour
                 currentAmmo--;
                 ammoText.text = "Bullets: " + currentAmmo;
             }
-            // else
-            // {
-            //     ShowMessage("Press R to reload!!", 0.2f, Color.white);
-            // }
         }
     }
 
     //take damage equal to input, includes check for death
     public void TakeDamage(float damage)
     {
-        currentHealth -= damage;
-        if (healthBar != null)
-            healthBar.fillAmount = currentHealth / maxHealth;
+        float newHealth = currentHealth - damage;
+
+        if (HasStateAuthority)
+            currentHealth = newHealth;
+
+        UpdateHealthBar(newHealth);
 
         //Play hurt animation and sounds
         HurtEffects();
 
-        if (currentHealth <= 0.0f) {
+        if (newHealth <= 0.0f) {
             Die();
         }
     }
@@ -424,12 +422,16 @@ public class Player : NetworkBehaviour
     //heal equal to input, includes check for max health
     public void Heal(float amount)
     {
-        currentHealth += amount;
-        if (healthBar != null)
-            healthBar.fillAmount = currentHealth / maxHealth;
+        float newHealth = currentHealth + amount;
+
+        if (HasStateAuthority)
+            currentHealth = newHealth;
+
         if (currentHealth >= maxHealth) {
             currentHealth = maxHealth;
         }
+
+        UpdateHealthBar(newHealth);
     }
 
     public void GainPoints(int amount)
@@ -450,13 +452,8 @@ public class Player : NetworkBehaviour
     {
         isAlive = false;
 
-        // // Only show message for client who controls this player
-        // if (HasInputAuthority)
-        //ShowMessage("You died :((", 0.1f, Color.red);
-        
         // Ensure health bar is empty
-        if (healthBar != null)
-            healthBar.fillAmount = 0.0f;
+        UpdateHealthBar(0.0f);
 
         // Disable the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = false;
@@ -466,6 +463,20 @@ public class Player : NetworkBehaviour
         {
             // Player will drop the flag if they died
             DropObject();
+        }
+    }
+
+    void OnHealthChanged()
+    {
+        Debug.Log("Receive health update!");
+        UpdateHealthBar(currentHealth);
+    }
+
+    void UpdateHealthBar(float health)
+    {
+        if (healthBar != null)
+        {
+            healthBar.fillAmount = health / maxHealth;
         }
     }
 
