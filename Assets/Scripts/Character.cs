@@ -1,3 +1,4 @@
+using UnityEditor.Animations;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "Character", menuName = "Scriptable Objects/Character")]
@@ -6,16 +7,13 @@ public class Character : ScriptableObject
     [SerializeField] float speed;
     [SerializeField] float maxHealth;
     [SerializeField] float damage;
-    //[SerializeField] Ability ability;
     [SerializeField] Sprite sprite;
+    [SerializeField] AnimatorController animatorController;
     [SerializeField] int maxAmmo;
     [SerializeField] float fireRate;
     [SerializeField] float dashSpeed;
     [SerializeField] float dashDuration;
     [SerializeField] float dashCooldown;
-    [SerializeField] float aoeCooldown;
-    [SerializeField] float aoeDamage;
-    [SerializeField] float aoeDuration;
     public float Speed{
         get{return speed;}
     }
@@ -25,11 +23,11 @@ public class Character : ScriptableObject
     public float Damage{
         get{return damage;}
     }
-    // public Ability Ability{
-    //     get{return ability;}
-    // }
     public Sprite Sprite{
         get{return sprite;}
+    }
+    public AnimatorController AnimatorController{
+        get{return animatorController;}
     }
     public int MaxAmmo{
         get{return maxAmmo;}
@@ -46,15 +44,5 @@ public class Character : ScriptableObject
     }
     public float DashCooldown{
         get{return dashCooldown;}
-    }
-
-    public float AoeDamage{
-        get{return aoeDamage;}
-    }
-    public float AoeCooldown{
-        get{return aoeCooldown;}
-    }
-    public float AoeDuration{
-        get{return aoeDuration;}
     }
 }

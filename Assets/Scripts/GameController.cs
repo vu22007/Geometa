@@ -159,7 +159,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
         {
             // Load prefab
             GameObject playerPrefab = Resources.Load("Prefabs/Player") as GameObject;
-            string characterPath = "ScriptableObjects/Characters/Army Vet";
+            string characterPath = "ScriptableObjects/Characters/Knight";
 
             // Spawn the player network object
             int team = nextTeam;
@@ -276,7 +276,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
     void SpawnPlayersForTesting(int allies, int enemies)
     {
         GameObject playerPrefab = Resources.Load("Prefabs/Player") as GameObject;
-        string characterPath = "ScriptableObjects/Characters/Army Vet";
+        string characterPath = "ScriptableObjects/Characters/Knight";
 
         for (int i = 0; i < allies; i++)
         {

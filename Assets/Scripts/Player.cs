@@ -5,6 +5,7 @@ using TMPro;
 using Fusion.Addons.Physics;
 using UnityEngine.SocialPlatforms.Impl;
 using System.Collections;
+using UnityEditor.Animations;
 
 public class Player : NetworkBehaviour
 {
@@ -45,7 +46,8 @@ public class Player : NetworkBehaviour
     public Camera cam;
     Rigidbody2D rb;
     SpriteRenderer spriteRenderer;
-    public Animator animator;
+    Animator animator;
+    AnimatorController animatorController;
     [SerializeField] Image mainHealthBar;
     [SerializeField] Image teamHealthBar;
     [SerializeField] Image enemyHealthBar;
@@ -79,9 +81,8 @@ public class Player : NetworkBehaviour
         dashSpeed = character.DashSpeed;
         dashDuration = character.DashDuration;
         dashCooldown = character.DashCooldown;
-        aoeDamage = character.AoeDamage;
-        aoeCooldown = character.AoeCooldown;
-        aoeDuration = character.AoeDuration;
+        animatorController = character.AnimatorController;
+        
 
         this.respawnPoint = respawnPoint;
         this.team = team;
@@ -89,6 +90,9 @@ public class Player : NetworkBehaviour
         points = 100;
         reloadTime = 3.0f;
         respawnTime = 10.0f;
+        aoeDamage = 5;
+        aoeCooldown = 10;
+        aoeDuration = 5;
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
         isAlive = true;
@@ -119,6 +123,7 @@ public class Player : NetworkBehaviour
         rb = gameObject.GetComponent<Rigidbody2D>();
         spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
         animator = gameObject.GetComponent<Animator>();
+        animator.runtimeAnimatorController = animatorController;
 
         // Set sprite from resource path
         Character character = Resources.Load(characterPath) as Character;
