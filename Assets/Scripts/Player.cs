@@ -3,6 +3,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Fusion.Addons.Physics;
+using UnityEngine.SocialPlatforms.Impl;
+using System.Collections;
 
 public class Player : NetworkBehaviour
 {
@@ -308,6 +310,7 @@ public class Player : NetworkBehaviour
                 if (input.buttons.IsSet(InputButtons.Shoot))
                 {
                     Shoot(input.aimDirection);
+                    animator.SetTrigger("Attack");
                 }
 
                 // Reloading
@@ -649,5 +652,17 @@ public class Player : NetworkBehaviour
     public float GetPoints()
     {
         return points;
+    }
+
+    public void GetSlowed(float amount, float time)
+    {
+        this.speed -= amount;
+        StartCoroutine(timeSlowed(amount, time));
+    }
+
+    IEnumerator timeSlowed(float amount, float time)
+    {
+        yield return new WaitForSeconds(time);
+        this.speed += amount; 
     }
 }
