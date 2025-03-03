@@ -62,7 +62,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
             team2Flag = flag2Obj.GetComponent<PickupFlag>();
 
             // Spawn NPCs for testing - WORKS IF YOU PLAY AS A HOST :)
-            SpawnPlayersForTesting(3, 3);
+            // SpawnPlayersForTesting(3, 3);
         }
     }
 

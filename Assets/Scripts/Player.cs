@@ -3,6 +3,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Fusion.Addons.Physics;
+using UnityEngine.SocialPlatforms.Impl;
+using System.Collections;
 
 public class Player : NetworkBehaviour
 {
@@ -638,5 +640,17 @@ public class Player : NetworkBehaviour
     public int GetPoints()
     {
         return points;
+    }
+
+    public void GetSlowed(float amount, float time)
+    {
+        this.speed -= amount;
+        StartCoroutine(timeSlowed(amount, time));
+    }
+
+    IEnumerator timeSlowed(float amount, float time)
+    {
+        yield return new WaitForSeconds(time);
+        this.speed += amount; 
     }
 }

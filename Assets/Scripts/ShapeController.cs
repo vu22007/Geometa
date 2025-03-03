@@ -18,6 +18,9 @@ public class ShapeController : NetworkBehaviour
     GameController gameController { get; set; }
     Player parentPlayer { get; set; }
 
+    private float triangleCooldown = 0f;
+    private float squareCooldown = 0f;
+
     private LineRenderer triangleLineRenderer;
     private LineRenderer squareLineRenderer;
     private LineRenderer pentagonLineRenderer;
@@ -68,7 +71,8 @@ public class ShapeController : NetworkBehaviour
         if (!isActive) return;
 
         // TODO: Need cooldown for every shape separately
-        cooldown = (cooldown > 0) ? cooldown - Runner.DeltaTime : 0;
+        triangleCooldown = (triangleCooldown > 0) ? triangleCooldown - Runner.DeltaTime : 0;
+        squareCooldown = (squareCooldown > 0) ? squareCooldown - Runner.DeltaTime : 0;
 
         // GetInput will return true on the StateAuthority (the server) and the InputAuthority (the client who controls this shape controller)
         // So the following is ran for just the server and the client who controls this shape controller
@@ -146,6 +150,16 @@ public class ShapeController : NetworkBehaviour
         // Do not allow shape preview or activation if shape is currently active
         if (shapeIsActive) return;
 
+        if (nVertices == 3 && triangleCooldown > 0)
+        {
+            Debug.Log("Cooldown on triangle: " + triangleCooldown);
+            return;
+        } else if(nVertices == 4 && squareCooldown > 0)
+        {
+            Debug.Log("Cooldown on square: " + squareCooldown);
+            return;
+        }
+
         List<Player> closestPlayers = GetClosestPlayers(parentPlayer, nVertices - 1);
 
         // Making a list of vector3 positions of the players
@@ -197,6 +211,7 @@ public class ShapeController : NetworkBehaviour
                     if (HasStateAuthority)
                     {
                         triangleShape.CastAbility(playerPositions, score);
+                        triangleCooldown = 1f;
                         parentPlayer.SpendPoints(triangleCost);
 
                         // Set networked property so everyone can draw lines in OnShapeActiveChanged method
@@ -222,6 +237,8 @@ public class ShapeController : NetworkBehaviour
                 {
                     if (HasStateAuthority)
                     {
+                        squareShape.CastAbility(playerPositions, score);
+                        squareCooldown = 3f;
                         parentPlayer.SpendPoints(squareCost);
 
                         // Set networked property so everyone can draw lines in OnShapeActiveChanged method
@@ -267,7 +284,7 @@ public class ShapeController : NetworkBehaviour
         // Draw lines locally when just preview
         if (HasInputAuthority && !activate)
         {
-            DrawLines(playerPositions, false);
+            DrawLines(playerPositions, false, score);
         }
     }
 
@@ -286,7 +303,7 @@ public class ShapeController : NetworkBehaviour
         return closestPlayers.Take(count).ToList();
     }
 
-    void DrawLines(List<Vector3> vertices, bool activate)
+    void DrawLines(List<Vector3> vertices, bool activate, float score)
     {
         int nVertices = vertices.Count;
 
@@ -308,8 +325,8 @@ public class ShapeController : NetworkBehaviour
 
         if (activate)
         {
-            startColor.a = 1f;
-            endColor.a = 1f;
+            startColor.a = 1f * score;
+            endColor.a = 1f * score;
         }
         // More transparent color for preview
         else
@@ -324,7 +341,7 @@ public class ShapeController : NetworkBehaviour
 
         if (activate)
         {
-            StartCoroutine(DelayDisable(0.3f, lineRenderer));
+            StartCoroutine(DelayDisable(1f, lineRenderer));
         }
     }
 
