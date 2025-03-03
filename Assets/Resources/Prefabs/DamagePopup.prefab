@@ -11,8 +11,7 @@ GameObject:
   - component: {fileID: 7946892849076048799}
   - component: {fileID: 541527173913219502}
   - component: {fileID: 6014857973192534382}
-  - component: {fileID: 8839055339611455514}
-  - component: {fileID: 1794345421617191820}
+  - component: {fileID: 7111286466103160798}
   m_Layer: 0
   m_Name: DamagePopup
   m_TagString: Untagged
@@ -178,7 +177,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_renderer: {fileID: 541527173913219502}
   m_maskType: 0
---- !u!114 &8839055339611455514
+--- !u!114 &7111286466103160798
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -191,22 +190,3 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   team: 0
---- !u!114 &1794345421617191820
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6627244779619507459}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  SortKey: 1325670756
-  ObjectInterest: 1
-  Flags: 262145
-  NestedObjects: []
-  NetworkedBehaviours:
-  - {fileID: 8839055339611455514}
-  ForceRemoteRenderTimeframe: 0

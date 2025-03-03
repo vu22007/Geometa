@@ -22,15 +22,11 @@ public static class PrefabFactory
         return worldCollider;
     }
 
-    public static NetworkObject SpawnDamagePopup(NetworkRunner runner, GameObject prefab, int damage, int team, Vector3 position)
+    public static void SpawnDamagePopup(GameObject prefab, int damage, int team, Vector3 position)
     {
-        NetworkObject damagePopupObject = runner.Spawn(prefab, position, Quaternion.identity, null, (runner, networkObject) =>
-        {
-            DamagePopup damagePopup = networkObject.GetComponent<DamagePopup>();
-            damagePopup.Setup(damage, team);
-        });
-
-        return damagePopupObject;
+        GameObject damagePopupObject = GameObject.Instantiate(prefab, position, Quaternion.identity);
+        DamagePopup damagePopup = damagePopupObject.GetComponent<DamagePopup>();
+        damagePopup.Setup(damage, team);
     }
 
     public static NetworkObject SpawnBullet(NetworkRunner runner, PlayerRef playerRef, GameObject prefab, Vector3 spawnPosition, Vector2 moveDirection, float speed, float damage, int team){

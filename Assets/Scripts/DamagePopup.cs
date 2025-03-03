@@ -2,10 +2,10 @@ using TMPro;
 using UnityEngine;
 using Fusion;
 
-public class DamagePopup : NetworkBehaviour
+public class DamagePopup : MonoBehaviour
 {
     TextMeshPro textMesh;
-    float destructTimeMax = 2f;
+    float destructTimeMax = 1.5f;
     float destructTime;
     Vector3 moveVector;
     public int team;
@@ -20,22 +20,23 @@ public class DamagePopup : NetworkBehaviour
         this.team = team;
         destructTime = destructTimeMax;
 
-        moveVector = new Vector3(0, 1) * 20f;
+        float randomXDir = Random.Range(-0.4f, 0.4f);
+        moveVector = new Vector3(randomXDir, 1) * 20f;
     }
 
     void Update(){
         //moving
-        transform.position += moveVector * Runner.DeltaTime;
-        moveVector -= moveVector * 8f * Runner.DeltaTime;
+        transform.position += moveVector * Time.deltaTime;
+        moveVector -= moveVector * 8f * Time.deltaTime;
 
-        destructTime -= Runner.DeltaTime;
+        destructTime -= Time.deltaTime;
 
         //effects
         if (destructTime > destructTimeMax * 0.5f){
-            transform.localScale += Vector3.one * Runner.DeltaTime;
+            transform.localScale += 0.7f * Vector3.one * Time.deltaTime;
         }
         else{
-            transform.localScale -= Vector3.one * Runner.DeltaTime;
+            transform.localScale -= 0.7f * Vector3.one * Time.deltaTime;
         }
 
 

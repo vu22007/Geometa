@@ -484,10 +484,8 @@ public class Player : NetworkBehaviour
 
     void HurtEffects(float damage){
         animator.SetTrigger("Damaged");
-        if (HasStateAuthority){
-            GameObject damagePopupPrefab = Resources.Load("Prefabs/DamagePopup") as GameObject;
-            PrefabFactory.SpawnDamagePopup(Runner, damagePopupPrefab, (int)damage, team, transform.position);
-        }  
+        GameObject damagePopupPrefab = Resources.Load("Prefabs/DamagePopup") as GameObject;
+        PrefabFactory.SpawnDamagePopup(damagePopupPrefab, (int)damage, team, transform.position);
     }
 
     //heal equal to input, includes check for max health
