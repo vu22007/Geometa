@@ -7,17 +7,22 @@ public class TriangleShape : NetworkBehaviour
 {
     private TriangleCollider triangleCollider;
     private EdgeCollider2D edgeCollider;
+
     public override void Spawned()
     {
-        // This is the object
-        GameObject worldColliderPrefab = Resources.Load("Prefabs/TriangleCollider") as GameObject;
-        NetworkObject triangleColliderObject = PrefabFactory.SpawnWorldCollider(Runner, worldColliderPrefab);
+        // Only the server can spawn the collider
+        if (HasStateAuthority)
+        {
+            // This is the object
+            GameObject worldColliderPrefab = Resources.Load("Prefabs/TriangleCollider") as GameObject;
+            NetworkObject triangleColliderObject = PrefabFactory.SpawnWorldCollider(Runner, worldColliderPrefab);
 
-        // This is the script of the object
-        triangleCollider = triangleColliderObject.GetComponent<TriangleCollider>();
-        triangleCollider.team = transform.GetComponentInParent<Player>().GetTeam();
+            // This is the script of the object
+            triangleCollider = triangleColliderObject.GetComponent<TriangleCollider>();
+            triangleCollider.team = transform.GetComponentInParent<Player>().GetTeam();
 
-        edgeCollider = triangleCollider.GetComponent<EdgeCollider2D>();
+            edgeCollider = triangleCollider.GetComponent<EdgeCollider2D>();
+        }
     }
 
     public void CastAbility(List<Vector3> playerPositions, float score)
