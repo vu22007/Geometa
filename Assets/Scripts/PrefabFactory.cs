@@ -21,6 +21,18 @@ public static class PrefabFactory
         NetworkObject worldCollider = runner.Spawn(prefab, Vector3.zero);
         return worldCollider;
     }
+
+    public static NetworkObject SpawnDamagePopup(NetworkRunner runner, GameObject prefab, int damage, int team, Vector3 position)
+    {
+        NetworkObject damagePopupObject = runner.Spawn(prefab, position, Quaternion.identity, null, (runner, networkObject) =>
+        {
+            DamagePopup damagePopup = networkObject.GetComponent<DamagePopup>();
+            damagePopup.Setup(damage, team);
+        });
+
+        return damagePopupObject;
+    }
+
     public static NetworkObject SpawnBullet(NetworkRunner runner, PlayerRef playerRef, GameObject prefab, Vector3 spawnPosition, Vector2 moveDirection, float speed, float damage, int team){
         // Get rotation
         Vector3 direction = new Vector3(moveDirection.x, moveDirection.y);
