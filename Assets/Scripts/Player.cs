@@ -302,6 +302,7 @@ public class Player : NetworkBehaviour
                 if (input.buttons.IsSet(InputButtons.Shoot))
                 {
                     Shoot(input.aimDirection);
+                    animator.SetTrigger("Attack");
                 }
 
                 // Reloading
