@@ -13,6 +13,9 @@ public class Character : ScriptableObject
     [SerializeField] float dashSpeed;
     [SerializeField] float dashDuration;
     [SerializeField] float dashCooldown;
+    [SerializeField] float aoeCooldown;
+    [SerializeField] float aoeDamage;
+    [SerializeField] float aoeDuration;
     public float Speed{
         get{return speed;}
     }
@@ -45,4 +48,13 @@ public class Character : ScriptableObject
         get{return dashCooldown;}
     }
 
+    public float AoeDamage{
+        get{return aoeDamage;}
+    }
+    public float AoeCooldown{
+        get{return aoeCooldown;}
+    }
+    public float AoeDuration{
+        get{return aoeDuration;}
+    }
 }

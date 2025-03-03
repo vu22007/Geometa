@@ -35,6 +35,10 @@ public class Player : NetworkBehaviour
     [Networked] float dashSpeed { get; set; }
     [Networked] float dashDuration { get; set; }
     [Networked] float dashCooldown { get; set; }
+    [Networked] public float aoeDamage { get; set; }
+    [Networked] public float aoeCooldown { get; set; }
+    [Networked] public float aoeDuration { get; set; }
+    [Networked] public float aoeCooldownTimer { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
@@ -46,8 +50,11 @@ public class Player : NetworkBehaviour
     [SerializeField] PopUpText popUpText;
     [SerializeField] cooldownHandler dashCDHandler;
     [SerializeField] cooldownHandler reloadHandler;
+    [SerializeField] cooldownHandler aoeHandler;
     [SerializeField] Image reloadIcon;
     [SerializeField] Image reloadIconLayer;
+    [SerializeField] Image aoeIcon;
+    [SerializeField] Image aoeIconLayer;
     [SerializeField] GameObject escapeMenu;
     Image healthBar;
     public TextMeshProUGUI ammoText;
@@ -70,6 +77,9 @@ public class Player : NetworkBehaviour
         dashSpeed = character.DashSpeed;
         dashDuration = character.DashDuration;
         dashCooldown = character.DashCooldown;
+        aoeDamage = character.AoeDamage;
+        aoeCooldown = character.AoeCooldown;
+        aoeDuration = character.AoeDuration;
 
         this.respawnPoint = respawnPoint;
         this.team = team;
@@ -261,6 +271,17 @@ public class Player : NetworkBehaviour
             }
         }
 
+        // Handle AoE cooldown
+        if (aoeCooldownTimer > 0)
+        {
+            aoeCooldownTimer -= Runner.DeltaTime;
+            if (aoeCooldownTimer <= 0)
+            {
+                aoeIcon.enabled = false;
+                aoeIconLayer.enabled = false;
+            }
+        }
+
         // auto reload 
         if (currentAmmo == 0 && reloadTimer <= 0) 
         {
@@ -316,6 +337,11 @@ public class Player : NetworkBehaviour
                 escapeMenu.SetActive(!escapeMenu.gameObject.activeSelf);
             }
 
+            // Activate AoE skill with 'T'
+            if (input.buttons.WasPressed(previousButtons, InputButtons.AoE))
+            {
+                ActivateAoE(input.cursorWorldPoint);
+            }
             //Character rotates to mouse position
             Vector2 lookDirection = input.aimDirection.normalized;
             Quaternion wantedRotation = Quaternion.LookRotation(transform.forward, lookDirection);
@@ -376,6 +402,39 @@ public class Player : NetworkBehaviour
             ShowMessage("Dash in cooldown", 0.2f, Color.white);
         }
     }
+
+    // Activate AoE skill
+    void ActivateAoE(Vector2 cursorWorldPoint)
+    {
+        if (aoeCooldownTimer <= 0) // Only allow AoE if cooldown is over
+        {
+            // Spawn AoE effect (only the server can do this)
+            if (HasStateAuthority)
+            {
+                GameObject aoeEffect = Resources.Load("Prefabs/AoE1") as GameObject;
+                // Spawn the AoE prefab
+                NetworkObject aoeObject = Runner.Spawn(aoeEffect, cursorWorldPoint, Quaternion.identity, null, (runner, networkObject) =>
+                {
+                    AoESpell aoeSpell = networkObject.GetComponent<AoESpell>();
+                    if (aoeSpell != null)
+                    {
+                        aoeSpell.OnCreated(aoeDamage, team, aoeDuration); 
+                    }
+                });
+            }
+            // Start cooldown
+            aoeCooldownTimer = aoeCooldown;
+            ShowMessage("AoE Skill Used", 0.5f, Color.white);
+            aoeIcon.enabled = true;
+            aoeIconLayer.enabled = true;
+            aoeHandler.StartCooldown(aoeCooldown);
+        }
+        else
+        {
+            ShowMessage("AoE Skill in Cooldown", 0.5f, Color.white);
+        }
+    }
+
 
     // Shoots a bullet by spawning the prefab on the network
     void Shoot(Vector2 aimDirection)
