@@ -324,8 +324,7 @@ public class ShapeController : NetworkBehaviour
 
         if (activate)
         {
-            //StartCoroutine(DelayDisable(0.3f, lineRenderer));
-            StartCoroutine(DelayDisable(5.0f, lineRenderer));
+            StartCoroutine(DelayDisable(0.3f, lineRenderer));
         }
     }
 
