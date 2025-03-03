@@ -22,22 +22,6 @@ public class TriangleCollider : NetworkBehaviour
         edgeCollider.enabled = false;
         edgeCollider.isTrigger = true;
     }
-    //void OnCollisionHitbox(Hitbox hitbox)
-    //{
-    //    // Check if object is a player
-    //    if (hitbox.CompareTag("Player"))
-    //    {
-    //        Player player = hitbox.GetComponent<Player>();
-    //        if (player != null)
-    //        {
-    //            // Check if player is from the enemy team
-    //            if (player.GetTeam() != team)
-    //            {
-    //                player.TakeDamage(10f * score);
-    //            }
-    //        }
-    //    }
-    //}
 
     void OnTriggerEnter2D(Collider2D collider)
     {

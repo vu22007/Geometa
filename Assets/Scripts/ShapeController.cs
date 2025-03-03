@@ -17,6 +17,9 @@ public class ShapeController : NetworkBehaviour
     GameController gameController { get; set; }
     Player parentPlayer { get; set; }
 
+    private float triangleCooldown = 0f;
+    private float squareCooldown = 0f;
+
     private LineRenderer triangleLineRenderer;
     private LineRenderer squareLineRenderer;
     private LineRenderer pentagonLineRenderer;
@@ -56,7 +59,8 @@ public class ShapeController : NetworkBehaviour
         if (!isActive) return;
 
         // TODO: Need cooldown for every shape separately
-        cooldown = (cooldown > 0) ? cooldown - Runner.DeltaTime : 0;
+        triangleCooldown = (triangleCooldown > 0) ? triangleCooldown - Runner.DeltaTime : 0;
+        squareCooldown = (squareCooldown > 0) ? squareCooldown - Runner.DeltaTime : 0;
 
         // GetInput will return true on the StateAuthority (the server) and the InputAuthority (the client who controls this shape controller)
         // So the following is ran for just the server and the client who controls this shape controller
@@ -138,6 +142,16 @@ public class ShapeController : NetworkBehaviour
 
     void previewShape(int nVertices, bool activate)
     {
+        if(nVertices == 3 && triangleCooldown > 0)
+        {
+            Debug.Log("Cooldown on triangle: " + triangleCooldown);
+            return;
+        } else if(nVertices == 4 && squareCooldown > 0)
+        {
+            Debug.Log("Cooldown on square: " + squareCooldown);
+            return;
+        }
+
         List<Player> closestPlayers = GetClosestPlayers(parentPlayer, nVertices - 1);
 
         // Making a list of vector3 positions of the players
@@ -168,13 +182,13 @@ public class ShapeController : NetworkBehaviour
         if (activate && HasStateAuthority)
         {
             // When activated the server will draw the lines
-            // TODO: MAke the lines darker for activate and lighter for preview
-            DrawLines(playerPositions, true);
+            DrawLines(playerPositions, true, score);
             if (nVertices == 3)
             {
                 if (parentPlayer.GetPoints() >= triangleCost)
                 {
                     triangleShape.CastAbility(playerPositions, score);
+                    triangleCooldown = 1f;
                     // StartCoroutine(DelayDisable(0.1f));
                     parentPlayer.SpendPoints(triangleCost);
                 }
@@ -200,6 +214,8 @@ public class ShapeController : NetworkBehaviour
                 }
                 else
                 {
+                    squareShape.CastAbility(playerPositions, score);
+                    squareCooldown = 3f;
                     parentPlayer.SpendPoints(squareCost);
                 }
 
@@ -236,7 +252,7 @@ public class ShapeController : NetworkBehaviour
         // Draw lines locally when just preview
         if(HasInputAuthority && !activate)
         {
-            DrawLines(playerPositions, false);
+            DrawLines(playerPositions, false, score);
         }
     }
 
@@ -255,7 +271,7 @@ public class ShapeController : NetworkBehaviour
         return closestPlayers.Take(count).ToList();
     }
 
-    void DrawLines(List<Vector3> vertices, bool activate)
+    void DrawLines(List<Vector3> vertices, bool activate, float score)
     {
         int nVertices = vertices.Count;
         // Choose different lines for different abilities
@@ -274,13 +290,12 @@ public class ShapeController : NetworkBehaviour
         Color endColor = lineRenderer.endColor;
         if (activate)
         {
-            startColor.a = 1f;
-            endColor.a = 1f;
+            startColor.a = 1f * score;
+            endColor.a = 1f * score;
         }
         // More transparent color for preview
         else
         {
-
             startColor.a = 0.3f;
             endColor.a = 0.3f;
         }
@@ -291,7 +306,7 @@ public class ShapeController : NetworkBehaviour
 
         if (activate)
         {
-            StartCoroutine(DelayDisable(0.3f, lineRenderer));
+            StartCoroutine(DelayDisable(1f, lineRenderer));
         }
     }
 
