@@ -118,7 +118,7 @@ public class Bullet : NetworkBehaviour
                     done = true; // Doesn't pierce
 
                     if (HasInputAuthority) {
-                        playerShooting.PlayHitSound();
+                        //playerShooting.PlayHitSound();
                     }
                 }
             }
