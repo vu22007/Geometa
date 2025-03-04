@@ -119,6 +119,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
     public void UnregisterPlayer(Player player)
     {
         players.Remove(player);
+        UnregisterAlivePlayer(player);
     }
 
     public void RegisterBullet(Bullet bullet)

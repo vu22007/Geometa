@@ -176,7 +176,6 @@ public class Player : NetworkBehaviour
     // Player initialisation when respawning
     public void Respawn()
     {
-        //gameObject.transform.position = respawnPoint;
         gameObject.GetComponent<NetworkRigidbody2D>().Teleport(respawnPoint);
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
