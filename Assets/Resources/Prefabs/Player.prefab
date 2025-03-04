@@ -1282,12 +1282,12 @@ SpriteRenderer:
   m_SortingLayerID: 1322949293
   m_SortingLayer: 1
   m_SortingOrder: 0
-  m_Sprite: {fileID: 558781374, guid: 8c496e6564e6bbb4496002a6855204b6, type: 3}
+  m_Sprite: {fileID: -1138556517, guid: a46387f6947657e4a91427cc2c63fa02, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 2.85, y: 5.25}
+  m_Size: {x: 2.56, y: 2.56}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -1303,7 +1303,7 @@ Animator:
   m_GameObject: {fileID: 3801650017718524952}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 6f3c15ce244b748a7a12967678fe92f6, type: 2}
+  m_Controller: {fileID: 9100000, guid: 23e74537545aeea448b031fe1c836626, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -1333,7 +1333,6 @@ MonoBehaviour:
   _aoeDuration: 0
   _aoeCooldownTimer: 0
   cam: {fileID: 3093333144043118080}
-  animator: {fileID: 3838861860339599067}
   mainHealthBar: {fileID: 8395293536219763284}
   teamHealthBar: {fileID: 8623719664100579951}
   mainPointsBar: {fileID: 1413040121094791050}

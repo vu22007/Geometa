@@ -46,7 +46,7 @@ public class Player : NetworkBehaviour
     public Camera cam;
     Rigidbody2D rb;
     SpriteRenderer spriteRenderer;
-    public Animator animator;
+    Animator animator;
     [SerializeField] Image mainHealthBar;
     [SerializeField] Image teamHealthBar;
     [SerializeField] Image mainPointsBar;
@@ -82,16 +82,16 @@ public class Player : NetworkBehaviour
         dashSpeed = character.DashSpeed;
         dashDuration = character.DashDuration;
         dashCooldown = character.DashCooldown;
-        aoeDamage = character.AoeDamage;
-        aoeCooldown = character.AoeCooldown;
-        aoeDuration = character.AoeDuration;
-
+        
         this.respawnPoint = respawnPoint;
         this.team = team;
         this.characterPath = characterPath;
         points = 5f;
         reloadTime = 3.0f;
         respawnTime = 10.0f;
+        aoeDamage = 5;
+        aoeCooldown = 10;
+        aoeDuration = 5;
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
         isAlive = true;
@@ -126,6 +126,9 @@ public class Player : NetworkBehaviour
         // Set sprite from resource path
         Character character = Resources.Load(characterPath) as Character;
         spriteRenderer.sprite = character.Sprite;
+
+        //Set animator controller
+        animator.runtimeAnimatorController = Resources.Load("Animations/"+character.name) as RuntimeAnimatorController;
 
         Player localPlayer = Runner.GetPlayerObject(Runner.LocalPlayer)?.GetComponent<Player>();
         int localPlayerTeam = localPlayer.GetTeam();
