@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using Fusion;
 using UnityEngine;
 
@@ -61,8 +60,8 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
             NetworkObject flag2Obj = PrefabFactory.SpawnFlag(Runner, flagPrefab, respawnPoint2 + new Vector3(0, 5, 0), 2);
             team2Flag = flag2Obj.GetComponent<PickupFlag>();
 
-            // Spawn NPCs for testing - WORKS IF YOU PLAY AS A HOST :)
-            // SpawnPlayersForTesting(3, 3);
+            // Spawn NPCs for testing
+            SpawnPlayersForTesting(3, 3);
         }
     }
 

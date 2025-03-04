@@ -3,7 +3,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Fusion.Addons.Physics;
-using UnityEngine.SocialPlatforms.Impl;
 using System.Collections;
 
 public class Player : NetworkBehaviour
@@ -651,6 +650,6 @@ public class Player : NetworkBehaviour
     IEnumerator timeSlowed(float amount, float time)
     {
         yield return new WaitForSeconds(time);
-        this.speed += amount; 
+        this.speed += amount;
     }
 }

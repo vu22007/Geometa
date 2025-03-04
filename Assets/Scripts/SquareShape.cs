@@ -5,16 +5,18 @@ using UnityEngine;
 public class SquareShape : NetworkBehaviour
 {
     private List<CircleCornerCollider> circleColliders;
+
     public override void Spawned()
     {
         circleColliders = new List<CircleCornerCollider>();
+
+        // Only the server can spawn the colliders
         if (HasStateAuthority)
         {
             GameObject circleColliderPrefab = Resources.Load("Prefabs/CircleCornerCollider") as GameObject;
             for (int i = 0; i < 4; i++)
             {
                 // The prefab is disabled by default
-                
                 NetworkObject circleColliderObject = PrefabFactory.SpawnCircleCollider(Runner, circleColliderPrefab);
 
                 CircleCornerCollider temp = circleColliderObject.GetComponent<CircleCornerCollider>();

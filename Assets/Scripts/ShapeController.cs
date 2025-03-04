@@ -10,6 +10,7 @@ public class ShapeController : NetworkBehaviour
     [Networked] private float cooldown { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
     [Networked, OnChangedRender(nameof(OnShapeActiveChanged))] private bool shapeIsActive { get; set; }
+    [Networked] private float score { get; set; }
     [Networked, Capacity(5)] private NetworkLinkedList<Vector3> vertices { get; }
 
     private int triangleCost = 3;
@@ -62,7 +63,7 @@ public class ShapeController : NetworkBehaviour
         // Draw shape for everyone when shape is active
         if (shapeIsActive)
         {
-            DrawLines(vertices.ToList(), true);
+            DrawLines(vertices.ToList(), true, score);
         }
     }
 
@@ -85,10 +86,12 @@ public class ShapeController : NetworkBehaviour
 
             if (input.buttons.WasReleased(previousButtons, InputButtons.Triangle))
             {
+                Debug.Log("Triangle released");
                 TriangleActivated();
             }
             if (input.buttons.WasReleased(previousButtons, InputButtons.Square))
             {
+                Debug.Log("Square released");
                 SquareActivated();
             }
             if (input.buttons.WasReleased(previousButtons, InputButtons.Pentagon))
@@ -148,13 +151,18 @@ public class ShapeController : NetworkBehaviour
     void PreviewShape(int nVertices, bool activate)
     {
         // Do not allow shape preview or activation if shape is currently active
-        if (shapeIsActive) return;
+        if (shapeIsActive)
+        {
+            Debug.Log("Shape is already active!");
+            return;
+        }
 
         if (nVertices == 3 && triangleCooldown > 0)
         {
             Debug.Log("Cooldown on triangle: " + triangleCooldown);
             return;
-        } else if(nVertices == 4 && squareCooldown > 0)
+        }
+        else if (nVertices == 4 && squareCooldown > 0)
         {
             Debug.Log("Cooldown on square: " + squareCooldown);
             return;
@@ -191,7 +199,8 @@ public class ShapeController : NetworkBehaviour
         {
             if (HasStateAuthority)
             {
-                // Set vertices networked property for everyone (server, input authority and all other clients) to use to draw lines in OnShapeActiveChanged method
+                // Set score and vertices networked properties for everyone (server, input authority and all other clients) to use to draw lines in OnShapeActiveChanged method
+                this.score = score;
                 vertices.Clear();
                 foreach (Vector3 position in playerPositions)
                 {
@@ -305,6 +314,8 @@ public class ShapeController : NetworkBehaviour
 
     void DrawLines(List<Vector3> vertices, bool activate, float score)
     {
+        Debug.Log("Drawing shape...");
+
         int nVertices = vertices.Count;
 
         // Choose different lines for different abilities
@@ -341,6 +352,7 @@ public class ShapeController : NetworkBehaviour
 
         if (activate)
         {
+            Debug.Log("Starting shape fade coroutine...");
             StartCoroutine(DelayDisable(1f, lineRenderer));
         }
     }
@@ -356,7 +368,6 @@ public class ShapeController : NetworkBehaviour
         while (timer < delay)
         {
             timer += Time.deltaTime;
-            //Debug.Log(timer);
 
             // Calculate a new alpha based on the elapsed time
             float newAlpha = Mathf.Lerp(startAlpha, 0f, timer / delay);
