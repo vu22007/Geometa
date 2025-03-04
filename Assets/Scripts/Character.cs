@@ -1,4 +1,3 @@
-using UnityEditor.Animations;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "Character", menuName = "Scriptable Objects/Character")]
@@ -8,7 +7,6 @@ public class Character : ScriptableObject
     [SerializeField] float maxHealth;
     [SerializeField] float damage;
     [SerializeField] Sprite sprite;
-    [SerializeField] AnimatorController animatorController;
     [SerializeField] int maxAmmo;
     [SerializeField] float fireRate;
     [SerializeField] float dashSpeed;
@@ -25,9 +23,6 @@ public class Character : ScriptableObject
     }
     public Sprite Sprite{
         get{return sprite;}
-    }
-    public AnimatorController AnimatorController{
-        get{return animatorController;}
     }
     public int MaxAmmo{
         get{return maxAmmo;}

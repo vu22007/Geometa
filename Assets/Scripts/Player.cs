@@ -5,7 +5,6 @@ using TMPro;
 using Fusion.Addons.Physics;
 using UnityEngine.SocialPlatforms.Impl;
 using System.Collections;
-using UnityEditor.Animations;
 
 public class Player : NetworkBehaviour
 {
@@ -47,7 +46,7 @@ public class Player : NetworkBehaviour
     Rigidbody2D rb;
     SpriteRenderer spriteRenderer;
     Animator animator;
-    AnimatorController animatorController;
+    RuntimeAnimatorController animatorController;
     [SerializeField] Image mainHealthBar;
     [SerializeField] Image teamHealthBar;
     [SerializeField] Image enemyHealthBar;
@@ -81,7 +80,7 @@ public class Player : NetworkBehaviour
         dashSpeed = character.DashSpeed;
         dashDuration = character.DashDuration;
         dashCooldown = character.DashCooldown;
-        animatorController = character.AnimatorController;
+        animatorController = Resources.Load("Animations/"+character.name) as RuntimeAnimatorController;
         
 
         this.respawnPoint = respawnPoint;
