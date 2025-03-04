@@ -21,7 +21,21 @@ public static class PrefabFactory
         NetworkObject worldCollider = runner.Spawn(prefab, Vector3.zero);
         return worldCollider;
     }
-    public static NetworkObject SpawnBullet(NetworkRunner runner, PlayerRef playerRef, GameObject prefab, Vector3 spawnPosition, Vector2 moveDirection, float speed, float damage, int team, Player playerShooting){
+
+    public static void SpawnDamagePopup(GameObject prefab, int damage, int team, Vector3 position)
+    {
+        GameObject damagePopupObject = GameObject.Instantiate(prefab, position, Quaternion.identity);
+        DamagePopup damagePopup = damagePopupObject.GetComponent<DamagePopup>();
+        damagePopup.Setup(damage, team);
+    }
+    
+    public static NetworkObject SpawnCircleCollider(NetworkRunner runner, GameObject prefab)
+    {
+        NetworkObject circleCollider = runner.Spawn(prefab, Vector3.zero);
+        return circleCollider;
+    }
+
+    public static NetworkObject SpawnBullet(NetworkRunner runner, PlayerRef playerRef, GameObject prefab, Vector3 spawnPosition, Vector2 moveDirection, float speed, float damage, int team){
         // Get rotation
         Vector3 direction = new Vector3(moveDirection.x, moveDirection.y);
         Quaternion rotation = Quaternion.LookRotation(Vector3.forward, direction);
@@ -31,7 +45,7 @@ public static class PrefabFactory
         {
             // Initialise the bullet (this is called before the bullet is spawned)
             Bullet bullet = networkObject.GetComponent<Bullet>();
-            bullet.OnCreated(spawnPosition, moveDirection, rotation, speed, damage, team, playerShooting);
+            bullet.OnCreated(spawnPosition, moveDirection, rotation, speed, damage, team);
         });
 
         return networkBulletObject;

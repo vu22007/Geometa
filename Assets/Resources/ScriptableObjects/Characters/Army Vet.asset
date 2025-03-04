@@ -21,3 +21,6 @@ MonoBehaviour:
   dashSpeed: 3
   dashDuration: 0.2
   dashCooldown: 2
+  aoeCooldown: 10
+  aoeDamage: 5
+  aoeDuration: 5

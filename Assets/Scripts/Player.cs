@@ -3,11 +3,14 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Fusion.Addons.Physics;
+using UnityEngine.SocialPlatforms.Impl;
+using System.Collections;
 
 public class Player : NetworkBehaviour
 {
     [Networked] float speed { get; set; }
     [Networked] float maxHealth { get; set; }
+    [Networked] float maxPoints { get; set; }
     [Networked] float damage { get; set; }
     [Networked] int maxAmmo { get; set; }
     [Networked] int currentAmmo { get; set; }
@@ -16,7 +19,7 @@ public class Player : NetworkBehaviour
     [Networked] float reloadTime { get; set; }
     [Networked] float reloadTimer { get; set; }
     [Networked] float reloadFraction { get; set; }
-    [Networked] int points { get; set; }
+    [Networked] float points { get; set; }
     [Networked] float timeToWaitForBullet { get; set; }
     [Networked] float currentHealth { get; set; }
     [Networked] int team { get; set; }
@@ -35,6 +38,10 @@ public class Player : NetworkBehaviour
     [Networked] float dashSpeed { get; set; }
     [Networked] float dashDuration { get; set; }
     [Networked] float dashCooldown { get; set; }
+    [Networked] public float aoeDamage { get; set; }
+    [Networked] public float aoeCooldown { get; set; }
+    [Networked] public float aoeDuration { get; set; }
+    [Networked] public float aoeCooldownTimer { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
@@ -42,12 +49,16 @@ public class Player : NetworkBehaviour
     public Animator animator;
     [SerializeField] Image mainHealthBar;
     [SerializeField] Image teamHealthBar;
-    [SerializeField] Image enemyHealthBar; 
+    [SerializeField] Image mainPointsBar;
+    [SerializeField] Image enemyHealthBar;
     [SerializeField] PopUpText popUpText;
     [SerializeField] cooldownHandler dashCDHandler;
     [SerializeField] cooldownHandler reloadHandler;
+    [SerializeField] cooldownHandler aoeHandler;
     [SerializeField] Image reloadIcon;
     [SerializeField] Image reloadIconLayer;
+    [SerializeField] Image aoeIcon;
+    [SerializeField] Image aoeIconLayer;
     [SerializeField] GameObject escapeMenu;
     Image healthBar;
     public TextMeshProUGUI ammoText;
@@ -67,6 +78,7 @@ public class Player : NetworkBehaviour
     {
         Character character = Resources.Load(characterPath) as Character;
         maxHealth = character.MaxHealth;
+        maxPoints = 30f;
         speed = character.Speed;
         damage = character.Damage;
         maxAmmo = character.MaxAmmo;
@@ -74,11 +86,14 @@ public class Player : NetworkBehaviour
         dashSpeed = character.DashSpeed;
         dashDuration = character.DashDuration;
         dashCooldown = character.DashCooldown;
+        aoeDamage = character.AoeDamage;
+        aoeCooldown = character.AoeCooldown;
+        aoeDuration = character.AoeDuration;
 
         this.respawnPoint = respawnPoint;
         this.team = team;
         this.characterPath = characterPath;
-        points = 100;
+        points = 5f;
         reloadTime = 3.0f;
         respawnTime = 10.0f;
         currentAmmo = maxAmmo;
@@ -163,6 +178,9 @@ public class Player : NetworkBehaviour
 
         // Set the initial flag indicator visibility
         OnCarryingChanged();
+
+        //Set points bar
+        UpdatePointsBar();
     }
 
     // Called on each client and server when player is despawned from network
@@ -186,7 +204,7 @@ public class Player : NetworkBehaviour
         // Refill the health bar
         if (healthBar != null)
             healthBar.fillAmount = currentHealth / maxHealth;
-
+        
         // Set the ammo counter
         ammoText.text = "Bullets: " + currentAmmo;
 
@@ -271,6 +289,17 @@ public class Player : NetworkBehaviour
             }
         }
 
+        // Handle AoE cooldown
+        if (aoeCooldownTimer > 0)
+        {
+            aoeCooldownTimer -= Runner.DeltaTime;
+            if (aoeCooldownTimer <= 0)
+            {
+                aoeIcon.enabled = false;
+                aoeIconLayer.enabled = false;
+            }
+        }
+
         // auto reload 
         if (currentAmmo == 0 && reloadTimer <= 0) 
         {
@@ -290,6 +319,7 @@ public class Player : NetworkBehaviour
                 if (input.buttons.IsSet(InputButtons.Shoot))
                 {
                     Shoot(input.aimDirection);
+                    animator.SetTrigger("Attack");
                 }
 
                 // Reloading
@@ -326,6 +356,11 @@ public class Player : NetworkBehaviour
                 escapeMenu.SetActive(!escapeMenu.gameObject.activeSelf);
             }
 
+            // Activate AoE skill with 'T'
+            if (input.buttons.WasPressed(previousButtons, InputButtons.AoE))
+            {
+                ActivateAoE(input.cursorWorldPoint);
+            }
             //Character rotates to mouse position
             Vector2 lookDirection = input.aimDirection.normalized;
             Quaternion wantedRotation = Quaternion.LookRotation(transform.forward, lookDirection);
@@ -391,6 +426,39 @@ public class Player : NetworkBehaviour
         }
     }
 
+    // Activate AoE skill
+    void ActivateAoE(Vector2 cursorWorldPoint)
+    {
+        if (aoeCooldownTimer <= 0) // Only allow AoE if cooldown is over
+        {
+            // Spawn AoE effect (only the server can do this)
+            if (HasStateAuthority)
+            {
+                GameObject aoeEffect = Resources.Load("Prefabs/AoE1") as GameObject;
+                // Spawn the AoE prefab
+                NetworkObject aoeObject = Runner.Spawn(aoeEffect, cursorWorldPoint, Quaternion.identity, null, (runner, networkObject) =>
+                {
+                    AoESpell aoeSpell = networkObject.GetComponent<AoESpell>();
+                    if (aoeSpell != null)
+                    {
+                        aoeSpell.OnCreated(aoeDamage, team, aoeDuration); 
+                    }
+                });
+            }
+            // Start cooldown
+            aoeCooldownTimer = aoeCooldown;
+            ShowMessage("AoE Skill Used", 0.5f, Color.white);
+            aoeIcon.enabled = true;
+            aoeIconLayer.enabled = true;
+            aoeHandler.StartCooldown(aoeCooldown);
+        }
+        else
+        {
+            ShowMessage("AoE Skill in Cooldown", 0.5f, Color.white);
+        }
+    }
+
+
     // Shoots a bullet by spawning the prefab on the network
     void Shoot(Vector2 aimDirection)
     {
@@ -430,7 +498,7 @@ public class Player : NetworkBehaviour
             healthBar.fillAmount = currentHealth / maxHealth;
 
         //Play hurt animation and sounds
-        HurtEffects();
+        HurtEffects(damage);
 
         if (currentHealth <= 0.0f) {
             Die();
@@ -441,9 +509,11 @@ public class Player : NetworkBehaviour
     {
         audioSource.PlayOneShot(hitSound);
     }
-
-    void HurtEffects(){
+    
+    void HurtEffects(float damage){
         animator.SetTrigger("Damaged");
+        GameObject damagePopupPrefab = Resources.Load("Prefabs/DamagePopup") as GameObject;
+        PrefabFactory.SpawnDamagePopup(damagePopupPrefab, (int)damage, team, transform.position);
     }
 
     //heal equal to input, includes check for max health
@@ -460,15 +530,23 @@ public class Player : NetworkBehaviour
     public void GainPoints(int amount)
     {
         points += amount;
+        if(points > maxPoints){
+            points = maxPoints;
+        }
+        UpdatePointsBar();
     }
 
     public void SpendPoints(int amount)
     {
         if(amount > points)
         {
-            Debug.Log("You don't have enough points");
+            Debug.Log("Not enough points");
         }
-        points -= amount;
+        else
+        {
+            points -= amount;
+            UpdatePointsBar();
+        }
     }
 
     void Die()
@@ -507,6 +585,12 @@ public class Player : NetworkBehaviour
         {
             audioSource.PlayOneShot(dyingSound, 0.7f);
         }
+
+    }
+    
+    void UpdatePointsBar(){
+        float fillAmount = points/maxPoints;
+        mainPointsBar.fillAmount = fillAmount;
     }
 
     void Reload()
@@ -606,8 +690,20 @@ public class Player : NetworkBehaviour
         return team;
     }
 
-    public int GetPoints()
+    public float GetPoints()
     {
         return points;
+    }
+
+    public void GetSlowed(float amount, float time)
+    {
+        this.speed -= amount;
+        StartCoroutine(timeSlowed(amount, time));
+    }
+
+    IEnumerator timeSlowed(float amount, float time)
+    {
+        yield return new WaitForSeconds(time);
+        this.speed += amount; 
     }
 }
