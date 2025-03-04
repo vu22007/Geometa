@@ -116,10 +116,6 @@ public class Bullet : NetworkBehaviour
                 {
                     player.TakeDamage(damage);
                     done = true; // Doesn't pierce
-
-                    if (HasInputAuthority) {
-                        //playerShooting.PlayHitSound();
-                    }
                 }
             }
         }

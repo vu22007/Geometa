@@ -70,7 +70,7 @@ public class Player : NetworkBehaviour
     [SerializeField] FlagIndicator flagIndicator;
     private AudioClip shootSound;
     private AudioClip dyingSound;
-    private AudioClip hitSound;
+    private AudioClip dashSound;
     private AudioSource audioSource;
 
     // Player intialisation (called from game controller on server when creating the player)
@@ -93,7 +93,7 @@ public class Player : NetworkBehaviour
         this.respawnPoint = respawnPoint;
         this.team = team;
         this.characterPath = characterPath;
-        points = 5f;
+        points = 10f;
         reloadTime = 3.0f;
         respawnTime = 10.0f;
         currentAmmo = maxAmmo;
@@ -174,7 +174,7 @@ public class Player : NetworkBehaviour
         audioSource = GetComponent<AudioSource>();
         shootSound = Resources.Load<AudioClip>("Sounds/Shoot");
         dyingSound = Resources.Load<AudioClip>("Sounds/Dying");
-        hitSound = Resources.Load<AudioClip>("Sounds/HitWizard");
+        dashSound = Resources.Load<AudioClip>("Sounds/Dash");
 
         // Set the initial flag indicator visibility
         OnCarryingChanged();
@@ -367,7 +367,7 @@ public class Player : NetworkBehaviour
             gameObject.transform.rotation = wantedRotation;
 
             cam.gameObject.transform.rotation = Quaternion.identity;
-
+            
             previousButtons = input.buttons;
         }
 
@@ -415,10 +415,7 @@ public class Player : NetworkBehaviour
             dashTimer = dashDuration;
             dashCooldownTimer = dashCooldown;
             dashCDHandler.StartCooldown(dashCooldown);
-            if (HasStateAuthority)
-            {
-                RPC_PlayDyingSound(transform.position);
-            }
+            audioSource.PlayOneShot(dashSound);
         }
         else
         {
@@ -503,11 +500,6 @@ public class Player : NetworkBehaviour
         if (currentHealth <= 0.0f) {
             Die();
         }
-    }
-
-    public void PlayHitSound()
-    {
-        audioSource.PlayOneShot(hitSound);
     }
     
     void HurtEffects(float damage){

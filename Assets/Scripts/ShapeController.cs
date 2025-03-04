@@ -57,7 +57,7 @@ public class ShapeController : NetworkBehaviour
         pentagonLineRenderer.enabled = false;
 
         audioSource = GetComponentInParent<AudioSource>();
-        triangleKnightSound = Resources.Load<AudioClip>("Sounds/Shoot");
+        triangleKnightSound = Resources.Load<AudioClip>("Sounds/TriangleKnight");
         triangleWizardSound = Resources.Load<AudioClip>("Sounds/Shoot");
         squareKnightSound = Resources.Load<AudioClip>("Sounds/Shoot");
         squareWizardSound = Resources.Load<AudioClip>("Sounds/Shoot");
@@ -201,7 +201,6 @@ public class ShapeController : NetworkBehaviour
                 {
                     triangleShape.CastAbility(playerPositions, score);
                     triangleCooldown = 1f;
-                    // StartCoroutine(DelayDisable(0.1f));
                     parentPlayer.SpendPoints(triangleCost);
 
                     // TODO: Separate for knight/wizard 
