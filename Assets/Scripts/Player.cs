@@ -26,7 +26,7 @@ public class Player : NetworkBehaviour
     [Networked] bool isAlive { get; set; }
     [Networked] float respawnTime { get; set; }
     [Networked] float currentRespawn { get; set; }
-    [Networked, Capacity(50)] string characterPath { get; set; } = "ScriptableObjects/Characters/Army Vet";
+    [Networked, Capacity(50)] string characterPath { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
     [Networked] private NetworkObject carriedObject { get; set; }
     [Networked, OnChangedRender(nameof(OnCarryingChanged)), HideInInspector] public bool isCarrying { get; set; }
