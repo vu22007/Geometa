@@ -26,7 +26,7 @@ public class Player : NetworkBehaviour
     [Networked] bool isAlive { get; set; }
     [Networked] float respawnTime { get; set; }
     [Networked] float currentRespawn { get; set; }
-    [Networked, Capacity(50)] string characterPath { get; set; } = "ScriptableObjects/Characters/Army Vet";
+    [Networked, Capacity(50)] string characterPath { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
     [Networked] private NetworkObject carriedObject { get; set; }
     [Networked, OnChangedRender(nameof(OnCarryingChanged)), HideInInspector] public bool isCarrying { get; set; }
@@ -68,6 +68,10 @@ public class Player : NetworkBehaviour
     [SerializeField] GameObject deathOverlay;
     [SerializeField] TextMeshProUGUI respawnTimerTxt;
     [SerializeField] FlagIndicator flagIndicator;
+    private AudioClip shootSound;
+    private AudioClip dyingSound;
+    private AudioClip dashSound;
+    private AudioSource audioSource;
 
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(string characterPath, Vector3 respawnPoint, int team)
@@ -168,6 +172,11 @@ public class Player : NetworkBehaviour
 
         // Pass the local player's team to the flag indicator
         flagIndicator.SetLocalPlayerTeam(localPlayerTeam);
+
+        audioSource = GetComponent<AudioSource>();
+        shootSound = Resources.Load<AudioClip>("Sounds/Shoot");
+        dyingSound = Resources.Load<AudioClip>("Sounds/Dying");
+        dashSound = Resources.Load<AudioClip>("Sounds/Dash");
 
         // Set the initial flag indicator visibility
         OnCarryingChanged();
@@ -363,7 +372,7 @@ public class Player : NetworkBehaviour
             gameObject.transform.rotation = wantedRotation;
 
             cam.gameObject.transform.rotation = Quaternion.identity;
-
+            
             previousButtons = input.buttons;
         }
 
@@ -416,6 +425,7 @@ public class Player : NetworkBehaviour
             dashTimer = dashDuration;
             dashCooldownTimer = dashCooldown;
             dashCDHandler.StartCooldown(dashCooldown);
+            audioSource.PlayOneShot(dashSound);
         }
         else
         {
@@ -464,16 +474,27 @@ public class Player : NetworkBehaviour
             timeToWaitForBullet = 1 / fireRate;
             if (currentAmmo != 0)
             {
+
                 // Spawn bullet (only the server can do this)
                 if (HasStateAuthority)
                 {
                     GameObject bulletPrefab = Resources.Load("Prefabs/Bullet") as GameObject;
-                    PrefabFactory.SpawnBullet(Runner, Object.InputAuthority, bulletPrefab, gameObject.transform.position, aimDirection, 40.0f, damage, team);
+                    PrefabFactory.SpawnBullet(Runner, Object.InputAuthority, bulletPrefab, gameObject.transform.position, aimDirection, 40.0f, damage, team, this);
+                }
+                // Just the player that shoot listens to the sound
+                if (HasInputAuthority)
+                {
+                    PlayShootSound();
                 }
                 currentAmmo--;
                 ammoText.text = "Bullets: " + currentAmmo;
             }
         }
+    }
+
+    public void PlayShootSound()
+    {
+        audioSource.PlayOneShot(shootSound);
     }
 
     //take damage equal to input, includes check for death
@@ -494,7 +515,7 @@ public class Player : NetworkBehaviour
             Die();
         }
     }
-
+    
     void HurtEffects(float damage){
         animator.SetTrigger("Damaged");
         ShowDamagePopup(damage);
@@ -560,6 +581,7 @@ public class Player : NetworkBehaviour
         // Disable the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = false;
         gameController.UnregisterAlivePlayer(this);
+        RPC_PlayDyingSound(transform.position);
 
         if (isCarrying)
         {
@@ -568,6 +590,21 @@ public class Player : NetworkBehaviour
         }
     }
 
+    [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
+    public void RPC_PlayDyingSound(Vector3 pos)
+    {
+        Vector3 viewportPos = Camera.main.WorldToViewportPoint(pos);
+        bool onScreen =
+            viewportPos.x >= 0f && viewportPos.x <= 1f &&
+            viewportPos.y >= 0f && viewportPos.y <= 1f;
+
+        if (onScreen)
+        {
+            audioSource.PlayOneShot(dyingSound, 0.7f);
+        }
+
+    }
+    
     void OnHealthChanged()
     {
         UpdateHealthBar(currentHealth);

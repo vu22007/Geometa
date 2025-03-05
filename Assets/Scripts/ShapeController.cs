@@ -29,6 +29,12 @@ public class ShapeController : NetworkBehaviour
     private SquareShape squareShape;
     private PentagonShape pentagonShape;
 
+    private AudioSource audioSource;
+    private AudioClip triangleKnightSound;
+    private AudioClip triangleWizardSound;
+    private AudioClip squareKnightSound;
+    private AudioClip squareWizardSound;
+
     // Shape controller intialisation (called on each client and server when shape controller is spawned on network)
     public override void Spawned()
     {
@@ -50,6 +56,12 @@ public class ShapeController : NetworkBehaviour
         squareLineRenderer.enabled = false;
         pentagonLineRenderer = pentagonShape.GetComponent<LineRenderer>();
         pentagonLineRenderer.enabled = false;
+
+        audioSource = GetComponentInParent<AudioSource>();
+        triangleKnightSound = Resources.Load<AudioClip>("Sounds/TriangleKnight");
+        triangleWizardSound = Resources.Load<AudioClip>("Sounds/Shoot");
+        squareKnightSound = Resources.Load<AudioClip>("Sounds/Shoot");
+        squareWizardSound = Resources.Load<AudioClip>("Sounds/Shoot");
 
         isActive = true;
         triangleCooldown = 0;
@@ -226,6 +238,7 @@ public class ShapeController : NetworkBehaviour
                         triangleCooldown = 1f;
                         parentPlayer.SpendPoints(triangleCost);
 
+                        RPC_PlayTriangleSound(playerPositions.ToArray(), 3, 0); 
                         // Set networked property so everyone can draw lines in OnShapeActiveChanged method
                         shapeIsActive = true;
                     }
@@ -301,6 +314,45 @@ public class ShapeController : NetworkBehaviour
         if (HasInputAuthority && !activate)
         {
             DrawLines(playerPositions, false, score);
+        }
+    }
+
+    // The parameter character - 0 for knight, 1 for wizard
+    [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
+    public void RPC_PlayTriangleSound(Vector3[] playerPositions, int nVertices, int character)
+    {
+        // Play sound locally if the players activating are in view 
+        foreach (Vector3 pos in playerPositions) {
+            Vector3 viewportPos = Camera.main.WorldToViewportPoint(pos);
+            bool onScreen =
+                viewportPos.x >= 0f && viewportPos.x <= 1f &&
+                viewportPos.y >= 0f && viewportPos.y <= 1f;
+            if (onScreen)
+            {
+                if (nVertices == 3)
+                {
+                    if (character == 0)
+                    {
+                        audioSource.PlayOneShot(triangleKnightSound);
+                    }
+                    else
+                    {
+                        audioSource.PlayOneShot(triangleWizardSound);
+                    }
+                } else if (nVertices == 4)
+                {
+                    if (character == 0)
+                    {
+                        audioSource.PlayOneShot(squareKnightSound);
+                    }
+                    else
+                    {
+                        audioSource.PlayOneShot(squareWizardSound);
+                    }
+                }
+                // If some of the players activating is on screen return
+                return;
+            }
         }
     }
 

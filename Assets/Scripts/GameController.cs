@@ -61,7 +61,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
             team2Flag = flag2Obj.GetComponent<PickupFlag>();
 
             // Spawn NPCs for testing
-            //SpawnPlayersForTesting(3, 3);
+            SpawnPlayersForTesting(3, 3);
         }
     }
 
@@ -159,7 +159,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
         {
             // Load prefab
             GameObject playerPrefab = Resources.Load("Prefabs/Player") as GameObject;
-            string characterPath = "ScriptableObjects/Characters/Knight";
+            string characterPath = "ScriptableObjects/Characters/Wizard";
 
             // Spawn the player network object
             int team = nextTeam;
@@ -276,7 +276,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
     void SpawnPlayersForTesting(int allies, int enemies)
     {
         GameObject playerPrefab = Resources.Load("Prefabs/Player") as GameObject;
-        string characterPath = "ScriptableObjects/Characters/Knight";
+        string characterPath = "ScriptableObjects/Characters/Wizard";
 
         for (int i = 0; i < allies; i++)
         {
