@@ -22,6 +22,13 @@ public static class PrefabFactory
         return worldCollider;
     }
 
+    public static void SpawnDamagePopup(GameObject prefab, int damage, int team, Vector3 position)
+    {
+        GameObject damagePopupObject = GameObject.Instantiate(prefab, position, Quaternion.identity);
+        DamagePopup damagePopup = damagePopupObject.GetComponent<DamagePopup>();
+        damagePopup.Setup(damage, team);
+    }
+    
     public static NetworkObject SpawnCircleCollider(NetworkRunner runner, GameObject prefab)
     {
         NetworkObject circleCollider = runner.Spawn(prefab, Vector3.zero);

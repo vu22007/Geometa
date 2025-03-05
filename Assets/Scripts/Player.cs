@@ -9,6 +9,7 @@ public class Player : NetworkBehaviour
 {
     [Networked] float speed { get; set; }
     [Networked] float maxHealth { get; set; }
+    [Networked] float maxPoints { get; set; }
     [Networked] float damage { get; set; }
     [Networked] int maxAmmo { get; set; }
     [Networked] int currentAmmo { get; set; }
@@ -17,7 +18,7 @@ public class Player : NetworkBehaviour
     [Networked] float reloadTime { get; set; }
     [Networked] float reloadTimer { get; set; }
     [Networked] float reloadFraction { get; set; }
-    [Networked] int points { get; set; }
+    [Networked] float points { get; set; }
     [Networked] float timeToWaitForBullet { get; set; }
     [Networked, OnChangedRender(nameof(OnHealthChanged))] float currentHealth { get; set; }
     [Networked] int team { get; set; }
@@ -44,9 +45,10 @@ public class Player : NetworkBehaviour
     public Camera cam;
     Rigidbody2D rb;
     SpriteRenderer spriteRenderer;
-    public Animator animator;
+    Animator animator;
     [SerializeField] Image mainHealthBar;
     [SerializeField] Image teamHealthBar;
+    [SerializeField] Image mainPointsBar;
     [SerializeField] Image enemyHealthBar;
     [SerializeField] PopUpText popUpText;
     [SerializeField] cooldownHandler dashCDHandler;
@@ -71,6 +73,7 @@ public class Player : NetworkBehaviour
     {
         Character character = Resources.Load(characterPath) as Character;
         maxHealth = character.MaxHealth;
+        maxPoints = 30f;
         speed = character.Speed;
         damage = character.Damage;
         maxAmmo = character.MaxAmmo;
@@ -78,16 +81,16 @@ public class Player : NetworkBehaviour
         dashSpeed = character.DashSpeed;
         dashDuration = character.DashDuration;
         dashCooldown = character.DashCooldown;
-        aoeDamage = character.AoeDamage;
-        aoeCooldown = character.AoeCooldown;
-        aoeDuration = character.AoeDuration;
-
+        
         this.respawnPoint = respawnPoint;
         this.team = team;
         this.characterPath = characterPath;
-        points = 100;
+        points = 5f;
         reloadTime = 3.0f;
         respawnTime = 10.0f;
+        aoeDamage = 5;
+        aoeCooldown = 10;
+        aoeDuration = 5;
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
         isAlive = true;
@@ -122,6 +125,9 @@ public class Player : NetworkBehaviour
         // Set sprite from resource path
         Character character = Resources.Load(characterPath) as Character;
         spriteRenderer.sprite = character.Sprite;
+
+        //Set animator controller
+        animator.runtimeAnimatorController = Resources.Load("Animations/"+character.name) as RuntimeAnimatorController;
 
         Player localPlayer = Runner.GetPlayerObject(Runner.LocalPlayer)?.GetComponent<Player>();
         int localPlayerTeam = localPlayer.GetTeam();
@@ -164,6 +170,9 @@ public class Player : NetworkBehaviour
 
         // Set the initial flag indicator visibility
         OnCarryingChanged();
+
+        //Set points bar
+        UpdatePointsBar();
     }
 
     // Called on each client and server when player is despawned from network
@@ -186,7 +195,7 @@ public class Player : NetworkBehaviour
         // Refill the health bar
         if (healthBar != null)
             healthBar.fillAmount = currentHealth / maxHealth;
-
+        
         // Set the ammo counter
         ammoText.text = "Bullets: " + currentAmmo;
 
@@ -301,6 +310,7 @@ public class Player : NetworkBehaviour
                 if (input.buttons.IsSet(InputButtons.Shoot))
                 {
                     Shoot(input.aimDirection);
+                    animator.SetTrigger("Attack");
                 }
 
                 // Reloading
@@ -467,15 +477,17 @@ public class Player : NetworkBehaviour
         UpdateHealthBar(newHealth);
 
         //Play hurt animation and sounds
-        HurtEffects();
+        HurtEffects(damage);
 
         if (newHealth <= 0.0f) {
             Die();
         }
     }
 
-    void HurtEffects(){
+    void HurtEffects(float damage){
         animator.SetTrigger("Damaged");
+        GameObject damagePopupPrefab = Resources.Load("Prefabs/DamagePopup") as GameObject;
+        PrefabFactory.SpawnDamagePopup(damagePopupPrefab, (int)damage, team, transform.position);
     }
 
     //heal equal to input, includes check for max health
@@ -496,15 +508,23 @@ public class Player : NetworkBehaviour
     public void GainPoints(int amount)
     {
         points += amount;
+        if(points > maxPoints){
+            points = maxPoints;
+        }
+        UpdatePointsBar();
     }
 
     public void SpendPoints(int amount)
     {
         if(amount > points)
         {
-            Debug.Log("You don't have enough points");
+            Debug.Log("Not enough points");
         }
-        points -= amount;
+        else
+        {
+            points -= amount;
+            UpdatePointsBar();
+        }
     }
 
     void Die()
@@ -536,6 +556,11 @@ public class Player : NetworkBehaviour
         {
             healthBar.fillAmount = health / maxHealth;
         }
+    }
+
+    void UpdatePointsBar(){
+        float fillAmount = points/maxPoints;
+        mainPointsBar.fillAmount = fillAmount;
     }
 
     void Reload()
@@ -635,7 +660,7 @@ public class Player : NetworkBehaviour
         return team;
     }
 
-    public int GetPoints()
+    public float GetPoints()
     {
         return points;
     }
