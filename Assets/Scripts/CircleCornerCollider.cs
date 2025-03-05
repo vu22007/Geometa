@@ -7,10 +7,15 @@ public class CircleCornerCollider : NetworkBehaviour
 {
     [Networked] public int team { get; set; }
     [Networked] float score { get; set; }
+    Animator animator;
+    AnimationClip shockwave;
     private CircleCollider2D circleCollider;
     private List<Player> slowedPlayers;
     public override void Spawned()
     {
+        animator = GetComponent<Animator>();
+        shockwave = Resources.Load<AnimationClip>("Animations/SFX/Shockwave");
+
         slowedPlayers = new List<Player>();
         circleCollider = GetComponent<CircleCollider2D>();
         circleCollider.enabled = false;
@@ -19,7 +24,7 @@ public class CircleCornerCollider : NetworkBehaviour
     public void ActivateCollider(Vector3 pos, float score)
     {
         this.score = score;
-        
+        animator.SetTrigger("Shockwave");
         circleCollider.transform.position = pos;
         circleCollider.enabled = true;
 
