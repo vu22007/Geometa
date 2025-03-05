@@ -7,7 +7,6 @@ using UnityEngine;
 public class ShapeController : NetworkBehaviour
 {
     [Networked] public bool isActive { get; set; }
-    [Networked] private float cooldown { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
     [Networked, OnChangedRender(nameof(OnShapeActiveChanged))] private bool shapeIsActive { get; set; }
     [Networked] private float score { get; set; }
@@ -19,8 +18,8 @@ public class ShapeController : NetworkBehaviour
     GameController gameController { get; set; }
     Player parentPlayer { get; set; }
 
-    private float triangleCooldown = 0f;
-    private float squareCooldown = 0f;
+    [Networked] private float triangleCooldown { get; set; }
+    [Networked] private float squareCooldown { get; set; }
 
     private LineRenderer triangleLineRenderer;
     private LineRenderer squareLineRenderer;
@@ -53,7 +52,8 @@ public class ShapeController : NetworkBehaviour
         pentagonLineRenderer.enabled = false;
 
         isActive = true;
-        cooldown = 0;
+        triangleCooldown = 0;
+        squareCooldown = 0;
 
         shapeIsActive = false;
     }
@@ -379,8 +379,11 @@ public class ShapeController : NetworkBehaviour
 
             yield return null;
         }
+
         lineRenderer.enabled = false;
-        shapeIsActive = false;
+
+        if (HasStateAuthority)
+            shapeIsActive = false;
     }
 
     LineRenderer ChooseLineRenderer(int nVertices)
