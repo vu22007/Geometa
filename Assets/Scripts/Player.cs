@@ -18,7 +18,7 @@ public class Player : NetworkBehaviour
     [Networked] float reloadTime { get; set; }
     [Networked] float reloadTimer { get; set; }
     [Networked] float reloadFraction { get; set; }
-    [Networked] float points { get; set; }
+    [Networked, OnChangedRender(nameof(OnPointsChanged))] float points { get; set; }
     [Networked] float timeToWaitForBullet { get; set; }
     [Networked, OnChangedRender(nameof(OnHealthChanged))] float currentHealth { get; set; }
     [Networked] int team { get; set; }
@@ -31,6 +31,7 @@ public class Player : NetworkBehaviour
     [Networked] private NetworkObject carriedObject { get; set; }
     [Networked, OnChangedRender(nameof(OnCarryingChanged)), HideInInspector] public bool isCarrying { get; set; }
     [Networked] bool isMoving { get; set; }
+    [Networked] bool isAttacking { get; set; }
     [Networked] bool isDashing { get; set; }
     [Networked] float dashTimer { get; set; }
     [Networked] float dashCooldownTimer { get; set; }
@@ -85,7 +86,7 @@ public class Player : NetworkBehaviour
         this.respawnPoint = respawnPoint;
         this.team = team;
         this.characterPath = characterPath;
-        points = 5f;
+        points = 30f;
         reloadTime = 3.0f;
         respawnTime = 10.0f;
         aoeDamage = 5;
@@ -310,7 +311,11 @@ public class Player : NetworkBehaviour
                 if (input.buttons.IsSet(InputButtons.Shoot))
                 {
                     Shoot(input.aimDirection);
-                    animator.SetTrigger("Attack");
+                    isAttacking = true;
+                }
+                else
+                {
+                    isAttacking = false;
                 }
 
                 // Reloading
@@ -367,6 +372,11 @@ public class Player : NetworkBehaviour
             animator.SetFloat("Speed", 0.02f);
         else
             animator.SetFloat("Speed", 0f);
+
+        if (isAttacking)
+        {
+            animator.SetTrigger("Attack");
+        }
 
         // If carrying an object, move it to player's position
         if (isCarrying && carriedObject != null)
@@ -556,6 +566,11 @@ public class Player : NetworkBehaviour
         {
             healthBar.fillAmount = health / maxHealth;
         }
+    }
+
+    void OnPointsChanged()
+    {
+        UpdatePointsBar();
     }
 
     void UpdatePointsBar(){
