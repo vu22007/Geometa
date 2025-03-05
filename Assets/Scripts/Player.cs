@@ -487,7 +487,7 @@ public class Player : NetworkBehaviour
                     PlayShootSound();
                 }
                 currentAmmo--;
-                ammoText.text = "Bullets: " + currentAmmo;
+                ammoText.text = "Mana: " + currentAmmo;
             }
         }
     }
@@ -632,12 +632,12 @@ public class Player : NetworkBehaviour
     {
         if (currentAmmo >= maxAmmo)
         {
-            ShowMessage("Ammo is full!", 0.1f, Color.white);
+            ShowMessage("Mana is full!", 0.1f, Color.white);
             return; 
         }
         if (reloadTimer <= 0)
         {
-            ShowMessage("Reloading", 0.3f, Color.green);
+            ShowMessage("Gathering Mana", 0.3f, Color.green);
             missingAmmo = maxAmmo - currentAmmo;
             reloadFraction = (float)missingAmmo / maxAmmo;
             reloadTimer = reloadTime * reloadFraction;
@@ -648,7 +648,7 @@ public class Player : NetworkBehaviour
         }
         else
         {
-            ShowMessage("still reloading", 0.3f, Color.white);
+            ShowMessage("still gathering mana", 0.3f, Color.white);
         }
     }
 
