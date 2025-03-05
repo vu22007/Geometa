@@ -7,8 +7,10 @@ public class TriangleShape : NetworkBehaviour
 {
     private TriangleCollider triangleCollider;
     private EdgeCollider2D edgeCollider;
+
     public override void Spawned()
     {
+        // Only the server can spawn the collider
         if (HasStateAuthority)
         {
             // This is the object
