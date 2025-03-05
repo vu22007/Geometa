@@ -7,14 +7,14 @@ public class AoESpell : NetworkBehaviour
     [Networked] public int team { get; set; }
     [Networked] public float duration { get; set; }
     [Networked] private TickTimer despawnTimer { get; set; }
+    [Networked] private PlayerRef playerCasting { get; set; }
 
-    //private CircleCollider2D aoeCollider;
-
-    public void OnCreated(float damage, int team, float duration)
+    public void OnCreated(float damage, int team, float duration, PlayerRef playerCasting)
     {
         this.damage = damage;
         this.team = team;
         this.duration = duration;
+        this.playerCasting = playerCasting;
 
         despawnTimer = TickTimer.CreateFromSeconds(Runner, duration);
     }
@@ -37,7 +37,7 @@ public class AoESpell : NetworkBehaviour
 
             if (player != null)
             {
-                player.TakeDamage(damage * Runner.DeltaTime, PlayerRef.None);
+                player.TakeDamage(damage * Runner.DeltaTime, playerCasting);
             }
         }
     }

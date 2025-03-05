@@ -448,7 +448,7 @@ public class Player : NetworkBehaviour
                     AoESpell aoeSpell = networkObject.GetComponent<AoESpell>();
                     if (aoeSpell != null)
                     {
-                        aoeSpell.OnCreated(aoeDamage, team, aoeDuration); 
+                        aoeSpell.OnCreated(aoeDamage, team, aoeDuration, Object.InputAuthority); 
                     }
                 });
             }
