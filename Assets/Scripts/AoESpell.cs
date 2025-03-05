@@ -37,7 +37,7 @@ public class AoESpell : NetworkBehaviour
 
             if (player != null)
             {
-                player.TakeDamage(damage * Runner.DeltaTime);
+                player.TakeDamage(damage * Runner.DeltaTime, PlayerRef.None);
             }
         }
     }

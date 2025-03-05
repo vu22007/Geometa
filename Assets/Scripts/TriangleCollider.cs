@@ -33,7 +33,7 @@ public class TriangleCollider : NetworkBehaviour
             if (player.GetTeam() != team && !zappedPlayers.Contains(player))
             {
                 Debug.Log("Collided with enemy");
-                player.TakeDamage(10f * score);
+                player.TakeDamage(10f * score, PlayerRef.None);
                 zappedPlayers.Add(player);
             }
         }
