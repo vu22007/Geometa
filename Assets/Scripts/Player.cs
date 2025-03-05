@@ -486,8 +486,9 @@ public class Player : NetworkBehaviour
 
         UpdateHealthBar(newHealth);
 
-        //Play hurt animation and sounds
-        HurtEffects(damage);
+        // Play hurt animation and sounds for all clients
+        if (HasStateAuthority)
+            RPC_HurtEffects(damage);
 
         if (newHealth <= 0.0f) {
             Die();
@@ -496,8 +497,20 @@ public class Player : NetworkBehaviour
 
     void HurtEffects(float damage){
         animator.SetTrigger("Damaged");
+        ShowDamagePopup(damage);
+    }
+
+    void ShowDamagePopup(float damage)
+    {
         GameObject damagePopupPrefab = Resources.Load("Prefabs/DamagePopup") as GameObject;
         PrefabFactory.SpawnDamagePopup(damagePopupPrefab, (int)damage, team, transform.position);
+    }
+
+    // Only server can call this RPC, and it will run only on all clients
+    [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
+    public void RPC_HurtEffects(float damage)
+    {
+        HurtEffects(damage);
     }
 
     //heal equal to input, includes check for max health
