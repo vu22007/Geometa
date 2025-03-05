@@ -400,7 +400,11 @@ public class Player : NetworkBehaviour
             int secondsLeft = (int) Mathf.Ceil(timeLeft);
             int mins = secondsLeft / 60;
             int secs = secondsLeft % 60;
-            timeLeftText.text = "Time Left: " + mins + ":" + secs.ToString("00");
+
+            if (mins < 0 || secs < 0)
+                timeLeftText.text = "Time Left: 0:00";
+            else
+                timeLeftText.text = "Time Left: " + mins + ":" + secs.ToString("00");
         }
     }
 
@@ -596,9 +600,11 @@ public class Player : NetworkBehaviour
         // Award points to killer
         if (Runner.TryGetPlayerObject(killer, out NetworkObject networkPlayerObject))
         {
-            Debug.Log("Awarding points for kill...");
             Player player = networkPlayerObject.GetComponent<Player>();
-            player.GainPoints(10);
+            if (player.team != team)
+            {
+                player.GainPoints(10);
+            }
         }
     }
 
@@ -660,7 +666,7 @@ public class Player : NetworkBehaviour
         }
         else
         {
-            ShowMessage("still gathering mana", 0.3f, Color.white);
+            ShowMessage("Still gathering mana", 0.3f, Color.white);
         }
     }
 
