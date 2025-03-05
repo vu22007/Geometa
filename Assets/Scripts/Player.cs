@@ -581,7 +581,9 @@ public class Player : NetworkBehaviour
         // Disable the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = false;
         gameController.UnregisterAlivePlayer(this);
-        RPC_PlayDyingSound(transform.position);
+        
+        if (HasStateAuthority)
+            RPC_PlayDyingSound(transform.position);
 
         if (isCarrying)
         {
