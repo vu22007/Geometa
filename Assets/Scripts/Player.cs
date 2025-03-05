@@ -3,7 +3,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Fusion.Addons.Physics;
-using UnityEngine.SocialPlatforms.Impl;
 using System.Collections;
 
 public class Player : NetworkBehaviour
@@ -19,9 +18,9 @@ public class Player : NetworkBehaviour
     [Networked] float reloadTime { get; set; }
     [Networked] float reloadTimer { get; set; }
     [Networked] float reloadFraction { get; set; }
-    [Networked] float points { get; set; }
+    [Networked, OnChangedRender(nameof(OnPointsChanged))] float points { get; set; }
     [Networked] float timeToWaitForBullet { get; set; }
-    [Networked] float currentHealth { get; set; }
+    [Networked, OnChangedRender(nameof(OnHealthChanged))] float currentHealth { get; set; }
     [Networked] int team { get; set; }
     [Networked] Vector3 respawnPoint { get; set; }
     [Networked] bool isAlive { get; set; }
@@ -32,6 +31,7 @@ public class Player : NetworkBehaviour
     [Networked] private NetworkObject carriedObject { get; set; }
     [Networked, OnChangedRender(nameof(OnCarryingChanged)), HideInInspector] public bool isCarrying { get; set; }
     [Networked] bool isMoving { get; set; }
+    [Networked] bool isAttacking { get; set; }
     [Networked] bool isDashing { get; set; }
     [Networked] float dashTimer { get; set; }
     [Networked] float dashCooldownTimer { get; set; }
@@ -86,7 +86,7 @@ public class Player : NetworkBehaviour
         this.respawnPoint = respawnPoint;
         this.team = team;
         this.characterPath = characterPath;
-        points = 5f;
+        points = 30f;
         reloadTime = 3.0f;
         respawnTime = 10.0f;
         aoeDamage = 5;
@@ -156,8 +156,7 @@ public class Player : NetworkBehaviour
         }
 
         // Set the health bar
-        if (healthBar != null)
-            healthBar.fillAmount = currentHealth / maxHealth;
+        UpdateHealthBar(currentHealth);
 
         if (deathOverlay != null)
         {
@@ -187,7 +186,6 @@ public class Player : NetworkBehaviour
     // Player initialisation when respawning
     public void Respawn()
     {
-        //gameObject.transform.position = respawnPoint;
         gameObject.GetComponent<NetworkRigidbody2D>().Teleport(respawnPoint);
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
@@ -313,7 +311,11 @@ public class Player : NetworkBehaviour
                 if (input.buttons.IsSet(InputButtons.Shoot))
                 {
                     Shoot(input.aimDirection);
-                    animator.SetTrigger("Attack");
+                    isAttacking = true;
+                }
+                else
+                {
+                    isAttacking = false;
                 }
 
                 // Reloading
@@ -343,10 +345,10 @@ public class Player : NetworkBehaviour
                     Dash(input.moveDirection);
                 }
             }
-            
 
             // Activate Menu
-            if (input.buttons.WasPressed(previousButtons, InputButtons.Menu)){
+            if (input.buttons.WasPressed(previousButtons, InputButtons.Menu))
+            {
                 escapeMenu.SetActive(!escapeMenu.gameObject.activeSelf);
             }
 
@@ -370,6 +372,11 @@ public class Player : NetworkBehaviour
             animator.SetFloat("Speed", 0.02f);
         else
             animator.SetFloat("Speed", 0f);
+
+        if (isAttacking)
+        {
+            animator.SetTrigger("Attack");
+        }
 
         // If carrying an object, move it to player's position
         if (isCarrying && carriedObject != null)
@@ -466,43 +473,59 @@ public class Player : NetworkBehaviour
                 currentAmmo--;
                 ammoText.text = "Bullets: " + currentAmmo;
             }
-            // else
-            // {
-            //     ShowMessage("Press R to reload!!", 0.2f, Color.white);
-            // }
         }
     }
 
     //take damage equal to input, includes check for death
     public void TakeDamage(float damage)
     {
-        currentHealth -= damage;
-        if (healthBar != null)
-            healthBar.fillAmount = currentHealth / maxHealth;
+        float newHealth = currentHealth - damage;
 
-        //Play hurt animation and sounds
-        HurtEffects(damage);
+        if (HasStateAuthority)
+            currentHealth = newHealth;
 
-        if (currentHealth <= 0.0f) {
+        UpdateHealthBar(newHealth);
+
+        // Play hurt animation and sounds for all clients
+        if (HasStateAuthority)
+            RPC_HurtEffects(damage);
+
+        if (newHealth <= 0.0f) {
             Die();
         }
     }
 
     void HurtEffects(float damage){
         animator.SetTrigger("Damaged");
+        ShowDamagePopup(damage);
+    }
+
+    void ShowDamagePopup(float damage)
+    {
         GameObject damagePopupPrefab = Resources.Load("Prefabs/DamagePopup") as GameObject;
         PrefabFactory.SpawnDamagePopup(damagePopupPrefab, (int)damage, team, transform.position);
+    }
+
+    // Only server can call this RPC, and it will run only on all clients
+    [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
+    public void RPC_HurtEffects(float damage)
+    {
+        HurtEffects(damage);
     }
 
     //heal equal to input, includes check for max health
     public void Heal(float amount)
     {
-        currentHealth += amount;
-        if (healthBar != null)
-            healthBar.fillAmount = currentHealth / maxHealth;
+        float newHealth = currentHealth + amount;
+
+        if (HasStateAuthority)
+            currentHealth = newHealth;
+
         if (currentHealth >= maxHealth) {
             currentHealth = maxHealth;
         }
+
+        UpdateHealthBar(newHealth);
     }
 
     public void GainPoints(int amount)
@@ -531,13 +554,8 @@ public class Player : NetworkBehaviour
     {
         isAlive = false;
 
-        // // Only show message for client who controls this player
-        // if (HasInputAuthority)
-        //ShowMessage("You died :((", 0.1f, Color.red);
-        
         // Ensure health bar is empty
-        if (healthBar != null)
-            healthBar.fillAmount = 0.0f;
+        UpdateHealthBar(0.0f);
 
         // Disable the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = false;
@@ -548,6 +566,24 @@ public class Player : NetworkBehaviour
             // Player will drop the flag if they died
             DropObject();
         }
+    }
+
+    void OnHealthChanged()
+    {
+        UpdateHealthBar(currentHealth);
+    }
+
+    void UpdateHealthBar(float health)
+    {
+        if (healthBar != null)
+        {
+            healthBar.fillAmount = health / maxHealth;
+        }
+    }
+
+    void OnPointsChanged()
+    {
+        UpdatePointsBar();
     }
 
     void UpdatePointsBar(){
@@ -666,6 +702,6 @@ public class Player : NetworkBehaviour
     IEnumerator timeSlowed(float amount, float time)
     {
         yield return new WaitForSeconds(time);
-        this.speed += amount; 
+        this.speed += amount;
     }
 }
