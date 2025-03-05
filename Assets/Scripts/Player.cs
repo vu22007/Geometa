@@ -345,10 +345,10 @@ public class Player : NetworkBehaviour
                     Dash(input.moveDirection);
                 }
             }
-            
 
             // Activate Menu
-            if (input.buttons.WasPressed(previousButtons, InputButtons.Menu)){
+            if (input.buttons.WasPressed(previousButtons, InputButtons.Menu))
+            {
                 escapeMenu.SetActive(!escapeMenu.gameObject.activeSelf);
             }
 

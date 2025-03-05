@@ -86,12 +86,10 @@ public class ShapeController : NetworkBehaviour
 
             if (input.buttons.WasReleased(previousButtons, InputButtons.Triangle))
             {
-                Debug.Log("Triangle released");
                 TriangleActivated();
             }
             if (input.buttons.WasReleased(previousButtons, InputButtons.Square))
             {
-                Debug.Log("Square released");
                 SquareActivated();
             }
             if (input.buttons.WasReleased(previousButtons, InputButtons.Pentagon))
@@ -154,17 +152,20 @@ public class ShapeController : NetworkBehaviour
         if (shapeIsActive)
         {
             Debug.Log("Shape is already active!");
+            if (activate) parentPlayer.ShowMessage("Shape is already active!", 0.2f, Color.white);
             return;
         }
 
         if (nVertices == 3 && triangleCooldown > 0)
         {
             Debug.Log("Cooldown on triangle: " + triangleCooldown);
+            if (activate) parentPlayer.ShowMessage("Cooldown on triangle!", 0.2f, Color.white);
             return;
         }
         else if (nVertices == 4 && squareCooldown > 0)
         {
             Debug.Log("Cooldown on square: " + squareCooldown);
+            if (activate) parentPlayer.ShowMessage("Cooldown on square!", 0.2f, Color.white);
             return;
         }
 
@@ -182,6 +183,7 @@ public class ShapeController : NetworkBehaviour
         if (playerPositions.Count < nVertices)
         {
             Debug.Log("Not enough players to activate shape");
+            if (activate) parentPlayer.ShowMessage("Not enough players to activate shape!", 0.2f, Color.white);
             return;
         }
 
@@ -214,6 +216,7 @@ public class ShapeController : NetworkBehaviour
                 {
                     triangleLineRenderer.enabled = false;
                     Debug.Log("You don't have enough points to activate a triangle");
+                    parentPlayer.ShowMessage("Not enough points!", 0.2f, Color.white);
                 }
                 else
                 {
@@ -234,12 +237,14 @@ public class ShapeController : NetworkBehaviour
                 {
                     squareLineRenderer.enabled = false;
                     Debug.Log("You don't have enough points to activate a square");
+                    parentPlayer.ShowMessage("Not enough points!", 0.2f, Color.white);
                 }
                 // If it's not convex don't activate it
                 else if (!IsConvex(angles))
                 {
                     squareLineRenderer.enabled = false;
                     Debug.Log("Shape is not convex - can't activate buff!");
+                    parentPlayer.ShowMessage("Shape is not convex!", 0.2f, Color.white);
                     return;
                 }
                 else
@@ -261,11 +266,13 @@ public class ShapeController : NetworkBehaviour
                 {
                     pentagonLineRenderer.enabled = false;
                     Debug.Log("You don't have enough points to activate a pentagon");
+                    parentPlayer.ShowMessage("Not enough points!", 0.2f, Color.white);
                 }
                 else if (!IsConvex(angles))
                 {
                     pentagonLineRenderer.enabled = false;
                     Debug.Log("Shape is not convex - can't activate buff!");
+                    parentPlayer.ShowMessage("Shape is not convex!", 0.2f, Color.white);
                     return;
                 }
                 else
@@ -314,8 +321,6 @@ public class ShapeController : NetworkBehaviour
 
     void DrawLines(List<Vector3> vertices, bool activate, float score)
     {
-        Debug.Log("Drawing shape...");
-
         int nVertices = vertices.Count;
 
         // Choose different lines for different abilities
@@ -352,7 +357,6 @@ public class ShapeController : NetworkBehaviour
 
         if (activate)
         {
-            Debug.Log("Starting shape fade coroutine...");
             StartCoroutine(DelayDisable(1f, lineRenderer));
         }
     }
