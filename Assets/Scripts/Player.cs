@@ -168,7 +168,7 @@ public class Player : NetworkBehaviour
         }
 
         // Set the ammo counter
-        ammoText.text = "Bullets: " + currentAmmo;
+        ammoText.text = "Mana: " + currentAmmo;
 
         // Pass the local player's team to the flag indicator
         flagIndicator.SetLocalPlayerTeam(localPlayerTeam);
@@ -207,7 +207,7 @@ public class Player : NetworkBehaviour
             healthBar.fillAmount = currentHealth / maxHealth;
         
         // Set the ammo counter
-        ammoText.text = "Bullets: " + currentAmmo;
+        ammoText.text = "Mana: " + currentAmmo;
 
         // Activate the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = true;
@@ -268,7 +268,7 @@ public class Player : NetworkBehaviour
             {
                 // Reloading is complete, update ammo
                 currentAmmo = maxAmmo;
-                ammoText.text = "Bullets: " + currentAmmo;
+                ammoText.text = "Mana: " + currentAmmo;
                 reloadIcon.enabled = false;
                 reloadIconLayer.enabled = false;
             }
