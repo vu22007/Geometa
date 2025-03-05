@@ -13,7 +13,6 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
     private List<Bullet> bullets;
     private List<Player> players;
     private List<Player> alivePlayers;
-
     private List<Pickup> pickups;
 
     // For only the server to use so that it can manage the spawn and despawn of players
@@ -31,6 +30,10 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
 
     private bool spawnedItems = false;
 
+    private float pointsTopupCooldownMax = 10f;
+    private float pointsTopupCooldownCurrent = 0f;
+
+
     // Initialisation
     void Start()
     {
@@ -38,6 +41,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
         players = new List<Player>();
         pickups = new List<Pickup>();
         alivePlayers = new List<Player>();
+        pointsTopupCooldownCurrent = pointsTopupCooldownMax;
     }
 
     void SpawnItems()
@@ -74,6 +78,16 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
         if (currentTime >= maxTime)
         {
             //end game
+        }
+
+        //topup players points by 5 every 10 seconds
+        pointsTopupCooldownCurrent -= Runner.DeltaTime;
+        if(pointsTopupCooldownCurrent < 0){
+            foreach (Player player in players)
+            {
+                player.GainPoints(5);
+            }
+            pointsTopupCooldownCurrent = pointsTopupCooldownMax;
         }
 
         foreach (Player player in players)
