@@ -1,17 +1,29 @@
 using UnityEngine;
+using Fusion;
 
 public class MainMenu : MonoBehaviour
 {
+    private GameController gameController;
+    private string sessionName;
+
+    public void OnEnable() {
+        gameController = GameObject.Find("Game Controller").GetComponent<GameController>();
+    }
+
+    public void OnSessionNameChanged(string newSessionName) {
+        sessionName = newSessionName;
+    }
+
     public void HostGame()
     {
-        // TODO
-        Debug.Log("Hosting game...");
+        Debug.Log($"Hosting game with session name '{sessionName}'...");
+        gameController.StartGame(GameMode.Host, sessionName);
     }
 
     public void JoinGame()
     {
-        // TODO
-        Debug.Log("Joining game...");
+        Debug.Log($"Joining game with session name '{sessionName}'...");
+        gameController.StartGame(GameMode.Client, sessionName);
     }
 
     public void QuitGame()

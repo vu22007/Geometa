@@ -37,7 +37,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
     private NetworkRunner runner;
     private string sessionName;
 
-    async void StartGame(GameMode mode, string sessionName)
+    async public void StartGame(GameMode mode, string sessionName)
     {
         runner = gameObject.GetComponent<NetworkRunner>();
         runner.ProvideInput = true;
@@ -58,25 +58,6 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
             Scene = scene,
             SceneManager = gameObject.AddComponent<NetworkSceneManagerDefault>()
         });
-    }
-
-    private void OnGUI()
-    {
-        if (runner == null)
-        {
-            GUI.Label(new Rect(0, 0, 200, 20), "Session Name:");
-            sessionName = GUI.TextField(new Rect(0, 20, 200, 20), sessionName);
-
-            if (GUI.Button(new Rect(0, 50, 200, 40), "Host"))
-            {
-                StartGame(GameMode.Host, sessionName);
-            }
-
-            if (GUI.Button(new Rect(0, 100, 200, 40), "Join"))
-            {
-                StartGame(GameMode.Client, sessionName);
-            }
-        }
     }
 
     // Initialisation
