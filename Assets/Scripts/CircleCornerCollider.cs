@@ -13,6 +13,7 @@ public class CircleCornerCollider : NetworkBehaviour
     {
         slowedPlayers = new List<Player>();
         circleCollider = GetComponent<CircleCollider2D>();
+        circleCollider.enabled = false;
     }
 
     public void ActivateCollider(Vector3 pos, float score)

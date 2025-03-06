@@ -2,30 +2,21 @@
 Multiplayer game where you form shapes with teammates to grant bonuses to defeat the enemy team
 
 # Gameplay & Rules
-Players are spit into 2 teams. Each team has their own base and flag. A team wins the game when they steal the enemy flag and bring it to their base.
+Players are split into 2 teams. Each team has their own base and flag. A team wins the game when they steal the enemy flag and bring it to their base
 
-Players can shoot their opponents to send them back to their base with a respawn timer, giving them an advantage in proceeding further into the map.
+Players can fight theit opponents as wizards and knights to send them back to their base with a respawn timer, giving them an advantage in proceeding further into the map
 
 ## Shapes & Buffs
 Players can form shapes to activate certain buffs:
+THe effectiveness of the buff depends on how regular the shape is
 
- - Line: +speed +vision
- - Triangle: +resistance
- - Rectangle: +damage 
- - Pentagon: +damage +spread -speed
-
-Once carrying the flag you cannot join a shape/activate a buff.
+ - Triangle: Damages opponents on the edges of the shape 
+ - Rectangle: Slows opponents on the vertices
 
 ## How to make a shape
 Players will collect points through killing opponents and collecting from pickup points around the map
 
-These points are spent on shapes/buffs. A player will use a number of points to 'ping' a shape to their team. 
-
-The shape will gradually disappear over 5 seconds unless a teammate comes in contact with it, the countdown resets and shortens everytime a player moves off the shape.
-
-Once all the vertices of the shape have a teamate on it, the shape will begin a countdown during which the players must not move off their vertex.
-
-Once the timer is complete, the players will receive the associated buff for a designated amount of time.
+These points are spent on shapes/buffs. A player will use a number of points activate their shape
 
 ## Health & Respawns
 Players all have a health bar that gradually regains health out of combat, there will also be health packs on the map.
@@ -37,10 +28,12 @@ To avoid a draw, the timer gradually increase.
 ## Controls
 WASD - Movement
 
-Left click - fire gun 
+Left click - Attack
 
 R - Reload 
 
-Q - preview triangle placement; + right click - place triangle
+Q - preview triangle 
+
+E - previes square
 
 

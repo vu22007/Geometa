@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using Fusion;
 using UnityEngine;
 
@@ -14,7 +13,6 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
     private List<Bullet> bullets;
     private List<Player> players;
     private List<Player> alivePlayers;
-
     private List<Pickup> pickups;
 
     // For only the server to use so that it can manage the spawn and despawn of players
@@ -32,6 +30,10 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
 
     private bool spawnedItems = false;
 
+    private float pointsTopupCooldownMax = 10f;
+    private float pointsTopupCooldownCurrent = 0f;
+
+
     // Initialisation
     void Start()
     {
@@ -39,6 +41,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
         players = new List<Player>();
         pickups = new List<Pickup>();
         alivePlayers = new List<Player>();
+        pointsTopupCooldownCurrent = pointsTopupCooldownMax;
     }
 
     void SpawnItems()
@@ -61,7 +64,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
             NetworkObject flag2Obj = PrefabFactory.SpawnFlag(Runner, flagPrefab, respawnPoint2 + new Vector3(0, 5, 0), 2);
             team2Flag = flag2Obj.GetComponent<PickupFlag>();
 
-            // Spawn NPCs for testing - WORKS IF YOU PLAY AS A HOST :)
+            // Spawn NPCs for testing
             // SpawnPlayersForTesting(3, 3);
         }
     }
@@ -75,6 +78,16 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
         if (currentTime >= maxTime)
         {
             //end game
+        }
+
+        //topup players points by 5 every 10 seconds
+        pointsTopupCooldownCurrent -= Runner.DeltaTime;
+        if(pointsTopupCooldownCurrent < 0){
+            foreach (Player player in players)
+            {
+                player.GainPoints(5);
+            }
+            pointsTopupCooldownCurrent = pointsTopupCooldownMax;
         }
 
         foreach (Player player in players)
@@ -120,6 +133,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
     public void UnregisterPlayer(Player player)
     {
         players.Remove(player);
+        UnregisterAlivePlayer(player);
     }
 
     public void RegisterBullet(Bullet bullet)
@@ -159,7 +173,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
         {
             // Load prefab
             GameObject playerPrefab = Resources.Load("Prefabs/Player") as GameObject;
-            string characterPath = "ScriptableObjects/Characters/Army Vet";
+            string characterPath = "ScriptableObjects/Characters/Wizard";
 
             // Spawn the player network object
             int team = nextTeam;
@@ -276,7 +290,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
     void SpawnPlayersForTesting(int allies, int enemies)
     {
         GameObject playerPrefab = Resources.Load("Prefabs/Player") as GameObject;
-        string characterPath = "ScriptableObjects/Characters/Army Vet";
+        string characterPath = "ScriptableObjects/Characters/Wizard";
 
         for (int i = 0; i < allies; i++)
         {

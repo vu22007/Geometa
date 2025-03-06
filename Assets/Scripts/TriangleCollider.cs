@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
@@ -25,7 +24,7 @@ public class TriangleCollider : NetworkBehaviour
 
     void OnTriggerEnter2D(Collider2D collider)
     {
-        if(collider.gameObject.tag == "Player")
+        if (collider.gameObject.tag == "Player")
         {
             Player player = collider.GetComponentInParent<Player>();
 

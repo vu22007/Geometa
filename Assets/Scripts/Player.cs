@@ -3,13 +3,13 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Fusion.Addons.Physics;
-using UnityEngine.SocialPlatforms.Impl;
 using System.Collections;
 
 public class Player : NetworkBehaviour
 {
     [Networked] float speed { get; set; }
     [Networked] float maxHealth { get; set; }
+    [Networked] float maxPoints { get; set; }
     [Networked] float damage { get; set; }
     [Networked] int maxAmmo { get; set; }
     [Networked] int currentAmmo { get; set; }
@@ -18,19 +18,20 @@ public class Player : NetworkBehaviour
     [Networked] float reloadTime { get; set; }
     [Networked] float reloadTimer { get; set; }
     [Networked] float reloadFraction { get; set; }
-    [Networked] int points { get; set; }
+    [Networked, OnChangedRender(nameof(OnPointsChanged))] float points { get; set; }
     [Networked] float timeToWaitForBullet { get; set; }
-    [Networked] float currentHealth { get; set; }
+    [Networked, OnChangedRender(nameof(OnHealthChanged))] float currentHealth { get; set; }
     [Networked] int team { get; set; }
     [Networked] Vector3 respawnPoint { get; set; }
     [Networked] bool isAlive { get; set; }
     [Networked] float respawnTime { get; set; }
     [Networked] float currentRespawn { get; set; }
-    [Networked, Capacity(50)] string characterPath { get; set; } = "ScriptableObjects/Characters/Army Vet";
+    [Networked, Capacity(50)] string characterPath { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
     [Networked] private NetworkObject carriedObject { get; set; }
     [Networked, OnChangedRender(nameof(OnCarryingChanged)), HideInInspector] public bool isCarrying { get; set; }
     [Networked] bool isMoving { get; set; }
+    [Networked] bool isAttacking { get; set; }
     [Networked] bool isDashing { get; set; }
     [Networked] float dashTimer { get; set; }
     [Networked] float dashCooldownTimer { get; set; }
@@ -45,9 +46,10 @@ public class Player : NetworkBehaviour
     public Camera cam;
     Rigidbody2D rb;
     SpriteRenderer spriteRenderer;
-    public Animator animator;
+    Animator animator;
     [SerializeField] Image mainHealthBar;
     [SerializeField] Image teamHealthBar;
+    [SerializeField] Image mainPointsBar;
     [SerializeField] Image enemyHealthBar;
     [SerializeField] PopUpText popUpText;
     [SerializeField] cooldownHandler dashCDHandler;
@@ -66,6 +68,10 @@ public class Player : NetworkBehaviour
     [SerializeField] GameObject deathOverlay;
     [SerializeField] TextMeshProUGUI respawnTimerTxt;
     [SerializeField] FlagIndicator flagIndicator;
+    private AudioClip shootSound;
+    private AudioClip dyingSound;
+    private AudioClip dashSound;
+    private AudioSource audioSource;
     [SerializeField] Image bulletIcon;
 
     // Player intialisation (called from game controller on server when creating the player)
@@ -73,6 +79,7 @@ public class Player : NetworkBehaviour
     {
         Character character = Resources.Load(characterPath) as Character;
         maxHealth = character.MaxHealth;
+        maxPoints = 30f;
         speed = character.Speed;
         damage = character.Damage;
         maxAmmo = character.MaxAmmo;
@@ -80,16 +87,16 @@ public class Player : NetworkBehaviour
         dashSpeed = character.DashSpeed;
         dashDuration = character.DashDuration;
         dashCooldown = character.DashCooldown;
-        aoeDamage = character.AoeDamage;
-        aoeCooldown = character.AoeCooldown;
-        aoeDuration = character.AoeDuration;
-
+        
         this.respawnPoint = respawnPoint;
         this.team = team;
         this.characterPath = characterPath;
-        points = 100;
+        points = 30f;
         reloadTime = 3.0f;
         respawnTime = 10.0f;
+        aoeDamage = 5;
+        aoeCooldown = 10;
+        aoeDuration = 5;
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
         isAlive = true;
@@ -125,6 +132,9 @@ public class Player : NetworkBehaviour
         Character character = Resources.Load(characterPath) as Character;
         spriteRenderer.sprite = character.Sprite;
 
+        //Set animator controller
+        animator.runtimeAnimatorController = Resources.Load("Animations/"+character.name) as RuntimeAnimatorController;
+
         Player localPlayer = Runner.GetPlayerObject(Runner.LocalPlayer)?.GetComponent<Player>();
         int localPlayerTeam = localPlayer.GetTeam();
 
@@ -151,8 +161,7 @@ public class Player : NetworkBehaviour
         }
 
         // Set the health bar
-        if (healthBar != null)
-            healthBar.fillAmount = currentHealth / maxHealth;
+        UpdateHealthBar(currentHealth);
 
         if (deathOverlay != null)
         {
@@ -160,14 +169,21 @@ public class Player : NetworkBehaviour
         }
 
         // Set the ammo counter
-        ammoText.text = "Bullets: " + currentAmmo;
-        bulletIcon.fillAmount = currentAmmo / maxAmmo;
+        ammoText.text = "Mana: " + currentAmmo;
 
         // Pass the local player's team to the flag indicator
         flagIndicator.SetLocalPlayerTeam(localPlayerTeam);
 
+        audioSource = GetComponent<AudioSource>();
+        shootSound = Resources.Load<AudioClip>("Sounds/Shoot");
+        dyingSound = Resources.Load<AudioClip>("Sounds/Dying");
+        dashSound = Resources.Load<AudioClip>("Sounds/Dash");
+
         // Set the initial flag indicator visibility
         OnCarryingChanged();
+
+        //Set points bar
+        UpdatePointsBar();
     }
 
     // Called on each client and server when player is despawned from network
@@ -180,7 +196,6 @@ public class Player : NetworkBehaviour
     // Player initialisation when respawning
     public void Respawn()
     {
-        //gameObject.transform.position = respawnPoint;
         gameObject.GetComponent<NetworkRigidbody2D>().Teleport(respawnPoint);
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
@@ -191,10 +206,9 @@ public class Player : NetworkBehaviour
         // Refill the health bar
         if (healthBar != null)
             healthBar.fillAmount = currentHealth / maxHealth;
-
+        
         // Set the ammo counter
-        ammoText.text = "Bullets: " + currentAmmo;
-        bulletIcon.fillAmount = currentAmmo / maxAmmo;
+        ammoText.text = "Mana: " + currentAmmo;
 
         // Activate the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = true;
@@ -255,8 +269,7 @@ public class Player : NetworkBehaviour
             {
                 // Reloading is complete, update ammo
                 currentAmmo = maxAmmo;
-                ammoText.text = "Bullets: " + currentAmmo;
-                bulletIcon.fillAmount = currentAmmo / maxAmmo;
+                ammoText.text = "Mana: " + currentAmmo;
                 reloadIcon.enabled = false;
                 reloadIconLayer.enabled = false;
             }
@@ -308,7 +321,11 @@ public class Player : NetworkBehaviour
                 if (input.buttons.IsSet(InputButtons.Shoot))
                 {
                     Shoot(input.aimDirection);
-                    animator.SetTrigger("Attack");
+                    isAttacking = true;
+                }
+                else
+                {
+                    isAttacking = false;
                 }
 
                 // Reloading
@@ -345,10 +362,10 @@ public class Player : NetworkBehaviour
                     ActivateAoE(input.cursorWorldPoint);
                 }
             }
-            
 
             // Activate Menu
-            if (input.buttons.WasPressed(previousButtons, InputButtons.Menu)){
+            if (input.buttons.WasPressed(previousButtons, InputButtons.Menu))
+            {
                 escapeMenu.SetActive(!escapeMenu.gameObject.activeSelf);
             }
 
@@ -359,7 +376,7 @@ public class Player : NetworkBehaviour
             gameObject.transform.rotation = wantedRotation;
 
             cam.gameObject.transform.rotation = Quaternion.identity;
-
+            
             previousButtons = input.buttons;
         }
 
@@ -368,6 +385,11 @@ public class Player : NetworkBehaviour
             animator.SetFloat("Speed", 0.02f);
         else
             animator.SetFloat("Speed", 0f);
+
+        if (isAttacking)
+        {
+            animator.SetTrigger("Attack");
+        }
 
         // If carrying an object, move it to player's position
         if (isCarrying && carriedObject != null)
@@ -407,6 +429,7 @@ public class Player : NetworkBehaviour
             dashTimer = dashDuration;
             dashCooldownTimer = dashCooldown;
             dashCDHandler.StartCooldown(dashCooldown);
+            audioSource.PlayOneShot(dashSound);
         }
         else
         {
@@ -455,83 +478,116 @@ public class Player : NetworkBehaviour
             timeToWaitForBullet = 1 / fireRate;
             if (currentAmmo != 0)
             {
+
                 // Spawn bullet (only the server can do this)
                 if (HasStateAuthority)
                 {
                     GameObject bulletPrefab = Resources.Load("Prefabs/Bullet") as GameObject;
-                    PrefabFactory.SpawnBullet(Runner, Object.InputAuthority, bulletPrefab, gameObject.transform.position, aimDirection, 40.0f, damage, team);
+                    PrefabFactory.SpawnBullet(Runner, Object.InputAuthority, bulletPrefab, gameObject.transform.position, aimDirection, 40.0f, damage, team, this);
+                }
+                // Just the player that shoot listens to the sound
+                if (HasInputAuthority)
+                {
+                    PlayShootSound();
                 }
                 currentAmmo--;
-                ammoText.text = "Bullets: " + currentAmmo;
-                bulletIcon.fillAmount = currentAmmo / maxAmmo;
-                Debug.Log("bullet fill");
+                ammoText.text = "Mana: " + currentAmmo;
             }
-            // else
-            // {
-            //     ShowMessage("Press R to reload!!", 0.2f, Color.white);
-            // }
         }
+    }
+
+    public void PlayShootSound()
+    {
+        audioSource.PlayOneShot(shootSound);
     }
 
     //take damage equal to input, includes check for death
     public void TakeDamage(float damage)
     {
-        currentHealth -= damage;
-        if (healthBar != null)
-            healthBar.fillAmount = currentHealth / maxHealth;
+        float newHealth = currentHealth - damage;
 
-        //Play hurt animation and sounds
-        HurtEffects();
+        if (HasStateAuthority)
+            currentHealth = newHealth;
 
-        if (currentHealth <= 0.0f) {
+        UpdateHealthBar(newHealth);
+
+        // Play hurt animation and sounds for all clients
+        if (HasStateAuthority)
+            RPC_HurtEffects(damage);
+
+        if (newHealth <= 0.0f) {
             Die();
         }
     }
-
-    void HurtEffects(){
+    
+    void HurtEffects(float damage){
         animator.SetTrigger("Damaged");
+        ShowDamagePopup(damage);
+    }
+
+    void ShowDamagePopup(float damage)
+    {
+        GameObject damagePopupPrefab = Resources.Load("Prefabs/DamagePopup") as GameObject;
+        PrefabFactory.SpawnDamagePopup(damagePopupPrefab, (int)damage, team, transform.position);
+    }
+
+    // Only server can call this RPC, and it will run only on all clients
+    [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
+    public void RPC_HurtEffects(float damage)
+    {
+        HurtEffects(damage);
     }
 
     //heal equal to input, includes check for max health
     public void Heal(float amount)
     {
-        currentHealth += amount;
-        if (healthBar != null)
-            healthBar.fillAmount = currentHealth / maxHealth;
+        float newHealth = currentHealth + amount;
+
+        if (HasStateAuthority)
+            currentHealth = newHealth;
+
         if (currentHealth >= maxHealth) {
             currentHealth = maxHealth;
         }
+
+        UpdateHealthBar(newHealth);
     }
 
     public void GainPoints(int amount)
     {
         points += amount;
+        if(points > maxPoints){
+            points = maxPoints;
+        }
+        UpdatePointsBar();
     }
 
     public void SpendPoints(int amount)
     {
         if(amount > points)
         {
-            Debug.Log("You don't have enough points");
+            Debug.Log("Not enough points");
         }
-        points -= amount;
+        else
+        {
+            points -= amount;
+            UpdatePointsBar();
+        }
     }
 
     void Die()
     {
         isAlive = false;
 
-        // // Only show message for client who controls this player
-        // if (HasInputAuthority)
-        //ShowMessage("You died :((", 0.1f, Color.red);
-        
         // Ensure health bar is empty
-        if (healthBar != null)
-            healthBar.fillAmount = 0.0f;
+        UpdateHealthBar(0.0f);
 
         // Disable the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = false;
         gameController.UnregisterAlivePlayer(this);
+        
+        if (HasStateAuthority)
+            RPC_PlayDyingSound(transform.position);
 
         if (isCarrying)
         {
@@ -540,16 +596,54 @@ public class Player : NetworkBehaviour
         }
     }
 
+    [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
+    public void RPC_PlayDyingSound(Vector3 pos)
+    {
+        Vector3 viewportPos = Camera.main.WorldToViewportPoint(pos);
+        bool onScreen =
+            viewportPos.x >= 0f && viewportPos.x <= 1f &&
+            viewportPos.y >= 0f && viewportPos.y <= 1f;
+
+        if (onScreen)
+        {
+            audioSource.PlayOneShot(dyingSound, 0.7f);
+        }
+
+    }
+    
+    void OnHealthChanged()
+    {
+        UpdateHealthBar(currentHealth);
+    }
+
+    void UpdateHealthBar(float health)
+    {
+        if (healthBar != null)
+        {
+            healthBar.fillAmount = health / maxHealth;
+        }
+    }
+
+    void OnPointsChanged()
+    {
+        UpdatePointsBar();
+    }
+
+    void UpdatePointsBar(){
+        float fillAmount = points/maxPoints;
+        mainPointsBar.fillAmount = fillAmount;
+    }
+
     void Reload()
     {
         if (currentAmmo >= maxAmmo)
         {
-            ShowMessage("Ammo is full!", 0.1f, Color.white);
+            ShowMessage("Mana is full!", 0.1f, Color.white);
             return; 
         }
         if (reloadTimer <= 0)
         {
-            ShowMessage("Reloading", 0.3f, Color.green);
+            ShowMessage("Gathering Mana", 0.3f, Color.green);
             missingAmmo = maxAmmo - currentAmmo;
             reloadFraction = (float)missingAmmo / maxAmmo;
             reloadTimer = reloadTime * reloadFraction;
@@ -560,7 +654,7 @@ public class Player : NetworkBehaviour
         }
         else
         {
-            ShowMessage("still reloading", 0.3f, Color.white);
+            ShowMessage("still gathering mana", 0.3f, Color.white);
         }
     }
 
@@ -637,7 +731,7 @@ public class Player : NetworkBehaviour
         return team;
     }
 
-    public int GetPoints()
+    public float GetPoints()
     {
         return points;
     }
@@ -651,6 +745,6 @@ public class Player : NetworkBehaviour
     IEnumerator timeSlowed(float amount, float time)
     {
         yield return new WaitForSeconds(time);
-        this.speed += amount; 
+        this.speed += amount;
     }
 }
