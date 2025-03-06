@@ -44,6 +44,7 @@ public class Player : NetworkBehaviour
     [Networked] public float aoeCooldownTimer { get; set; }
     [Networked] public bool isAoEEnabled { get; set; }
     [Networked] private bool isAoEUsed { get; set; }
+    [Networked] public float aoeMaxRad { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
@@ -75,6 +76,17 @@ public class Player : NetworkBehaviour
     private AudioClip dashSound;
     private AudioSource audioSource;
     [SerializeField] Image bulletIcon;
+    [SerializeField] private SpriteRenderer placementRadiusIndicator;
+
+    private void Start()
+    {
+        if (placementRadiusIndicator != null)
+        {
+            // Scale the indicator to match the maxAoERadius
+            float diameter = aoeMaxRad * 2;
+            placementRadiusIndicator.transform.localScale = new Vector3(diameter, diameter, 1);
+        }
+    }
 
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(string characterPath, Vector3 respawnPoint, int team)
@@ -99,6 +111,7 @@ public class Player : NetworkBehaviour
         aoeDamage = 5;
         aoeCooldown = 10;
         aoeDuration = 5;
+        aoeMaxRad = 10;
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
         isAlive = true;
@@ -208,6 +221,11 @@ public class Player : NetworkBehaviour
         currentRespawn = 0.0f;
         timeToWaitForBullet = 0.0f;
 
+        if (placementRadiusIndicator != null)
+        {
+            placementRadiusIndicator.enabled = false;
+        }
+
         // Refill the health bar
         if (healthBar != null)
             healthBar.fillAmount = currentHealth / maxHealth;
@@ -307,6 +325,7 @@ public class Player : NetworkBehaviour
                 aoeIcon.enabled = false;
                 aoeIconLayer.enabled = false;
                 isAoEUsed = false; 
+                isAoEEnabled = false;
             }
         }
 
@@ -454,27 +473,40 @@ public class Player : NetworkBehaviour
     {
         if (aoeCooldownTimer <= 0 && isAoEEnabled) // Only allow AoE if cooldown is over
         {
-            // Spawn AoE effect (only the server can do this)
-            if (HasStateAuthority)
+            // Calculate the distance between the player and the target location
+            float distanceToTarget = Vector2.Distance(transform.position, cursorWorldPoint);
+
+            // Check if the target location is within the allowed radius
+            if (distanceToTarget <= aoeMaxRad)
             {
-                GameObject aoeEffect = Resources.Load("Prefabs/AoE1") as GameObject;
-                // Spawn the AoE prefab
-                NetworkObject aoeObject = Runner.Spawn(aoeEffect, cursorWorldPoint, Quaternion.identity, null, (runner, networkObject) =>
+                // Spawn AoE effect (only the server can do this)
+                if (HasStateAuthority)
                 {
-                    AoESpell aoeSpell = networkObject.GetComponent<AoESpell>();
-                    if (aoeSpell != null)
+                    GameObject aoeEffect = Resources.Load("Prefabs/AoE1") as GameObject;
+                    // Spawn the AoE prefab
+                    NetworkObject aoeObject = Runner.Spawn(aoeEffect, cursorWorldPoint, Quaternion.identity, null, (runner, networkObject) =>
                     {
-                        aoeSpell.OnCreated(aoeDamage, team, aoeDuration, Object.InputAuthority); 
-                    }
-                });
+                        AoESpell aoeSpell = networkObject.GetComponent<AoESpell>();
+                        if (aoeSpell != null)
+                        {
+                            aoeSpell.OnCreated(aoeDamage, team, aoeDuration, Object.InputAuthority); 
+                        }
+                    });
+                }
+                // Start cooldown
+                aoeCooldownTimer = aoeCooldown;
+                ShowMessage("AoE Skill Used", 0.5f, Color.white);
+                aoeIcon.enabled = true;
+                aoeIconLayer.enabled = true;
+                isAoEUsed = true;
+                placementRadiusIndicator.enabled = false;
+                aoeHandler.StartCooldown(aoeCooldown);
             }
-            // Start cooldown
-            aoeCooldownTimer = aoeCooldown;
-            ShowMessage("AoE Skill Used", 0.5f, Color.white);
-            aoeIcon.enabled = true;
-            aoeIconLayer.enabled = true;
-            isAoEUsed = true;
-            aoeHandler.StartCooldown(aoeCooldown);
+            else
+            {
+                ShowMessage("AoE is out of range", 0.5f, Color.white);
+            }
+            
         }
         else if (!isAoEEnabled)
         {
@@ -788,11 +820,13 @@ public class Player : NetworkBehaviour
         isAoEEnabled = true; // Enable AoE
         aoeIcon.enabled = true;
         isAoEUsed = false;
+        placementRadiusIndicator.enabled = true;
         yield return new WaitForSeconds(5f); 
         if (!isAoEUsed)
         {
             isAoEEnabled = false; // Disable AoE
             aoeIcon.enabled = false;
+            placementRadiusIndicator.enabled = false;
         }
         
     }
