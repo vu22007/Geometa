@@ -12,12 +12,12 @@ public class Bullet : NetworkBehaviour
     [Networked] public bool done { get; set; }
     [Networked] float lifespan { get; set; }
     [Networked] int team { get; set; }
+    [Networked] private PlayerRef playerShooting { get; set; }
 
     GameController gameController;
-    private Player playerShooting;
 
     // Bullet intialisation (called from a player object on server when creating the bullet)
-    public void OnCreated(Vector2 position, Vector2 direction, Quaternion rotation, float speed, float damage, int team, Player playerShooting)
+    public void OnCreated(Vector2 position, Vector2 direction, Quaternion rotation, float speed, float damage, int team, PlayerRef playerShooting)
     {
         initialTick = Runner.Tick;
         initialPosition = position;
@@ -114,7 +114,7 @@ public class Bullet : NetworkBehaviour
                 // Check if player is from the enemy team
                 if (player.GetTeam() != team)
                 {
-                    player.TakeDamage(damage);
+                    player.TakeDamage(damage, playerShooting);
                     done = true; // Doesn't pierce
                 }
             }
