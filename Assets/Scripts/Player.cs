@@ -113,11 +113,8 @@ public class Player : NetworkBehaviour
             cam.gameObject.SetActive(false);
         }
 
-        // Find game controller component (Fusion creates copies of the game controller object so we need to choose the correct one)
-        if (GameObject.Find("Host") != null)
-            gameController = GameObject.Find("Host").GetComponent<GameController>();
-        else
-            gameController = GameObject.Find("Client A").GetComponent<GameController>();
+        // Get game controller component
+        gameController = GameObject.Find("Game Controller").GetComponent<GameController>();
 
         // Add this player to game controller player list
         gameController.RegisterPlayer(this);

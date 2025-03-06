@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
 {
@@ -33,6 +34,50 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
     private float pointsTopupCooldownMax = 10f;
     private float pointsTopupCooldownCurrent = 0f;
 
+    private NetworkRunner runner;
+    private string sessionName;
+
+    async void StartGame(GameMode mode, string sessionName)
+    {
+        runner = gameObject.GetComponent<NetworkRunner>();
+        runner.ProvideInput = true;
+
+        // Create the NetworkSceneInfo from the current scene
+        SceneRef scene = SceneRef.FromIndex(SceneManager.GetActiveScene().buildIndex);
+        NetworkSceneInfo sceneInfo = new NetworkSceneInfo();
+        if (scene.IsValid)
+        {
+            sceneInfo.AddSceneRef(scene, LoadSceneMode.Additive);
+        }
+
+        // Start or join (depends on gamemode) a session with a specific name
+        await runner.StartGame(new StartGameArgs()
+        {
+            GameMode = mode,
+            SessionName = sessionName,
+            Scene = scene,
+            SceneManager = gameObject.AddComponent<NetworkSceneManagerDefault>()
+        });
+    }
+
+    private void OnGUI()
+    {
+        if (runner == null)
+        {
+            GUI.Label(new Rect(0, 0, 200, 20), "Session Name:");
+            sessionName = GUI.TextField(new Rect(0, 20, 200, 20), sessionName);
+
+            if (GUI.Button(new Rect(0, 50, 200, 40), "Host"))
+            {
+                StartGame(GameMode.Host, sessionName);
+            }
+
+            if (GUI.Button(new Rect(0, 100, 200, 40), "Join"))
+            {
+                StartGame(GameMode.Client, sessionName);
+            }
+        }
+    }
 
     // Initialisation
     void Start()
