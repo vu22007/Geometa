@@ -17,9 +17,12 @@ public class TriangleShape : NetworkBehaviour
             GameObject worldColliderPrefab = Resources.Load("Prefabs/TriangleCollider") as GameObject;
             NetworkObject triangleColliderObject = PrefabFactory.SpawnWorldCollider(Runner, worldColliderPrefab);
 
+            PlayerRef parentPlayerRef = GetComponentInParent<Player>().Object.InputAuthority;
+
             // This is the script of the object
             triangleCollider = triangleColliderObject.GetComponent<TriangleCollider>();
             triangleCollider.team = transform.GetComponentInParent<Player>().GetTeam();
+            triangleCollider.parentPlayerRef = parentPlayerRef;
 
             edgeCollider = triangleCollider.GetComponent<EdgeCollider2D>();
         }

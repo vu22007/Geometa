@@ -345,7 +345,7 @@ public class Player : NetworkBehaviour
                 // Testing damage
                 if (input.buttons.WasPressed(previousButtons, InputButtons.TakeDamage))
                 {
-                    TakeDamage(10);
+                    TakeDamage(10, PlayerRef.None);
                 }
 
                 // Dash with 'space'
@@ -400,7 +400,11 @@ public class Player : NetworkBehaviour
             int secondsLeft = (int) Mathf.Ceil(timeLeft);
             int mins = secondsLeft / 60;
             int secs = secondsLeft % 60;
-            timeLeftText.text = "Time Left: " + mins + ":" + secs.ToString("00");
+
+            if (mins < 0 || secs < 0)
+                timeLeftText.text = "Time Left: 0:00";
+            else
+                timeLeftText.text = "Time Left: " + mins + ":" + secs.ToString("00");
         }
     }
 
@@ -448,7 +452,7 @@ public class Player : NetworkBehaviour
                     AoESpell aoeSpell = networkObject.GetComponent<AoESpell>();
                     if (aoeSpell != null)
                     {
-                        aoeSpell.OnCreated(aoeDamage, team, aoeDuration); 
+                        aoeSpell.OnCreated(aoeDamage, team, aoeDuration, Object.InputAuthority); 
                     }
                 });
             }
@@ -479,7 +483,7 @@ public class Player : NetworkBehaviour
                 if (HasStateAuthority)
                 {
                     GameObject bulletPrefab = Resources.Load("Prefabs/Bullet") as GameObject;
-                    PrefabFactory.SpawnBullet(Runner, Object.InputAuthority, bulletPrefab, gameObject.transform.position, aimDirection, 40.0f, damage, team, this);
+                    PrefabFactory.SpawnBullet(Runner, Object.InputAuthority, bulletPrefab, gameObject.transform.position, aimDirection, 40.0f, damage, team, Object.InputAuthority);
                 }
                 // Just the player that shoot listens to the sound
                 if (HasInputAuthority)
@@ -498,8 +502,10 @@ public class Player : NetworkBehaviour
     }
 
     //take damage equal to input, includes check for death
-    public void TakeDamage(float damage)
+    public void TakeDamage(float damage, PlayerRef damageDealer)
     {
+        if (!isAlive) return;
+
         float newHealth = currentHealth - damage;
 
         if (HasStateAuthority)
@@ -512,7 +518,7 @@ public class Player : NetworkBehaviour
             RPC_HurtEffects(damage);
 
         if (newHealth <= 0.0f) {
-            Die();
+            Die(damageDealer);
         }
     }
     
@@ -571,7 +577,7 @@ public class Player : NetworkBehaviour
         }
     }
 
-    void Die()
+    void Die(PlayerRef killer)
     {
         isAlive = false;
 
@@ -589,6 +595,16 @@ public class Player : NetworkBehaviour
         {
             // Player will drop the flag if they died
             DropObject();
+        }
+
+        // Award points to killer
+        if (Runner.TryGetPlayerObject(killer, out NetworkObject networkPlayerObject))
+        {
+            Player player = networkPlayerObject.GetComponent<Player>();
+            if (player.team != team)
+            {
+                player.GainPoints(10);
+            }
         }
     }
 
@@ -650,7 +666,7 @@ public class Player : NetworkBehaviour
         }
         else
         {
-            ShowMessage("still gathering mana", 0.3f, Color.white);
+            ShowMessage("Still gathering mana", 0.3f, Color.white);
         }
     }
 
