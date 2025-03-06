@@ -42,6 +42,8 @@ public class Player : NetworkBehaviour
     [Networked] public float aoeCooldown { get; set; }
     [Networked] public float aoeDuration { get; set; }
     [Networked] public float aoeCooldownTimer { get; set; }
+    [Networked] public bool isAoEEnabled { get; set; }
+    [Networked] private bool isAoEUsed { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
@@ -103,6 +105,8 @@ public class Player : NetworkBehaviour
         currentRespawn = 0.0f;
         timeToWaitForBullet = 0.0f;
         isCarrying = false;
+        isAoEEnabled = false;
+        isAoEUsed = false;
     }
 
     // Player initialisation (called on each client and server when player is spawned on network)
@@ -302,6 +306,7 @@ public class Player : NetworkBehaviour
             {
                 aoeIcon.enabled = false;
                 aoeIconLayer.enabled = false;
+                isAoEUsed = false; 
             }
         }
 
@@ -447,7 +452,7 @@ public class Player : NetworkBehaviour
     // Activate AoE skill
     void ActivateAoE(Vector2 cursorWorldPoint)
     {
-        if (aoeCooldownTimer <= 0) // Only allow AoE if cooldown is over
+        if (aoeCooldownTimer <= 0 && isAoEEnabled) // Only allow AoE if cooldown is over
         {
             // Spawn AoE effect (only the server can do this)
             if (HasStateAuthority)
@@ -468,7 +473,12 @@ public class Player : NetworkBehaviour
             ShowMessage("AoE Skill Used", 0.5f, Color.white);
             aoeIcon.enabled = true;
             aoeIconLayer.enabled = true;
+            isAoEUsed = true;
             aoeHandler.StartCooldown(aoeCooldown);
+        }
+        else if (!isAoEEnabled)
+        {
+            ShowMessage("AoE is not enable", 0.5f, Color.white);
         }
         else
         {
@@ -751,6 +761,11 @@ public class Player : NetworkBehaviour
         return team;
     }
 
+    public void ActivateTri(bool tri)
+    {
+        StartCoroutine(EnableAoETemporarily());
+    }
+
     public float GetPoints()
     {
         return points;
@@ -766,5 +781,19 @@ public class Player : NetworkBehaviour
     {
         yield return new WaitForSeconds(time);
         this.speed += amount;
+    }
+
+    private IEnumerator EnableAoETemporarily()
+    {
+        isAoEEnabled = true; // Enable AoE
+        aoeIcon.enabled = true;
+        isAoEUsed = false;
+        yield return new WaitForSeconds(5f); 
+        if (!isAoEUsed)
+        {
+            isAoEEnabled = false; // Disable AoE
+            aoeIcon.enabled = false;
+        }
+        
     }
 }

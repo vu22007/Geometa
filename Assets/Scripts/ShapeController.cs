@@ -146,6 +146,7 @@ public class ShapeController : NetworkBehaviour
     private void TriangleActivated()
     {
         PreviewShape(3, true);
+        parentPlayer.ActivateTri(true);
     }
 
     private void SquareActivated()
