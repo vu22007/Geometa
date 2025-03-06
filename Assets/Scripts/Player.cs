@@ -72,6 +72,7 @@ public class Player : NetworkBehaviour
     private AudioClip dyingSound;
     private AudioClip dashSound;
     private AudioSource audioSource;
+    [SerializeField] Image bulletIcon;
 
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(string characterPath, Vector3 respawnPoint, int team)
@@ -168,7 +169,8 @@ public class Player : NetworkBehaviour
         }
 
         // Set the ammo counter
-        ammoText.text = "Mana: " + currentAmmo;
+        ammoText.text = currentAmmo.ToString();
+        bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
 
         // Pass the local player's team to the flag indicator
         flagIndicator.SetLocalPlayerTeam(localPlayerTeam);
@@ -207,7 +209,8 @@ public class Player : NetworkBehaviour
             healthBar.fillAmount = currentHealth / maxHealth;
         
         // Set the ammo counter
-        ammoText.text = "Mana: " + currentAmmo;
+        ammoText.text = currentAmmo.ToString();
+        bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
 
         // Activate the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = true;
@@ -268,7 +271,8 @@ public class Player : NetworkBehaviour
             {
                 // Reloading is complete, update ammo
                 currentAmmo = maxAmmo;
-                ammoText.text = "Mana: " + currentAmmo;
+                ammoText.text = currentAmmo.ToString();
+                bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
                 reloadIcon.enabled = false;
                 reloadIconLayer.enabled = false;
             }
@@ -353,6 +357,13 @@ public class Player : NetworkBehaviour
                 {
                     Dash(input.moveDirection);
                 }
+
+                // Activate AoE skill with 'T'
+                if (input.buttons.WasPressed(previousButtons, InputButtons.AoE))
+                {
+                    Debug.Log("T is pressed");
+                    ActivateAoE(input.cursorWorldPoint);
+                }
             }
 
             // Activate Menu
@@ -361,11 +372,7 @@ public class Player : NetworkBehaviour
                 escapeMenu.SetActive(!escapeMenu.gameObject.activeSelf);
             }
 
-            // Activate AoE skill with 'T'
-            if (input.buttons.WasPressed(previousButtons, InputButtons.AoE))
-            {
-                ActivateAoE(input.cursorWorldPoint);
-            }
+            
             //Character rotates to mouse position
             Vector2 lookDirection = input.aimDirection.normalized;
             Quaternion wantedRotation = Quaternion.LookRotation(transform.forward, lookDirection);
@@ -491,7 +498,8 @@ public class Player : NetworkBehaviour
                     PlayShootSound();
                 }
                 currentAmmo--;
-                ammoText.text = "Mana: " + currentAmmo;
+                ammoText.text = currentAmmo.ToString();
+                bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
             }
         }
     }
