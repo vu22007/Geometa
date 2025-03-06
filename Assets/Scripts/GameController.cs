@@ -42,8 +42,8 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
         runner = gameObject.GetComponent<NetworkRunner>();
         runner.ProvideInput = true;
 
-        // Create the NetworkSceneInfo from the current scene
-        SceneRef scene = SceneRef.FromIndex(SceneManager.GetActiveScene().buildIndex);
+        // Create the NetworkSceneInfo from the next scene (the game scene, not the main menu scene)
+        SceneRef scene = SceneRef.FromIndex(SceneManager.GetActiveScene().buildIndex + 1);
         NetworkSceneInfo sceneInfo = new NetworkSceneInfo();
         if (scene.IsValid)
         {
@@ -98,7 +98,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
     // Update for every server simulation tick
     public override void FixedUpdateNetwork()
     {
-        if (!spawnedItems) SpawnItems();
+        // if (!spawnedItems) SpawnItems();
 
         currentTime = Runner.Tick * Runner.DeltaTime;
         if (currentTime >= maxTime)
