@@ -76,17 +76,17 @@ public class Player : NetworkBehaviour
     private AudioClip dashSound;
     private AudioSource audioSource;
     [SerializeField] Image bulletIcon;
-    [SerializeField] private SpriteRenderer placementRadiusIndicator;
+    // [SerializeField] private SpriteRenderer placementRadiusIndicator;
 
-    private void Start()
-    {
-        if (placementRadiusIndicator != null)
-        {
-            // Scale the indicator to match the maxAoERadius
-            float diameter = aoeMaxRad * 2;
-            placementRadiusIndicator.transform.localScale = new Vector3(diameter, diameter, 1);
-        }
-    }
+    // private void Start()
+    // {
+    //     if (placementRadiusIndicator != null)
+    //     {
+    //         // Scale the indicator to match the maxAoERadius
+    //         float diameter = aoeMaxRad * 2;
+    //         placementRadiusIndicator.transform.localScale = new Vector3(diameter, diameter, 1);
+    //     }
+    // }
 
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(string characterPath, Vector3 respawnPoint, int team)
@@ -221,10 +221,10 @@ public class Player : NetworkBehaviour
         currentRespawn = 0.0f;
         timeToWaitForBullet = 0.0f;
 
-        if (placementRadiusIndicator != null)
-        {
-            placementRadiusIndicator.enabled = false;
-        }
+        // if (placementRadiusIndicator != null)
+        // {
+        //     placementRadiusIndicator.enabled = false;
+        // }
 
         // Refill the health bar
         if (healthBar != null)
@@ -347,7 +347,15 @@ public class Player : NetworkBehaviour
                 // Firing the weapon
                 if (input.buttons.IsSet(InputButtons.Shoot))
                 {
-                    Shoot(input.aimDirection);
+                    if (isAoEEnabled)
+                    {
+                        ShootAoE(input.aimDirection);
+                        ActivateAoE();
+                    }
+                    else
+                    {
+                        Shoot(input.aimDirection);
+                    }
                     isAttacking = true;
                 }
                 else
@@ -382,12 +390,12 @@ public class Player : NetworkBehaviour
                     Dash(input.moveDirection);
                 }
 
-                // Activate AoE skill with 'T'
-                if (input.buttons.WasPressed(previousButtons, InputButtons.AoE))
-                {
-                    Debug.Log("T is pressed");
-                    ActivateAoE(input.cursorWorldPoint);
-                }
+                // // Activate AoE skill with 'T'
+                // if (input.buttons.WasPressed(previousButtons, InputButtons.AoE))
+                // {
+                //     Debug.Log("T is pressed");
+                //     ActivateAoE(input.cursorWorldPoint);
+                // }
             }
 
             // Activate Menu
@@ -468,54 +476,16 @@ public class Player : NetworkBehaviour
         }
     }
 
-    // Activate AoE skill
-    void ActivateAoE(Vector2 cursorWorldPoint)
+    // Activate AoE skill cooldown
+    public void ActivateAoE()
     {
-        if (aoeCooldownTimer <= 0 && isAoEEnabled) // Only allow AoE if cooldown is over
-        {
-            // Calculate the distance between the player and the target location
-            float distanceToTarget = Vector2.Distance(transform.position, cursorWorldPoint);
-
-            // Check if the target location is within the allowed radius
-            if (distanceToTarget <= aoeMaxRad)
-            {
-                // Spawn AoE effect (only the server can do this)
-                if (HasStateAuthority)
-                {
-                    GameObject aoeEffect = Resources.Load("Prefabs/AoE1") as GameObject;
-                    // Spawn the AoE prefab
-                    NetworkObject aoeObject = Runner.Spawn(aoeEffect, cursorWorldPoint, Quaternion.identity, null, (runner, networkObject) =>
-                    {
-                        AoESpell aoeSpell = networkObject.GetComponent<AoESpell>();
-                        if (aoeSpell != null)
-                        {
-                            aoeSpell.OnCreated(aoeDamage, team, aoeDuration, Object.InputAuthority); 
-                        }
-                    });
-                }
-                // Start cooldown
-                aoeCooldownTimer = aoeCooldown;
-                ShowMessage("AoE Skill Used", 0.5f, Color.white);
-                aoeIcon.enabled = true;
-                aoeIconLayer.enabled = true;
-                isAoEUsed = true;
-                placementRadiusIndicator.enabled = false;
-                aoeHandler.StartCooldown(aoeCooldown);
-            }
-            else
-            {
-                ShowMessage("AoE is out of range", 0.5f, Color.white);
-            }
-            
-        }
-        else if (!isAoEEnabled)
-        {
-            ShowMessage("AoE is not enable", 0.5f, Color.white);
-        }
-        else
-        {
-            ShowMessage("AoE Skill in Cooldown", 0.5f, Color.white);
-        }
+        // Start cooldown
+        aoeCooldownTimer = aoeCooldown;
+        ShowMessage("AoE Skill Used", 0.5f, Color.white);
+        aoeIcon.enabled = true;
+        aoeIconLayer.enabled = true;
+        isAoEUsed = true;
+        aoeHandler.StartCooldown(aoeCooldown);
     }
 
 
@@ -545,6 +515,30 @@ public class Player : NetworkBehaviour
             }
         }
     }
+
+    // Shoots a bullet by spawning the prefab on the network
+    void ShootAoE(Vector2 aimDirection)
+    {
+        if (HasStateAuthority)
+        {
+            GameObject aoeSpellPrefab = Resources.Load("Prefabs/AoE1") as GameObject;
+            NetworkObject aoeSpellObject = Runner.Spawn(aoeSpellPrefab, transform.position, Quaternion.identity, null, (runner, networkObject) =>
+            {
+                AoESpell aoeSpell = networkObject.GetComponent<AoESpell>();
+                if (aoeSpell != null)
+                {
+                    aoeSpell.OnCreated(aimDirection, 10f, 10f, aoeDamage, team, aoeDuration, Object.InputAuthority);
+                }
+            });
+        }
+        // Just the player that shoot listens to the sound
+        if (HasInputAuthority)
+        {
+            PlayShootSound();
+        }  
+        isAoEEnabled = false;     
+    }
+    
 
     public void PlayShootSound()
     {
@@ -795,7 +789,10 @@ public class Player : NetworkBehaviour
 
     public void ActivateTri(bool tri)
     {
-        StartCoroutine(EnableAoETemporarily());
+        if (tri)
+        {
+            StartCoroutine(EnableAoETemporarily());
+        } 
     }
 
     public float GetPoints()
@@ -820,13 +817,11 @@ public class Player : NetworkBehaviour
         isAoEEnabled = true; // Enable AoE
         aoeIcon.enabled = true;
         isAoEUsed = false;
-        placementRadiusIndicator.enabled = true;
         yield return new WaitForSeconds(5f); 
         if (!isAoEUsed)
         {
             isAoEEnabled = false; // Disable AoE
             aoeIcon.enabled = false;
-            placementRadiusIndicator.enabled = false;
         }
         
     }
