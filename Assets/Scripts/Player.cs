@@ -76,18 +76,7 @@ public class Player : NetworkBehaviour
     private AudioClip dashSound;
     private AudioSource audioSource;
     [SerializeField] Image bulletIcon;
-    // [SerializeField] private SpriteRenderer placementRadiusIndicator;
-
-    // private void Start()
-    // {
-    //     if (placementRadiusIndicator != null)
-    //     {
-    //         // Scale the indicator to match the maxAoERadius
-    //         float diameter = aoeMaxRad * 2;
-    //         placementRadiusIndicator.transform.localScale = new Vector3(diameter, diameter, 1);
-    //     }
-    // }
-
+    
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(string characterPath, Vector3 respawnPoint, int team)
     {
@@ -220,11 +209,6 @@ public class Player : NetworkBehaviour
         isAlive = true;
         currentRespawn = 0.0f;
         timeToWaitForBullet = 0.0f;
-
-        // if (placementRadiusIndicator != null)
-        // {
-        //     placementRadiusIndicator.enabled = false;
-        // }
 
         // Refill the health bar
         if (healthBar != null)
@@ -390,12 +374,6 @@ public class Player : NetworkBehaviour
                     Dash(input.moveDirection);
                 }
 
-                // // Activate AoE skill with 'T'
-                // if (input.buttons.WasPressed(previousButtons, InputButtons.AoE))
-                // {
-                //     Debug.Log("T is pressed");
-                //     ActivateAoE(input.cursorWorldPoint);
-                // }
             }
 
             // Activate Menu
