@@ -3,7 +3,7 @@ using Fusion;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
+public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, ISceneLoadDone
 {
     [SerializeField] Vector3 respawnPoint1;
     [SerializeField] Vector3 respawnPoint2;
@@ -29,20 +29,17 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
     // For only the server to use when broadcasting messages
     private bool gameOver = false;
 
-    private bool spawnedItems = false;
-
     private float pointsTopupCooldownMax = 10f;
     private float pointsTopupCooldownCurrent = 0f;
 
     private NetworkRunner runner;
-    private string sessionName;
 
     async public void StartGame(GameMode mode, string sessionName)
     {
         runner = gameObject.GetComponent<NetworkRunner>();
         runner.ProvideInput = true;
 
-        // Create the NetworkSceneInfo from the next scene (the game scene, not the main menu scene)
+        // Create the NetworkSceneInfo from the next scene (the map scene, not the main menu scene)
         SceneRef scene = SceneRef.FromIndex(SceneManager.GetActiveScene().buildIndex + 1);
         NetworkSceneInfo sceneInfo = new NetworkSceneInfo();
         if (scene.IsValid)
@@ -70,10 +67,13 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
         pointsTopupCooldownCurrent = pointsTopupCooldownMax;
     }
 
+    public void SceneLoadDone(in SceneLoadDoneArgs sceneInfo)
+    {
+        SpawnItems();
+    }
+
     void SpawnItems()
     {
-        spawnedItems = true;
-
         // Spawn initial items (only the server can do this)
         if (Runner.IsServer)
         {
@@ -98,8 +98,6 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
     // Update for every server simulation tick
     public override void FixedUpdateNetwork()
     {
-        // if (!spawnedItems) SpawnItems();
-
         currentTime = Runner.Tick * Runner.DeltaTime;
         if (currentTime >= maxTime)
         {
@@ -204,6 +202,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
             // Spawn the player network object
             int team = nextTeam;
             Vector3 respawnPoint = (team == 1) ? respawnPoint1 : respawnPoint2;
+
             NetworkObject networkPlayerObject = PrefabFactory.SpawnPlayer(Runner, player, playerPrefab, respawnPoint, characterPath, team);
 
             // Flip the next team so the next player to join will be on the other team

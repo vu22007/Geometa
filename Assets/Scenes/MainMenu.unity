@@ -1489,8 +1489,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e06333a752e842b7b7390cb414ea92b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  respawnPoint1: {x: -62, y: -68, z: 1}
-  respawnPoint2: {x: -172, y: -169, z: 0}
+  respawnPoint1: {x: -44, y: -82, z: 1}
+  respawnPoint2: {x: 20, y: 16, z: 0}
   maxTime: 480
   currentTime: 0
 --- !u!4 &1421627842
