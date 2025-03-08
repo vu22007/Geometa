@@ -104,13 +104,13 @@ public class Player : NetworkBehaviour
         timeToWaitForBullet = 0.0f;
         isCarrying = false;
 
-        GetComponentInChildren<PopUpText>().SetPlayer(this);
-        GetComponentInChildren<PopUpText>().transform.SetParent(null);
     }
 
     // Player initialisation (called on each client and server when player is spawned on network)
     public override void Spawned()
     {
+        GetComponentInChildren<PopUpText>().SetPlayer(this);
+        GetComponentInChildren<PopUpText>().transform.SetParent(null);
         // Disable the camera if client does not control this player
         if (!HasInputAuthority)
         {
