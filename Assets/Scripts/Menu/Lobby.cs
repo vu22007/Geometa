@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using Fusion;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,10 +16,14 @@ public class Lobby : NetworkBehaviour
     private Button knightButton;
     private Button wizardButton;
     private Button readyButton;
+    private GameObject team1List;
+    private GameObject team2List;
+    private GameObject playerCardPrefab;
     private int team = 0;
     private string characterName = "";
+    private bool playerIsReady = false;
 
-    public void OnEnable()
+    public override void Spawned()
     {
         gameController = GameObject.Find("Game Controller").GetComponent<GameController>();
         team1Button = GameObject.Find("Team 1 Button").GetComponent<Button>();
@@ -26,12 +32,19 @@ public class Lobby : NetworkBehaviour
         wizardButton = GameObject.Find("Wizard Button").GetComponent<Button>();
         readyButton = GameObject.Find("Ready Button").GetComponent<Button>();
         readyButton.interactable = false;
+        team1List = GameObject.Find("Team 1 List");
+        team2List = GameObject.Find("Team 2 List");
+        playerCardPrefab = Resources.Load("Prefabs/Lobby/PlayerCard") as GameObject;
+
+        // Populate team lists
+        AddPlayerCardsToTeamList(team1List, team1Players);
+        AddPlayerCardsToTeamList(team2List, team2Players);
     }
 
     public void Update()
     {
         // Make ready button interactable once team and character have been selected
-        if (team != 0 && characterName != "")
+        if (!playerIsReady && team != 0 && characterName != "")
         {
             readyButton.interactable = true;
         }
@@ -67,16 +80,16 @@ public class Lobby : NetworkBehaviour
 
     public void PlayerReady()
     {
-        Debug.Log("Calling RPC...");
+        playerIsReady = true;
+        readyButton.interactable = false;
         RPC_PlayerReady(team, characterName);
     }
 
     // Anyone can call this RPC, and it will run only on the server
-    [Rpc(sources: RpcSources.All, targets: RpcTargets.StateAuthority)]
+    [Rpc(sources: RpcSources.All, targets: RpcTargets.StateAuthority, HostMode = RpcHostMode.SourceIsHostPlayer)]
     public void RPC_PlayerReady(int team, string characterName, RpcInfo info = default)
     {
         PlayerRef player = info.Source;
-
         var dict = (team == 1) ? team1Players : team2Players;
         dict.Add(player, characterName);
     }
@@ -85,11 +98,64 @@ public class Lobby : NetworkBehaviour
     void OnTeam1PlayersChanged()
     {
         Debug.Log("Team 1 players changed");
+
+        // Clear team list
+        ClearPlayerCardsFromTeamList(team1List);
+
+        // Populate team list based on new player info
+        AddPlayerCardsToTeamList(team1List, team1Players);
     }
 
     // Called when the team2Players networked property changes
     void OnTeam2PlayersChanged()
     {
         Debug.Log("Team 2 players changed");
+
+        // Clear team list
+        ClearPlayerCardsFromTeamList(team2List);
+
+        // Populate team list based on new player info
+        AddPlayerCardsToTeamList(team2List, team2Players);
+    }
+
+    void ClearPlayerCardsFromTeamList(GameObject teamList)
+    {
+        foreach (Transform child in teamList.transform)
+        {
+            if (child.name.Contains("Player Card"))
+            {
+                Destroy(child);
+            }
+        }
+    }
+
+    void AddPlayerCardsToTeamList(GameObject teamList, NetworkDictionary<PlayerRef, string> players)
+    {
+        // Get card and list height
+        float cardHeight = playerCardPrefab.GetComponent<RectTransform>().rect.height;
+        float listHeight = teamList.GetComponent<RectTransform>().rect.height;
+
+        // Calculate position of first card relative to the list
+        float cardX = 0;
+        float cardY = listHeight / 2 - cardHeight / 2;
+        Vector3 cardPosition = new Vector3(cardX, cardY, 0);
+
+        // Add each player to team list
+        foreach (KeyValuePair<PlayerRef, string> item in players)
+        {
+            PlayerRef playerRef = item.Key;
+            string characterName = item.Value;
+
+            // Create and position the player card relative to the list
+            GameObject playerCard = Instantiate(playerCardPrefab, new Vector3(0, 0, 0), Quaternion.identity, teamList.transform);
+            playerCard.transform.localPosition = cardPosition;
+
+            // Set card text to character name, with an indicator to show if the player is the client's own player
+            TextMeshProUGUI cardText = playerCard.GetComponentInChildren<TextMeshProUGUI>();
+            cardText.text = Runner.LocalPlayer.Equals(playerRef) ? characterName + " (You)" : characterName;
+
+            // Set position for next card
+            cardPosition.y -= cardHeight;
+        }
     }
 }
