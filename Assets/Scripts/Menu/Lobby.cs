@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using Fusion;
 using TMPro;
 using UnityEngine;
@@ -16,8 +16,11 @@ public class Lobby : NetworkBehaviour
     private Button knightButton;
     private Button wizardButton;
     private Button readyButton;
+    private Button startGameButton;
     private GameObject team1List;
     private GameObject team2List;
+    private TextMeshProUGUI playerCounter;
+    private TextMeshProUGUI notReadyCounter;
     private GameObject playerCardPrefab;
     private int team = 0;
     private string characterName = "";
@@ -32,9 +35,21 @@ public class Lobby : NetworkBehaviour
         wizardButton = GameObject.Find("Wizard Button").GetComponent<Button>();
         readyButton = GameObject.Find("Ready Button").GetComponent<Button>();
         readyButton.interactable = false;
+        startGameButton = GameObject.Find("Start Game Button").GetComponent<Button>();
+        startGameButton.interactable = false;
         team1List = GameObject.Find("Team 1 List");
         team2List = GameObject.Find("Team 2 List");
+        playerCounter = GameObject.Find("Player Counter").GetComponent<TextMeshProUGUI>();
+        notReadyCounter = GameObject.Find("Not Ready Counter").GetComponent<TextMeshProUGUI>();
         playerCardPrefab = Resources.Load("Prefabs/Lobby/PlayerCard") as GameObject;
+
+        // Hide start game button if not the host
+        if (!HasStateAuthority)
+            startGameButton.gameObject.SetActive(false);
+
+        // Initialise player and not-ready counters
+        UpdatePlayerCounter();
+        UpdateNotReadyCounter();
 
         // Populate team lists
         AddPlayerCardsToTeamList(team1List, team1Players);
@@ -48,6 +63,9 @@ public class Lobby : NetworkBehaviour
         {
             readyButton.interactable = true;
         }
+
+        UpdatePlayerCounter();
+        UpdateNotReadyCounter();
     }
 
     public void SelectTeam1()
@@ -85,13 +103,27 @@ public class Lobby : NetworkBehaviour
         RPC_PlayerReady(team, characterName);
     }
 
+    public void StartGame()
+    {
+        if (HasStateAuthority)
+        {
+            // TODO
+            Debug.Log("Starting game...");
+        }
+    }
+
     // Anyone can call this RPC, and it will run only on the server
     [Rpc(sources: RpcSources.All, targets: RpcTargets.StateAuthority, HostMode = RpcHostMode.SourceIsHostPlayer)]
     public void RPC_PlayerReady(int team, string characterName, RpcInfo info = default)
     {
         PlayerRef player = info.Source;
-        var dict = (team == 1) ? team1Players : team2Players;
-        dict.Add(player, characterName);
+
+        // Add player to chosen team if they aren't already in a team
+        if (!team1Players.ContainsKey(player) && !team2Players.ContainsKey(player))
+        {
+            var dict = (team == 1) ? team1Players : team2Players;
+            dict.Add(player, characterName);
+        }
     }
 
     // Called when the team1Players networked property changes
@@ -116,6 +148,23 @@ public class Lobby : NetworkBehaviour
 
         // Populate team list based on new player info
         AddPlayerCardsToTeamList(team2List, team2Players);
+    }
+
+    void UpdatePlayerCounter()
+    {
+        int numPlayersInLobby = Runner.ActivePlayers.Count();
+        playerCounter.text = "Players in lobby: " + numPlayersInLobby;
+    }
+
+    void UpdateNotReadyCounter()
+    {
+        // Get number of players who are not ready
+        int numPlayersInLobby = Runner.ActivePlayers.Count();
+        int numPlayersReady = team1Players.Count() + team2Players.Count();
+        int numPlayersNotReady = numPlayersInLobby - numPlayersReady;
+
+        // Update counter
+        notReadyCounter.text = "Players not ready: " + numPlayersNotReady;
     }
 
     void ClearPlayerCardsFromTeamList(GameObject teamList)
