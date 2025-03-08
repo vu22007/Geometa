@@ -200,6 +200,7 @@ public class Player : NetworkBehaviour
     // Player initialisation when respawning
     public void Respawn()
     {
+        gameObject.SetActive(true);
         gameObject.GetComponent<NetworkRigidbody2D>().Teleport(respawnPoint);
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
@@ -617,6 +618,8 @@ public class Player : NetworkBehaviour
                 player.GainPoints(10);
             }
         }
+
+        gameObject.SetActive(false);
     }
 
     [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]

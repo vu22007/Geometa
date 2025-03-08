@@ -1335,7 +1335,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -379, y: -766}
+  m_AnchoredPosition: {x: -379, y: -571}
   m_SizeDelta: {x: 65, y: 65}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3911840303915894577
@@ -3488,7 +3488,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   popUpTextPrefab: {fileID: 2075306469595700386, guid: b548b5ef87d184627bcf594c3c5f7acb, type: 3}
   popUpText: {fileID: 2040430487038617038, guid: b548b5ef87d184627bcf594c3c5f7acb, type: 3}
-  player: {fileID: 0}
 --- !u!1773428102 &3325362716360511297
 ParentConstraint:
   m_ObjectHideFlags: 0
@@ -3512,7 +3511,7 @@ ParentConstraint:
   m_AffectRotationY: 0
   m_AffectRotationZ: 0
   m_Active: 1
-  m_IsLocked: 0
+  m_IsLocked: 1
   m_Sources:
   - sourceTransform: {fileID: 981996023074110673}
     weight: 1

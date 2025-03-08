@@ -1,12 +1,13 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Animations;
 
 public class PopUpText : MonoBehaviour
 {
     public GameObject popUpTextPrefab;
     public TMP_Text popUpText;
-    public Player player;
+    private Player player;
 
     public void MakePopupText(string message, float speed, Color textColor){
         popUpText.text = message;
