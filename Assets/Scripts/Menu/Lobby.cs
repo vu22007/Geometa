@@ -3,6 +3,7 @@ using System.Linq;
 using Fusion;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Rendering.UI;
 using UnityEngine.UI;
 
 public class Lobby : NetworkBehaviour
@@ -20,7 +21,7 @@ public class Lobby : NetworkBehaviour
     private GameObject team1List;
     private GameObject team2List;
     private TextMeshProUGUI playerCounter;
-    private TextMeshProUGUI notReadyCounter;
+    private TextMeshProUGUI readyCounter;
     private GameObject playerCardPrefab;
     private int team = 0;
     private string characterName = "";
@@ -40,16 +41,12 @@ public class Lobby : NetworkBehaviour
         team1List = GameObject.Find("Team 1 List");
         team2List = GameObject.Find("Team 2 List");
         playerCounter = GameObject.Find("Player Counter").GetComponent<TextMeshProUGUI>();
-        notReadyCounter = GameObject.Find("Not Ready Counter").GetComponent<TextMeshProUGUI>();
+        readyCounter = GameObject.Find("Ready Counter").GetComponent<TextMeshProUGUI>();
         playerCardPrefab = Resources.Load("Prefabs/Lobby/PlayerCard") as GameObject;
 
         // Hide start game button if not the host
         if (!HasStateAuthority)
             startGameButton.gameObject.SetActive(false);
-
-        // Initialise player and not-ready counters
-        UpdatePlayerCounter();
-        UpdateNotReadyCounter();
 
         // Populate team lists
         AddPlayerCardsToTeamList(team1List, team1Players);
@@ -60,12 +57,22 @@ public class Lobby : NetworkBehaviour
     {
         // Make ready button interactable once team and character have been selected
         if (!playerIsReady && team != 0 && characterName != "")
-        {
             readyButton.interactable = true;
-        }
 
-        UpdatePlayerCounter();
-        UpdateNotReadyCounter();
+        if (Runner != null)
+        {
+            // Get number of players in lobby and number of players who are ready
+            int numPlayersInLobby = Runner.ActivePlayers.Count();
+            int numPlayersReady = team1Players.Count() + team2Players.Count();
+
+            // Update player and ready counters
+            UpdatePlayerCounter(numPlayersInLobby);
+            UpdateReadyCounter(numPlayersReady);
+
+            // Enable start game button if all players in lobby are ready, else disable it
+            bool allPlayersAreReady = numPlayersReady == numPlayersInLobby;
+            startGameButton.interactable = allPlayersAreReady;
+        }
     }
 
     public void SelectTeam1()
@@ -150,21 +157,14 @@ public class Lobby : NetworkBehaviour
         AddPlayerCardsToTeamList(team2List, team2Players);
     }
 
-    void UpdatePlayerCounter()
+    void UpdatePlayerCounter(int numPlayersInLobby)
     {
-        int numPlayersInLobby = Runner.ActivePlayers.Count();
         playerCounter.text = "Players in lobby: " + numPlayersInLobby;
     }
 
-    void UpdateNotReadyCounter()
+    void UpdateReadyCounter(int numPlayersReady)
     {
-        // Get number of players who are not ready
-        int numPlayersInLobby = Runner.ActivePlayers.Count();
-        int numPlayersReady = team1Players.Count() + team2Players.Count();
-        int numPlayersNotReady = numPlayersInLobby - numPlayersReady;
-
-        // Update counter
-        notReadyCounter.text = "Players not ready: " + numPlayersNotReady;
+        readyCounter.text = "Players ready: " + numPlayersReady;
     }
 
     void ClearPlayerCardsFromTeamList(GameObject teamList)
