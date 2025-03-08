@@ -8,7 +8,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
     [SerializeField] Vector3 respawnPoint1;
     [SerializeField] Vector3 respawnPoint2;
 
-    public float maxTime = 480.0f; // 8 minute games
+    public float maxTime;
     [HideInInspector] public float currentTime = 0.0f;
 
     private List<Bullet> bullets;

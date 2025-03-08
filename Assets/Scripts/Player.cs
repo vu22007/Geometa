@@ -72,6 +72,7 @@ public class Player : NetworkBehaviour
     private AudioClip dyingSound;
     private AudioClip dashSound;
     private AudioSource audioSource;
+    [SerializeField] Image bulletIcon;
 
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(string characterPath, Vector3 respawnPoint, int team)
@@ -165,7 +166,8 @@ public class Player : NetworkBehaviour
         }
 
         // Set the ammo counter
-        ammoText.text = "Mana: " + currentAmmo;
+        ammoText.text = currentAmmo.ToString();
+        bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
 
         // Pass the local player's team to the flag indicator
         flagIndicator.SetLocalPlayerTeam(localPlayerTeam);
@@ -204,7 +206,8 @@ public class Player : NetworkBehaviour
             healthBar.fillAmount = currentHealth / maxHealth;
         
         // Set the ammo counter
-        ammoText.text = "Mana: " + currentAmmo;
+        ammoText.text = currentAmmo.ToString();
+        bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
 
         // Activate the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = true;
@@ -265,7 +268,8 @@ public class Player : NetworkBehaviour
             {
                 // Reloading is complete, update ammo
                 currentAmmo = maxAmmo;
-                ammoText.text = "Mana: " + currentAmmo;
+                ammoText.text = currentAmmo.ToString();
+                bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
                 reloadIcon.enabled = false;
                 reloadIconLayer.enabled = false;
             }
@@ -342,13 +346,20 @@ public class Player : NetworkBehaviour
                 // Testing damage
                 if (input.buttons.WasPressed(previousButtons, InputButtons.TakeDamage))
                 {
-                    TakeDamage(10);
+                    TakeDamage(10, PlayerRef.None);
                 }
 
                 // Dash with 'space'
                 if (input.buttons.WasPressed(previousButtons, InputButtons.Dash))
                 {
                     Dash(input.moveDirection);
+                }
+
+                // Activate AoE skill with 'T'
+                if (input.buttons.WasPressed(previousButtons, InputButtons.AoE))
+                {
+                    Debug.Log("T is pressed");
+                    ActivateAoE(input.cursorWorldPoint);
                 }
             }
 
@@ -358,11 +369,7 @@ public class Player : NetworkBehaviour
                 escapeMenu.SetActive(!escapeMenu.gameObject.activeSelf);
             }
 
-            // Activate AoE skill with 'T'
-            if (input.buttons.WasPressed(previousButtons, InputButtons.AoE))
-            {
-                ActivateAoE(input.cursorWorldPoint);
-            }
+            
             //Character rotates to mouse position
             Vector2 lookDirection = input.aimDirection.normalized;
             Quaternion wantedRotation = Quaternion.LookRotation(transform.forward, lookDirection);
@@ -397,7 +404,11 @@ public class Player : NetworkBehaviour
             int secondsLeft = (int) Mathf.Ceil(timeLeft);
             int mins = secondsLeft / 60;
             int secs = secondsLeft % 60;
-            timeLeftText.text = "Time Left: " + mins + ":" + secs.ToString("00");
+
+            if (mins < 0 || secs < 0)
+                timeLeftText.text = "Time Left: 0:00";
+            else
+                timeLeftText.text = "Time Left: " + mins + ":" + secs.ToString("00");
         }
     }
 
@@ -445,7 +456,7 @@ public class Player : NetworkBehaviour
                     AoESpell aoeSpell = networkObject.GetComponent<AoESpell>();
                     if (aoeSpell != null)
                     {
-                        aoeSpell.OnCreated(aoeDamage, team, aoeDuration); 
+                        aoeSpell.OnCreated(aoeDamage, team, aoeDuration, Object.InputAuthority); 
                     }
                 });
             }
@@ -476,7 +487,7 @@ public class Player : NetworkBehaviour
                 if (HasStateAuthority)
                 {
                     GameObject bulletPrefab = Resources.Load("Prefabs/Bullet") as GameObject;
-                    PrefabFactory.SpawnBullet(Runner, Object.InputAuthority, bulletPrefab, gameObject.transform.position, aimDirection, 40.0f, damage, team, this);
+                    PrefabFactory.SpawnBullet(Runner, Object.InputAuthority, bulletPrefab, gameObject.transform.position, aimDirection, 40.0f, damage, team, Object.InputAuthority);
                 }
                 // Just the player that shoot listens to the sound
                 if (HasInputAuthority)
@@ -484,7 +495,8 @@ public class Player : NetworkBehaviour
                     PlayShootSound();
                 }
                 currentAmmo--;
-                ammoText.text = "Mana: " + currentAmmo;
+                ammoText.text = currentAmmo.ToString();
+                bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
             }
         }
     }
@@ -495,8 +507,10 @@ public class Player : NetworkBehaviour
     }
 
     //take damage equal to input, includes check for death
-    public void TakeDamage(float damage)
+    public void TakeDamage(float damage, PlayerRef damageDealer)
     {
+        if (!isAlive) return;
+
         float newHealth = currentHealth - damage;
 
         if (HasStateAuthority)
@@ -509,7 +523,7 @@ public class Player : NetworkBehaviour
             RPC_HurtEffects(damage);
 
         if (newHealth <= 0.0f) {
-            Die();
+            Die(damageDealer);
         }
     }
     
@@ -568,7 +582,7 @@ public class Player : NetworkBehaviour
         }
     }
 
-    void Die()
+    void Die(PlayerRef killer)
     {
         isAlive = false;
 
@@ -586,6 +600,16 @@ public class Player : NetworkBehaviour
         {
             // Player will drop the flag if they died
             DropObject();
+        }
+
+        // Award points to killer
+        if (Runner.TryGetPlayerObject(killer, out NetworkObject networkPlayerObject))
+        {
+            Player player = networkPlayerObject.GetComponent<Player>();
+            if (player.team != team)
+            {
+                player.GainPoints(10);
+            }
         }
     }
 
@@ -647,7 +671,7 @@ public class Player : NetworkBehaviour
         }
         else
         {
-            ShowMessage("still gathering mana", 0.3f, Color.white);
+            ShowMessage("Still gathering mana", 0.3f, Color.white);
         }
     }
 
