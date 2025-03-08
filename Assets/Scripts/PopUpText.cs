@@ -6,6 +6,7 @@ public class PopUpText : MonoBehaviour
 {
     public GameObject popUpTextPrefab;
     public TMP_Text popUpText;
+    public Player player;
 
     public void MakePopupText(string message, float speed, Color textColor){
         popUpText.text = message;
@@ -17,4 +18,8 @@ public class PopUpText : MonoBehaviour
         animator.speed = speed;
     }
 
+    public void SetPlayer(Player player)
+    {
+        this.player = player;
+    }
 }

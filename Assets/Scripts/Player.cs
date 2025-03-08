@@ -103,6 +103,9 @@ public class Player : NetworkBehaviour
         currentRespawn = 0.0f;
         timeToWaitForBullet = 0.0f;
         isCarrying = false;
+
+        GetComponentInChildren<PopUpText>().SetPlayer(this);
+        GetComponentInChildren<PopUpText>().transform.SetParent(null);
     }
 
     // Player initialisation (called on each client and server when player is spawned on network)
