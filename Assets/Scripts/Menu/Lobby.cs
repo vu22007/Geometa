@@ -3,7 +3,7 @@ using System.Linq;
 using Fusion;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Rendering.UI;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class Lobby : NetworkBehaviour
@@ -114,9 +114,25 @@ public class Lobby : NetworkBehaviour
     {
         if (HasStateAuthority)
         {
-            // TODO
             Debug.Log("Starting game...");
+
+            // Give the game controller the player dictionaries, but first convert the networked ones to standard ones
+            gameController.team1Players = ConvertFromNetworkDictionary(team1Players);
+            gameController.team2Players = ConvertFromNetworkDictionary(team2Players);
+
+            // Switch to map scene, and the game controller will then spawn player objects etc. and start game
+            Runner.LoadScene(SceneRef.FromIndex(SceneManager.GetActiveScene().buildIndex + 1));
         }
+    }
+
+    Dictionary<PlayerRef, string> ConvertFromNetworkDictionary(NetworkDictionary<PlayerRef, string> networkDictionary)
+    {
+        Dictionary<PlayerRef, string> dictionary = new Dictionary<PlayerRef, string>();
+        foreach (KeyValuePair<PlayerRef, string> item in networkDictionary)
+        {
+            dictionary.Add(item.Key, item.Value);
+        }
+        return dictionary;
     }
 
     // Anyone can call this RPC, and it will run only on the server

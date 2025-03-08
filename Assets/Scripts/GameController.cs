@@ -16,17 +16,14 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
     private List<Player> alivePlayers;
     private List<Pickup> pickups;
 
-    // For only the server to use so that it can manage the spawn and despawn of players
+    // For only the server/host to use so that it can manage the spawn and despawn of players
     private Dictionary<PlayerRef, NetworkObject> spawnedPlayers = new Dictionary<PlayerRef, NetworkObject>();
-
-    // For server to use to keep track of what team to assign to a new player when they join
-    int nextTeam = 1;
 
     // Flags
     private PickupFlag team1Flag;
     private PickupFlag team2Flag;
 
-    // For only the server to use when broadcasting messages
+    // For only the server/host to use when broadcasting messages
     private bool gameOver = false;
 
     private float pointsTopupCooldownMax = 10f;
@@ -34,12 +31,16 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
 
     private NetworkRunner runner;
 
+    // For only the server/host to use for spawning players
+    public Dictionary<PlayerRef, string> team1Players;
+    public Dictionary<PlayerRef, string> team2Players;
+
     async public void StartGame(GameMode mode, string sessionName)
     {
         runner = gameObject.GetComponent<NetworkRunner>();
         runner.ProvideInput = true;
 
-        // Create the NetworkSceneInfo from the next scene (the map scene, not the main menu scene)
+        // Create the NetworkSceneInfo from the next scene (the lobby scene)
         SceneRef scene = SceneRef.FromIndex(SceneManager.GetActiveScene().buildIndex + 1);
         NetworkSceneInfo sceneInfo = new NetworkSceneInfo();
         if (scene.IsValid)
@@ -69,7 +70,14 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
 
     public void SceneLoadDone(in SceneLoadDoneArgs sceneInfo)
     {
-        SpawnItems();
+        // Only proceed if we are loading the map, not the lobby
+        if (sceneInfo.Scene.name == "Lobby") return;
+
+        if (Runner.IsServer)
+        {
+            SpawnPlayers();
+            SpawnItems();
+        }
     }
 
     void SpawnItems()
@@ -190,27 +198,67 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft, I
         alivePlayers.Remove(player);
     }
 
-    public void PlayerJoined(PlayerRef player)
+    public void SpawnPlayers()
     {
-        // Run the following only on the server
+        if (Runner.IsServer)
+        {
+            // Create team 1 players
+            foreach (KeyValuePair<PlayerRef, string> item in team1Players)
+            {
+                PlayerRef playerRef = item.Key;
+                string characterName = item.Value;
+                SpawnPlayer(playerRef, characterName, 1);
+            }
+
+            // Create team 2 players
+            foreach (KeyValuePair<PlayerRef, string> item in team2Players)
+            {
+                PlayerRef playerRef = item.Key;
+                string characterName = item.Value;
+                SpawnPlayer(playerRef, characterName, 2);
+            }
+        }
+    }
+
+    void SpawnPlayer(PlayerRef player, string characterName, int team)
+    {
         if (Runner.IsServer)
         {
             // Load prefab
             GameObject playerPrefab = Resources.Load("Prefabs/Player") as GameObject;
-            string characterPath = "ScriptableObjects/Characters/Wizard";
 
-            // Spawn the player network object
-            int team = nextTeam;
+            // Choose respawn point based on team
             Vector3 respawnPoint = (team == 1) ? respawnPoint1 : respawnPoint2;
 
-            NetworkObject networkPlayerObject = PrefabFactory.SpawnPlayer(Runner, player, playerPrefab, respawnPoint, characterPath, team);
-
-            // Flip the next team so the next player to join will be on the other team
-            nextTeam = (nextTeam == 1) ? 2 : 1;
+            // Spawn the player network object
+            NetworkObject networkPlayerObject = PrefabFactory.SpawnPlayer(Runner, player, playerPrefab, respawnPoint, characterName, team);
 
             // Add player network object to dictionary
             spawnedPlayers.Add(player, networkPlayerObject);
         }
+    }
+
+    public void PlayerJoined(PlayerRef player)
+    {
+        //// Run the following only on the server
+        //if (Runner.IsServer)
+        //{
+        //    // Load prefab
+        //    GameObject playerPrefab = Resources.Load("Prefabs/Player") as GameObject;
+        //    string characterPath = "ScriptableObjects/Characters/Wizard";
+
+        //    // Spawn the player network object
+        //    int team = nextTeam;
+        //    Vector3 respawnPoint = (team == 1) ? respawnPoint1 : respawnPoint2;
+
+        //    NetworkObject networkPlayerObject = PrefabFactory.SpawnPlayer(Runner, player, playerPrefab, respawnPoint, characterPath, team);
+
+        //    // Flip the next team so the next player to join will be on the other team
+        //    nextTeam = (nextTeam == 1) ? 2 : 1;
+
+        //    // Add player network object to dictionary
+        //    spawnedPlayers.Add(player, networkPlayerObject);
+        //}
     }
 
     public void PlayerLeft(PlayerRef player)

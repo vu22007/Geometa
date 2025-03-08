@@ -26,7 +26,7 @@ public class Player : NetworkBehaviour
     [Networked] bool isAlive { get; set; }
     [Networked] float respawnTime { get; set; }
     [Networked] float currentRespawn { get; set; }
-    [Networked, Capacity(50)] string characterPath { get; set; }
+    [Networked, Capacity(30)] string characterName { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
     [Networked] private NetworkObject carriedObject { get; set; }
     [Networked, OnChangedRender(nameof(OnCarryingChanged)), HideInInspector] public bool isCarrying { get; set; }
@@ -75,9 +75,9 @@ public class Player : NetworkBehaviour
     [SerializeField] Image bulletIcon;
 
     // Player intialisation (called from game controller on server when creating the player)
-    public void OnCreated(string characterPath, Vector3 respawnPoint, int team)
+    public void OnCreated(string characterName, Vector3 respawnPoint, int team)
     {
-        Character character = Resources.Load(characterPath) as Character;
+        Character character = Resources.Load($"ScriptableObjects/Characters/{characterName}") as Character;
         maxHealth = character.MaxHealth;
         maxPoints = 30f;
         speed = character.Speed;
@@ -90,7 +90,7 @@ public class Player : NetworkBehaviour
         
         this.respawnPoint = respawnPoint;
         this.team = team;
-        this.characterPath = characterPath;
+        this.characterName = characterName;
         points = 30f;
         reloadTime = 3.0f;
         respawnTime = 10.0f;
@@ -126,7 +126,7 @@ public class Player : NetworkBehaviour
         animator = gameObject.GetComponent<Animator>();
 
         // Set sprite from resource path
-        Character character = Resources.Load(characterPath) as Character;
+        Character character = Resources.Load($"ScriptableObjects/Characters/{characterName}") as Character;
         spriteRenderer.sprite = character.Sprite;
 
         //Set animator controller
