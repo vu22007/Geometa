@@ -9,7 +9,11 @@ public class CircleCornerCollider : NetworkBehaviour
     [Networked] float score { get; set; }
     private CircleCollider2D circleCollider;
     private List<Player> slowedPlayers;
+
+    public GameObject shockwavePrefab;
+
     public override void Spawned()
+
     {
         slowedPlayers = new List<Player>();
         circleCollider = GetComponent<CircleCollider2D>();
@@ -23,7 +27,56 @@ public class CircleCornerCollider : NetworkBehaviour
         circleCollider.transform.position = pos;
         circleCollider.enabled = true;
 
+        // Trigger animation
+        TriggerShockwave(pos);
+
+
         StartCoroutine(DelayDisable(0.1f));
+    }
+
+    void TriggerShockwave(Vector3 position)
+    {
+        if (shockwavePrefab != null)
+        {
+            if (!Runner.IsRunning)
+            {
+                Debug.LogWarning("Fusion is not running! Cannot spawn shockwave.");
+                return;
+            }
+
+            // Spawn with correct ownership (Prevent owner-prediction issues)
+            NetworkObject shockwaveObject = Runner.Spawn(shockwavePrefab, position, Quaternion.identity, Object.InputAuthority);
+
+            Debug.Log($"Shockwave spawned at {position}");
+
+            Animator shockwaveAnimator = shockwaveObject.GetComponent<Animator>();
+            float animLength = (shockwaveAnimator != null) ? shockwaveAnimator.GetCurrentAnimatorStateInfo(0).length : 1.5f;
+
+            Debug.Log($"Shockwave animation length: {animLength}");
+
+            StartCoroutine(DespawnShockwave(shockwaveObject, animLength));
+        }
+        else
+        {
+            Debug.LogWarning("Shockwave prefab not assigned!");
+        }
+    }
+
+   IEnumerator DespawnShockwave(NetworkObject obj, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        if (obj != null && obj.IsValid)
+        {
+            Debug.Log($"Despawning shockwave after {delay} seconds.");
+
+            Runner.Despawn(obj); // Fusion despawn
+            Destroy(obj.gameObject); // Forcefully remove from scene
+        }
+        else
+        {
+            Debug.LogWarning("Shockwave object is already destroyed or invalid.");
+        }
     }
 
     IEnumerator DelayDisable(float delay)
@@ -36,17 +89,17 @@ public class CircleCornerCollider : NetworkBehaviour
 
     void OnTriggerEnter2D(Collider2D collider)
     {
+        // Prevent running if not fully spawned in the network
+        if (!Object || !HasStateAuthority || !Runner.IsRunning) return;
+
         if (collider.gameObject.tag == "Player")
         {
             Player player = collider.GetComponentInParent<Player>();
 
-            // This doesn't allow players to be damaged twice from the same ability
-            // because the collider exists for 0.1 seconds and multiple frames
-            if (player.GetTeam() != team && !slowedPlayers.Contains(player))
+            // Ensure 'team' is accessed only after Spawned() is called
+            if (player != null && Object.IsValid && player.GetTeam() != team && !slowedPlayers.Contains(player))
             {
                 Debug.Log("Enemy slowed");
-                // The score determines how much the player will be slowed with the max amount of 2 = 2*1
-                // It is set in the activate collider function above so it gets set before the collider gets enabled
                 player.GetSlowed(2f * score, 1f);
                 slowedPlayers.Add(player);
             }
