@@ -107,6 +107,10 @@ public class Lobby : NetworkBehaviour
     {
         playerIsReady = true;
         readyButton.interactable = false;
+        team1Button.interactable = false;
+        team2Button.interactable = false;
+        knightButton.interactable = false;
+        wizardButton.interactable = false;
         RPC_PlayerReady(team, characterName);
     }
 
@@ -219,6 +223,12 @@ public class Lobby : NetworkBehaviour
             TextMeshProUGUI cardText = playerCard.GetComponentInChildren<TextMeshProUGUI>();
             cardText.text = Runner.LocalPlayer.Equals(playerRef) ? characterName + " (You)" : characterName;
             cardText.color = Runner.LocalPlayer.Equals(playerRef) ? Color.green : Color.white;
+
+            // Set card character image based on chosen character
+            GameObject knightImage = playerCard.transform.Find("Knight Image").gameObject;
+            GameObject wizardImage = playerCard.transform.Find("Wizard Image").gameObject;
+            if (characterName == "Knight") wizardImage.SetActive(false);
+            else knightImage.SetActive(false);
 
             // Set position for next card
             cardPosition.y -= cardHeight;
