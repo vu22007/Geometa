@@ -152,6 +152,7 @@ public class Player : NetworkBehaviour
         else if (localPlayerTeam != team)
         {
             healthBar = enemyHealthBar;
+            enemyHealthBar.transform.parent.gameObject.SetActive(true);
             mainHealthBar.transform.parent.gameObject.SetActive(false);
             teamHealthBar.transform.parent.gameObject.SetActive(false);
         }
