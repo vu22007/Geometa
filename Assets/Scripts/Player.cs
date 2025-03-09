@@ -45,6 +45,7 @@ public class Player : NetworkBehaviour
     [Networked] public bool isAoEEnabled { get; set; }
     [Networked] private bool isAoEUsed { get; set; }
     [Networked] public float aoeMaxRad { get; set; }
+    [Networked] private bool normalShoot { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
@@ -109,6 +110,7 @@ public class Player : NetworkBehaviour
         isCarrying = false;
         isAoEEnabled = false;
         isAoEUsed = false;
+        normalShoot = true;
     }
 
     // Player initialisation (called on each client and server when player is spawned on network)
@@ -300,19 +302,6 @@ public class Player : NetworkBehaviour
             }
         }
 
-        // Handle AoE cooldown
-        if (aoeCooldownTimer > 0)
-        {
-            aoeCooldownTimer -= Runner.DeltaTime;
-            if (aoeCooldownTimer <= 0)
-            {
-                aoeIcon.enabled = false;
-                aoeIconLayer.enabled = false;
-                isAoEUsed = false; 
-                isAoEEnabled = false;
-            }
-        }
-
         // auto reload 
         if (currentAmmo == 0 && reloadTimer <= 0) 
         {
@@ -331,14 +320,15 @@ public class Player : NetworkBehaviour
                 // Firing the weapon
                 if (input.buttons.IsSet(InputButtons.Shoot))
                 {
-                    if (isAoEEnabled)
+                    if (isAoEEnabled && !normalShoot)
                     {
                         ShootAoE(input.aimDirection);
-                        ActivateAoE();
+                        Debug.Log("Shoot aoe");
                     }
-                    else
+                    else if (normalShoot && !isAoEEnabled)
                     {
                         Shoot(input.aimDirection);
+                        Debug.Log("Shoot normal");
                     }
                     isAttacking = true;
                 }
@@ -454,19 +444,6 @@ public class Player : NetworkBehaviour
         }
     }
 
-    // Activate AoE skill cooldown
-    public void ActivateAoE()
-    {
-        // Start cooldown
-        aoeCooldownTimer = aoeCooldown;
-        ShowMessage("AoE Skill Used", 0.5f, Color.white);
-        aoeIcon.enabled = true;
-        aoeIconLayer.enabled = true;
-        isAoEUsed = true;
-        aoeHandler.StartCooldown(aoeCooldown);
-    }
-
-
     // Shoots a bullet by spawning the prefab on the network
     void Shoot(Vector2 aimDirection)
     {
@@ -514,7 +491,9 @@ public class Player : NetworkBehaviour
         {
             PlayShootSound();
         }  
-        isAoEEnabled = false;     
+        isAoEEnabled = false;
+        normalShoot = true;
+        aoeIcon.enabled = false;     
     }
     
 
@@ -769,6 +748,10 @@ public class Player : NetworkBehaviour
     {
         if (tri)
         {
+            isAoEEnabled = true; // Enable AoE
+            normalShoot = false;
+            aoeIcon.enabled = true;
+            isAoEUsed = false;
             StartCoroutine(EnableAoETemporarily());
         } 
     }
@@ -792,13 +775,11 @@ public class Player : NetworkBehaviour
 
     private IEnumerator EnableAoETemporarily()
     {
-        isAoEEnabled = true; // Enable AoE
-        aoeIcon.enabled = true;
-        isAoEUsed = false;
         yield return new WaitForSeconds(5f); 
         if (!isAoEUsed)
         {
             isAoEEnabled = false; // Disable AoE
+            normalShoot = true;
             aoeIcon.enabled = false;
         }
         

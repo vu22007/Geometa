@@ -179,3 +179,5 @@ MonoBehaviour:
   _damage: 0
   _team: 0
   _duration: 0
+  aoeSmall: {fileID: 21300000, guid: 797312d0b4f40c148857bff08e4ccdfd, type: 3}
+  aoeNormal: {fileID: 1224305071567388437, guid: 7722a591a539f874dba6f9db948387e9, type: 3}

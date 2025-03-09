@@ -14,6 +14,11 @@ public class AoESpell : NetworkBehaviour
     [Networked] private float distanceTraveled { get; set; }
     [Networked] private bool isActivated { get; set; }
 
+    [SerializeField] private Sprite aoeSmall;
+    [SerializeField] private Sprite aoeNormal;
+
+    private SpriteRenderer spriteRenderer;
+
     public void OnCreated(Vector2 direction, float speed, float maxDistance, float damage, int team, float duration, PlayerRef playerCasting)
     {
         this.damage = damage;
@@ -26,6 +31,11 @@ public class AoESpell : NetworkBehaviour
         this.distanceTraveled = 0f;
         this.isActivated = false;
 
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer != null && aoeSmall != null)
+        {
+            spriteRenderer.sprite = aoeSmall;
+        }
     }
 
     public override void FixedUpdateNetwork()
@@ -48,6 +58,10 @@ public class AoESpell : NetworkBehaviour
             if (distanceTraveled >= maxDistance)
             {
                 isActivated = true;
+                if (spriteRenderer != null && aoeNormal != null)
+                {
+                    spriteRenderer.sprite = aoeNormal;
+                }
                 despawnTimer = TickTimer.CreateFromSeconds(Runner, duration);
             }
         }
