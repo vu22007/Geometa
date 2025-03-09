@@ -218,6 +218,7 @@ public class Lobby : NetworkBehaviour
             // Set card text to character name, with an indicator to show if the player is the client's own player
             TextMeshProUGUI cardText = playerCard.GetComponentInChildren<TextMeshProUGUI>();
             cardText.text = Runner.LocalPlayer.Equals(playerRef) ? characterName + " (You)" : characterName;
+            cardText.color = Runner.LocalPlayer.Equals(playerRef) ? Color.green : Color.white;
 
             // Set position for next card
             cardPosition.y -= cardHeight;
