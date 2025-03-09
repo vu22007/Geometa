@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Fusion;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class ShapeController : NetworkBehaviour
@@ -20,6 +21,7 @@ public class ShapeController : NetworkBehaviour
 
     [Networked] private float triangleCooldown { get; set; }
     [Networked] private float squareCooldown { get; set; }
+    private float maxDistance = 30;
 
     private LineRenderer triangleLineRenderer;
     private LineRenderer squareLineRenderer;
@@ -159,15 +161,7 @@ public class ShapeController : NetworkBehaviour
     }
 
     void PreviewShape(int nVertices, bool activate)
-    {
-        // Do not allow shape preview or activation if shape is currently active
-        if (shapeIsActive)
-        {
-            Debug.Log("Shape is already active!");
-            if (activate) parentPlayer.ShowMessage("Shape is already active!", 0.2f, Color.white);
-            return;
-        }
-
+    { 
         if (nVertices == 3 && triangleCooldown > 0)
         {
             Debug.Log("Cooldown on triangle: " + triangleCooldown);
@@ -196,6 +190,13 @@ public class ShapeController : NetworkBehaviour
         {
             Debug.Log("Not enough players to activate shape");
             if (activate) parentPlayer.ShowMessage("Not enough players to activate shape!", 0.2f, Color.white);
+            return;
+        }
+
+        if (Vector3.Distance(parentPlayer.transform.position, playerPositions.Last()) > maxDistance)
+        {
+            Debug.Log("Players too far away to activate shape");
+            if (activate) parentPlayer.ShowMessage("Players too far away to activate shape!", 0.2f, Color.white);
             return;
         }
 
