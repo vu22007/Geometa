@@ -51,7 +51,7 @@ public class Player : NetworkBehaviour
     [SerializeField] Image teamHealthBar;
     [SerializeField] Image mainPointsBar;
     [SerializeField] Image enemyHealthBar;
-    [SerializeField] PopUpText popUpText;
+    [SerializeField] UIController uIController;
     [SerializeField] cooldownHandler dashCDHandler;
     [SerializeField] cooldownHandler reloadHandler;
     [SerializeField] cooldownHandler aoeHandler;
@@ -109,8 +109,9 @@ public class Player : NetworkBehaviour
     // Player initialisation (called on each client and server when player is spawned on network)
     public override void Spawned()
     {
-        GetComponentInChildren<PopUpText>().SetPlayer(this);
-        GetComponentInChildren<PopUpText>().transform.SetParent(null);
+        uIController = GetComponentInChildren<UIController>();
+        uIController.SetPlayer(this);
+        uIController.transform.SetParent(null);
         // Disable the camera if client does not control this player
         if (!HasInputAuthority)
         {
@@ -405,19 +406,6 @@ public class Player : NetworkBehaviour
             carriedObject.transform.position = transform.position + new Vector3(2.0f, 0, 0);
         }
 
-        // Update the time left in the UI if the client controls this player
-        if (HasInputAuthority)
-        {
-            float timeLeft = gameController.maxTime - gameController.currentTime;
-            int secondsLeft = (int) Mathf.Ceil(timeLeft);
-            int mins = secondsLeft / 60;
-            int secs = secondsLeft % 60;
-
-            if (mins < 0 || secs < 0)
-                timeLeftText.text = "Time Left: 0:00";
-            else
-                timeLeftText.text = "Time Left: " + mins + ":" + secs.ToString("00");
-        }
     }
 
     // Player moves according to key presses and player speed
@@ -726,7 +714,7 @@ public class Player : NetworkBehaviour
 
     public void ShowMessage(string message, float speed, Color color) {
         if (HasInputAuthority) {
-            popUpText.MakePopupText(message, speed, color);
+            uIController.MakePopupText(message, speed, color);
         }
     }
 

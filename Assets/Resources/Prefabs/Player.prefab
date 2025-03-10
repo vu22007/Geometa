@@ -1533,7 +1533,7 @@ MonoBehaviour:
   teamHealthBar: {fileID: 8623719664100579951}
   mainPointsBar: {fileID: 1413040121094791050}
   enemyHealthBar: {fileID: 871756147968111674}
-  popUpText: {fileID: 5274057264464900876}
+  uIController: {fileID: 0}
   dashCDHandler: {fileID: 44001292487815618}
   reloadHandler: {fileID: 4176487474788363455}
   aoeHandler: {fileID: 3511033827935905921}
@@ -3387,8 +3387,8 @@ GameObject:
   - component: {fileID: 5694737665341873896}
   - component: {fileID: 5026694663692752616}
   - component: {fileID: 1051879175246726060}
-  - component: {fileID: 5274057264464900876}
   - component: {fileID: 3325362716360511297}
+  - component: {fileID: 2701067427050605302}
   m_Layer: 5
   m_Name: UI
   m_TagString: Untagged
@@ -3488,20 +3488,6 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
---- !u!114 &5274057264464900876
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8614039415812819164}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ef476de2eef2b4277b2945d6685418de, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  popUpTextPrefab: {fileID: 2075306469595700386, guid: b548b5ef87d184627bcf594c3c5f7acb, type: 3}
-  popUpText: {fileID: 2040430487038617038, guid: b548b5ef87d184627bcf594c3c5f7acb, type: 3}
 --- !u!1773428102 &3325362716360511297
 ParentConstraint:
   m_ObjectHideFlags: 0
@@ -3529,6 +3515,21 @@ ParentConstraint:
   m_Sources:
   - sourceTransform: {fileID: 981996023074110673}
     weight: 1
+--- !u!114 &2701067427050605302
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8614039415812819164}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef476de2eef2b4277b2945d6685418de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  popUpTextPrefab: {fileID: 2075306469595700386, guid: b548b5ef87d184627bcf594c3c5f7acb, type: 3}
+  popUpText: {fileID: 5253126099504964119}
+  timeLeftText: {fileID: 5253126099504964119}
 --- !u!1 &8773785525493105379
 GameObject:
   m_ObjectHideFlags: 0

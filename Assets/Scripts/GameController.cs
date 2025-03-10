@@ -75,6 +75,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
         if (!spawnedItems) SpawnItems();
 
         currentTime = Runner.Tick * Runner.DeltaTime;
+
         if (currentTime >= maxTime)
         {
             //end game
