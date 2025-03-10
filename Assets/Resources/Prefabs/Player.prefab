@@ -1848,6 +1848,7 @@ MonoBehaviour:
   aoeIcon: {fileID: 3657592492558244496}
   aoeIconLayer: {fileID: 6684430098283849814}
   escapeMenu: {fileID: 1120290703584790456}
+  minimap: {fileID: 3611658082365429512}
   ammoText: {fileID: 9126663489822556632}
   timeLeftText: {fileID: 5253126099504964119}
   holdPosition: {fileID: 0}
@@ -2074,6 +2075,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4108924248177764437}
+  - component: {fileID: 3611658082365429512}
   m_Layer: 5
   m_Name: Minimap
   m_TagString: Untagged
@@ -2102,6 +2104,20 @@ RectTransform:
   m_AnchoredPosition: {x: 200, y: 200}
   m_SizeDelta: {x: 200, y: 200}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &3611658082365429512
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3884593934228597447}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 838c3afba4484411095c95a571baf6be, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cameraView: {fileID: 8276108097317485181}
+  minimap: {fileID: 4778632824303049457}
 --- !u!1 &4011279368303780446
 GameObject:
   m_ObjectHideFlags: 0
@@ -3760,7 +3776,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Texture: {fileID: 8400000, guid: 4fa2005fcd3ab465abba0b8057f35d8f, type: 2}
+  m_Texture: {fileID: 0}
   m_UVRect:
     serializedVersion: 2
     x: 0

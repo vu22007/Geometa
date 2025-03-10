@@ -60,6 +60,7 @@ public class Player : NetworkBehaviour
     [SerializeField] Image aoeIcon;
     [SerializeField] Image aoeIconLayer;
     [SerializeField] GameObject escapeMenu;
+    [SerializeField] Minimap minimap;
     Image healthBar;
     public TextMeshProUGUI ammoText;
     public TextMeshProUGUI timeLeftText;
@@ -137,6 +138,9 @@ public class Player : NetworkBehaviour
 
         Player localPlayer = Runner.GetPlayerObject(Runner.LocalPlayer)?.GetComponent<Player>();
         int localPlayerTeam = localPlayer.GetTeam();
+
+        //Setup minimap
+        minimap.Setup();
 
         // If client controls this player then use main health bar
         if (HasInputAuthority)
