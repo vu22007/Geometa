@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Fusion;
 using Fusion.Sockets;
 using UnityEngine;
@@ -13,7 +14,7 @@ public class Runner : SimulationBehaviour, INetworkRunnerCallbacks
     public Dictionary<PlayerRef, string> team1Players;
     public Dictionary<PlayerRef, string> team2Players;
 
-    async public void StartGame(GameMode mode, string sessionName)
+    async public Task<StartGameResult> StartGame(GameMode mode, string sessionName)
     {
         runner = gameObject.GetComponent<NetworkRunner>();
         runner.ProvideInput = true;
@@ -27,7 +28,7 @@ public class Runner : SimulationBehaviour, INetworkRunnerCallbacks
         }
 
         // Start or join (depends on gamemode) a session with a specific name
-        await runner.StartGame(new StartGameArgs()
+        StartGameResult result = await runner.StartGame(new StartGameArgs()
         {
             GameMode = mode,
             SessionName = sessionName,
@@ -35,6 +36,8 @@ public class Runner : SimulationBehaviour, INetworkRunnerCallbacks
             PlayerCount = 12,
             SceneManager = gameObject.AddComponent<NetworkSceneManagerDefault>()
         });
+
+        return result;
     }
 
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
