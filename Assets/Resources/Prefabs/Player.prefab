@@ -4465,6 +4465,7 @@ GameObject:
   - component: {fileID: 7684104281542879862}
   - component: {fileID: 8276108097317485181}
   - component: {fileID: 5648670422859079730}
+  - component: {fileID: 7840698907083128695}
   m_Layer: 0
   m_Name: MinimapCamera
   m_TagString: Untagged
@@ -4582,6 +4583,19 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
+--- !u!114 &7840698907083128695
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8744208852700158081}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f2b36c576e96b64d9a7aed326104bc6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lockRelativePosition: 0
 --- !u!1 &8773785525493105379
 GameObject:
   m_ObjectHideFlags: 0
