@@ -63,16 +63,6 @@ public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
         actionMenu.Disable();
     }
 
-    //public override void Spawned()
-    //{
-    //    Debug.Log("On spawned...");
-    //    if (Runner != null)
-    //    {
-    //        Debug.Log("Adding callbacks...");
-    //        Runner.AddCallbacks(this);
-    //    }
-    //}
-
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {
         NetworkInputData data = new NetworkInputData();

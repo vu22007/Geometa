@@ -720,10 +720,10 @@ public class Player : NetworkBehaviour
         }
     }
 
-    public void Quit()
+    public void LeaveMatch()
     {
-        Debug.Log("Exiting");
-        Application.Quit();
+        // Shutdown the network runner, which will cause the game to return to the main menu
+        Runner.Shutdown();
     }
     
     // Only server can call this RPC, and it will run only on the client that controls this player

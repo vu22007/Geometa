@@ -118,8 +118,6 @@ public class Lobby : NetworkBehaviour
     {
         if (HasStateAuthority)
         {
-            Debug.Log("Starting game...");
-
             // Give the runner the player dictionaries, but first convert the networked ones to standard ones
             runner.team1Players = ConvertFromNetworkDictionary(team1Players);
             runner.team2Players = ConvertFromNetworkDictionary(team2Players);
@@ -156,8 +154,6 @@ public class Lobby : NetworkBehaviour
     // Called when the team1Players networked property changes
     void OnTeam1PlayersChanged()
     {
-        Debug.Log("Team 1 players changed");
-
         // Clear team list
         ClearPlayerCardsFromTeamList(team1List);
 
@@ -168,8 +164,6 @@ public class Lobby : NetworkBehaviour
     // Called when the team2Players networked property changes
     void OnTeam2PlayersChanged()
     {
-        Debug.Log("Team 2 players changed");
-
         // Clear team list
         ClearPlayerCardsFromTeamList(team2List);
 

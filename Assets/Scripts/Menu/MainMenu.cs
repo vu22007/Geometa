@@ -16,13 +16,11 @@ public class MainMenu : MonoBehaviour
 
     public void HostGame()
     {
-        Debug.Log($"Hosting game with session name '{sessionName}'...");
         runner.StartGame(GameMode.Host, sessionName);
     }
 
     public void JoinGame()
     {
-        Debug.Log($"Joining game with session name '{sessionName}'...");
         runner.StartGame(GameMode.Client, sessionName);
     }
 
