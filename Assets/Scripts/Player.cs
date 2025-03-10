@@ -411,13 +411,22 @@ public class Player : NetworkBehaviour
     // Player moves according to key presses and player speed
     void PlayerMovement(Vector2 moveDirection)
     {
-        // If dashing, use dash speed; otherwise, use normal speed
-        float currentSpeed = isDashing ? speed * dashSpeed : speed;
-        // Move the player by setting the velocity using the supplied movement direction vector
-        Vector2 velocity = moveDirection.normalized * currentSpeed;
-        rb.linearVelocity = velocity;
+        // Calculate target velocity
+        float targetSpeed = isDashing ? speed * dashSpeed : speed;
+        Vector2 targetVelocity = moveDirection.normalized * targetSpeed;
 
-        isMoving = velocity.x != 0 || velocity.y != 0;
+        // Current velocity
+        Vector2 currentVelocity = rb.linearVelocity;
+
+        // Apply acceleration to gradually reach target velocity
+        float acceleration = 5f;
+        Vector2 newVelocity = Vector2.Lerp(currentVelocity, targetVelocity, acceleration * Time.deltaTime);
+
+        // Apply the new velocity
+        rb.linearVelocity = newVelocity;
+
+        // Check if player is moving
+        isMoving = newVelocity.x != 0 || newVelocity.y != 0;
     }
 
     // Dash mechanic
