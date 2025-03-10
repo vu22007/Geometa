@@ -3,11 +3,11 @@ using Fusion;
 
 public class MainMenu : MonoBehaviour
 {
-    private GameController gameController;
+    private Runner runner;
     private string sessionName;
 
     public void OnEnable() {
-        gameController = GameObject.Find("Game Controller").GetComponent<GameController>();
+        runner = GameObject.Find("Network Runner").GetComponent<Runner>();
     }
 
     public void OnSessionNameChanged(string newSessionName) {
@@ -17,13 +17,13 @@ public class MainMenu : MonoBehaviour
     public void HostGame()
     {
         Debug.Log($"Hosting game with session name '{sessionName}'...");
-        gameController.StartGame(GameMode.Host, sessionName);
+        runner.StartGame(GameMode.Host, sessionName);
     }
 
     public void JoinGame()
     {
         Debug.Log($"Joining game with session name '{sessionName}'...");
-        gameController.StartGame(GameMode.Client, sessionName);
+        runner.StartGame(GameMode.Client, sessionName);
     }
 
     public void QuitGame()

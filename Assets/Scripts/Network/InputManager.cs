@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Fusion;
 using Fusion.Sockets;
 using UnityEngine;
-using UnityEngine.Assertions.Must;
 using UnityEngine.InputSystem;
 
 public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
@@ -48,7 +47,6 @@ public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
         actionDash.Enable();
         actionAoE.Enable();
         actionMenu.Enable();
-
     }
 
     private void OnDisable()
@@ -64,6 +62,16 @@ public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
         actionAoE.Disable();
         actionMenu.Disable();
     }
+
+    //public override void Spawned()
+    //{
+    //    Debug.Log("On spawned...");
+    //    if (Runner != null)
+    //    {
+    //        Debug.Log("Adding callbacks...");
+    //        Runner.AddCallbacks(this);
+    //    }
+    //}
 
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {

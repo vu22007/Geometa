@@ -11,7 +11,7 @@ public class Lobby : NetworkBehaviour
     [Networked, Capacity(6), OnChangedRender(nameof(OnTeam1PlayersChanged))] private NetworkDictionary<PlayerRef, string> team1Players { get; }
     [Networked, Capacity(6), OnChangedRender(nameof(OnTeam2PlayersChanged))] private NetworkDictionary<PlayerRef, string> team2Players { get; }
 
-    private GameController gameController;
+    private Runner runner;
     private Button team1Button;
     private Button team2Button;
     private Button knightButton;
@@ -29,7 +29,7 @@ public class Lobby : NetworkBehaviour
 
     public override void Spawned()
     {
-        gameController = GameObject.Find("Game Controller").GetComponent<GameController>();
+        runner = GameObject.Find("Network Runner").GetComponent<Runner>();
         team1Button = GameObject.Find("Team 1 Button").GetComponent<Button>();
         team2Button = GameObject.Find("Team 2 Button").GetComponent<Button>();
         knightButton = GameObject.Find("Knight Button").GetComponent<Button>();
@@ -120,11 +120,11 @@ public class Lobby : NetworkBehaviour
         {
             Debug.Log("Starting game...");
 
-            // Give the game controller the player dictionaries, but first convert the networked ones to standard ones
-            gameController.team1Players = ConvertFromNetworkDictionary(team1Players);
-            gameController.team2Players = ConvertFromNetworkDictionary(team2Players);
+            // Give the runner the player dictionaries, but first convert the networked ones to standard ones
+            runner.team1Players = ConvertFromNetworkDictionary(team1Players);
+            runner.team2Players = ConvertFromNetworkDictionary(team2Players);
 
-            // Switch to map scene, and the game controller will then spawn player objects etc. and start game
+            // Switch to map scene to start the game, and the game controller will spawn player objects using the player dicts in the runner
             Runner.LoadScene(SceneRef.FromIndex(SceneManager.GetActiveScene().buildIndex + 1));
         }
     }

@@ -1,15 +1,14 @@
 using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
-public class GameController : SimulationBehaviour, IPlayerLeft, ISceneLoadDone
+public class GameController : NetworkBehaviour, IPlayerLeft
 {
     [SerializeField] Vector3 respawnPoint1;
     [SerializeField] Vector3 respawnPoint2;
 
     public float maxTime;
-    [HideInInspector] public float currentTime = 0.0f;
+    [Networked, HideInInspector] public float currentTime { get; set; }
 
     private List<Bullet> bullets;
     private List<Player> players;
@@ -26,64 +25,30 @@ public class GameController : SimulationBehaviour, IPlayerLeft, ISceneLoadDone
     // For only the server/host to use when broadcasting messages
     private bool gameOver = false;
 
-    private float pointsTopupCooldownMax = 10f;
-    private float pointsTopupCooldownCurrent = 0f;
-
-    private NetworkRunner runner;
-
-    // For only the server/host to use for spawning players
-    public Dictionary<PlayerRef, string> team1Players;
-    public Dictionary<PlayerRef, string> team2Players;
-
-    private Tick gameStartTick;
-    private bool gameStarted = false;
-
-    async public void StartGame(GameMode mode, string sessionName)
-    {
-        runner = gameObject.GetComponent<NetworkRunner>();
-        runner.ProvideInput = true;
-
-        // Create the NetworkSceneInfo from the next scene (the lobby scene)
-        SceneRef scene = SceneRef.FromIndex(SceneManager.GetActiveScene().buildIndex + 1);
-        NetworkSceneInfo sceneInfo = new NetworkSceneInfo();
-        if (scene.IsValid)
-        {
-            sceneInfo.AddSceneRef(scene, LoadSceneMode.Additive);
-        }
-
-        // Start or join (depends on gamemode) a session with a specific name
-        await runner.StartGame(new StartGameArgs()
-        {
-            GameMode = mode,
-            SessionName = sessionName,
-            Scene = scene,
-            SceneManager = gameObject.AddComponent<NetworkSceneManagerDefault>()
-        });
-    }
+    [Networked] private float pointsTopupCooldownMax { get; set; }
+    [Networked] private float pointsTopupCooldownCurrent { get; set; }
+    [Networked] private int gameStartTick { get; set; }
 
     // Initialisation
-    void Start()
+    public override void Spawned()
     {
+        // Make FixedUpdateNetwork run on all clients
+        Runner.SetIsSimulated(Object, true);
+
         bullets = new List<Bullet>();
         players = new List<Player>();
         pickups = new List<Pickup>();
         alivePlayers = new List<Player>();
+        currentTime = 0.0f;
+        pointsTopupCooldownMax = 10f;
         pointsTopupCooldownCurrent = pointsTopupCooldownMax;
-    }
-
-    public void SceneLoadDone(in SceneLoadDoneArgs sceneInfo)
-    {
-        // Only proceed if we are loading the map, not the lobby
-        if (sceneInfo.Scene.name == "Lobby") return;
+        gameStartTick = Runner.Tick;
 
         if (Runner.IsServer)
         {
             SpawnPlayers();
             SpawnItems();
         }
-
-        gameStartTick = Runner.Tick;
-        gameStarted = true;
     }
 
     void SpawnItems()
@@ -112,8 +77,6 @@ public class GameController : SimulationBehaviour, IPlayerLeft, ISceneLoadDone
     // Update for every server simulation tick
     public override void FixedUpdateNetwork()
     {
-        if (!gameStarted) return;
-
         currentTime = (Runner.Tick - gameStartTick) * Runner.DeltaTime;
         if (currentTime >= maxTime)
         {
@@ -210,8 +173,10 @@ public class GameController : SimulationBehaviour, IPlayerLeft, ISceneLoadDone
     {
         if (Runner.IsServer)
         {
+            Runner runner = GameObject.Find("Network Runner").GetComponent<Runner>();
+
             // Create team 1 players
-            foreach (KeyValuePair<PlayerRef, string> item in team1Players)
+            foreach (KeyValuePair<PlayerRef, string> item in runner.team1Players)
             {
                 PlayerRef playerRef = item.Key;
                 string characterName = item.Value;
@@ -219,7 +184,7 @@ public class GameController : SimulationBehaviour, IPlayerLeft, ISceneLoadDone
             }
 
             // Create team 2 players
-            foreach (KeyValuePair<PlayerRef, string> item in team2Players)
+            foreach (KeyValuePair<PlayerRef, string> item in runner.team2Players)
             {
                 PlayerRef playerRef = item.Key;
                 string characterName = item.Value;
