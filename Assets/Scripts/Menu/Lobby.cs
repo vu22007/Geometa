@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-public class Lobby : NetworkBehaviour
+public class Lobby : NetworkBehaviour, IPlayerLeft
 {
     [Networked, Capacity(6), OnChangedRender(nameof(OnTeam1PlayersChanged))] private NetworkDictionary<PlayerRef, string> team1Players { get; }
     [Networked, Capacity(6), OnChangedRender(nameof(OnTeam2PlayersChanged))] private NetworkDictionary<PlayerRef, string> team2Players { get; }
@@ -127,6 +127,12 @@ public class Lobby : NetworkBehaviour
         }
     }
 
+    public void LeaveLobby()
+    {
+        // Shutdown the network runner, which will cause the game to return to the main menu
+        Runner.Shutdown();
+    }
+
     Dictionary<PlayerRef, string> ConvertFromNetworkDictionary(NetworkDictionary<PlayerRef, string> networkDictionary)
     {
         Dictionary<PlayerRef, string> dictionary = new Dictionary<PlayerRef, string>();
@@ -185,9 +191,9 @@ public class Lobby : NetworkBehaviour
     {
         foreach (Transform child in teamList.transform)
         {
-            if (child.name.Contains("Player Card"))
+            if (child.name.Contains("PlayerCard"))
             {
-                Destroy(child);
+                Destroy(child.gameObject);
             }
         }
     }
@@ -226,6 +232,25 @@ public class Lobby : NetworkBehaviour
 
             // Set position for next card
             cardPosition.y -= cardHeight;
+        }
+    }
+
+    public void PlayerLeft(PlayerRef player)
+    {
+        // Remove player from both dictionaries if they leave, so that the team lists
+        // update on each client to no longer show the player
+        if (HasStateAuthority)
+        {
+            if (team1Players.ContainsKey(player))
+            {
+                var dict = team1Players;
+                dict.Remove(player);
+            }
+            else if (team2Players.ContainsKey(player))
+            {
+                var dict = team2Players;
+                dict.Remove(player);
+            }
         }
     }
 }
