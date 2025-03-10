@@ -35,6 +35,7 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
         knightButton = GameObject.Find("Knight Button").GetComponent<Button>();
         wizardButton = GameObject.Find("Wizard Button").GetComponent<Button>();
         readyButton = GameObject.Find("Ready Button").GetComponent<Button>();
+        readyButton.onClick.AddListener(PlayerReady);
         readyButton.interactable = false;
         startGameButton = GameObject.Find("Start Game Button").GetComponent<Button>();
         startGameButton.interactable = false;
@@ -106,12 +107,39 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
     public void PlayerReady()
     {
         playerIsReady = true;
-        readyButton.interactable = false;
+
+        // Turn the ready button into an unready button
+        readyButton.GetComponentInChildren<TextMeshProUGUI>().text = "Unready";
+        readyButton.onClick.RemoveAllListeners();
+        readyButton.onClick.AddListener(PlayerUnready);
+
+        // Disable team and character selection
         team1Button.interactable = false;
         team2Button.interactable = false;
         knightButton.interactable = false;
         wizardButton.interactable = false;
+
+        // Send selection to host
         RPC_PlayerReady(team, characterName);
+    }
+
+    public void PlayerUnready()
+    {
+        playerIsReady = false;
+
+        // Turn the unready button into a ready button
+        readyButton.GetComponentInChildren<TextMeshProUGUI>().text = "Ready";
+        readyButton.onClick.RemoveAllListeners();
+        readyButton.onClick.AddListener(PlayerReady);
+
+        // Enable the team and character selection, with the current selection applied
+        team1Button.interactable = team != 1;
+        team2Button.interactable = team != 2;
+        knightButton.interactable = characterName != "Knight";
+        wizardButton.interactable = characterName != "Wizard";
+
+        // Remove selection from host
+        RPC_PlayerUnready();
     }
 
     public void StartGame()
@@ -133,6 +161,7 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
         Runner.Shutdown();
     }
 
+    // Convert a network dictionary into a standard dictionary
     Dictionary<PlayerRef, string> ConvertFromNetworkDictionary(NetworkDictionary<PlayerRef, string> networkDictionary)
     {
         Dictionary<PlayerRef, string> dictionary = new Dictionary<PlayerRef, string>();
@@ -149,12 +178,25 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
     {
         PlayerRef player = info.Source;
 
+        // Validate player details
+        bool teamIsValid = team == 1 || team == 2;
+        bool characterIsValid = characterName == "Knight" || characterName == "Wizard";
+        if (!teamIsValid || !characterIsValid) return;
+
         // Add player to chosen team if they aren't already in a team
         if (!team1Players.ContainsKey(player) && !team2Players.ContainsKey(player))
         {
             var dict = (team == 1) ? team1Players : team2Players;
             dict.Add(player, characterName);
         }
+    }
+
+    // Anyone can call this RPC, and it will run only on the server
+    [Rpc(sources: RpcSources.All, targets: RpcTargets.StateAuthority, HostMode = RpcHostMode.SourceIsHostPlayer)]
+    public void RPC_PlayerUnready(RpcInfo info = default)
+    {
+        PlayerRef player = info.Source;
+        RemovePlayerSelection(player);
     }
 
     // Called when the team1Players networked property changes
@@ -241,16 +283,21 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
         // update on each client to no longer show the player
         if (HasStateAuthority)
         {
-            if (team1Players.ContainsKey(player))
-            {
-                var dict = team1Players;
-                dict.Remove(player);
-            }
-            else if (team2Players.ContainsKey(player))
-            {
-                var dict = team2Players;
-                dict.Remove(player);
-            }
+            RemovePlayerSelection(player);
+        }
+    }
+
+    private void RemovePlayerSelection(PlayerRef player)
+    {
+        if (team1Players.ContainsKey(player))
+        {
+            var dict = team1Players;
+            dict.Remove(player);
+        }
+        else if (team2Players.ContainsKey(player))
+        {
+            var dict = team2Players;
+            dict.Remove(player);
         }
     }
 }
