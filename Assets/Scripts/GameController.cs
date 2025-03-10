@@ -70,7 +70,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
             team2Flag = flag2Obj.GetComponent<PickupFlag>();
 
             // Spawn NPCs for testing
-            // SpawnPlayersForTesting(3, 3);
+            //SpawnPlayersForTesting(3, 3);
         }
     }
 
@@ -313,7 +313,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     void SpawnPlayersForTesting(int allies, int enemies)
     {
         GameObject playerPrefab = Resources.Load("Prefabs/Player") as GameObject;
-        string characterPath = "ScriptableObjects/Characters/Wizard";
+        string characterName = "Wizard";
 
         for (int i = 0; i < allies; i++)
         {
@@ -322,7 +322,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
             {
                 // Initialise the player (this is called before the player is spawned)
                 Player player = networkObject.GetComponent<Player>();
-                player.OnCreated(characterPath, respawnPoint1, 1);
+                player.OnCreated(characterName, respawnPoint1, 1);
             });
         }
 
@@ -333,7 +333,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
             {
                 // Initialise the player (this is called before the player is spawned)
                 Player player = networkObject.GetComponent<Player>();
-                player.OnCreated(characterPath, respawnPoint1, 2);
+                player.OnCreated(characterName, respawnPoint1, 2);
             });
         }
 
