@@ -157,7 +157,7 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
 
     public void LeaveLobby()
     {
-        // Shutdown the network runner, which will cause the game to return to the main menu
+        // Shut down the network runner, which will cause the game to return to the main menu
         Runner.Shutdown();
     }
 

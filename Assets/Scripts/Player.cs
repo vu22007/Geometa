@@ -722,7 +722,7 @@ public class Player : NetworkBehaviour
 
     public void LeaveMatch()
     {
-        // Shutdown the network runner, which will cause the game to return to the main menu
+        // Shut down the network runner, which will cause the game to return to the main menu
         Runner.Shutdown();
     }
     
