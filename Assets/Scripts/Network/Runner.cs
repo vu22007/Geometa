@@ -32,6 +32,7 @@ public class Runner : SimulationBehaviour, INetworkRunnerCallbacks
             GameMode = mode,
             SessionName = sessionName,
             Scene = scene,
+            PlayerCount = 12,
             SceneManager = gameObject.AddComponent<NetworkSceneManagerDefault>()
         });
     }

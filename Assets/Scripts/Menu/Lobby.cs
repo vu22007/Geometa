@@ -150,6 +150,9 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
             runner.team1Players = ConvertFromNetworkDictionary(team1Players);
             runner.team2Players = ConvertFromNetworkDictionary(team2Players);
 
+            // Prevent new players from joining
+            Runner.SessionInfo.IsOpen = false;
+
             // Switch to map scene to start the game, and the game controller will spawn player objects using the player dicts in the runner
             Runner.LoadScene(SceneRef.FromIndex(SceneManager.GetActiveScene().buildIndex + 1));
         }

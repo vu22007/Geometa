@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
 
-public class GameController : NetworkBehaviour, IPlayerJoined, IPlayerLeft
+public class GameController : NetworkBehaviour, IPlayerLeft
 {
     [SerializeField] Vector3 respawnPoint1;
     [SerializeField] Vector3 respawnPoint2;
@@ -209,23 +209,6 @@ public class GameController : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             // Add player network object to dictionary
             spawnedPlayers.Add(player, networkPlayerObject);
         }
-    }
-
-    public void PlayerJoined(PlayerRef player)
-    {
-        // Disconnect players from the game who join after the game has started
-        // Note: This PlayerJoined method will not get called if players join from the lobby, so if this method is
-        // called then the player must have joined after the lobby, i.e. when the game has already started
-        if (HasStateAuthority)
-            RPC_DisconnectPlayer(player);
-    }
-
-    // Only the server can call this RPC, and it will run only on the client who has the given PlayerRef
-    [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
-    public void RPC_DisconnectPlayer([RpcTarget] PlayerRef player)
-    {
-        // Shut down the network runner, which will cause the game to return to the main menu
-        Runner.Shutdown();
     }
 
     public void PlayerLeft(PlayerRef player)
