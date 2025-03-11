@@ -9,7 +9,7 @@ public class ShapeController : NetworkBehaviour
 {
     [Networked] public bool isActive { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
-    [Networked, OnChangedRender(nameof(OnShapeActiveChanged))] private bool shapeIsActive { get; set; }
+    [Networked, OnChangedRender(nameof(OnShapeActivationToggleChanged))] private bool shapeActivationToggle { get; set; }
     [Networked] private float score { get; set; }
     [Networked, Capacity(5)] private NetworkLinkedList<Vector3> vertices { get; }
 
@@ -69,16 +69,13 @@ public class ShapeController : NetworkBehaviour
         triangleCooldown = 0;
         squareCooldown = 0;
 
-        shapeIsActive = false;
+        shapeActivationToggle = false;
     }
 
-    void OnShapeActiveChanged()
+    void OnShapeActivationToggleChanged()
     {
-        // Draw shape for everyone when shape is active
-        if (shapeIsActive)
-        {
-            DrawLines(vertices.ToList(), true, score);
-        }
+        // Draw shape for everyone when shape is activated
+        DrawLines(vertices.ToList(), true, score);
     }
 
     public override void FixedUpdateNetwork()
@@ -162,28 +159,50 @@ public class ShapeController : NetworkBehaviour
 
     void PreviewShape(int nVertices, bool activate)
     {
-        // Do not allow shape preview or activation if shape is currently active
-        if (shapeIsActive)
+        // Stop both shape preview and activation if cooldown or point requirements are not met
+        if (nVertices == 3)
         {
-            Debug.Log("Shape is already active!");
-            if (activate) parentPlayer.ShowMessage("Shape is already active!", 0.2f, Color.white);
-            ChooseLineRenderer(nVertices).enabled = false;
-            return;
-        }
+            if (triangleCooldown > 0)
+            {
+                Debug.Log("Cooldown on triangle: " + triangleCooldown);
+                if (activate) parentPlayer.ShowMessage("Cooldown on triangle!", 0.2f, Color.white);
+                return;
+            }
 
-        if (nVertices == 3 && triangleCooldown > 0)
-        {
-            Debug.Log("Cooldown on triangle: " + triangleCooldown);
-            if (activate) parentPlayer.ShowMessage("Cooldown on triangle!", 0.2f, Color.white);
-            ChooseLineRenderer(nVertices).enabled = false;
-            return;
+            if (parentPlayer.GetPoints() < triangleCost)
+            {
+                triangleLineRenderer.enabled = false;
+                Debug.Log("You don't have enough points to activate a triangle");
+                if (activate) parentPlayer.ShowMessage("Not enough points!", 0.2f, Color.white);
+                return;
+            }
         }
-        else if (nVertices == 4 && squareCooldown > 0)
+        else if (nVertices == 4)
         {
-            Debug.Log("Cooldown on square: " + squareCooldown);
-            if (activate) parentPlayer.ShowMessage("Cooldown on square!", 0.2f, Color.white);
-            ChooseLineRenderer(nVertices).enabled = false;
-            return;
+            if (squareCooldown > 0)
+            {
+                Debug.Log("Cooldown on square: " + squareCooldown);
+                if (activate) parentPlayer.ShowMessage("Cooldown on square!", 0.2f, Color.white);
+                return;
+            }
+
+            if (parentPlayer.GetPoints() < squareCost)
+            {
+                squareLineRenderer.enabled = false;
+                Debug.Log("You don't have enough points to activate a square");
+                if (activate) parentPlayer.ShowMessage("Not enough points!", 0.2f, Color.white);
+                return;
+            }
+        }
+        else if (nVertices == 5)
+        {
+            if (parentPlayer.GetPoints() < pentagonCost)
+            {
+                pentagonLineRenderer.enabled = false;
+                Debug.Log("You don't have enough points to activate a pentagon");
+                if (activate) parentPlayer.ShowMessage("Not enough points!", 0.2f, Color.white);
+                return;
+            }
         }
 
         List<Player> closestPlayers = GetClosestPlayers(parentPlayer, nVertices - 1);
@@ -227,7 +246,7 @@ public class ShapeController : NetworkBehaviour
         {
             if (HasStateAuthority)
             {
-                // Set score and vertices networked properties for everyone (server, input authority and all other clients) to use to draw lines in OnShapeActiveChanged method
+                // Set score and vertices networked properties for everyone (server, input authority and all other clients) to use to draw lines in OnShapeActivationToggleChanged method
                 this.score = score;
                 vertices.Clear();
                 foreach (Vector3 position in playerPositions)
@@ -238,36 +257,21 @@ public class ShapeController : NetworkBehaviour
 
             if (nVertices == 3)
             {
-                if (parentPlayer.GetPoints() < triangleCost)
+                if (HasStateAuthority)
                 {
-                    triangleLineRenderer.enabled = false;
-                    Debug.Log("You don't have enough points to activate a triangle");
-                    parentPlayer.ShowMessage("Not enough points!", 0.2f, Color.white);
-                }
-                else
-                {
-                    if (HasStateAuthority)
-                    {
-                        triangleShape.CastAbility(playerPositions, score);
-                        triangleCooldown = 1f;
-                        parentPlayer.SpendPoints(triangleCost);
+                    triangleShape.CastAbility(playerPositions, score);
+                    triangleCooldown = 1f;
+                    parentPlayer.SpendPoints(triangleCost);
 
-                        RPC_PlayTriangleSound(playerPositions.ToArray(), 3, 0); 
-                        // Set networked property so everyone can draw lines in OnShapeActiveChanged method
-                        shapeIsActive = true;
-                    }
+                    RPC_PlayTriangleSound(playerPositions.ToArray(), 3, 0);
+                    // Set networked property so everyone can draw lines in OnShapeActivationToggleChanged method
+                    shapeActivationToggle = !shapeActivationToggle;
                 }
             }
             else if (nVertices == 4)
             {
-                if (parentPlayer.GetPoints() < squareCost)
-                {
-                    squareLineRenderer.enabled = false;
-                    Debug.Log("You don't have enough points to activate a square");
-                    parentPlayer.ShowMessage("Not enough points!", 0.2f, Color.white);
-                }
                 // If it's not convex don't activate it
-                else if (!IsConvex(angles))
+                if (!IsConvex(angles))
                 {
                     squareLineRenderer.enabled = false;
                     Debug.Log("Shape is not convex - can't activate buff!");
@@ -282,20 +286,14 @@ public class ShapeController : NetworkBehaviour
                         squareCooldown = 3f;
                         parentPlayer.SpendPoints(squareCost);
 
-                        // Set networked property so everyone can draw lines in OnShapeActiveChanged method
-                        shapeIsActive = true;
+                        // Set networked property so everyone can draw lines in OnShapeActivationToggleChanged method
+                        shapeActivationToggle = !shapeActivationToggle;
                     }
                 }
             }
             else if (nVertices == 5)
             {
-                if (parentPlayer.GetPoints() < pentagonCost)
-                {
-                    pentagonLineRenderer.enabled = false;
-                    Debug.Log("You don't have enough points to activate a pentagon");
-                    parentPlayer.ShowMessage("Not enough points!", 0.2f, Color.white);
-                }
-                else if (!IsConvex(angles))
+                if (!IsConvex(angles))
                 {
                     pentagonLineRenderer.enabled = false;
                     Debug.Log("Shape is not convex - can't activate buff!");
@@ -317,8 +315,8 @@ public class ShapeController : NetworkBehaviour
 
                         parentPlayer.SpendPoints(pentagonCost);
 
-                        // Set networked property so everyone can draw lines in OnShapeActiveChanged method
-                        shapeIsActive = true;
+                        // Set networked property so everyone can draw lines in OnShapeActivationToggleChanged method
+                        shapeActivationToggle = !shapeActivationToggle;
                     }
                 }
             }
@@ -451,9 +449,6 @@ public class ShapeController : NetworkBehaviour
         }
 
         lineRenderer.enabled = false;
-
-        if (HasStateAuthority)
-            shapeIsActive = false;
     }
 
     LineRenderer ChooseLineRenderer(int nVertices)
