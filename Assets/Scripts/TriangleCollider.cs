@@ -6,6 +6,7 @@ public class TriangleCollider : NetworkBehaviour
 {
     [Networked, HideInInspector] public int team { get; set; }
     [Networked] float score { get; set; }
+    [Networked] public PlayerRef parentPlayerRef { get; set; }
 
     private EdgeCollider2D edgeCollider;
 
@@ -33,7 +34,7 @@ public class TriangleCollider : NetworkBehaviour
             if (player.GetTeam() != team && !zappedPlayers.Contains(player))
             {
                 Debug.Log("Collided with enemy");
-                player.TakeDamage(10f * score);
+                player.TakeDamage(10f * score, parentPlayerRef);
                 zappedPlayers.Add(player);
             }
         }
