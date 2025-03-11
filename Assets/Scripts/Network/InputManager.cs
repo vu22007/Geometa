@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Fusion;
 using Fusion.Sockets;
 using UnityEngine;
-using UnityEngine.Assertions.Must;
 using UnityEngine.InputSystem;
 
 public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
@@ -48,7 +47,6 @@ public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
         actionDash.Enable();
         actionAoE.Enable();
         actionMenu.Enable();
-
     }
 
     private void OnDisable()
