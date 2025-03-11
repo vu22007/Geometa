@@ -477,7 +477,7 @@ public class Player : NetworkBehaviour
         if (HasStateAuthority)
         {
             GameObject aoeSpellPrefab = Resources.Load("Prefabs/AoE1") as GameObject;
-            NetworkObject aoeSpellObject = Runner.Spawn(aoeSpellPrefab, transform.position, Quaternion.identity, null, (runner, networkObject) =>
+            NetworkObject aoeSpellObject = Runner.Spawn(aoeSpellPrefab, transform.position, Quaternion.identity, Object.InputAuthority, (runner, networkObject) =>
             {
                 AoESpell aoeSpell = networkObject.GetComponent<AoESpell>();
                 if (aoeSpell != null)
@@ -490,10 +490,10 @@ public class Player : NetworkBehaviour
         if (HasInputAuthority)
         {
             PlayShootSound();
-        }  
+        }
         isAoEEnabled = false;
         normalShoot = true;
-        aoeIcon.enabled = false;     
+        aoeIcon.enabled = false;
     }
     
 

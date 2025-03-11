@@ -146,7 +146,6 @@ public class ShapeController : NetworkBehaviour
     private void TriangleActivated()
     {
         PreviewShape(3, true);
-        parentPlayer.ActivateTri(true);
     }
 
     private void SquareActivated()
@@ -233,6 +232,8 @@ public class ShapeController : NetworkBehaviour
                 }
                 else
                 {
+                    parentPlayer.ActivateTri(true);
+
                     if (HasStateAuthority)
                     {
                         triangleShape.CastAbility(playerPositions, score);

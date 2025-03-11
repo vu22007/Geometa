@@ -12,7 +12,7 @@ public class AoESpell : NetworkBehaviour
     [Networked] private float speed { get; set; }
     [Networked] private float maxDistance { get; set; }
     [Networked] private float distanceTraveled { get; set; }
-    [Networked] private bool isActivated { get; set; }
+    [Networked, OnChangedRender(nameof(OnActivatedChanged))] private bool isActivated { get; set; }
 
     [SerializeField] private Sprite aoeSmall;
     [SerializeField] private Sprite aoeNormal;
@@ -30,7 +30,10 @@ public class AoESpell : NetworkBehaviour
         this.maxDistance = maxDistance;
         this.distanceTraveled = 0f;
         this.isActivated = false;
+    }
 
+    public override void Spawned()
+    {
         spriteRenderer = GetComponent<SpriteRenderer>();
         if (spriteRenderer != null && aoeSmall != null)
         {
@@ -81,5 +84,13 @@ public class AoESpell : NetworkBehaviour
             }
         }
     }
-    
+
+    // Called on all clients when AoE spell is activated, so that all clients see the sprite change
+    void OnActivatedChanged()
+    {
+        if (isActivated && spriteRenderer != null && aoeNormal != null)
+        {
+            spriteRenderer.sprite = aoeNormal;
+        }
+    }
 }

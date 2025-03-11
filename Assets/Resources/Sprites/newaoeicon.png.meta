@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      newaoeicon_0: 2352227056273460086
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
