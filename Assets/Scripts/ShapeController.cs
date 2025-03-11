@@ -161,17 +161,28 @@ public class ShapeController : NetworkBehaviour
     }
 
     void PreviewShape(int nVertices, bool activate)
-    { 
+    {
+        // Do not allow shape preview or activation if shape is currently active
+        if (shapeIsActive)
+        {
+            Debug.Log("Shape is already active!");
+            if (activate) parentPlayer.ShowMessage("Shape is already active!", 0.2f, Color.white);
+            ChooseLineRenderer(nVertices).enabled = false;
+            return;
+        }
+
         if (nVertices == 3 && triangleCooldown > 0)
         {
             Debug.Log("Cooldown on triangle: " + triangleCooldown);
             if (activate) parentPlayer.ShowMessage("Cooldown on triangle!", 0.2f, Color.white);
+            ChooseLineRenderer(nVertices).enabled = false;
             return;
         }
         else if (nVertices == 4 && squareCooldown > 0)
         {
             Debug.Log("Cooldown on square: " + squareCooldown);
             if (activate) parentPlayer.ShowMessage("Cooldown on square!", 0.2f, Color.white);
+            ChooseLineRenderer(nVertices).enabled = false;
             return;
         }
 
@@ -190,6 +201,7 @@ public class ShapeController : NetworkBehaviour
         {
             Debug.Log("Not enough players to activate shape");
             if (activate) parentPlayer.ShowMessage("Not enough players to activate shape!", 0.2f, Color.white);
+            ChooseLineRenderer(nVertices).enabled = false;
             return;
         }
 
@@ -197,6 +209,7 @@ public class ShapeController : NetworkBehaviour
         {
             Debug.Log("Players too far away to activate shape");
             if (activate) parentPlayer.ShowMessage("Players too far away to activate shape!", 0.2f, Color.white);
+            ChooseLineRenderer(nVertices).enabled = false;
             return;
         }
 
