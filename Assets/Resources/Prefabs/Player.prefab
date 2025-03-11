@@ -1668,6 +1668,7 @@ MonoBehaviour:
   respawnTimerTxt: {fileID: 6655207839670368177}
   flagIndicator: {fileID: 3617242858135019408}
   bulletIcon: {fileID: 1478925092546808149}
+  mainbulletIcon: {fileID: 3391385062733595157}
   meleePoint: {fileID: 0}
   meleeHitbox: {fileID: 325978928209685445}
 --- !u!50 &-5256008576835943960

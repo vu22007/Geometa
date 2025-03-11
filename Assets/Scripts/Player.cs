@@ -48,9 +48,6 @@ public class Player : NetworkBehaviour
     [Networked] public float aoeMaxRad { get; set; }
     [Networked] private bool normalShoot { get; set; }
     [Networked] string characterName { get; set; }
-    [Networked] float meleeDamage { get; set; }
-    [Networked] float meleeRange { get; set; }
-    [Networked] float meleeRadius { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
@@ -82,6 +79,7 @@ public class Player : NetworkBehaviour
     private AudioClip dashSound;
     private AudioSource audioSource;
     [SerializeField] Image bulletIcon;
+    [SerializeField] GameObject mainbulletIcon;
     [SerializeField] Transform meleePoint;
     [SerializeField] GameObject meleeHitbox;
     
@@ -119,9 +117,6 @@ public class Player : NetworkBehaviour
         isAoEEnabled = false;
         isAoEUsed = false;
         normalShoot = true;
-        meleeDamage = 10.0f;
-        meleeRange = 3.0f;
-        meleeRadius = 0.5f;
     }
 
     // Player initialisation (called on each client and server when player is spawned on network)
@@ -205,6 +200,11 @@ public class Player : NetworkBehaviour
         //Set points bar
         UpdatePointsBar();
         DisableMeleeHitbox();
+        if (characterName == "Knight")
+        {
+            Debug.Log("disabled mana");
+            mainbulletIcon.SetActive(false);
+        }
     }
 
     // Called on each client and server when player is despawned from network
@@ -228,9 +228,15 @@ public class Player : NetworkBehaviour
         if (healthBar != null)
             healthBar.fillAmount = currentHealth / maxHealth;
         
-        // Set the ammo counter
-        ammoText.text = currentAmmo.ToString();
-        bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
+        if (characterName != "Knight")
+        {
+            // Set the ammo counter
+            ammoText.text = currentAmmo.ToString();
+            bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
+        }
+        // // Set the ammo counter
+        // ammoText.text = currentAmmo.ToString();
+        // bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
 
         // Activate the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = true;
@@ -330,31 +336,41 @@ public class Player : NetworkBehaviour
                 PlayerMovement(input.moveDirection);
 
                 // Firing the weapon
-                if (input.buttons.IsSet(InputButtons.Shoot))
+                if (characterName == "Knight")
                 {
-                    // if (isAoEEnabled && !normalShoot)
-                    // {
-                    //     ShootAoE(input.aimDirection);
-                    //     Debug.Log("Shoot aoe");
-                    // }
-                    // else if (normalShoot && !isAoEEnabled)
-                    // {
-                    //     Shoot(input.aimDirection);
-                    //     Debug.Log("Shoot normal");
-                    // }
+                    if (input.buttons.IsSet(InputButtons.Shoot))
+                    {
+                        isAttacking = true;
+                        EnableMeleeHitbox();
+                        Debug.Log("enabled");
+                    }
+                    else
+                    {
+                        isAttacking = false;
+                        DisableMeleeHitbox();
+                        Debug.Log("disabled");
 
-                    // meleeHit();
-                    isAttacking = true;
-                    EnableMeleeHitbox();
-                    Debug.Log("enabled");
+                    }
                 }
+
                 else
                 {
-                    isAttacking = false;
-                    DisableMeleeHitbox();
-                    Debug.Log("disabled");
-
+                    if (input.buttons.IsSet(InputButtons.Shoot))
+                    {
+                        if (isAoEEnabled && !normalShoot)
+                        {
+                            ShootAoE(input.aimDirection);
+                            Debug.Log("Shoot aoe");
+                        }
+                        else if (normalShoot && !isAoEEnabled)
+                        {
+                            Shoot(input.aimDirection);
+                            Debug.Log("Shoot normal");
+                        }
+                    }
+                
                 }
+                
 
                 // Reloading
                 if (input.buttons.WasPressed(previousButtons, InputButtons.Reload))
@@ -484,8 +500,11 @@ public class Player : NetworkBehaviour
                     PlayShootSound();
                 }
                 currentAmmo--;
-                ammoText.text = currentAmmo.ToString();
-                bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
+                if (characterName != "Knight")
+                {
+                    ammoText.text = currentAmmo.ToString();
+                    bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
+                }
             }
         }
     }
@@ -514,20 +533,6 @@ public class Player : NetworkBehaviour
         normalShoot = true;
         aoeIcon.enabled = false;     
     }
-
-    // void meleeHit()
-    // {
-    //     int layerMask = LayerMask.GetMask("Default");
-    //     Vector2 attackPosition = (Vector2)transform.position + (spriteRenderer.flipX ? Vector2.left : Vector2.right) * meleeRange;
-    //     Collider[] hitPlayers = Physics.OverlapBox(attackPosition, meleeRange, layerMask);
-
-    //     foreach (Collider player in hitPlayers)
-    //     {
-    //         if (player.CompareTag("Player")) // Extra check for safety
-    //         {
-    //             player.GetComponent<Player>()?.TakeDamage(meleeDamage, Object.InputAuthority);
-    //         }
-    //     }
     
 
     public void PlayShootSound()
