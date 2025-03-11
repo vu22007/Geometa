@@ -256,6 +256,10 @@ public class Player : NetworkBehaviour
                     respawnTimerTxt.text = $"Respawning in {Mathf.CeilToInt(remainingTime)}s";
                 }
             }
+
+            // Hide the player
+            gameObject.SetActive(false);
+
             return;
         }
         else
@@ -264,6 +268,9 @@ public class Player : NetworkBehaviour
             {
                 deathOverlay.SetActive(false);
             }
+
+            // Show the player
+            gameObject.SetActive(true);
         }
 
         // Decrease bullet timer and clamp to 0 if below 0
@@ -420,7 +427,7 @@ public class Player : NetworkBehaviour
 
         // Apply acceleration to gradually reach target velocity
         float acceleration = 5f;
-        Vector2 newVelocity = Vector2.Lerp(currentVelocity, targetVelocity, acceleration * Time.deltaTime);
+        Vector2 newVelocity = Vector2.Lerp(currentVelocity, targetVelocity, acceleration * Runner.DeltaTime);
 
         // Apply the new velocity
         rb.linearVelocity = newVelocity;
