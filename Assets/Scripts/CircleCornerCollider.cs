@@ -9,15 +9,17 @@ public class CircleCornerCollider : NetworkBehaviour
     [Networked] float score { get; set; }
     private CircleCollider2D circleCollider;
     private List<Player> slowedPlayers;
-
-    public GameObject shockwavePrefab;
+    private Animator shockwaveAnimator;
 
     public override void Spawned()
-
     {
         slowedPlayers = new List<Player>();
         circleCollider = GetComponent<CircleCollider2D>();
         circleCollider.enabled = false;
+
+        shockwaveAnimator = GetComponentInChildren<Animator>();
+        // Change the localScale to change the size of the animation
+        shockwaveAnimator.transform.localScale = new Vector3(5f, 5f, 5f);
     }
 
     public void ActivateCollider(Vector3 pos, float score)
@@ -29,54 +31,21 @@ public class CircleCornerCollider : NetworkBehaviour
 
         // Trigger animation
         TriggerShockwave(pos);
-
-
         StartCoroutine(DelayDisable(0.1f));
     }
 
     void TriggerShockwave(Vector3 position)
     {
-        if (shockwavePrefab != null)
-        {
-            if (!Runner.IsRunning)
-            {
-                Debug.LogWarning("Fusion is not running! Cannot spawn shockwave.");
-                return;
-            }
-
-            // Spawn with correct ownership (Prevent owner-prediction issues)
-            NetworkObject shockwaveObject = Runner.Spawn(shockwavePrefab, position, Quaternion.identity, Object.InputAuthority);
-
-            Debug.Log($"Shockwave spawned at {position}");
-
-            Animator shockwaveAnimator = shockwaveObject.GetComponent<Animator>();
-            float animLength = (shockwaveAnimator != null) ? shockwaveAnimator.GetCurrentAnimatorStateInfo(0).length : 1.5f;
-
-            Debug.Log($"Shockwave animation length: {animLength}");
-
-            StartCoroutine(DespawnShockwave(shockwaveObject, animLength));
-        }
-        else
-        {
-            Debug.LogWarning("Shockwave prefab not assigned!");
-        }
+            shockwaveAnimator.Play("ShockWave", 0, 0f);
+            shockwaveAnimator.SetBool("Play", true);
+            // Called so there is time for the animator to realise it is true
+            StartCoroutine(DelayDisableAnimation(0.1f));
     }
-
-   IEnumerator DespawnShockwave(NetworkObject obj, float delay)
+    
+    IEnumerator DelayDisableAnimation(float delay)
     {
         yield return new WaitForSeconds(delay);
-
-        if (obj != null && obj.IsValid)
-        {
-            Debug.Log($"Despawning shockwave after {delay} seconds.");
-
-            Runner.Despawn(obj); // Fusion despawn
-            Destroy(obj.gameObject); // Forcefully remove from scene
-        }
-        else
-        {
-            Debug.LogWarning("Shockwave object is already destroyed or invalid.");
-        }
+        shockwaveAnimator.SetBool("Play", false);
     }
 
     IEnumerator DelayDisable(float delay)
