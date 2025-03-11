@@ -78,6 +78,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     public override void FixedUpdateNetwork()
     {
         currentTime = (Runner.Tick - gameStartTick) * Runner.DeltaTime;
+
         if (currentTime >= maxTime)
         {
             //end game

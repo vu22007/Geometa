@@ -55,7 +55,7 @@ public class Player : NetworkBehaviour
     [SerializeField] Image teamHealthBar;
     [SerializeField] Image mainPointsBar;
     [SerializeField] Image enemyHealthBar;
-    [SerializeField] PopUpText popUpText;
+    [SerializeField] UIController uIController;
     [SerializeField] cooldownHandler dashCDHandler;
     [SerializeField] cooldownHandler reloadHandler;
     [SerializeField] cooldownHandler aoeHandler;
@@ -116,6 +116,9 @@ public class Player : NetworkBehaviour
     // Player initialisation (called on each client and server when player is spawned on network)
     public override void Spawned()
     {
+        uIController = GetComponentInChildren<UIController>();
+        uIController.SetPlayer(this);
+        uIController.transform.SetParent(null);
         // Disable the camera if client does not control this player
         if (!HasInputAuthority)
         {
@@ -154,6 +157,7 @@ public class Player : NetworkBehaviour
         else if (localPlayerTeam != team)
         {
             healthBar = enemyHealthBar;
+            enemyHealthBar.transform.parent.gameObject.SetActive(true);
             mainHealthBar.transform.parent.gameObject.SetActive(false);
             teamHealthBar.transform.parent.gameObject.SetActive(false);
         }
@@ -202,6 +206,7 @@ public class Player : NetworkBehaviour
     // Player initialisation when respawning
     public void Respawn()
     {
+        gameObject.SetActive(true);
         gameObject.GetComponent<NetworkRigidbody2D>().Teleport(respawnPoint);
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
@@ -255,6 +260,10 @@ public class Player : NetworkBehaviour
                     respawnTimerTxt.text = $"Respawning in {Mathf.CeilToInt(remainingTime)}s";
                 }
             }
+
+            // Hide the player
+            gameObject.SetActive(false);
+
             return;
         }
         else
@@ -263,6 +272,9 @@ public class Player : NetworkBehaviour
             {
                 deathOverlay.SetActive(false);
             }
+
+            // Show the player
+            gameObject.SetActive(true);
         }
 
         // Decrease bullet timer and clamp to 0 if below 0
@@ -397,31 +409,27 @@ public class Player : NetworkBehaviour
             carriedObject.transform.position = transform.position + new Vector3(2.0f, 0, 0);
         }
 
-        // Update the time left in the UI if the client controls this player
-        if (HasInputAuthority)
-        {
-            float timeLeft = gameController.maxTime - gameController.currentTime;
-            int secondsLeft = (int) Mathf.Ceil(timeLeft);
-            int mins = secondsLeft / 60;
-            int secs = secondsLeft % 60;
-
-            if (mins < 0 || secs < 0)
-                timeLeftText.text = "Time Left: 0:00";
-            else
-                timeLeftText.text = "Time Left: " + mins + ":" + secs.ToString("00");
-        }
     }
 
     // Player moves according to key presses and player speed
     void PlayerMovement(Vector2 moveDirection)
     {
-        // If dashing, use dash speed; otherwise, use normal speed
-        float currentSpeed = isDashing ? speed * dashSpeed : speed;
-        // Move the player by setting the velocity using the supplied movement direction vector
-        Vector2 velocity = moveDirection.normalized * currentSpeed;
-        rb.linearVelocity = velocity;
+        // Calculate target velocity
+        float targetSpeed = isDashing ? speed * dashSpeed : speed;
+        Vector2 targetVelocity = moveDirection.normalized * targetSpeed;
 
-        isMoving = velocity.x != 0 || velocity.y != 0;
+        // Current velocity
+        Vector2 currentVelocity = rb.linearVelocity;
+
+        // Apply acceleration to gradually reach target velocity
+        float acceleration = 5f;
+        Vector2 newVelocity = Vector2.Lerp(currentVelocity, targetVelocity, acceleration * Runner.DeltaTime);
+
+        // Apply the new velocity
+        rb.linearVelocity = newVelocity;
+
+        // Check if player is moving
+        isMoving = newVelocity.x != 0 || newVelocity.y != 0;
     }
 
     // Dash mechanic
@@ -604,6 +612,8 @@ public class Player : NetworkBehaviour
                 player.GainPoints(10);
             }
         }
+
+        gameObject.SetActive(false);
     }
 
     [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
@@ -709,7 +719,7 @@ public class Player : NetworkBehaviour
 
     public void ShowMessage(string message, float speed, Color color) {
         if (HasInputAuthority) {
-            popUpText.MakePopupText(message, speed, color);
+            uIController.MakePopupText(message, speed, color);
         }
     }
 
