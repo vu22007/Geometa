@@ -26,7 +26,7 @@ public class Player : NetworkBehaviour
     [Networked] bool isAlive { get; set; }
     [Networked] float respawnTime { get; set; }
     [Networked] float currentRespawn { get; set; }
-    [Networked, Capacity(50)] string characterPath { get; set; }
+    [Networked, Capacity(30)] string characterName { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
     [Networked] private NetworkObject carriedObject { get; set; }
     [Networked, OnChangedRender(nameof(OnCarryingChanged)), HideInInspector] public bool isCarrying { get; set; }
@@ -42,6 +42,10 @@ public class Player : NetworkBehaviour
     [Networked] public float aoeCooldown { get; set; }
     [Networked] public float aoeDuration { get; set; }
     [Networked] public float aoeCooldownTimer { get; set; }
+    [Networked] public bool isAoEEnabled { get; set; }
+    [Networked] private bool isAoEUsed { get; set; }
+    [Networked] public float aoeMaxRad { get; set; }
+    [Networked] private bool normalShoot { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
@@ -52,7 +56,7 @@ public class Player : NetworkBehaviour
     [SerializeField] Image mainPointsBar;
     [SerializeField] Image minimapIndicator;
     [SerializeField] Image enemyHealthBar;
-    [SerializeField] PopUpText popUpText;
+    [SerializeField] UIController uIController;
     [SerializeField] cooldownHandler dashCDHandler;
     [SerializeField] cooldownHandler reloadHandler;
     [SerializeField] cooldownHandler aoeHandler;
@@ -75,11 +79,11 @@ public class Player : NetworkBehaviour
     private AudioClip dashSound;
     private AudioSource audioSource;
     [SerializeField] Image bulletIcon;
-
+    
     // Player intialisation (called from game controller on server when creating the player)
-    public void OnCreated(string characterPath, Vector3 respawnPoint, int team)
+    public void OnCreated(string characterName, Vector3 respawnPoint, int team)
     {
-        Character character = Resources.Load(characterPath) as Character;
+        Character character = Resources.Load($"ScriptableObjects/Characters/{characterName}") as Character;
         maxHealth = character.MaxHealth;
         maxPoints = 30f;
         speed = character.Speed;
@@ -92,35 +96,39 @@ public class Player : NetworkBehaviour
         
         this.respawnPoint = respawnPoint;
         this.team = team;
-        this.characterPath = characterPath;
+        this.characterName = characterName;
         points = 30f;
         reloadTime = 3.0f;
         respawnTime = 10.0f;
         aoeDamage = 5;
         aoeCooldown = 10;
         aoeDuration = 5;
+        aoeMaxRad = 10;
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
         isAlive = true;
         currentRespawn = 0.0f;
         timeToWaitForBullet = 0.0f;
         isCarrying = false;
+        isAoEEnabled = false;
+        isAoEUsed = false;
+        normalShoot = true;
     }
 
     // Player initialisation (called on each client and server when player is spawned on network)
     public override void Spawned()
     {
+        uIController = GetComponentInChildren<UIController>();
+        uIController.SetPlayer(this);
+        uIController.transform.SetParent(null);
         // Disable the camera if client does not control this player
         if (!HasInputAuthority)
         {
             cam.gameObject.SetActive(false);
         }
 
-        // Find game controller component (Fusion creates copies of the game controller object so we need to choose the correct one)
-        if (GameObject.Find("Host") != null)
-            gameController = GameObject.Find("Host").GetComponent<GameController>();
-        else
-            gameController = GameObject.Find("Client A").GetComponent<GameController>();
+        // Get game controller component
+        gameController = GameObject.Find("Game Controller").GetComponent<GameController>();
 
         // Add this player to game controller player list
         gameController.RegisterPlayer(this);
@@ -131,7 +139,7 @@ public class Player : NetworkBehaviour
         animator = gameObject.GetComponent<Animator>();
 
         // Set sprite from resource path
-        Character character = Resources.Load(characterPath) as Character;
+        Character character = Resources.Load($"ScriptableObjects/Characters/{characterName}") as Character;
         spriteRenderer.sprite = character.Sprite;
 
         //Set animator controller
@@ -156,6 +164,7 @@ public class Player : NetworkBehaviour
         else if (localPlayerTeam != team)
         {
             healthBar = enemyHealthBar;
+            enemyHealthBar.transform.parent.gameObject.SetActive(true);
             mainHealthBar.transform.parent.gameObject.SetActive(false);
             teamHealthBar.transform.parent.gameObject.SetActive(false);
             minimapIndicator.color = Color.red;
@@ -206,6 +215,7 @@ public class Player : NetworkBehaviour
     // Player initialisation when respawning
     public void Respawn()
     {
+        gameObject.SetActive(true);
         gameObject.GetComponent<NetworkRigidbody2D>().Teleport(respawnPoint);
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
@@ -259,6 +269,10 @@ public class Player : NetworkBehaviour
                     respawnTimerTxt.text = $"Respawning in {Mathf.CeilToInt(remainingTime)}s";
                 }
             }
+
+            // Hide the player
+            gameObject.SetActive(false);
+
             return;
         }
         else
@@ -267,6 +281,9 @@ public class Player : NetworkBehaviour
             {
                 deathOverlay.SetActive(false);
             }
+
+            // Show the player
+            gameObject.SetActive(true);
         }
 
         // Decrease bullet timer and clamp to 0 if below 0
@@ -303,17 +320,6 @@ public class Player : NetworkBehaviour
             }
         }
 
-        // Handle AoE cooldown
-        if (aoeCooldownTimer > 0)
-        {
-            aoeCooldownTimer -= Runner.DeltaTime;
-            if (aoeCooldownTimer <= 0)
-            {
-                aoeIcon.enabled = false;
-                aoeIconLayer.enabled = false;
-            }
-        }
-
         // auto reload 
         if (currentAmmo == 0 && reloadTimer <= 0) 
         {
@@ -332,7 +338,16 @@ public class Player : NetworkBehaviour
                 // Firing the weapon
                 if (input.buttons.IsSet(InputButtons.Shoot))
                 {
-                    Shoot(input.aimDirection);
+                    if (isAoEEnabled && !normalShoot)
+                    {
+                        ShootAoE(input.aimDirection);
+                        Debug.Log("Shoot aoe");
+                    }
+                    else if (normalShoot && !isAoEEnabled)
+                    {
+                        Shoot(input.aimDirection);
+                        Debug.Log("Shoot normal");
+                    }
                     isAttacking = true;
                 }
                 else
@@ -367,12 +382,6 @@ public class Player : NetworkBehaviour
                     Dash(input.moveDirection);
                 }
 
-                // Activate AoE skill with 'T'
-                if (input.buttons.WasPressed(previousButtons, InputButtons.AoE))
-                {
-                    Debug.Log("T is pressed");
-                    ActivateAoE(input.cursorWorldPoint);
-                }
             }
 
             // Activate Menu
@@ -409,31 +418,27 @@ public class Player : NetworkBehaviour
             carriedObject.transform.position = transform.position + new Vector3(2.0f, 0, 0);
         }
 
-        // Update the time left in the UI if the client controls this player
-        if (HasInputAuthority)
-        {
-            float timeLeft = gameController.maxTime - gameController.currentTime;
-            int secondsLeft = (int) Mathf.Ceil(timeLeft);
-            int mins = secondsLeft / 60;
-            int secs = secondsLeft % 60;
-
-            if (mins < 0 || secs < 0)
-                timeLeftText.text = "Time Left: 0:00";
-            else
-                timeLeftText.text = "Time Left: " + mins + ":" + secs.ToString("00");
-        }
     }
 
     // Player moves according to key presses and player speed
     void PlayerMovement(Vector2 moveDirection)
     {
-        // If dashing, use dash speed; otherwise, use normal speed
-        float currentSpeed = isDashing ? speed * dashSpeed : speed;
-        // Move the player by setting the velocity using the supplied movement direction vector
-        Vector2 velocity = moveDirection.normalized * currentSpeed;
-        rb.linearVelocity = velocity;
+        // Calculate target velocity
+        float targetSpeed = isDashing ? speed * dashSpeed : speed;
+        Vector2 targetVelocity = moveDirection.normalized * targetSpeed;
 
-        isMoving = velocity.x != 0 || velocity.y != 0;
+        // Current velocity
+        Vector2 currentVelocity = rb.linearVelocity;
+
+        // Apply acceleration to gradually reach target velocity
+        float acceleration = 5f;
+        Vector2 newVelocity = Vector2.Lerp(currentVelocity, targetVelocity, acceleration * Runner.DeltaTime);
+
+        // Apply the new velocity
+        rb.linearVelocity = newVelocity;
+
+        // Check if player is moving
+        isMoving = newVelocity.x != 0 || newVelocity.y != 0;
     }
 
     // Dash mechanic
@@ -452,39 +457,6 @@ public class Player : NetworkBehaviour
             ShowMessage("Dash in cooldown", 0.2f, Color.white);
         }
     }
-
-    // Activate AoE skill
-    void ActivateAoE(Vector2 cursorWorldPoint)
-    {
-        if (aoeCooldownTimer <= 0) // Only allow AoE if cooldown is over
-        {
-            // Spawn AoE effect (only the server can do this)
-            if (HasStateAuthority)
-            {
-                GameObject aoeEffect = Resources.Load("Prefabs/AoE1") as GameObject;
-                // Spawn the AoE prefab
-                NetworkObject aoeObject = Runner.Spawn(aoeEffect, cursorWorldPoint, Quaternion.identity, null, (runner, networkObject) =>
-                {
-                    AoESpell aoeSpell = networkObject.GetComponent<AoESpell>();
-                    if (aoeSpell != null)
-                    {
-                        aoeSpell.OnCreated(aoeDamage, team, aoeDuration, Object.InputAuthority); 
-                    }
-                });
-            }
-            // Start cooldown
-            aoeCooldownTimer = aoeCooldown;
-            ShowMessage("AoE Skill Used", 0.5f, Color.white);
-            aoeIcon.enabled = true;
-            aoeIconLayer.enabled = true;
-            aoeHandler.StartCooldown(aoeCooldown);
-        }
-        else
-        {
-            ShowMessage("AoE Skill in Cooldown", 0.5f, Color.white);
-        }
-    }
-
 
     // Shoots a bullet by spawning the prefab on the network
     void Shoot(Vector2 aimDirection)
@@ -512,6 +484,32 @@ public class Player : NetworkBehaviour
             }
         }
     }
+
+    // Shoots a bullet by spawning the prefab on the network
+    void ShootAoE(Vector2 aimDirection)
+    {
+        if (HasStateAuthority)
+        {
+            GameObject aoeSpellPrefab = Resources.Load("Prefabs/AoE1") as GameObject;
+            NetworkObject aoeSpellObject = Runner.Spawn(aoeSpellPrefab, transform.position, Quaternion.identity, Object.InputAuthority, (runner, networkObject) =>
+            {
+                AoESpell aoeSpell = networkObject.GetComponent<AoESpell>();
+                if (aoeSpell != null)
+                {
+                    aoeSpell.OnCreated(aimDirection, 10f, 10f, aoeDamage, team, aoeDuration, Object.InputAuthority);
+                }
+            });
+        }
+        // Just the player that shoot listens to the sound
+        if (HasInputAuthority)
+        {
+            PlayShootSound();
+        }
+        isAoEEnabled = false;
+        normalShoot = true;
+        aoeIcon.enabled = false;
+    }
+    
 
     public void PlayShootSound()
     {
@@ -623,6 +621,8 @@ public class Player : NetworkBehaviour
                 player.GainPoints(10);
             }
         }
+
+        gameObject.SetActive(false);
     }
 
     [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
@@ -728,14 +728,14 @@ public class Player : NetworkBehaviour
 
     public void ShowMessage(string message, float speed, Color color) {
         if (HasInputAuthority) {
-            popUpText.MakePopupText(message, speed, color);
+            uIController.MakePopupText(message, speed, color);
         }
     }
 
-    public void Quit()
+    public void LeaveMatch()
     {
-        Debug.Log("Exiting");
-        Application.Quit();
+        // Shut down the network runner, which will cause the game to return to the main menu
+        Runner.Shutdown();
     }
     
     // Only server can call this RPC, and it will run only on the client that controls this player
@@ -760,6 +760,18 @@ public class Player : NetworkBehaviour
         return team;
     }
 
+    public void ActivateTri(bool tri)
+    {
+        if (tri)
+        {
+            isAoEEnabled = true; // Enable AoE
+            normalShoot = false;
+            aoeIcon.enabled = true;
+            isAoEUsed = false;
+            StartCoroutine(EnableAoETemporarily());
+        } 
+    }
+
     public float GetPoints()
     {
         return points;
@@ -775,5 +787,17 @@ public class Player : NetworkBehaviour
     {
         yield return new WaitForSeconds(time);
         this.speed += amount;
+    }
+
+    private IEnumerator EnableAoETemporarily()
+    {
+        yield return new WaitForSeconds(5f); 
+        if (!isAoEUsed)
+        {
+            isAoEEnabled = false; // Disable AoE
+            normalShoot = true;
+            aoeIcon.enabled = false;
+        }
+        
     }
 }

@@ -3,13 +3,13 @@ using UnityEngine;
 
 public static class PrefabFactory
 {
-    public static NetworkObject SpawnPlayer(NetworkRunner runner, PlayerRef playerRef, GameObject prefab, Vector3 spawnPosition, string characterPath, int team){
+    public static NetworkObject SpawnPlayer(NetworkRunner runner, PlayerRef playerRef, GameObject prefab, Vector3 spawnPosition, string characterName, int team){
         // Spawn the player network object
         NetworkObject networkPlayerObject = runner.Spawn(prefab, spawnPosition, Quaternion.identity, playerRef, (runner, networkObject) =>
         {
             // Initialise the player (this is called before the player is spawned)
             Player player = networkObject.GetComponent<Player>();
-            player.OnCreated(characterPath, spawnPosition, team);
+            player.OnCreated(characterName, spawnPosition, team);
             runner.SetPlayerObject(playerRef, networkObject);
         });
 

@@ -159,18 +159,18 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "AoE",
+                    "name": "Menu",
                     "type": "Button",
-                    "id": "07600445-d63d-4fb5-9558-62061a41dfcc",
+                    "id": "6bdb488b-4c64-46ee-875d-2f82a76916c0",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Menu",
+                    "name": "AoE",
                     "type": "Button",
-                    "id": "6bdb488b-4c64-46ee-875d-2f82a76916c0",
+                    "id": "1f8814f9-d560-44fd-8007-58b4d045346b",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -653,23 +653,23 @@
                 },
                 {
                     "name": "",
-                    "id": "43931294-0831-4e9a-b9dc-514a3cb5a665",
-                    "path": "<Keyboard>/t",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "AoE",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "1ddf5428-5041-4bca-ab9a-3956ee78f9a0",
                     "path": "<Keyboard>/escape",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
                     "action": "Menu",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "d73cd7b7-55ef-4e18-ab64-777dba5ffd2d",
+                    "path": "",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "AoE",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

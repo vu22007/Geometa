@@ -2,52 +2,57 @@ using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
 
-public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
+public class GameController : NetworkBehaviour, IPlayerLeft
 {
     [SerializeField] Vector3 respawnPoint1;
     [SerializeField] Vector3 respawnPoint2;
 
     public float maxTime;
-    [HideInInspector] public float currentTime = 0.0f;
+    [Networked, HideInInspector] public float currentTime { get; set; }
 
     private List<Bullet> bullets;
     private List<Player> players;
     private List<Player> alivePlayers;
     private List<Pickup> pickups;
 
-    // For only the server to use so that it can manage the spawn and despawn of players
+    // For only the server/host to use so that it can manage the spawn and despawn of players
     private Dictionary<PlayerRef, NetworkObject> spawnedPlayers = new Dictionary<PlayerRef, NetworkObject>();
-
-    // For server to use to keep track of what team to assign to a new player when they join
-    int nextTeam = 1;
 
     // Flags
     private PickupFlag team1Flag;
     private PickupFlag team2Flag;
 
-    // For only the server to use when broadcasting messages
+    // For only the server/host to use when broadcasting messages
     private bool gameOver = false;
 
-    private bool spawnedItems = false;
-
-    private float pointsTopupCooldownMax = 10f;
-    private float pointsTopupCooldownCurrent = 0f;
-
+    [Networked] private float pointsTopupCooldownMax { get; set; }
+    [Networked] private float pointsTopupCooldownCurrent { get; set; }
+    [Networked] private int gameStartTick { get; set; }
 
     // Initialisation
-    void Start()
+    public override void Spawned()
     {
+        // Make FixedUpdateNetwork run on all clients
+        Runner.SetIsSimulated(Object, true);
+
         bullets = new List<Bullet>();
         players = new List<Player>();
         pickups = new List<Pickup>();
         alivePlayers = new List<Player>();
+        currentTime = 0.0f;
+        pointsTopupCooldownMax = 10f;
         pointsTopupCooldownCurrent = pointsTopupCooldownMax;
+        gameStartTick = Runner.Tick;
+
+        if (Runner.IsServer)
+        {
+            SpawnPlayers();
+            SpawnItems();
+        }
     }
 
     void SpawnItems()
     {
-        spawnedItems = true;
-
         // Spawn initial items (only the server can do this)
         if (Runner.IsServer)
         {
@@ -72,9 +77,8 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
     // Update for every server simulation tick
     public override void FixedUpdateNetwork()
     {
-        if (!spawnedItems) SpawnItems();
+        currentTime = (Runner.Tick - gameStartTick) * Runner.DeltaTime;
 
-        currentTime = Runner.Tick * Runner.DeltaTime;
         if (currentTime >= maxTime)
         {
             //end game
@@ -166,22 +170,42 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
         alivePlayers.Remove(player);
     }
 
-    public void PlayerJoined(PlayerRef player)
+    public void SpawnPlayers()
     {
-        // Run the following only on the server
+        if (Runner.IsServer)
+        {
+            NetworkManager networkManager = GameObject.Find("Network Runner").GetComponent<NetworkManager>();
+
+            // Create team 1 players
+            foreach (KeyValuePair<PlayerRef, string> item in networkManager.team1Players)
+            {
+                PlayerRef playerRef = item.Key;
+                string characterName = item.Value;
+                SpawnPlayer(playerRef, characterName, 1);
+            }
+
+            // Create team 2 players
+            foreach (KeyValuePair<PlayerRef, string> item in networkManager.team2Players)
+            {
+                PlayerRef playerRef = item.Key;
+                string characterName = item.Value;
+                SpawnPlayer(playerRef, characterName, 2);
+            }
+        }
+    }
+
+    void SpawnPlayer(PlayerRef player, string characterName, int team)
+    {
         if (Runner.IsServer)
         {
             // Load prefab
             GameObject playerPrefab = Resources.Load("Prefabs/Player") as GameObject;
-            string characterPath = "ScriptableObjects/Characters/Wizard";
+
+            // Choose respawn point based on team
+            Vector3 respawnPoint = (team == 1) ? respawnPoint1 : respawnPoint2;
 
             // Spawn the player network object
-            int team = nextTeam;
-            Vector3 respawnPoint = (team == 1) ? respawnPoint1 : respawnPoint2;
-            NetworkObject networkPlayerObject = PrefabFactory.SpawnPlayer(Runner, player, playerPrefab, respawnPoint, characterPath, team);
-
-            // Flip the next team so the next player to join will be on the other team
-            nextTeam = (nextTeam == 1) ? 2 : 1;
+            NetworkObject networkPlayerObject = PrefabFactory.SpawnPlayer(Runner, player, playerPrefab, respawnPoint, characterName, team);
 
             // Add player network object to dictionary
             spawnedPlayers.Add(player, networkPlayerObject);
@@ -290,7 +314,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
     void SpawnPlayersForTesting(int allies, int enemies)
     {
         GameObject playerPrefab = Resources.Load("Prefabs/Player") as GameObject;
-        string characterPath = "ScriptableObjects/Characters/Wizard";
+        string characterName = "Wizard";
 
         for (int i = 0; i < allies; i++)
         {
@@ -299,7 +323,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
             {
                 // Initialise the player (this is called before the player is spawned)
                 Player player = networkObject.GetComponent<Player>();
-                player.OnCreated(characterPath, respawnPoint1, 1);
+                player.OnCreated(characterName, respawnPoint1, 1);
             });
         }
 
@@ -310,7 +334,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
             {
                 // Initialise the player (this is called before the player is spawned)
                 Player player = networkObject.GetComponent<Player>();
-                player.OnCreated(characterPath, respawnPoint1, 2);
+                player.OnCreated(characterName, respawnPoint1, 2);
             });
         }
 
