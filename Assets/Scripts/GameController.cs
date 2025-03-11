@@ -173,10 +173,10 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     {
         if (Runner.IsServer)
         {
-            Runner runner = GameObject.Find("Network Runner").GetComponent<Runner>();
+            NetworkManager networkManager = GameObject.Find("Network Runner").GetComponent<NetworkManager>();
 
             // Create team 1 players
-            foreach (KeyValuePair<PlayerRef, string> item in runner.team1Players)
+            foreach (KeyValuePair<PlayerRef, string> item in networkManager.team1Players)
             {
                 PlayerRef playerRef = item.Key;
                 string characterName = item.Value;
@@ -184,7 +184,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
             }
 
             // Create team 2 players
-            foreach (KeyValuePair<PlayerRef, string> item in runner.team2Players)
+            foreach (KeyValuePair<PlayerRef, string> item in networkManager.team2Players)
             {
                 PlayerRef playerRef = item.Key;
                 string characterName = item.Value;

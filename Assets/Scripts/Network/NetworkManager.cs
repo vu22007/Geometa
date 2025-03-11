@@ -1,20 +1,24 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Fusion;
 using Fusion.Sockets;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class Runner : SimulationBehaviour, INetworkRunnerCallbacks
+public class NetworkManager : SimulationBehaviour, INetworkRunnerCallbacks
 {
+    // Store shutdown reason as static variable so that it persists network runner reloads
+    // Note: Fusion will reload the main menu scene when fail to host or join game, which means
+    // that the network runner is reloaded, so static is necessary for persistence
+    public static ShutdownReason shutdownReason;
+
     private NetworkRunner runner;
 
     // For the game controller to use for spawning players based on lobby selections
     public Dictionary<PlayerRef, string> team1Players;
     public Dictionary<PlayerRef, string> team2Players;
 
-    async public Task<StartGameResult> StartGame(GameMode mode, string sessionName)
+    async public void StartGame(GameMode mode, string sessionName)
     {
         runner = gameObject.GetComponent<NetworkRunner>();
         runner.ProvideInput = true;
@@ -28,7 +32,7 @@ public class Runner : SimulationBehaviour, INetworkRunnerCallbacks
         }
 
         // Start or join (depends on gamemode) a session with a specific name
-        StartGameResult result = await runner.StartGame(new StartGameArgs()
+        await runner.StartGame(new StartGameArgs()
         {
             GameMode = mode,
             SessionName = sessionName,
@@ -36,12 +40,13 @@ public class Runner : SimulationBehaviour, INetworkRunnerCallbacks
             PlayerCount = 12,
             SceneManager = gameObject.AddComponent<NetworkSceneManagerDefault>()
         });
-
-        return result;
     }
 
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
     {
+        // Set static variable for shutdown reason (for main menu to use for error message)
+        NetworkManager.shutdownReason = shutdownReason;
+
         // Go to main menu if the network runner is shutdown
         SceneManager.LoadScene(0);
     }

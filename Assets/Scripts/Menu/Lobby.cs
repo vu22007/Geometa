@@ -11,7 +11,7 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
     [Networked, Capacity(6), OnChangedRender(nameof(OnTeam1PlayersChanged))] private NetworkDictionary<PlayerRef, string> team1Players { get; }
     [Networked, Capacity(6), OnChangedRender(nameof(OnTeam2PlayersChanged))] private NetworkDictionary<PlayerRef, string> team2Players { get; }
 
-    private Runner runner;
+    private NetworkManager networkManager;
     private Button team1Button;
     private Button team2Button;
     private Button knightButton;
@@ -29,7 +29,7 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
 
     public override void Spawned()
     {
-        runner = GameObject.Find("Network Runner").GetComponent<Runner>();
+        networkManager = GameObject.Find("Network Runner").GetComponent<NetworkManager>();
         team1Button = GameObject.Find("Team 1 Button").GetComponent<Button>();
         team2Button = GameObject.Find("Team 2 Button").GetComponent<Button>();
         knightButton = GameObject.Find("Knight Button").GetComponent<Button>();
@@ -146,14 +146,14 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
     {
         if (HasStateAuthority)
         {
-            // Give the runner the player dictionaries, but first convert the networked ones to standard ones
-            runner.team1Players = ConvertFromNetworkDictionary(team1Players);
-            runner.team2Players = ConvertFromNetworkDictionary(team2Players);
+            // Give the network manager the player dictionaries, but first convert the networked ones to standard ones
+            networkManager.team1Players = ConvertFromNetworkDictionary(team1Players);
+            networkManager.team2Players = ConvertFromNetworkDictionary(team2Players);
 
             // Prevent new players from joining
             Runner.SessionInfo.IsOpen = false;
 
-            // Switch to map scene to start the game, and the game controller will spawn player objects using the player dicts in the runner
+            // Switch to map scene to start the game, and the game controller will spawn player objects using the player dicts in the network manager
             Runner.LoadScene(SceneRef.FromIndex(SceneManager.GetActiveScene().buildIndex + 1));
         }
     }

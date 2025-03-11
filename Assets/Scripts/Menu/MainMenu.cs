@@ -2,40 +2,36 @@ using UnityEngine;
 using Fusion;
 using UnityEngine.UI;
 using TMPro;
-using Unity.VisualScripting;
 
 public class MainMenu : MonoBehaviour
 {
-    // Store error message as static variable so that it persists scene reloads
-    // Note: Fusion will reload main menu scene when fail to host or join game, so this is necessary
-    static string errorMessage = "";
-
-    private Runner runner;
+    private NetworkManager networkManager;
     private string sessionName;
 
     public void OnEnable() {
-        runner = GameObject.Find("Network Runner").GetComponent<Runner>();
-        UpdateErrorMessage(errorMessage);
+        networkManager = GameObject.Find("Network Runner").GetComponent<NetworkManager>();
+
+        // Update the error message using the shutdown reason provided in the network manager,
+        // in case we are back to the main menu due to an error
+        UpdateErrorMessage(NetworkManager.shutdownReason);
     }
 
     public void OnSessionNameChanged(string newSessionName) {
         sessionName = newSessionName;
     }
 
-    async public void HostGame()
+    public void HostGame()
     {
         DisableMenu();
-        UpdateErrorMessage(""); // Clear error message
-        StartGameResult result = await runner.StartGame(GameMode.Host, sessionName);
-        errorMessage = result.ErrorMessage;
+        UpdateErrorMessage(ShutdownReason.Ok); // Clear error message
+        networkManager.StartGame(GameMode.Host, sessionName);
     }
 
-    async public void JoinGame()
+    public void JoinGame()
     {
         DisableMenu();
-        UpdateErrorMessage(""); // Clear error message
-        StartGameResult result = await runner.StartGame(GameMode.Client, sessionName);
-        errorMessage = result.ErrorMessage;
+        UpdateErrorMessage(ShutdownReason.Ok); // Clear error message
+        networkManager.StartGame(GameMode.Client, sessionName);
     }
 
     public void QuitGame()
@@ -53,24 +49,58 @@ public class MainMenu : MonoBehaviour
         GameObject.Find("JoinButton").GetComponent<Button>().interactable = false;
     }
 
-    private void UpdateErrorMessage(string errorMessage)
+    private void UpdateErrorMessage(ShutdownReason shutdownReason)
     {
-        TextMeshProUGUI errorMessageText = GameObject.Find("ErrorMessage").GetComponent<TextMeshProUGUI>();
+        TextMeshProUGUI errorMessage = GameObject.Find("ErrorMessage").GetComponent<TextMeshProUGUI>();
 
-        // If error message contains error code, remove error code starting from '(' at end of string 
-        if (errorMessage.IndexOf('(') >= 0)
-            errorMessage = errorMessage.Substring(0, errorMessage.IndexOf('(')).TrimEnd();
-
-        // If error message is "Ok" then there is no error, so show nothing
-        if (errorMessage == "Ok")
-            errorMessageText.text = "";
-
-        // If the string matches the below, then convert it into a clearer message
-        else if (errorMessage == "Game closed")
-            errorMessageText.text = "Game has already started";
-
-        // Just show the message as it is if string does not match any of the above
-        else
-            errorMessageText.text = errorMessage;
+        switch (shutdownReason)
+        {
+            case ShutdownReason.Ok:
+                errorMessage.text = ""; break;
+            case ShutdownReason.AlreadyRunning:
+                errorMessage.text = "Already hosting/joining a game"; break;
+            case ShutdownReason.AuthenticationTicketExpired:
+                errorMessage.text = "Authentication ticket expired"; break;
+            case ShutdownReason.ConnectionRefused:
+                errorMessage.text = "Connection refused"; break;
+            case ShutdownReason.ConnectionTimeout:
+                errorMessage.text = "Connection timeout"; break;
+            case ShutdownReason.CustomAuthenticationFailed:
+                errorMessage.text = "Custom authentication failed"; break;
+            case ShutdownReason.DisconnectedByPluginLogic:
+                errorMessage.text = "Host has left"; break;
+            case ShutdownReason.Error:
+                errorMessage.text = "Internal error"; break;
+            case ShutdownReason.GameClosed:
+                errorMessage.text = "Game has already started"; break;
+            case ShutdownReason.GameIdAlreadyExists:
+                errorMessage.text = "Game already exists"; break;
+            case ShutdownReason.GameIsFull:
+                errorMessage.text = "Game is full"; break;
+            case ShutdownReason.GameNotFound:
+                errorMessage.text = "Game does not exist"; break;
+            case ShutdownReason.HostMigration:
+                errorMessage.text = "Host migration about to happen"; break;
+            case ShutdownReason.IncompatibleConfiguration:
+                errorMessage.text = "Incompatible configuration"; break;
+            case ShutdownReason.InvalidArguments:
+                errorMessage.text = "Invalid arguments"; break;
+            case ShutdownReason.InvalidAuthentication:
+                errorMessage.text = "Invalid authentication"; break;
+            case ShutdownReason.InvalidRegion:
+                errorMessage.text = "Region is unavailable or non-existent"; break;
+            case ShutdownReason.MaxCcuReached:
+                errorMessage.text = "Max CCU has been reached"; break;
+            case ShutdownReason.OperationCanceled:
+                errorMessage.text = "Operation canceled"; break;
+            case ShutdownReason.OperationTimeout:
+                errorMessage.text = "Operation timeout"; break;
+            case ShutdownReason.PhotonCloudTimeout:
+                errorMessage.text = "Photon Cloud timeout"; break;
+            case ShutdownReason.ServerInRoom:
+                errorMessage.text = "Game already has a host"; break;
+            default:
+                errorMessage.text = shutdownReason.ToString(); break;
+        }
     }
 }
