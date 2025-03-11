@@ -33,11 +33,8 @@ public class Bullet : NetworkBehaviour
     // Bullet initialisation (called on each client and server when bullet is spawned on network)
     public override void Spawned()
     {
-        // Find game controller component (Fusion creates copies of the game controller object so we need to choose the correct one)
-        if (GameObject.Find("Host") != null)
-            gameController = GameObject.Find("Host").GetComponent<GameController>();
-        else
-            gameController = GameObject.Find("Client A").GetComponent<GameController>();
+        // Get game controller component
+        gameController = GameObject.Find("Game Controller").GetComponent<GameController>();
 
         // Add this bullet to game controller bullet list
         gameController.RegisterBullet(this);

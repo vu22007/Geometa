@@ -27,7 +27,7 @@ public class Player : NetworkBehaviour
     [Networked] bool isAlive { get; set; }
     [Networked] float respawnTime { get; set; }
     [Networked] float currentRespawn { get; set; }
-    [Networked, Capacity(50)] string characterPath { get; set; }
+    [Networked, Capacity(30)] string characterName { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
     [Networked] private NetworkObject carriedObject { get; set; }
     [Networked, OnChangedRender(nameof(OnCarryingChanged)), HideInInspector] public bool isCarrying { get; set; }
@@ -56,8 +56,9 @@ public class Player : NetworkBehaviour
     [SerializeField] Image mainHealthBar;
     [SerializeField] Image teamHealthBar;
     [SerializeField] Image mainPointsBar;
+    [SerializeField] Image minimapIndicator;
     [SerializeField] Image enemyHealthBar;
-    [SerializeField] PopUpText popUpText;
+    [SerializeField] UIController uIController;
     [SerializeField] cooldownHandler dashCDHandler;
     [SerializeField] cooldownHandler reloadHandler;
     [SerializeField] cooldownHandler aoeHandler;
@@ -66,6 +67,7 @@ public class Player : NetworkBehaviour
     [SerializeField] Image aoeIcon;
     [SerializeField] Image aoeIconLayer;
     [SerializeField] GameObject escapeMenu;
+    [SerializeField] Minimap minimap;
     Image healthBar;
     public TextMeshProUGUI ammoText;
     public TextMeshProUGUI timeLeftText;
@@ -84,9 +86,9 @@ public class Player : NetworkBehaviour
     [SerializeField] GameObject meleeHitbox;
     
     // Player intialisation (called from game controller on server when creating the player)
-    public void OnCreated(string characterPath, Vector3 respawnPoint, int team)
+    public void OnCreated(string characterName, Vector3 respawnPoint, int team)
     {
-        Character character = Resources.Load(characterPath) as Character;
+        Character character = Resources.Load($"ScriptableObjects/Characters/{characterName}") as Character;
         maxHealth = character.MaxHealth;
         maxPoints = 30f;
         speed = character.Speed;
@@ -100,7 +102,7 @@ public class Player : NetworkBehaviour
         
         this.respawnPoint = respawnPoint;
         this.team = team;
-        this.characterPath = characterPath;
+        this.characterName = characterName;
         points = 30f;
         reloadTime = 3.0f;
         respawnTime = 10.0f;
@@ -122,17 +124,17 @@ public class Player : NetworkBehaviour
     // Player initialisation (called on each client and server when player is spawned on network)
     public override void Spawned()
     {
+        uIController = GetComponentInChildren<UIController>();
+        uIController.SetPlayer(this);
+        uIController.transform.SetParent(null);
         // Disable the camera if client does not control this player
         if (!HasInputAuthority)
         {
             cam.gameObject.SetActive(false);
         }
 
-        // Find game controller component (Fusion creates copies of the game controller object so we need to choose the correct one)
-        if (GameObject.Find("Host") != null)
-            gameController = GameObject.Find("Host").GetComponent<GameController>();
-        else
-            gameController = GameObject.Find("Client A").GetComponent<GameController>();
+        // Get game controller component
+        gameController = GameObject.Find("Game Controller").GetComponent<GameController>();
 
         // Add this player to game controller player list
         gameController.RegisterPlayer(this);
@@ -143,7 +145,7 @@ public class Player : NetworkBehaviour
         animator = gameObject.GetComponent<Animator>();
 
         // Set sprite from resource path
-        Character character = Resources.Load(characterPath) as Character;
+        Character character = Resources.Load($"ScriptableObjects/Characters/{characterName}") as Character;
         spriteRenderer.sprite = character.Sprite;
 
         //Set animator controller
@@ -152,19 +154,26 @@ public class Player : NetworkBehaviour
         Player localPlayer = Runner.GetPlayerObject(Runner.LocalPlayer)?.GetComponent<Player>();
         int localPlayerTeam = localPlayer.GetTeam();
 
+        //Setup minimap
+        minimap.Setup();
+        minimapIndicator.gameObject.SetActive(true);
+
         // If client controls this player then use main health bar
         if (HasInputAuthority)
         {
             healthBar = mainHealthBar;
             teamHealthBar.transform.parent.gameObject.SetActive(false);
             enemyHealthBar.transform.parent.gameObject.SetActive(false);
+            minimapIndicator.color = Color.blue;
         }
         // If this player is on the other team to the client's player then use small health bar
         else if (localPlayerTeam != team)
         {
             healthBar = enemyHealthBar;
+            enemyHealthBar.transform.parent.gameObject.SetActive(true);
             mainHealthBar.transform.parent.gameObject.SetActive(false);
             teamHealthBar.transform.parent.gameObject.SetActive(false);
+            minimapIndicator.color = Color.red;
         }
         // If this player is on the same team to the client's player then use no health bar
         else
@@ -172,6 +181,7 @@ public class Player : NetworkBehaviour
             healthBar = teamHealthBar;
             mainHealthBar.transform.parent.gameObject.SetActive(false);
             enemyHealthBar.transform.parent.gameObject.SetActive(false);
+            minimapIndicator.color = Color.green;
         }
 
         // Set the health bar
@@ -217,6 +227,7 @@ public class Player : NetworkBehaviour
     // Player initialisation when respawning
     public void Respawn()
     {
+        gameObject.SetActive(true);
         gameObject.GetComponent<NetworkRigidbody2D>().Teleport(respawnPoint);
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
@@ -276,6 +287,10 @@ public class Player : NetworkBehaviour
                     respawnTimerTxt.text = $"Respawning in {Mathf.CeilToInt(remainingTime)}s";
                 }
             }
+
+            // Hide the player
+            gameObject.SetActive(false);
+
             return;
         }
         else
@@ -284,6 +299,9 @@ public class Player : NetworkBehaviour
             {
                 deathOverlay.SetActive(false);
             }
+
+            // Show the player
+            gameObject.SetActive(true);
         }
 
         // Decrease bullet timer and clamp to 0 if below 0
@@ -435,31 +453,27 @@ public class Player : NetworkBehaviour
             carriedObject.transform.position = transform.position + new Vector3(2.0f, 0, 0);
         }
 
-        // Update the time left in the UI if the client controls this player
-        if (HasInputAuthority)
-        {
-            float timeLeft = gameController.maxTime - gameController.currentTime;
-            int secondsLeft = (int) Mathf.Ceil(timeLeft);
-            int mins = secondsLeft / 60;
-            int secs = secondsLeft % 60;
-
-            if (mins < 0 || secs < 0)
-                timeLeftText.text = "Time Left: 0:00";
-            else
-                timeLeftText.text = "Time Left: " + mins + ":" + secs.ToString("00");
-        }
     }
 
     // Player moves according to key presses and player speed
     void PlayerMovement(Vector2 moveDirection)
     {
-        // If dashing, use dash speed; otherwise, use normal speed
-        float currentSpeed = isDashing ? speed * dashSpeed : speed;
-        // Move the player by setting the velocity using the supplied movement direction vector
-        Vector2 velocity = moveDirection.normalized * currentSpeed;
-        rb.linearVelocity = velocity;
+        // Calculate target velocity
+        float targetSpeed = isDashing ? speed * dashSpeed : speed;
+        Vector2 targetVelocity = moveDirection.normalized * targetSpeed;
 
-        isMoving = velocity.x != 0 || velocity.y != 0;
+        // Current velocity
+        Vector2 currentVelocity = rb.linearVelocity;
+
+        // Apply acceleration to gradually reach target velocity
+        float acceleration = 5f;
+        Vector2 newVelocity = Vector2.Lerp(currentVelocity, targetVelocity, acceleration * Runner.DeltaTime);
+
+        // Apply the new velocity
+        rb.linearVelocity = newVelocity;
+
+        // Check if player is moving
+        isMoving = newVelocity.x != 0 || newVelocity.y != 0;
     }
 
     // Dash mechanic
@@ -515,7 +529,7 @@ public class Player : NetworkBehaviour
         if (HasStateAuthority)
         {
             GameObject aoeSpellPrefab = Resources.Load("Prefabs/AoE1") as GameObject;
-            NetworkObject aoeSpellObject = Runner.Spawn(aoeSpellPrefab, transform.position, Quaternion.identity, null, (runner, networkObject) =>
+            NetworkObject aoeSpellObject = Runner.Spawn(aoeSpellPrefab, transform.position, Quaternion.identity, Object.InputAuthority, (runner, networkObject) =>
             {
                 AoESpell aoeSpell = networkObject.GetComponent<AoESpell>();
                 if (aoeSpell != null)
@@ -528,10 +542,10 @@ public class Player : NetworkBehaviour
         if (HasInputAuthority)
         {
             PlayShootSound();
-        }  
+        }
         isAoEEnabled = false;
         normalShoot = true;
-        aoeIcon.enabled = false;     
+        aoeIcon.enabled = false;
     }
     
 
@@ -645,6 +659,8 @@ public class Player : NetworkBehaviour
                 player.GainPoints(10);
             }
         }
+
+        gameObject.SetActive(false);
     }
 
     [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
@@ -760,14 +776,14 @@ public class Player : NetworkBehaviour
 
     public void ShowMessage(string message, float speed, Color color) {
         if (HasInputAuthority) {
-            popUpText.MakePopupText(message, speed, color);
+            uIController.MakePopupText(message, speed, color);
         }
     }
 
-    public void Quit()
+    public void LeaveMatch()
     {
-        Debug.Log("Exiting");
-        Application.Quit();
+        // Shut down the network runner, which will cause the game to return to the main menu
+        Runner.Shutdown();
     }
     
     // Only server can call this RPC, and it will run only on the client that controls this player

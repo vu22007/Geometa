@@ -16,7 +16,6 @@ MonoBehaviour:
   maxHealth: 60
   damage: 6
   sprite: {fileID: 711129131, guid: 465b0d734e07360429b5e06c529c0e8a, type: 3}
-  animatorController: {fileID: 9100000, guid: 66e5936e7ac79df4a83c3f5e6825f21f, type: 2}
   maxAmmo: 6
   fireRate: 3
   dashSpeed: 3
