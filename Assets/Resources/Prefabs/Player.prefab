@@ -1810,7 +1810,7 @@ MonoBehaviour:
   mainPointsBar: {fileID: 1413040121094791050}
   minimapIndicator: {fileID: 8374197079019752597}
   enemyHealthBar: {fileID: 871756147968111674}
-  uIController: {fileID: 0}
+  uIController: {fileID: 2701067427050605302}
   dashCDHandler: {fileID: 44001292487815618}
   reloadHandler: {fileID: 4176487474788363455}
   aoeHandler: {fileID: 3511033827935905921}
@@ -4457,6 +4457,7 @@ RectTransform:
   - {fileID: 5057447111196210985}
   - {fileID: 4108924248177764437}
   - {fileID: 5336110192780742614}
+  - {fileID: 8247023986890649987}
   m_Father: {fileID: 981996023074110673}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -4568,6 +4569,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   popUpTextPrefab: {fileID: 2075306469595700386, guid: b548b5ef87d184627bcf594c3c5f7acb, type: 3}
   popUpText: {fileID: 2040430487038617038, guid: b548b5ef87d184627bcf594c3c5f7acb, type: 3}
+  timeLeftText: {fileID: 5253126099504964119}
 --- !u!1 &8744208852700158081
 GameObject:
   m_ObjectHideFlags: 0
@@ -4710,7 +4712,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lockRelativePosition: 0
-  timeLeftText: {fileID: 5253126099504964119}
 --- !u!1 &8773785525493105379
 GameObject:
   m_ObjectHideFlags: 0
