@@ -47,7 +47,6 @@ public class Player : NetworkBehaviour
     [Networked] private bool isAoEUsed { get; set; }
     [Networked] public float aoeMaxRad { get; set; }
     [Networked] private bool normalShoot { get; set; }
-    [Networked] string characterName { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
