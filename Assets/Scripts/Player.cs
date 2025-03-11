@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using TMPro;
 using Fusion.Addons.Physics;
 using System.Collections;
+using System.Collections.Generic;
 
 public class Player : NetworkBehaviour
 {
@@ -46,6 +47,10 @@ public class Player : NetworkBehaviour
     [Networked] private bool isAoEUsed { get; set; }
     [Networked] public float aoeMaxRad { get; set; }
     [Networked] private bool normalShoot { get; set; }
+    [Networked] string characterName { get; set; }
+    [Networked] float meleeDamage { get; set; }
+    [Networked] float meleeRange { get; set; }
+    [Networked] float meleeRadius { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
@@ -77,6 +82,8 @@ public class Player : NetworkBehaviour
     private AudioClip dashSound;
     private AudioSource audioSource;
     [SerializeField] Image bulletIcon;
+    [SerializeField] Transform meleePoint;
+    [SerializeField] GameObject meleeHitbox;
     
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(string characterPath, Vector3 respawnPoint, int team)
@@ -91,6 +98,7 @@ public class Player : NetworkBehaviour
         dashSpeed = character.DashSpeed;
         dashDuration = character.DashDuration;
         dashCooldown = character.DashCooldown;
+        characterName = character.name;
         
         this.respawnPoint = respawnPoint;
         this.team = team;
@@ -111,6 +119,9 @@ public class Player : NetworkBehaviour
         isAoEEnabled = false;
         isAoEUsed = false;
         normalShoot = true;
+        meleeDamage = 10.0f;
+        meleeRange = 3.0f;
+        meleeRadius = 0.5f;
     }
 
     // Player initialisation (called on each client and server when player is spawned on network)
@@ -193,6 +204,7 @@ public class Player : NetworkBehaviour
 
         //Set points bar
         UpdatePointsBar();
+        DisableMeleeHitbox();
     }
 
     // Called on each client and server when player is despawned from network
@@ -320,21 +332,28 @@ public class Player : NetworkBehaviour
                 // Firing the weapon
                 if (input.buttons.IsSet(InputButtons.Shoot))
                 {
-                    if (isAoEEnabled && !normalShoot)
-                    {
-                        ShootAoE(input.aimDirection);
-                        Debug.Log("Shoot aoe");
-                    }
-                    else if (normalShoot && !isAoEEnabled)
-                    {
-                        Shoot(input.aimDirection);
-                        Debug.Log("Shoot normal");
-                    }
+                    // if (isAoEEnabled && !normalShoot)
+                    // {
+                    //     ShootAoE(input.aimDirection);
+                    //     Debug.Log("Shoot aoe");
+                    // }
+                    // else if (normalShoot && !isAoEEnabled)
+                    // {
+                    //     Shoot(input.aimDirection);
+                    //     Debug.Log("Shoot normal");
+                    // }
+
+                    // meleeHit();
                     isAttacking = true;
+                    EnableMeleeHitbox();
+                    Debug.Log("enabled");
                 }
                 else
                 {
                     isAttacking = false;
+                    DisableMeleeHitbox();
+                    Debug.Log("disabled");
+
                 }
 
                 // Reloading
@@ -495,6 +514,20 @@ public class Player : NetworkBehaviour
         normalShoot = true;
         aoeIcon.enabled = false;     
     }
+
+    // void meleeHit()
+    // {
+    //     int layerMask = LayerMask.GetMask("Default");
+    //     Vector2 attackPosition = (Vector2)transform.position + (spriteRenderer.flipX ? Vector2.left : Vector2.right) * meleeRange;
+    //     Collider[] hitPlayers = Physics.OverlapBox(attackPosition, meleeRange, layerMask);
+
+    //     foreach (Collider player in hitPlayers)
+    //     {
+    //         if (player.CompareTag("Player")) // Extra check for safety
+    //         {
+    //             player.GetComponent<Player>()?.TakeDamage(meleeDamage, Object.InputAuthority);
+    //         }
+    //     }
     
 
     public void PlayShootSound()
@@ -622,6 +655,16 @@ public class Player : NetworkBehaviour
             audioSource.PlayOneShot(dyingSound, 0.7f);
         }
 
+    }
+
+    public void EnableMeleeHitbox()
+    {
+        meleeHitbox.SetActive(true);
+    }
+
+    public void DisableMeleeHitbox()
+    {
+        meleeHitbox.SetActive(false);
     }
     
     void OnHealthChanged()

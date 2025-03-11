@@ -173,7 +173,7 @@ public class GameController : SimulationBehaviour, IPlayerJoined, IPlayerLeft
         {
             // Load prefab
             GameObject playerPrefab = Resources.Load("Prefabs/Player") as GameObject;
-            string characterPath = "ScriptableObjects/Characters/Wizard";
+            string characterPath = "ScriptableObjects/Characters/Knight";
 
             // Spawn the player network object
             int team = nextTeam;
