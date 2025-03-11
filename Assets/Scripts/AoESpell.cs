@@ -8,30 +8,73 @@ public class AoESpell : NetworkBehaviour
     [Networked] public float duration { get; set; }
     [Networked] private TickTimer despawnTimer { get; set; }
     [Networked] private PlayerRef playerCasting { get; set; }
+    [Networked] private Vector2 direction { get; set; }
+    [Networked] private float speed { get; set; }
+    [Networked] private float maxDistance { get; set; }
+    [Networked] private float distanceTraveled { get; set; }
+    [Networked, OnChangedRender(nameof(OnActivatedChanged))] private bool isActivated { get; set; }
 
-    public void OnCreated(float damage, int team, float duration, PlayerRef playerCasting)
+    [SerializeField] private Sprite aoeSmall;
+    [SerializeField] private Sprite aoeNormal;
+
+    private SpriteRenderer spriteRenderer;
+
+    public void OnCreated(Vector2 direction, float speed, float maxDistance, float damage, int team, float duration, PlayerRef playerCasting)
     {
         this.damage = damage;
         this.team = team;
         this.duration = duration;
         this.playerCasting = playerCasting;
+        this.direction = direction.normalized;
+        this.speed = speed;
+        this.maxDistance = maxDistance;
+        this.distanceTraveled = 0f;
+        this.isActivated = false;
+    }
 
-        despawnTimer = TickTimer.CreateFromSeconds(Runner, duration);
+    public override void Spawned()
+    {
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer != null && aoeSmall != null)
+        {
+            spriteRenderer.sprite = aoeSmall;
+        }
     }
 
     public override void FixedUpdateNetwork()
     {
-        // Check if the despawn timer has expired
-        if (despawnTimer.Expired(Runner))
+        if (isActivated)
         {
-            Runner.Despawn(Object);
+            // Check if the despawn timer has expired
+            if (despawnTimer.Expired(Runner))
+            {
+                Runner.Despawn(Object);
+            }
         }
+        else
+        {
+            // Move the spell
+            Vector2 movement = direction * speed * Runner.DeltaTime;
+            transform.position += new Vector3(movement.x, movement.y, 0);
+            distanceTraveled += movement.magnitude;
+
+            if (distanceTraveled >= maxDistance)
+            {
+                isActivated = true;
+                if (spriteRenderer != null && aoeNormal != null)
+                {
+                    spriteRenderer.sprite = aoeNormal;
+                }
+                despawnTimer = TickTimer.CreateFromSeconds(Runner, duration);
+            }
+        }
+        
     }
 
     private void OnTriggerStay2D(Collider2D other)
     {
         // Check if the colliding object is a player
-        if (other.CompareTag("Player"))
+        if (isActivated && other.CompareTag("Player"))
         {
             Player player = other.GetComponentInParent<Player>();
 
@@ -41,5 +84,13 @@ public class AoESpell : NetworkBehaviour
             }
         }
     }
-    
+
+    // Called on all clients when AoE spell is activated, so that all clients see the sprite change
+    void OnActivatedChanged()
+    {
+        if (isActivated && spriteRenderer != null && aoeNormal != null)
+        {
+            spriteRenderer.sprite = aoeNormal;
+        }
+    }
 }
