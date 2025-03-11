@@ -1,11 +1,15 @@
 using Fusion;
+using Microsoft.Unity.VisualStudio.Editor;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PickupFlag : NetworkBehaviour
 {
     [Networked, OnChangedRender(nameof(OnPickupChanged))] private NetworkBool isPickedUp { get; set; } // Track if the object is picked up
     [Networked] private Player picker { get; set; } // Track which player picked up the object
     [Networked] public int team { get; set; }
+
+    [SerializeField] UnityEngine.UI.Image SpriteIndicator;
 
     public void OnCreated(int team)
     {
@@ -31,6 +35,7 @@ public class PickupFlag : NetworkBehaviour
 
             SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
             spriteRenderer.sprite = Resources.Load<Sprite>(spritePath);
+            SpriteIndicator.sprite = Resources.Load<Sprite>(spritePath);
         }
     }
 
