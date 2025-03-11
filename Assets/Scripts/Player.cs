@@ -42,6 +42,10 @@ public class Player : NetworkBehaviour
     [Networked] public float aoeCooldown { get; set; }
     [Networked] public float aoeDuration { get; set; }
     [Networked] public float aoeCooldownTimer { get; set; }
+    [Networked] public bool isAoEEnabled { get; set; }
+    [Networked] private bool isAoEUsed { get; set; }
+    [Networked] public float aoeMaxRad { get; set; }
+    [Networked] private bool normalShoot { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
@@ -73,7 +77,7 @@ public class Player : NetworkBehaviour
     private AudioClip dashSound;
     private AudioSource audioSource;
     [SerializeField] Image bulletIcon;
-
+    
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(string characterPath, Vector3 respawnPoint, int team)
     {
@@ -97,13 +101,16 @@ public class Player : NetworkBehaviour
         aoeDamage = 5;
         aoeCooldown = 10;
         aoeDuration = 5;
+        aoeMaxRad = 10;
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
         isAlive = true;
         currentRespawn = 0.0f;
         timeToWaitForBullet = 0.0f;
         isCarrying = false;
-
+        isAoEEnabled = false;
+        isAoEUsed = false;
+        normalShoot = true;
     }
 
     // Player initialisation (called on each client and server when player is spawned on network)
@@ -307,17 +314,6 @@ public class Player : NetworkBehaviour
             }
         }
 
-        // Handle AoE cooldown
-        if (aoeCooldownTimer > 0)
-        {
-            aoeCooldownTimer -= Runner.DeltaTime;
-            if (aoeCooldownTimer <= 0)
-            {
-                aoeIcon.enabled = false;
-                aoeIconLayer.enabled = false;
-            }
-        }
-
         // auto reload 
         if (currentAmmo == 0 && reloadTimer <= 0) 
         {
@@ -336,7 +332,16 @@ public class Player : NetworkBehaviour
                 // Firing the weapon
                 if (input.buttons.IsSet(InputButtons.Shoot))
                 {
-                    Shoot(input.aimDirection);
+                    if (isAoEEnabled && !normalShoot)
+                    {
+                        ShootAoE(input.aimDirection);
+                        Debug.Log("Shoot aoe");
+                    }
+                    else if (normalShoot && !isAoEEnabled)
+                    {
+                        Shoot(input.aimDirection);
+                        Debug.Log("Shoot normal");
+                    }
                     isAttacking = true;
                 }
                 else
@@ -371,12 +376,6 @@ public class Player : NetworkBehaviour
                     Dash(input.moveDirection);
                 }
 
-                // Activate AoE skill with 'T'
-                if (input.buttons.WasPressed(previousButtons, InputButtons.AoE))
-                {
-                    Debug.Log("T is pressed");
-                    ActivateAoE(input.cursorWorldPoint);
-                }
             }
 
             // Activate Menu
@@ -453,39 +452,6 @@ public class Player : NetworkBehaviour
         }
     }
 
-    // Activate AoE skill
-    void ActivateAoE(Vector2 cursorWorldPoint)
-    {
-        if (aoeCooldownTimer <= 0) // Only allow AoE if cooldown is over
-        {
-            // Spawn AoE effect (only the server can do this)
-            if (HasStateAuthority)
-            {
-                GameObject aoeEffect = Resources.Load("Prefabs/AoE1") as GameObject;
-                // Spawn the AoE prefab
-                NetworkObject aoeObject = Runner.Spawn(aoeEffect, cursorWorldPoint, Quaternion.identity, null, (runner, networkObject) =>
-                {
-                    AoESpell aoeSpell = networkObject.GetComponent<AoESpell>();
-                    if (aoeSpell != null)
-                    {
-                        aoeSpell.OnCreated(aoeDamage, team, aoeDuration, Object.InputAuthority); 
-                    }
-                });
-            }
-            // Start cooldown
-            aoeCooldownTimer = aoeCooldown;
-            ShowMessage("AoE Skill Used", 0.5f, Color.white);
-            aoeIcon.enabled = true;
-            aoeIconLayer.enabled = true;
-            aoeHandler.StartCooldown(aoeCooldown);
-        }
-        else
-        {
-            ShowMessage("AoE Skill in Cooldown", 0.5f, Color.white);
-        }
-    }
-
-
     // Shoots a bullet by spawning the prefab on the network
     void Shoot(Vector2 aimDirection)
     {
@@ -512,6 +478,32 @@ public class Player : NetworkBehaviour
             }
         }
     }
+
+    // Shoots a bullet by spawning the prefab on the network
+    void ShootAoE(Vector2 aimDirection)
+    {
+        if (HasStateAuthority)
+        {
+            GameObject aoeSpellPrefab = Resources.Load("Prefabs/AoE1") as GameObject;
+            NetworkObject aoeSpellObject = Runner.Spawn(aoeSpellPrefab, transform.position, Quaternion.identity, Object.InputAuthority, (runner, networkObject) =>
+            {
+                AoESpell aoeSpell = networkObject.GetComponent<AoESpell>();
+                if (aoeSpell != null)
+                {
+                    aoeSpell.OnCreated(aimDirection, 10f, 10f, aoeDamage, team, aoeDuration, Object.InputAuthority);
+                }
+            });
+        }
+        // Just the player that shoot listens to the sound
+        if (HasInputAuthority)
+        {
+            PlayShootSound();
+        }
+        isAoEEnabled = false;
+        normalShoot = true;
+        aoeIcon.enabled = false;
+    }
+    
 
     public void PlayShootSound()
     {
@@ -762,6 +754,18 @@ public class Player : NetworkBehaviour
         return team;
     }
 
+    public void ActivateTri(bool tri)
+    {
+        if (tri)
+        {
+            isAoEEnabled = true; // Enable AoE
+            normalShoot = false;
+            aoeIcon.enabled = true;
+            isAoEUsed = false;
+            StartCoroutine(EnableAoETemporarily());
+        } 
+    }
+
     public float GetPoints()
     {
         return points;
@@ -777,5 +781,17 @@ public class Player : NetworkBehaviour
     {
         yield return new WaitForSeconds(time);
         this.speed += amount;
+    }
+
+    private IEnumerator EnableAoETemporarily()
+    {
+        yield return new WaitForSeconds(5f); 
+        if (!isAoEUsed)
+        {
+            isAoEEnabled = false; // Disable AoE
+            normalShoot = true;
+            aoeIcon.enabled = false;
+        }
+        
     }
 }

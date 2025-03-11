@@ -257,6 +257,8 @@ public class ShapeController : NetworkBehaviour
 
             if (nVertices == 3)
             {
+                parentPlayer.ActivateTri(true);
+
                 if (HasStateAuthority)
                 {
                     triangleShape.CastAbility(playerPositions, score);
@@ -264,6 +266,7 @@ public class ShapeController : NetworkBehaviour
                     parentPlayer.SpendPoints(triangleCost);
 
                     RPC_PlayTriangleSound(playerPositions.ToArray(), 3, 0);
+
                     // Set networked property so everyone can draw lines in OnShapeActivationToggleChanged method
                     shapeActivationToggle = !shapeActivationToggle;
                 }

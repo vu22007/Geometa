@@ -810,7 +810,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 351059904661981119, guid: 9b4ce6e0ea86cef4da4e0eb13a2c63c3, type: 3}
+  m_Sprite: {fileID: 2352227056273460086, guid: b7765be74d7d6984d8164242b894ddb2, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1528,6 +1528,8 @@ MonoBehaviour:
   _aoeCooldown: 5
   _aoeDuration: 0
   _aoeCooldownTimer: 0
+  _isAoEEnabled: 0
+  _aoeMaxRad: 0
   cam: {fileID: 3093333144043118080}
   mainHealthBar: {fileID: 8395293536219763284}
   teamHealthBar: {fileID: 8623719664100579951}
@@ -3413,7 +3415,6 @@ RectTransform:
   - {fileID: 3520415813905811361}
   - {fileID: 4348571726127997781}
   - {fileID: 7198958181709275439}
-  - {fileID: 8247023986890649987}
   - {fileID: 7922923845506637100}
   - {fileID: 4283211400139917418}
   - {fileID: 2877228416330311294}
