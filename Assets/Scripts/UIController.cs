@@ -12,11 +12,9 @@ public class UIController : MonoBehaviour
 
     private void Start()
     {
-        if (GameObject.Find("Host") != null)
-            gameController = GameObject.Find("Host").GetComponent<GameController>();
-        else
-            gameController = GameObject.Find("Client A").GetComponent<GameController>();
+        gameController = GameObject.Find("Game Controller").GetComponent<GameController>();
     }
+
     private void Update()
     {
         // Update the time left in the UI if the client controls this player

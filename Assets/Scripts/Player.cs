@@ -54,6 +54,7 @@ public class Player : NetworkBehaviour
     [SerializeField] Image mainHealthBar;
     [SerializeField] Image teamHealthBar;
     [SerializeField] Image mainPointsBar;
+    [SerializeField] Image minimapIndicator;
     [SerializeField] Image enemyHealthBar;
     [SerializeField] UIController uIController;
     [SerializeField] cooldownHandler dashCDHandler;
@@ -64,6 +65,7 @@ public class Player : NetworkBehaviour
     [SerializeField] Image aoeIcon;
     [SerializeField] Image aoeIconLayer;
     [SerializeField] GameObject escapeMenu;
+    [SerializeField] Minimap minimap;
     Image healthBar;
     public TextMeshProUGUI ammoText;
     public TextMeshProUGUI timeLeftText;
@@ -146,12 +148,17 @@ public class Player : NetworkBehaviour
         Player localPlayer = Runner.GetPlayerObject(Runner.LocalPlayer)?.GetComponent<Player>();
         int localPlayerTeam = localPlayer.GetTeam();
 
+        //Setup minimap
+        minimap.Setup();
+        minimapIndicator.gameObject.SetActive(true);
+
         // If client controls this player then use main health bar
         if (HasInputAuthority)
         {
             healthBar = mainHealthBar;
             teamHealthBar.transform.parent.gameObject.SetActive(false);
             enemyHealthBar.transform.parent.gameObject.SetActive(false);
+            minimapIndicator.color = Color.blue;
         }
         // If this player is on the other team to the client's player then use small health bar
         else if (localPlayerTeam != team)
@@ -160,6 +167,7 @@ public class Player : NetworkBehaviour
             enemyHealthBar.transform.parent.gameObject.SetActive(true);
             mainHealthBar.transform.parent.gameObject.SetActive(false);
             teamHealthBar.transform.parent.gameObject.SetActive(false);
+            minimapIndicator.color = Color.red;
         }
         // If this player is on the same team to the client's player then use no health bar
         else
@@ -167,6 +175,7 @@ public class Player : NetworkBehaviour
             healthBar = teamHealthBar;
             mainHealthBar.transform.parent.gameObject.SetActive(false);
             enemyHealthBar.transform.parent.gameObject.SetActive(false);
+            minimapIndicator.color = Color.green;
         }
 
         // Set the health bar
