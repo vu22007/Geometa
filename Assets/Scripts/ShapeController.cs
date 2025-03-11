@@ -162,7 +162,7 @@ public class ShapeController : NetworkBehaviour
             if (triangleCooldown > 0)
             {
                 Debug.Log("Cooldown on triangle: " + triangleCooldown);
-                if (activate) parentPlayer.ShowMessage("Cooldown on triangle!", 0.2f, Color.white);
+                if (activate && !Runner.IsResimulation) parentPlayer.ShowMessage("Cooldown on triangle!", 0.2f, Color.white);
                 return;
             }
 
@@ -170,7 +170,7 @@ public class ShapeController : NetworkBehaviour
             {
                 triangleLineRenderer.enabled = false;
                 Debug.Log("You don't have enough points to activate a triangle");
-                if (activate) parentPlayer.ShowMessage("Not enough points!", 0.2f, Color.white);
+                if (activate && !Runner.IsResimulation) parentPlayer.ShowMessage("Not enough points!", 0.2f, Color.white);
                 return;
             }
         }
@@ -179,7 +179,7 @@ public class ShapeController : NetworkBehaviour
             if (squareCooldown > 0)
             {
                 Debug.Log("Cooldown on square: " + squareCooldown);
-                if (activate) parentPlayer.ShowMessage("Cooldown on square!", 0.2f, Color.white);
+                if (activate && !Runner.IsResimulation) parentPlayer.ShowMessage("Cooldown on square!", 0.2f, Color.white);
                 return;
             }
 
@@ -187,7 +187,7 @@ public class ShapeController : NetworkBehaviour
             {
                 squareLineRenderer.enabled = false;
                 Debug.Log("You don't have enough points to activate a square");
-                if (activate) parentPlayer.ShowMessage("Not enough points!", 0.2f, Color.white);
+                if (activate && !Runner.IsResimulation) parentPlayer.ShowMessage("Not enough points!", 0.2f, Color.white);
                 return;
             }
         }
@@ -197,7 +197,7 @@ public class ShapeController : NetworkBehaviour
             {
                 pentagonLineRenderer.enabled = false;
                 Debug.Log("You don't have enough points to activate a pentagon");
-                if (activate) parentPlayer.ShowMessage("Not enough points!", 0.2f, Color.white);
+                if (activate && !Runner.IsResimulation) parentPlayer.ShowMessage("Not enough points!", 0.2f, Color.white);
                 return;
             }
         }
@@ -216,7 +216,7 @@ public class ShapeController : NetworkBehaviour
         if (playerPositions.Count < nVertices)
         {
             Debug.Log("Not enough players to activate shape");
-            if (activate) parentPlayer.ShowMessage("Not enough players to activate shape!", 0.2f, Color.white);
+            if (activate && !Runner.IsResimulation) parentPlayer.ShowMessage("Not enough players to activate shape!", 0.2f, Color.white);
             ChooseLineRenderer(nVertices).enabled = false;
             return;
         }
@@ -224,7 +224,7 @@ public class ShapeController : NetworkBehaviour
         if (Vector3.Distance(parentPlayer.transform.position, playerPositions.Last()) > maxDistance)
         {
             Debug.Log("Players too far away to activate shape");
-            if (activate) parentPlayer.ShowMessage("Players too far away to activate shape!", 0.2f, Color.white);
+            if (activate && !Runner.IsResimulation) parentPlayer.ShowMessage("Players too far away to activate shape!", 0.2f, Color.white);
             ChooseLineRenderer(nVertices).enabled = false;
             return;
         }
@@ -275,7 +275,7 @@ public class ShapeController : NetworkBehaviour
                 {
                     squareLineRenderer.enabled = false;
                     Debug.Log("Shape is not convex - can't activate buff!");
-                    parentPlayer.ShowMessage("Shape is not convex!", 0.2f, Color.white);
+                    if (!Runner.IsResimulation) parentPlayer.ShowMessage("Shape is not convex!", 0.2f, Color.white);
                     return;
                 }
                 else
@@ -297,7 +297,7 @@ public class ShapeController : NetworkBehaviour
                 {
                     pentagonLineRenderer.enabled = false;
                     Debug.Log("Shape is not convex - can't activate buff!");
-                    parentPlayer.ShowMessage("Shape is not convex!", 0.2f, Color.white);
+                    if (!Runner.IsResimulation) parentPlayer.ShowMessage("Shape is not convex!", 0.2f, Color.white);
                     return;
                 }
                 else

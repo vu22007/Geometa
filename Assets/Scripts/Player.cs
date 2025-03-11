@@ -341,12 +341,10 @@ public class Player : NetworkBehaviour
                     if (isAoEEnabled && !normalShoot)
                     {
                         ShootAoE(input.aimDirection);
-                        Debug.Log("Shoot aoe");
                     }
                     else if (normalShoot && !isAoEEnabled)
                     {
                         Shoot(input.aimDirection);
-                        Debug.Log("Shoot normal");
                     }
                     isAttacking = true;
                 }
@@ -389,7 +387,6 @@ public class Player : NetworkBehaviour
             {
                 escapeMenu.SetActive(!escapeMenu.gameObject.activeSelf);
             }
-
             
             //Character rotates to mouse position
             Vector2 lookDirection = input.aimDirection.normalized;
@@ -450,11 +447,11 @@ public class Player : NetworkBehaviour
             dashTimer = dashDuration;
             dashCooldownTimer = dashCooldown;
             dashCDHandler.StartCooldown(dashCooldown);
-            audioSource.PlayOneShot(dashSound);
+            if (!Runner.IsResimulation) audioSource.PlayOneShot(dashSound);
         }
         else
         {
-            ShowMessage("Dash in cooldown", 0.2f, Color.white);
+            if (!Runner.IsResimulation) ShowMessage("Dash in cooldown", 0.2f, Color.white);
         }
     }
 
@@ -466,7 +463,6 @@ public class Player : NetworkBehaviour
             timeToWaitForBullet = 1 / fireRate;
             if (currentAmmo != 0)
             {
-
                 // Spawn bullet (only the server can do this)
                 if (HasStateAuthority)
                 {
@@ -474,7 +470,7 @@ public class Player : NetworkBehaviour
                     PrefabFactory.SpawnBullet(Runner, Object.InputAuthority, bulletPrefab, gameObject.transform.position, aimDirection, 40.0f, damage, team, Object.InputAuthority);
                 }
                 // Just the player that shoot listens to the sound
-                if (HasInputAuthority)
+                if (HasInputAuthority && !Runner.IsResimulation)
                 {
                     PlayShootSound();
                 }
@@ -501,7 +497,7 @@ public class Player : NetworkBehaviour
             });
         }
         // Just the player that shoot listens to the sound
-        if (HasInputAuthority)
+        if (HasInputAuthority && !Runner.IsResimulation)
         {
             PlayShootSound();
         }
@@ -667,12 +663,12 @@ public class Player : NetworkBehaviour
     {
         if (currentAmmo >= maxAmmo)
         {
-            ShowMessage("Mana is full!", 0.1f, Color.white);
+            if (!Runner.IsResimulation) ShowMessage("Mana is full!", 0.1f, Color.white);
             return; 
         }
         if (reloadTimer <= 0)
         {
-            ShowMessage("Gathering Mana", 0.3f, Color.green);
+            if (!Runner.IsResimulation) ShowMessage("Gathering Mana", 0.3f, Color.green);
             missingAmmo = maxAmmo - currentAmmo;
             reloadFraction = (float)missingAmmo / maxAmmo;
             reloadTimer = reloadTime * reloadFraction;
@@ -683,7 +679,7 @@ public class Player : NetworkBehaviour
         }
         else
         {
-            ShowMessage("Still gathering mana", 0.3f, Color.white);
+            if (!Runner.IsResimulation) ShowMessage("Still gathering mana", 0.3f, Color.white);
         }
     }
 
