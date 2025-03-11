@@ -435,7 +435,8 @@ public class Player : NetworkBehaviour
         rb.linearVelocity = newVelocity;
 
         // Check if player is moving
-        isMoving = newVelocity.x != 0 || newVelocity.y != 0;
+        float threshold = 0.1f;
+        isMoving = Mathf.Abs(newVelocity.x) > threshold || Mathf.Abs(newVelocity.y) > threshold;
     }
 
     // Dash mechanic
