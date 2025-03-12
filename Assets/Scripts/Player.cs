@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using TMPro;
 using Fusion.Addons.Physics;
 using System.Collections;
+using UnityEngine.EventSystems;
 
 public class Player : NetworkBehaviour
 {
@@ -464,17 +465,32 @@ public class Player : NetworkBehaviour
             timeToWaitForBullet = 1 / fireRate;
             if (currentAmmo != 0)
             {
+                // Spawn dummy bullet
+                if (HasInputAuthority && !Runner.IsResimulation)
+                {
+                    // Get rotation
+                    Vector3 direction = new Vector3(aimDirection.x, aimDirection.y);
+                    Quaternion rotation = Quaternion.LookRotation(Vector3.forward, direction);
+
+                    GameObject dummyBulletPrefab = Resources.Load("Prefabs/DummyBullet") as GameObject;
+                    GameObject dummyBulletObject = Instantiate(dummyBulletPrefab);
+                    DummyBullet dummyBullet = dummyBulletObject.GetComponent<DummyBullet>();
+                    dummyBullet.OnCreated(gameObject.transform.position, aimDirection, rotation, 40.0f, team, Runner.Tick);
+                }
+
                 // Spawn bullet (only the server can do this)
                 if (HasStateAuthority)
                 {
                     GameObject bulletPrefab = Resources.Load("Prefabs/Bullet") as GameObject;
                     PrefabFactory.SpawnBullet(Runner, Object.InputAuthority, bulletPrefab, gameObject.transform.position, aimDirection, 40.0f, damage, team, Object.InputAuthority);
                 }
+
                 // Just the player that shoot listens to the sound
                 if (HasInputAuthority && !Runner.IsResimulation)
                 {
                     PlayShootSound();
                 }
+
                 currentAmmo--;
                 ammoText.text = currentAmmo.ToString();
                 bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
