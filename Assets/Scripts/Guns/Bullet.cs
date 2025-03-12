@@ -41,6 +41,17 @@ public class Bullet : NetworkBehaviour
 
         // Rotate the bullet into the correct orientation
         transform.rotation = rotation;
+
+        // If a dummy bullet for this bullet exists then destroy it
+        foreach (DummyBullet dummyBullet in FindObjectsByType<DummyBullet>(FindObjectsSortMode.None))
+        {
+            // If this bullet and the dummy bullet were created in the same tick, then the dummy bullet
+            // corresponds to this bullet, so destroy it
+            if (dummyBullet.getInitialTick() == initialTick)
+            {
+                Destroy(dummyBullet.gameObject);
+            }
+        }
     }
 
     // Called on each client and server when bullet is despawned from network
