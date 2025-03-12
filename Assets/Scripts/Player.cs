@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using TMPro;
 using Fusion.Addons.Physics;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine.EventSystems;
 
 public class Player : NetworkBehaviour
@@ -81,6 +82,9 @@ public class Player : NetworkBehaviour
     private AudioClip dashSound;
     private AudioSource audioSource;
     [SerializeField] Image bulletIcon;
+    [SerializeField] GameObject mainbulletIcon;
+    [SerializeField] Transform meleePoint;
+    [SerializeField] GameObject meleeHitbox;
     
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(string characterName, Vector3 respawnPoint, int team)
@@ -95,6 +99,7 @@ public class Player : NetworkBehaviour
         dashSpeed = character.DashSpeed;
         dashDuration = character.DashDuration;
         dashCooldown = character.DashCooldown;
+        characterName = character.name;
         
         this.respawnPoint = respawnPoint;
         this.team = team;
@@ -206,6 +211,12 @@ public class Player : NetworkBehaviour
 
         //Set points bar
         UpdatePointsBar();
+        DisableMeleeHitbox();
+        if (characterName == "Knight")
+        {
+            Debug.Log("disabled mana");
+            mainbulletIcon.SetActive(false);
+        }
     }
 
     // Called on each client and server when player is despawned from network
@@ -230,9 +241,15 @@ public class Player : NetworkBehaviour
         if (healthBar != null)
             healthBar.fillAmount = currentHealth / maxHealth;
         
-        // Set the ammo counter
-        ammoText.text = currentAmmo.ToString();
-        bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
+        if (characterName != "Knight")
+        {
+            // Set the ammo counter
+            ammoText.text = currentAmmo.ToString();
+            bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
+        }
+        // // Set the ammo counter
+        // ammoText.text = currentAmmo.ToString();
+        // bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
 
         // Activate the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = true;
@@ -349,23 +366,43 @@ public class Player : NetworkBehaviour
                 PlayerMovement(input.moveDirection);
 
                 // Firing the weapon
-                if (input.buttons.IsSet(InputButtons.Shoot))
+                if (characterName == "Knight")
                 {
-                    if (isAoEEnabled && !normalShoot)
+                    if (input.buttons.IsSet(InputButtons.Shoot))
                     {
-                        ShootAoE(input.aimDirection);
+                        isAttacking = true;
+                        EnableMeleeHitbox();
+                        Debug.Log("enabled");
                     }
-                    else if (normalShoot && !isAoEEnabled)
+                    else
                     {
-                        Shoot(input.aimDirection);
+                        isAttacking = false;
+                        DisableMeleeHitbox();
+                        Debug.Log("disabled");
+
                     }
-                    isAttacking = true;
-                }
-                else
-                {
-                    isAttacking = false;
                 }
 
+                else
+                {
+                    if (input.buttons.IsSet(InputButtons.Shoot))
+                    {
+                        if (isAoEEnabled && !normalShoot)
+                        {
+                            ShootAoE(input.aimDirection);
+                        }
+                        else if (normalShoot && !isAoEEnabled)
+                        {
+                            Shoot(input.aimDirection);
+                        }
+                        isAttacking = true;
+                    }
+                    else
+                    {
+                        isAttacking = false;
+                    }
+                }
+                
                 // Reloading
                 if (input.buttons.WasPressed(previousButtons, InputButtons.Reload))
                 {
@@ -524,8 +561,11 @@ public class Player : NetworkBehaviour
 
                 if (!Runner.IsResimulation)
                 {
-                    ammoText.text = currentAmmo.ToString();
-                    bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
+                    if (characterName != "Knight")
+                    {
+                        ammoText.text = currentAmmo.ToString();
+                        bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
+                    }
                 }
             }
         }
@@ -693,6 +733,16 @@ public class Player : NetworkBehaviour
             audioSource.PlayOneShot(dyingSound, 0.7f);
         }
 
+    }
+
+    public void EnableMeleeHitbox()
+    {
+        meleeHitbox.SetActive(true);
+    }
+
+    public void DisableMeleeHitbox()
+    {
+        meleeHitbox.SetActive(false);
     }
     
     void OnHealthChanged()

@@ -71,6 +71,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
 
             // Spawn NPCs for testing
             // SpawnPlayersForTesting(3, 3);
+            // SpawnPlayersForTesting(3, 3);
         }
     }
 
