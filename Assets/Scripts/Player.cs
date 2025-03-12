@@ -5,6 +5,7 @@ using TMPro;
 using Fusion.Addons.Physics;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.EventSystems;
 
 public class Player : NetworkBehaviour
 {
@@ -47,6 +48,7 @@ public class Player : NetworkBehaviour
     [Networked] private bool isAoEUsed { get; set; }
     [Networked] public float aoeMaxRad { get; set; }
     [Networked] private bool normalShoot { get; set; }
+    [Networked] private bool gamePaused { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
@@ -118,6 +120,7 @@ public class Player : NetworkBehaviour
         isAoEEnabled = false;
         isAoEUsed = false;
         normalShoot = true;
+        gamePaused = false;
     }
 
     // Player initialisation (called on each client and server when player is spawned on network)
@@ -271,36 +274,42 @@ public class Player : NetworkBehaviour
             // Stop player movement and prevent player from infinitely sliding when pushed by another player
             rb.linearVelocity = new Vector2(0, 0);
 
-            // Enable the death overlay and update the respawn timer text
-            if (HasInputAuthority) // Only show for the local player
+            if (!Runner.IsResimulation)
             {
-                if (deathOverlay != null)
+                // Enable the death overlay and update the respawn timer text
+                if (HasInputAuthority) // Only show for the local player
                 {
-                    deathOverlay.SetActive(true); // Enable the overlay
+                    if (deathOverlay != null)
+                    {
+                        deathOverlay.SetActive(true); // Enable the overlay
+                    }
+
+                    if (respawnTimerTxt != null)
+                    {
+                        // Calculate the remaining respawn time
+                        float remainingTime = respawnTime - currentRespawn;
+                        respawnTimerTxt.text = $"Respawning in {Mathf.CeilToInt(remainingTime)}s";
+                    }
                 }
 
-                if (respawnTimerTxt != null)
-                {
-                    // Calculate the remaining respawn time
-                    float remainingTime = respawnTime - currentRespawn;
-                    respawnTimerTxt.text = $"Respawning in {Mathf.CeilToInt(remainingTime)}s";
-                }
+                // Hide the player
+                gameObject.SetActive(false);
             }
-
-            // Hide the player
-            gameObject.SetActive(false);
 
             return;
         }
         else
         {
-            if (HasInputAuthority && deathOverlay != null)
+            if (!Runner.IsResimulation)
             {
-                deathOverlay.SetActive(false);
-            }
+                if (HasInputAuthority && deathOverlay != null)
+                {
+                    deathOverlay.SetActive(false);
+                }
 
-            // Show the player
-            gameObject.SetActive(true);
+                // Show the player
+                gameObject.SetActive(true);
+            }
         }
 
         // Decrease bullet timer and clamp to 0 if below 0
@@ -314,10 +323,14 @@ public class Player : NetworkBehaviour
             {
                 // Reloading is complete, update ammo
                 currentAmmo = maxAmmo;
-                ammoText.text = currentAmmo.ToString();
-                bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
-                reloadIcon.enabled = false;
-                reloadIconLayer.enabled = false;
+
+                if (!Runner.IsResimulation)
+                {
+                    ammoText.text = currentAmmo.ToString();
+                    bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
+                    reloadIcon.enabled = false;
+                    reloadIconLayer.enabled = false;
+                }
             }
         }
 
@@ -347,8 +360,8 @@ public class Player : NetworkBehaviour
         // So the following is ran for just the server and the client who controls this player
         if (GetInput(out NetworkInputData input))
         {
-            //If menu is not active
-            if (!escapeMenu.activeSelf){
+            // If game is not paused
+            if (!gamePaused){
                 // WASD movement
                 PlayerMovement(input.moveDirection);
 
@@ -377,18 +390,19 @@ public class Player : NetworkBehaviour
                         if (isAoEEnabled && !normalShoot)
                         {
                             ShootAoE(input.aimDirection);
-                            Debug.Log("Shoot aoe");
                         }
                         else if (normalShoot && !isAoEEnabled)
                         {
                             Shoot(input.aimDirection);
-                            Debug.Log("Shoot normal");
                         }
+                        isAttacking = true;
                     }
-                
+                    else
+                    {
+                        isAttacking = false;
+                    }
                 }
                 
-
                 // Reloading
                 if (input.buttons.WasPressed(previousButtons, InputButtons.Reload))
                 {
@@ -421,9 +435,18 @@ public class Player : NetworkBehaviour
             // Activate Menu
             if (input.buttons.WasPressed(previousButtons, InputButtons.Menu))
             {
-                escapeMenu.SetActive(!escapeMenu.gameObject.activeSelf);
+                gamePaused = !gamePaused;
+
+                if (!Runner.IsResimulation)
+                    escapeMenu.SetActive(!escapeMenu.gameObject.activeSelf);
             }
 
+            if (gamePaused)
+            {
+                // Stop player movement (decelerate to stationary)
+                float acceleration = 5f;
+                rb.linearVelocity = Vector2.Lerp(rb.linearVelocity, Vector2.zero, acceleration * Runner.DeltaTime);
+            }
             
             //Character rotates to mouse position
             Vector2 lookDirection = input.aimDirection.normalized;
@@ -435,15 +458,18 @@ public class Player : NetworkBehaviour
             previousButtons = input.buttons;
         }
 
-        // Play idle or walking animation
-        if (isMoving)
-            animator.SetFloat("Speed", 0.02f);
-        else
-            animator.SetFloat("Speed", 0f);
-
-        if (isAttacking)
+        if (!Runner.IsResimulation)
         {
-            animator.SetTrigger("Attack");
+            // Play idle or walking animation
+            if (isMoving)
+                animator.SetFloat("Speed", 0.02f);
+            else
+                animator.SetFloat("Speed", 0f);
+
+            if (isAttacking)
+            {
+                animator.SetTrigger("Attack");
+            }
         }
 
         // If carrying an object, move it to player's position
@@ -451,7 +477,6 @@ public class Player : NetworkBehaviour
         {
             carriedObject.transform.position = transform.position + new Vector3(2.0f, 0, 0);
         }
-
     }
 
     // Player moves according to key presses and player speed
@@ -472,7 +497,8 @@ public class Player : NetworkBehaviour
         rb.linearVelocity = newVelocity;
 
         // Check if player is moving
-        isMoving = newVelocity.x != 0 || newVelocity.y != 0;
+        float threshold = 0.1f;
+        isMoving = Mathf.Abs(newVelocity.x) > threshold || Mathf.Abs(newVelocity.y) > threshold;
     }
 
     // Dash mechanic
@@ -483,12 +509,17 @@ public class Player : NetworkBehaviour
             isDashing = true;
             dashTimer = dashDuration;
             dashCooldownTimer = dashCooldown;
-            dashCDHandler.StartCooldown(dashCooldown);
-            audioSource.PlayOneShot(dashSound);
+
+            if (!Runner.IsResimulation)
+            {
+                dashCDHandler.StartCooldown(dashCooldown);
+                audioSource.PlayOneShot(dashSound);
+            }
         }
         else
         {
-            ShowMessage("Dash in cooldown", 0.2f, Color.white);
+            if (!Runner.IsResimulation)
+                ShowMessage("Dash in cooldown", 0.2f, Color.white);
         }
     }
 
@@ -500,6 +531,18 @@ public class Player : NetworkBehaviour
             timeToWaitForBullet = 1 / fireRate;
             if (currentAmmo != 0)
             {
+                // Spawn dummy bullet
+                if (HasInputAuthority && !Runner.IsResimulation)
+                {
+                    // Get rotation
+                    Vector3 direction = new Vector3(aimDirection.x, aimDirection.y);
+                    Quaternion rotation = Quaternion.LookRotation(Vector3.forward, direction);
+
+                    GameObject dummyBulletPrefab = Resources.Load("Prefabs/DummyBullet") as GameObject;
+                    GameObject dummyBulletObject = Instantiate(dummyBulletPrefab);
+                    DummyBullet dummyBullet = dummyBulletObject.GetComponent<DummyBullet>();
+                    dummyBullet.OnCreated(gameObject.transform.position, aimDirection, rotation, 40.0f, team, Runner.Tick);
+                }
 
                 // Spawn bullet (only the server can do this)
                 if (HasStateAuthority)
@@ -507,16 +550,22 @@ public class Player : NetworkBehaviour
                     GameObject bulletPrefab = Resources.Load("Prefabs/Bullet") as GameObject;
                     PrefabFactory.SpawnBullet(Runner, Object.InputAuthority, bulletPrefab, gameObject.transform.position, aimDirection, 40.0f, damage, team, Object.InputAuthority);
                 }
+
                 // Just the player that shoot listens to the sound
-                if (HasInputAuthority)
+                if (HasInputAuthority && !Runner.IsResimulation)
                 {
                     PlayShootSound();
                 }
+
                 currentAmmo--;
-                if (characterName != "Knight")
+
+                if (!Runner.IsResimulation)
                 {
-                    ammoText.text = currentAmmo.ToString();
-                    bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
+                    if (characterName != "Knight")
+                    {
+                        ammoText.text = currentAmmo.ToString();
+                        bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
+                    }
                 }
             }
         }
@@ -537,14 +586,18 @@ public class Player : NetworkBehaviour
                 }
             });
         }
+
         // Just the player that shoot listens to the sound
-        if (HasInputAuthority)
+        if (HasInputAuthority && !Runner.IsResimulation)
         {
             PlayShootSound();
         }
+
         isAoEEnabled = false;
         normalShoot = true;
-        aoeIcon.enabled = false;
+        
+        if (!Runner.IsResimulation)
+            aoeIcon.enabled = false;
     }
     
 
@@ -563,7 +616,8 @@ public class Player : NetworkBehaviour
         if (HasStateAuthority)
             currentHealth = newHealth;
 
-        UpdateHealthBar(newHealth);
+        if (!Runner.IsResimulation)
+            UpdateHealthBar(newHealth);
 
         // Play hurt animation and sounds for all clients
         if (HasStateAuthority)
@@ -604,7 +658,8 @@ public class Player : NetworkBehaviour
             currentHealth = maxHealth;
         }
 
-        UpdateHealthBar(newHealth);
+        if (!Runner.IsResimulation)
+            UpdateHealthBar(newHealth);
     }
 
     public void GainPoints(int amount)
@@ -613,7 +668,9 @@ public class Player : NetworkBehaviour
         if(points > maxPoints){
             points = maxPoints;
         }
-        UpdatePointsBar();
+
+        if (!Runner.IsResimulation)
+            UpdatePointsBar();
     }
 
     public void SpendPoints(int amount)
@@ -625,7 +682,8 @@ public class Player : NetworkBehaviour
         else
         {
             points -= amount;
-            UpdatePointsBar();
+            if (!Runner.IsResimulation)
+                UpdatePointsBar();
         }
     }
 
@@ -714,23 +772,29 @@ public class Player : NetworkBehaviour
     {
         if (currentAmmo >= maxAmmo)
         {
-            ShowMessage("Mana is full!", 0.1f, Color.white);
+            if (!Runner.IsResimulation)
+                ShowMessage("Mana is full!", 0.1f, Color.white);
             return; 
         }
         if (reloadTimer <= 0)
         {
-            ShowMessage("Gathering Mana", 0.3f, Color.green);
             missingAmmo = maxAmmo - currentAmmo;
             reloadFraction = (float)missingAmmo / maxAmmo;
             reloadTimer = reloadTime * reloadFraction;
             timeToWaitForBullet = reloadTimer;
-            reloadIcon.enabled = true;
-            reloadIconLayer.enabled = true;
-            reloadHandler.StartCooldown(reloadTimer);
+
+            if (!Runner.IsResimulation)
+            {
+                ShowMessage("Gathering Mana", 0.3f, Color.green);
+                reloadIcon.enabled = true;
+                reloadIconLayer.enabled = true;
+                reloadHandler.StartCooldown(reloadTimer);
+            }
         }
         else
         {
-            ShowMessage("Still gathering mana", 0.3f, Color.white);
+            if (!Runner.IsResimulation)
+                ShowMessage("Still gathering mana", 0.3f, Color.white);
         }
     }
 
@@ -777,6 +841,23 @@ public class Player : NetworkBehaviour
         if (HasInputAuthority) {
             uIController.MakePopupText(message, speed, color);
         }
+    }
+
+    public void ResumeGame()
+    {
+        escapeMenu.SetActive(false);
+
+        // This ResumeGame method is called only locally via the pause menu UI, so the change
+        // in the gamePaused networked property will not take place on the host, so we need to
+        // call an RPC to change it
+        RPC_ResumeGame();
+    }
+
+    // Only the client that controls this player can call this RPC, and it will run only on the server
+    [Rpc(sources: RpcSources.InputAuthority, targets: RpcTargets.StateAuthority)]
+    public void RPC_ResumeGame()
+    {
+        gamePaused = false;
     }
 
     public void LeaveMatch()
