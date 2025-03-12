@@ -257,6 +257,9 @@ public class ShapeController : NetworkBehaviour
                 if (parentPlayer.GetCharacterName() == "Wizard")
                 {
                     parentPlayer.ActivateTri(true);
+                    triangleCooldown = 1f;
+                    parentPlayer.SpendPoints(triangleCost);
+                    triangleLineRenderer.enabled = false;
                 }
                 else
                 {
