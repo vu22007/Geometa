@@ -30,16 +30,23 @@ public class CircleCornerCollider : NetworkBehaviour
         circleCollider.enabled = true;
 
         // Trigger animation
-        TriggerShockwave(pos);
+        RPC_TriggerShockwave(pos);
         StartCoroutine(DelayDisable(0.1f));
+    }
+
+    [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
+    public void RPC_TriggerShockwave(Vector3 pos)
+    {
+        circleCollider.transform.position = pos;
+        TriggerShockwave(pos);
     }
 
     void TriggerShockwave(Vector3 position)
     {
-            shockwaveAnimator.Play("ShockWave", 0, 0f);
-            shockwaveAnimator.SetBool("Play", true);
-            // Called so there is time for the animator to realise it is true
-            StartCoroutine(DelayDisableAnimation(0.1f));
+        shockwaveAnimator.Play("ShockWave", 0, 0f);
+        shockwaveAnimator.SetBool("Play", true);
+        // Called so there is time for the animator to realise it is true
+        StartCoroutine(DelayDisableAnimation(0.1f));
     }
     
     IEnumerator DelayDisableAnimation(float delay)
