@@ -59,7 +59,7 @@ public class ShapeController : NetworkBehaviour
         audioSource = GetComponentInParent<AudioSource>();
         triangleKnightSound = Resources.Load<AudioClip>("Sounds/TriangleKnight");
         triangleWizardSound = Resources.Load<AudioClip>("Sounds/Shoot");
-        squareKnightSound = Resources.Load<AudioClip>("Sounds/Shoot");
+        squareKnightSound = Resources.Load<AudioClip>("Sounds/SquareKnight");   
         squareWizardSound = Resources.Load<AudioClip>("Sounds/Shoot");
 
         isActive = true;
@@ -254,18 +254,26 @@ public class ShapeController : NetworkBehaviour
 
             if (nVertices == 3)
             {
-                parentPlayer.ActivateTri(true);
-
-                if (HasStateAuthority)
+                if (parentPlayer.GetCharacterName() == "Wizard")
                 {
-                    triangleShape.CastAbility(playerPositions, score);
+                    parentPlayer.ActivateTri(true);
                     triangleCooldown = 1f;
                     parentPlayer.SpendPoints(triangleCost);
+                    triangleLineRenderer.enabled = false;
+                }
+                else
+                {
+                    if (HasStateAuthority)
+                    {
+                        triangleShape.CastAbility(playerPositions, score);
+                        triangleCooldown = 1f;
+                        parentPlayer.SpendPoints(triangleCost);
 
-                    RPC_PlayTriangleSound(playerPositions.ToArray(), 3, 0);
+                        RPC_PlayTriangleSound(playerPositions.ToArray(), 3, "Knight");
 
-                    // Set networked property so everyone can draw lines in OnShapeActivationToggleChanged method
-                    shapeActivationToggle = !shapeActivationToggle;
+                        // Set networked property so everyone can draw lines in OnShapeActivationToggleChanged method
+                        shapeActivationToggle = !shapeActivationToggle;
+                    }
                 }
             }
             else if (nVertices == 4)
@@ -286,6 +294,7 @@ public class ShapeController : NetworkBehaviour
                         squareCooldown = 3f;
                         parentPlayer.SpendPoints(squareCost);
 
+                        RPC_PlayTriangleSound(playerPositions.ToArray(), 4, "Knight");
                         // Set networked property so everyone can draw lines in OnShapeActivationToggleChanged method
                         shapeActivationToggle = !shapeActivationToggle;
                     }
@@ -331,7 +340,7 @@ public class ShapeController : NetworkBehaviour
 
     // The parameter character - 0 for knight, 1 for wizard
     [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
-    public void RPC_PlayTriangleSound(Vector3[] playerPositions, int nVertices, int character)
+    public void RPC_PlayTriangleSound(Vector3[] playerPositions, int nVertices, string character)
     {
         // Play sound locally if the players activating are in view 
         foreach (Vector3 pos in playerPositions) {
@@ -343,7 +352,7 @@ public class ShapeController : NetworkBehaviour
             {
                 if (nVertices == 3)
                 {
-                    if (character == 0)
+                    if (character == "Knight")
                     {
                         audioSource.PlayOneShot(triangleKnightSound);
                     }
@@ -353,7 +362,7 @@ public class ShapeController : NetworkBehaviour
                     }
                 } else if (nVertices == 4)
                 {
-                    if (character == 0)
+                    if (character == "Knight")
                     {
                         audioSource.PlayOneShot(squareKnightSound);
                     }

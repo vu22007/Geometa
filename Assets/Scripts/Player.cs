@@ -888,6 +888,11 @@ public class Player : NetworkBehaviour
         return team;
     }
 
+    public string GetCharacterName()
+    {
+        return characterName;
+    }
+
     public void ActivateTri(bool tri)
     {
         if (tri)
