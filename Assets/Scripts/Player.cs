@@ -47,6 +47,7 @@ public class Player : NetworkBehaviour
     [Networked] private bool isAoEUsed { get; set; }
     [Networked] public float aoeMaxRad { get; set; }
     [Networked] private bool normalShoot { get; set; }
+    [Networked] private bool gamePaused { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
@@ -114,6 +115,7 @@ public class Player : NetworkBehaviour
         isAoEEnabled = false;
         isAoEUsed = false;
         normalShoot = true;
+        gamePaused = false;
     }
 
     // Player initialisation (called on each client and server when player is spawned on network)
@@ -341,8 +343,8 @@ public class Player : NetworkBehaviour
         // So the following is ran for just the server and the client who controls this player
         if (GetInput(out NetworkInputData input))
         {
-            //If menu is not active
-            if (!escapeMenu.activeSelf){
+            // If game is not paused
+            if (!gamePaused){
                 // WASD movement
                 PlayerMovement(input.moveDirection);
 
@@ -396,8 +398,17 @@ public class Player : NetworkBehaviour
             // Activate Menu
             if (input.buttons.WasPressed(previousButtons, InputButtons.Menu))
             {
+                gamePaused = !gamePaused;
+
                 if (!Runner.IsResimulation)
                     escapeMenu.SetActive(!escapeMenu.gameObject.activeSelf);
+            }
+
+            if (gamePaused)
+            {
+                // Stop player movement (decelerate to stationary)
+                float acceleration = 5f;
+                rb.linearVelocity = Vector2.Lerp(rb.linearVelocity, Vector2.zero, acceleration * Runner.DeltaTime);
             }
             
             //Character rotates to mouse position
@@ -429,7 +440,6 @@ public class Player : NetworkBehaviour
         {
             carriedObject.transform.position = transform.position + new Vector3(2.0f, 0, 0);
         }
-
     }
 
     // Player moves according to key presses and player speed
@@ -781,6 +791,23 @@ public class Player : NetworkBehaviour
         if (HasInputAuthority) {
             uIController.MakePopupText(message, speed, color);
         }
+    }
+
+    public void ResumeGame()
+    {
+        escapeMenu.SetActive(false);
+
+        // This ResumeGame method is called only locally via the pause menu UI, so the change
+        // in the gamePaused networked property will not take place on the host, so we need to
+        // call an RPC to change it
+        RPC_ResumeGame();
+    }
+
+    // Only the client that controls this player can call this RPC, and it will run only on the server
+    [Rpc(sources: RpcSources.InputAuthority, targets: RpcTargets.StateAuthority)]
+    public void RPC_ResumeGame()
+    {
+        gamePaused = false;
     }
 
     public void LeaveMatch()

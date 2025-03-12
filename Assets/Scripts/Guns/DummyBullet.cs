@@ -32,7 +32,6 @@ public class DummyBullet : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        // Check if object is a player
         if (other.CompareTag("Player"))
         {
             Player player = other.GetComponentInParent<Player>();
@@ -44,6 +43,10 @@ public class DummyBullet : MonoBehaviour
                     Destroy(gameObject);
                 }
             }
+        }
+        else if (other.CompareTag("Wall"))
+        {
+            Destroy(gameObject);
         }
     }
 
