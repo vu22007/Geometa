@@ -255,36 +255,42 @@ public class Player : NetworkBehaviour
             // Stop player movement and prevent player from infinitely sliding when pushed by another player
             rb.linearVelocity = new Vector2(0, 0);
 
-            // Enable the death overlay and update the respawn timer text
-            if (HasInputAuthority) // Only show for the local player
+            if (!Runner.IsResimulation)
             {
-                if (deathOverlay != null)
+                // Enable the death overlay and update the respawn timer text
+                if (HasInputAuthority) // Only show for the local player
                 {
-                    deathOverlay.SetActive(true); // Enable the overlay
+                    if (deathOverlay != null)
+                    {
+                        deathOverlay.SetActive(true); // Enable the overlay
+                    }
+
+                    if (respawnTimerTxt != null)
+                    {
+                        // Calculate the remaining respawn time
+                        float remainingTime = respawnTime - currentRespawn;
+                        respawnTimerTxt.text = $"Respawning in {Mathf.CeilToInt(remainingTime)}s";
+                    }
                 }
 
-                if (respawnTimerTxt != null)
-                {
-                    // Calculate the remaining respawn time
-                    float remainingTime = respawnTime - currentRespawn;
-                    respawnTimerTxt.text = $"Respawning in {Mathf.CeilToInt(remainingTime)}s";
-                }
+                // Hide the player
+                gameObject.SetActive(false);
             }
-
-            // Hide the player
-            gameObject.SetActive(false);
 
             return;
         }
         else
         {
-            if (HasInputAuthority && deathOverlay != null)
+            if (!Runner.IsResimulation)
             {
-                deathOverlay.SetActive(false);
-            }
+                if (HasInputAuthority && deathOverlay != null)
+                {
+                    deathOverlay.SetActive(false);
+                }
 
-            // Show the player
-            gameObject.SetActive(true);
+                // Show the player
+                gameObject.SetActive(true);
+            }
         }
 
         // Decrease bullet timer and clamp to 0 if below 0
@@ -298,10 +304,14 @@ public class Player : NetworkBehaviour
             {
                 // Reloading is complete, update ammo
                 currentAmmo = maxAmmo;
-                ammoText.text = currentAmmo.ToString();
-                bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
-                reloadIcon.enabled = false;
-                reloadIconLayer.enabled = false;
+
+                if (!Runner.IsResimulation)
+                {
+                    ammoText.text = currentAmmo.ToString();
+                    bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
+                    reloadIcon.enabled = false;
+                    reloadIconLayer.enabled = false;
+                }
             }
         }
 
@@ -386,7 +396,8 @@ public class Player : NetworkBehaviour
             // Activate Menu
             if (input.buttons.WasPressed(previousButtons, InputButtons.Menu))
             {
-                escapeMenu.SetActive(!escapeMenu.gameObject.activeSelf);
+                if (!Runner.IsResimulation)
+                    escapeMenu.SetActive(!escapeMenu.gameObject.activeSelf);
             }
             
             //Character rotates to mouse position
@@ -399,15 +410,18 @@ public class Player : NetworkBehaviour
             previousButtons = input.buttons;
         }
 
-        // Play idle or walking animation
-        if (isMoving)
-            animator.SetFloat("Speed", 0.02f);
-        else
-            animator.SetFloat("Speed", 0f);
-
-        if (isAttacking)
+        if (!Runner.IsResimulation)
         {
-            animator.SetTrigger("Attack");
+            // Play idle or walking animation
+            if (isMoving)
+                animator.SetFloat("Speed", 0.02f);
+            else
+                animator.SetFloat("Speed", 0f);
+
+            if (isAttacking)
+            {
+                animator.SetTrigger("Attack");
+            }
         }
 
         // If carrying an object, move it to player's position
@@ -448,12 +462,17 @@ public class Player : NetworkBehaviour
             isDashing = true;
             dashTimer = dashDuration;
             dashCooldownTimer = dashCooldown;
-            dashCDHandler.StartCooldown(dashCooldown);
-            if (!Runner.IsResimulation) audioSource.PlayOneShot(dashSound);
+
+            if (!Runner.IsResimulation)
+            {
+                dashCDHandler.StartCooldown(dashCooldown);
+                audioSource.PlayOneShot(dashSound);
+            }
         }
         else
         {
-            if (!Runner.IsResimulation) ShowMessage("Dash in cooldown", 0.2f, Color.white);
+            if (!Runner.IsResimulation)
+                ShowMessage("Dash in cooldown", 0.2f, Color.white);
         }
     }
 
@@ -492,8 +511,12 @@ public class Player : NetworkBehaviour
                 }
 
                 currentAmmo--;
-                ammoText.text = currentAmmo.ToString();
-                bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
+
+                if (!Runner.IsResimulation)
+                {
+                    ammoText.text = currentAmmo.ToString();
+                    bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
+                }
             }
         }
     }
@@ -513,14 +536,18 @@ public class Player : NetworkBehaviour
                 }
             });
         }
+
         // Just the player that shoot listens to the sound
         if (HasInputAuthority && !Runner.IsResimulation)
         {
             PlayShootSound();
         }
+
         isAoEEnabled = false;
         normalShoot = true;
-        aoeIcon.enabled = false;
+        
+        if (!Runner.IsResimulation)
+            aoeIcon.enabled = false;
     }
     
 
@@ -539,7 +566,8 @@ public class Player : NetworkBehaviour
         if (HasStateAuthority)
             currentHealth = newHealth;
 
-        UpdateHealthBar(newHealth);
+        if (!Runner.IsResimulation)
+            UpdateHealthBar(newHealth);
 
         // Play hurt animation and sounds for all clients
         if (HasStateAuthority)
@@ -580,7 +608,8 @@ public class Player : NetworkBehaviour
             currentHealth = maxHealth;
         }
 
-        UpdateHealthBar(newHealth);
+        if (!Runner.IsResimulation)
+            UpdateHealthBar(newHealth);
     }
 
     public void GainPoints(int amount)
@@ -589,7 +618,9 @@ public class Player : NetworkBehaviour
         if(points > maxPoints){
             points = maxPoints;
         }
-        UpdatePointsBar();
+
+        if (!Runner.IsResimulation)
+            UpdatePointsBar();
     }
 
     public void SpendPoints(int amount)
@@ -601,7 +632,8 @@ public class Player : NetworkBehaviour
         else
         {
             points -= amount;
-            UpdatePointsBar();
+            if (!Runner.IsResimulation)
+                UpdatePointsBar();
         }
     }
 
@@ -680,23 +712,29 @@ public class Player : NetworkBehaviour
     {
         if (currentAmmo >= maxAmmo)
         {
-            if (!Runner.IsResimulation) ShowMessage("Mana is full!", 0.1f, Color.white);
+            if (!Runner.IsResimulation)
+                ShowMessage("Mana is full!", 0.1f, Color.white);
             return; 
         }
         if (reloadTimer <= 0)
         {
-            if (!Runner.IsResimulation) ShowMessage("Gathering Mana", 0.3f, Color.green);
             missingAmmo = maxAmmo - currentAmmo;
             reloadFraction = (float)missingAmmo / maxAmmo;
             reloadTimer = reloadTime * reloadFraction;
             timeToWaitForBullet = reloadTimer;
-            reloadIcon.enabled = true;
-            reloadIconLayer.enabled = true;
-            reloadHandler.StartCooldown(reloadTimer);
+
+            if (!Runner.IsResimulation)
+            {
+                ShowMessage("Gathering Mana", 0.3f, Color.green);
+                reloadIcon.enabled = true;
+                reloadIconLayer.enabled = true;
+                reloadHandler.StartCooldown(reloadTimer);
+            }
         }
         else
         {
-            if (!Runner.IsResimulation) ShowMessage("Still gathering mana", 0.3f, Color.white);
+            if (!Runner.IsResimulation)
+                ShowMessage("Still gathering mana", 0.3f, Color.white);
         }
     }
 
