@@ -4,8 +4,7 @@ using UnityEngine.UI;
 using TMPro;
 using Fusion.Addons.Physics;
 using System.Collections;
-using System.Collections.Generic;
-using UnityEngine.EventSystems;
+using static UnityEditor.Experimental.AssetDatabaseExperimental.AssetDatabaseCounters;
 
 public class Player : NetworkBehaviour
 {
@@ -18,23 +17,23 @@ public class Player : NetworkBehaviour
     [Networked] int missingAmmo { get; set; }
     [Networked] float fireRate { get; set; }
     [Networked] float reloadTime { get; set; }
-    [Networked] float reloadTimer { get; set; }
+    [Networked, OnChangedRender(nameof(OnReloadTimerChanged))] float reloadTimer { get; set; }
     [Networked] float reloadFraction { get; set; }
     [Networked, OnChangedRender(nameof(OnPointsChanged))] float points { get; set; }
     [Networked] float timeToWaitForBullet { get; set; }
     [Networked, OnChangedRender(nameof(OnHealthChanged))] float currentHealth { get; set; }
     [Networked] int team { get; set; }
     [Networked] Vector3 respawnPoint { get; set; }
-    [Networked] bool isAlive { get; set; }
+    [Networked, OnChangedRender(nameof(OnIsAliveChanged))] bool isAlive { get; set; }
     [Networked] float respawnTime { get; set; }
     [Networked] float currentRespawn { get; set; }
     [Networked, Capacity(30)] string characterName { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
     [Networked] private NetworkObject carriedObject { get; set; }
     [Networked, OnChangedRender(nameof(OnCarryingChanged)), HideInInspector] public bool isCarrying { get; set; }
-    [Networked] bool isMoving { get; set; }
-    [Networked] bool isAttacking { get; set; }
-    [Networked] bool isDashing { get; set; }
+    [Networked, OnChangedRender(nameof(OnIsMovingChanged))] bool isMoving { get; set; }
+    [Networked, OnChangedRender(nameof(OnIsAttackingChanged))] bool isAttacking { get; set; }
+    [Networked, OnChangedRender(nameof(OnIsDashingChanged))] bool isDashing { get; set; }
     [Networked] float dashTimer { get; set; }
     [Networked] float dashCooldownTimer { get; set; }
     [Networked] float dashSpeed { get; set; }
@@ -262,7 +261,22 @@ public class Player : NetworkBehaviour
         }
     }
 
-    // Update function (called from the game controller on all clients and server)
+    public override void Render()
+    {
+        if (!isAlive)
+        {
+            // Update the respawn timer text
+            if (respawnTimerTxt != null)
+            {
+                // Calculate the remaining respawn time
+                float remainingTime = respawnTime - currentRespawn;
+                respawnTimerTxt.text = $"Respawning in {Mathf.CeilToInt(remainingTime)}s";
+            }
+
+            return;
+        }
+    }
+
     public void PlayerUpdate()
     {
         // Check if player is dead
@@ -274,42 +288,7 @@ public class Player : NetworkBehaviour
             // Stop player movement and prevent player from infinitely sliding when pushed by another player
             rb.linearVelocity = new Vector2(0, 0);
 
-            if (!Runner.IsResimulation)
-            {
-                // Enable the death overlay and update the respawn timer text
-                if (HasInputAuthority) // Only show for the local player
-                {
-                    if (deathOverlay != null)
-                    {
-                        deathOverlay.SetActive(true); // Enable the overlay
-                    }
-
-                    if (respawnTimerTxt != null)
-                    {
-                        // Calculate the remaining respawn time
-                        float remainingTime = respawnTime - currentRespawn;
-                        respawnTimerTxt.text = $"Respawning in {Mathf.CeilToInt(remainingTime)}s";
-                    }
-                }
-
-                // Hide the player
-                gameObject.SetActive(false);
-            }
-
             return;
-        }
-        else
-        {
-            if (!Runner.IsResimulation)
-            {
-                if (HasInputAuthority && deathOverlay != null)
-                {
-                    deathOverlay.SetActive(false);
-                }
-
-                // Show the player
-                gameObject.SetActive(true);
-            }
         }
 
         // Decrease bullet timer and clamp to 0 if below 0
@@ -323,14 +302,6 @@ public class Player : NetworkBehaviour
             {
                 // Reloading is complete, update ammo
                 currentAmmo = maxAmmo;
-
-                if (!Runner.IsResimulation)
-                {
-                    ammoText.text = currentAmmo.ToString();
-                    bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
-                    reloadIcon.enabled = false;
-                    reloadIconLayer.enabled = false;
-                }
             }
         }
 
@@ -372,14 +343,11 @@ public class Player : NetworkBehaviour
                     {
                         isAttacking = true;
                         EnableMeleeHitbox();
-                        Debug.Log("enabled");
                     }
                     else
                     {
                         isAttacking = false;
                         DisableMeleeHitbox();
-                        Debug.Log("disabled");
-
                     }
                 }
 
@@ -458,20 +426,6 @@ public class Player : NetworkBehaviour
             previousButtons = input.buttons;
         }
 
-        if (!Runner.IsResimulation)
-        {
-            // Play idle or walking animation
-            if (isMoving)
-                animator.SetFloat("Speed", 0.02f);
-            else
-                animator.SetFloat("Speed", 0f);
-
-            if (isAttacking)
-            {
-                animator.SetTrigger("Attack");
-            }
-        }
-
         // If carrying an object, move it to player's position
         if (isCarrying && carriedObject != null)
         {
@@ -509,12 +463,6 @@ public class Player : NetworkBehaviour
             isDashing = true;
             dashTimer = dashDuration;
             dashCooldownTimer = dashCooldown;
-
-            if (!Runner.IsResimulation)
-            {
-                dashCDHandler.StartCooldown(dashCooldown);
-                audioSource.PlayOneShot(dashSound);
-            }
         }
         else
         {
@@ -716,8 +664,6 @@ public class Player : NetworkBehaviour
                 player.GainPoints(10);
             }
         }
-
-        gameObject.SetActive(false);
     }
 
     [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
@@ -782,14 +728,6 @@ public class Player : NetworkBehaviour
             reloadFraction = (float)missingAmmo / maxAmmo;
             reloadTimer = reloadTime * reloadFraction;
             timeToWaitForBullet = reloadTimer;
-
-            if (!Runner.IsResimulation)
-            {
-                ShowMessage("Gathering Mana", 0.3f, Color.green);
-                reloadIcon.enabled = true;
-                reloadIconLayer.enabled = true;
-                reloadHandler.StartCooldown(reloadTimer);
-            }
         }
         else
         {
@@ -932,5 +870,94 @@ public class Player : NetworkBehaviour
             aoeIcon.enabled = false;
         }
         
+    }
+
+    void SetPlayerEnabled(bool enabled)
+    {
+        GetComponent<SpriteRenderer>().enabled = enabled;
+        GetComponent<HitboxRoot>().enabled = enabled;
+        GetComponent<Hitbox>().enabled = enabled;
+        transform.Find("Collider").gameObject.SetActive(enabled);
+        transform.Find("Overhead UI").gameObject.SetActive(enabled);
+        transform.Find("meleeHitbox").gameObject.SetActive(enabled);
+        transform.Find("MinimapIndicator").gameObject.SetActive(enabled);
+    }
+
+    void OnIsAliveChanged()
+    {
+        if (isAlive)
+        {
+            if (HasInputAuthority && deathOverlay != null)
+            {
+                deathOverlay.SetActive(false);
+            }
+
+            // Show the player
+            SetPlayerEnabled(true);
+        }
+        else
+        {
+            // Enable the death overlay
+            if (HasInputAuthority) // Only show for the local player
+            {
+                if (deathOverlay != null)
+                {
+                    Debug.Log("Activating death overlay...");
+                    deathOverlay.SetActive(true); // Enable the overlay
+                }
+            }
+
+            // Hide the player
+            SetPlayerEnabled(false);
+        }
+    }
+
+    void OnReloadTimerChanged(NetworkBehaviourBuffer previous)
+    {
+        float previousTimerVal = GetPropertyReader<float>(nameof(reloadTimer)).Read(previous);
+
+        // If previous timer < 0, and timer is now > 0, then reload has started
+        if (previousTimerVal <= 0 && reloadTimer > 0)
+        {
+            ShowMessage("Gathering Mana", 0.3f, Color.green);
+            reloadIcon.enabled = true;
+            reloadIconLayer.enabled = true;
+            reloadHandler.StartCooldown(reloadTimer);
+        }
+
+        // If previous timer > 0, and timer is now < 0, then reload has finished
+        if (previousTimerVal > 0 && reloadTimer <= 0)
+        {
+            ammoText.text = maxAmmo.ToString();
+            bulletIcon.fillAmount = 1;
+            reloadIcon.enabled = false;
+            reloadIconLayer.enabled = false;
+        }
+    }
+
+    void OnIsDashingChanged()
+    {
+        if (isDashing)
+        {
+            dashCDHandler.StartCooldown(dashCooldown);
+            audioSource.PlayOneShot(dashSound);
+        }
+    }
+
+    void OnIsMovingChanged()
+    {
+        // Play idle or walking animation
+        if (isMoving)
+            animator.SetFloat("Speed", 0.02f);
+        else
+            animator.SetFloat("Speed", 0f);
+    }
+
+    void OnIsAttackingChanged()
+    {
+        if (isAttacking)
+        {
+            animator.SetTrigger("Attack");
+        }
     }
 }
