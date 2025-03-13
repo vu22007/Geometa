@@ -389,7 +389,7 @@ public class Player : NetworkBehaviour
                     {
                         if (isAoEEnabled && !normalShoot)
                         {
-                            ShootAoE(input.aimDirection);
+                            ShootAoE(input.aimDirection, input.cursorWorldPoint);
                         }
                         else if (normalShoot && !isAoEEnabled)
                         {
@@ -572,8 +572,9 @@ public class Player : NetworkBehaviour
     }
 
     // Shoots a bullet by spawning the prefab on the network
-    void ShootAoE(Vector2 aimDirection)
+    void ShootAoE(Vector2 aimDirection, Vector2 cursorWorldPoint)
     {
+        float distance = Vector2.Distance(transform.position, cursorWorldPoint);
         if (HasStateAuthority)
         {
             GameObject aoeSpellPrefab = Resources.Load("Prefabs/AoE1") as GameObject;
@@ -582,7 +583,7 @@ public class Player : NetworkBehaviour
                 AoESpell aoeSpell = networkObject.GetComponent<AoESpell>();
                 if (aoeSpell != null)
                 {
-                    aoeSpell.OnCreated(aimDirection, 10f, 10f, aoeDamage, team, aoeDuration, Object.InputAuthority);
+                    aoeSpell.OnCreated(aimDirection, 10f, distance, aoeDamage, team, aoeDuration, Object.InputAuthority);
                 }
             });
         }
