@@ -4,7 +4,6 @@ using UnityEngine.UI;
 using TMPro;
 using Fusion.Addons.Physics;
 using System.Collections;
-using static UnityEditor.Experimental.AssetDatabaseExperimental.AssetDatabaseCounters;
 
 public class Player : NetworkBehaviour
 {
@@ -186,7 +185,7 @@ public class Player : NetworkBehaviour
         }
 
         // Set the health bar
-        UpdateHealthBar(currentHealth);
+        UpdateHealthBar();
 
         if (deathOverlay != null)
         {
@@ -557,21 +556,9 @@ public class Player : NetworkBehaviour
     //take damage equal to input, includes check for death
     public void TakeDamage(float damage, PlayerRef damageDealer)
     {
-        if (!isAlive) return;
+        currentHealth -= damage;
 
-        float newHealth = currentHealth - damage;
-
-        if (HasStateAuthority)
-            currentHealth = newHealth;
-
-        if (!Runner.IsResimulation)
-            UpdateHealthBar(newHealth);
-
-        // Play hurt animation and sounds for all clients
-        if (HasStateAuthority)
-            RPC_HurtEffects(damage);
-
-        if (newHealth <= 0.0f) {
+        if (currentHealth <= 0.0f) {
             Die(damageDealer);
         }
     }
@@ -587,71 +574,52 @@ public class Player : NetworkBehaviour
         PrefabFactory.SpawnDamagePopup(damagePopupPrefab, (int)damage, team, transform.position);
     }
 
-    // Only server can call this RPC, and it will run only on all clients
-    [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
-    public void RPC_HurtEffects(float damage)
-    {
-        HurtEffects(damage);
-    }
-
     //heal equal to input, includes check for max health
     public void Heal(float amount)
     {
-        float newHealth = currentHealth + amount;
-
-        if (HasStateAuthority)
-            currentHealth = newHealth;
+        currentHealth += amount;
 
         if (currentHealth >= maxHealth) {
             currentHealth = maxHealth;
         }
-
-        if (!Runner.IsResimulation)
-            UpdateHealthBar(newHealth);
     }
 
     public void GainPoints(int amount)
     {
         points += amount;
-        if(points > maxPoints){
+
+        if (points > maxPoints){
             points = maxPoints;
         }
-
-        if (!Runner.IsResimulation)
-            UpdatePointsBar();
     }
 
     public void SpendPoints(int amount)
     {
-        if(amount > points)
+        if (amount > points)
         {
             Debug.Log("Not enough points");
         }
         else
         {
             points -= amount;
-            if (!Runner.IsResimulation)
-                UpdatePointsBar();
         }
     }
 
     void Die(PlayerRef killer)
     {
+        if (!isAlive) return;
+
         isAlive = false;
 
-        // Ensure health bar is empty
-        UpdateHealthBar(0.0f);
+        // TODO: Fix unregister alive player below, since this changes a non-networked property in game controller, so state not synced
 
         // Disable the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = false;
         gameController.UnregisterAlivePlayer(this);
-        
-        if (HasStateAuthority)
-            RPC_PlayDyingSound(transform.position);
 
+        // Player will drop the flag if they died
         if (isCarrying)
         {
-            // Player will drop the flag if they died
             DropObject();
         }
 
@@ -666,8 +634,7 @@ public class Player : NetworkBehaviour
         }
     }
 
-    [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
-    public void RPC_PlayDyingSound(Vector3 pos)
+    public void PlayDyingSound(Vector3 pos)
     {
         Vector3 viewportPos = Camera.main.WorldToViewportPoint(pos);
         bool onScreen =
@@ -691,16 +658,25 @@ public class Player : NetworkBehaviour
         meleeHitbox.SetActive(false);
     }
     
-    void OnHealthChanged()
+    void OnHealthChanged(NetworkBehaviourBuffer previous)
     {
-        UpdateHealthBar(currentHealth);
+        float previousHealth = GetPropertyReader<float>(nameof(currentHealth)).Read(previous);
+
+        UpdateHealthBar();
+
+        if (currentHealth < previousHealth)
+        {
+            // Player took damage so show hurt effects
+            float damage = previousHealth - currentHealth;
+            HurtEffects(damage);
+        }
     }
 
-    void UpdateHealthBar(float health)
+    void UpdateHealthBar()
     {
         if (healthBar != null)
         {
-            healthBar.fillAmount = health / maxHealth;
+            healthBar.fillAmount = currentHealth / maxHealth;
         }
     }
 
@@ -897,6 +873,9 @@ public class Player : NetworkBehaviour
         }
         else
         {
+            // Ensure health bar is empty
+            UpdateHealthBar();
+
             // Enable the death overlay
             if (HasInputAuthority) // Only show for the local player
             {
@@ -906,6 +885,9 @@ public class Player : NetworkBehaviour
                     deathOverlay.SetActive(true); // Enable the overlay
                 }
             }
+
+            // Play sound
+            PlayDyingSound(transform.position);
 
             // Hide the player
             SetPlayerEnabled(false);
