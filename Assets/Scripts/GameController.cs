@@ -26,7 +26,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     private bool gameOver = false;
 
     [Networked] private float pointsTopupCooldownMax { get; set; }
-    [Networked] private float pointsTopupCooldownCurrent { get; set; }
+    [Networked] private float manaTopupCooldownCurrent { get; set; }
     [Networked] private int gameStartTick { get; set; }
 
     // Initialisation
@@ -41,7 +41,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
         alivePlayers = new List<Player>();
         currentTime = 0.0f;
         pointsTopupCooldownMax = 10f;
-        pointsTopupCooldownCurrent = pointsTopupCooldownMax;
+        manaTopupCooldownCurrent = pointsTopupCooldownMax;
         gameStartTick = Runner.Tick;
 
         if (Runner.IsServer)
@@ -84,14 +84,14 @@ public class GameController : NetworkBehaviour, IPlayerLeft
             //end game
         }
 
-        //topup players points by 5 every 10 seconds
-        pointsTopupCooldownCurrent -= Runner.DeltaTime;
-        if(pointsTopupCooldownCurrent < 0){
+        //topup players Mana by 5 every 10 seconds
+        manaTopupCooldownCurrent -= Runner.DeltaTime;
+        if(manaTopupCooldownCurrent < 0){
             foreach (Player player in players)
             {
-                player.GainPoints(5);
+                player.GainMana(5);
             }
-            pointsTopupCooldownCurrent = pointsTopupCooldownMax;
+            manaTopupCooldownCurrent = pointsTopupCooldownMax;
         }
 
         foreach (Player player in players)

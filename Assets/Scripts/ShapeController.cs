@@ -166,11 +166,11 @@ public class ShapeController : NetworkBehaviour
                 return;
             }
 
-            if (parentPlayer.GetPoints() < triangleCost)
+            if (parentPlayer.GetMana() < triangleCost)
             {
                 triangleLineRenderer.enabled = false;
-                Debug.Log("You don't have enough points to activate a triangle");
-                if (activate && !Runner.IsResimulation) parentPlayer.ShowMessage("Not enough points!", 0.2f, Color.white);
+                Debug.Log("You don't have enough Mana to activate a triangle");
+                if (activate && !Runner.IsResimulation) parentPlayer.ShowMessage("Not enough Mana!", 0.2f, Color.white);
                 return;
             }
         }
@@ -183,21 +183,21 @@ public class ShapeController : NetworkBehaviour
                 return;
             }
 
-            if (parentPlayer.GetPoints() < squareCost)
+            if (parentPlayer.GetMana() < squareCost)
             {
                 squareLineRenderer.enabled = false;
-                Debug.Log("You don't have enough points to activate a square");
-                if (activate && !Runner.IsResimulation) parentPlayer.ShowMessage("Not enough points!", 0.2f, Color.white);
+                Debug.Log("You don't have enough Mana to activate a square");
+                if (activate && !Runner.IsResimulation) parentPlayer.ShowMessage("Not enough Mana!", 0.2f, Color.white);
                 return;
             }
         }
         else if (nVertices == 5)
         {
-            if (parentPlayer.GetPoints() < pentagonCost)
+            if (parentPlayer.GetMana() < pentagonCost)
             {
                 pentagonLineRenderer.enabled = false;
-                Debug.Log("You don't have enough points to activate a pentagon");
-                if (activate && !Runner.IsResimulation) parentPlayer.ShowMessage("Not enough points!", 0.2f, Color.white);
+                Debug.Log("You don't have enough Mana to activate a pentagon");
+                if (activate && !Runner.IsResimulation) parentPlayer.ShowMessage("Not enough Mana!", 0.2f, Color.white);
                 return;
             }
         }
@@ -258,7 +258,7 @@ public class ShapeController : NetworkBehaviour
                 {
                     parentPlayer.ActivateTri(true);
                     triangleCooldown = 1f;
-                    parentPlayer.SpendPoints(triangleCost);
+                    parentPlayer.SpendMana(triangleCost);
                     triangleLineRenderer.enabled = false;
                 }
                 else
@@ -267,7 +267,7 @@ public class ShapeController : NetworkBehaviour
                     {
                         triangleShape.CastAbility(playerPositions, score);
                         triangleCooldown = 1f;
-                        parentPlayer.SpendPoints(triangleCost);
+                        parentPlayer.SpendMana(triangleCost);
 
                         RPC_PlayTriangleSound(playerPositions.ToArray(), 3, "Knight");
 
@@ -292,7 +292,7 @@ public class ShapeController : NetworkBehaviour
                     {
                         squareShape.CastAbility(playerPositions, score);
                         squareCooldown = 3f;
-                        parentPlayer.SpendPoints(squareCost);
+                        parentPlayer.SpendMana(squareCost);
 
                         RPC_PlayTriangleSound(playerPositions.ToArray(), 4, "Knight");
                         // Set networked property so everyone can draw lines in OnShapeActivationToggleChanged method
@@ -322,7 +322,7 @@ public class ShapeController : NetworkBehaviour
 
                         // TODO: Spawn creature in the center
 
-                        parentPlayer.SpendPoints(pentagonCost);
+                        parentPlayer.SpendMana(pentagonCost);
 
                         // Set networked property so everyone can draw lines in OnShapeActivationToggleChanged method
                         shapeActivationToggle = !shapeActivationToggle;
@@ -515,7 +515,7 @@ public class ShapeController : NetworkBehaviour
         int count = angles.Count;
         float sum = angles.Sum();
 
-        // sum is a sum of floating points so we put 0.1 as an allowed error margin
+        // sum is a sum of floating Mana so we put 0.1 as an allowed error margin
         if(Mathf.Abs(sum - ((count - 2) * 180f)) > 0.1)
         {
             return false;

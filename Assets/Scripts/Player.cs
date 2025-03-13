@@ -11,7 +11,7 @@ public class Player : NetworkBehaviour
 {
     [Networked] float speed { get; set; }
     [Networked] float maxHealth { get; set; }
-    [Networked] float maxPoints { get; set; }
+    [Networked] float maxMana { get; set; }
     [Networked] float damage { get; set; }
     [Networked] int maxAmmo { get; set; }
     [Networked] int currentAmmo { get; set; }
@@ -20,7 +20,7 @@ public class Player : NetworkBehaviour
     [Networked] float reloadTime { get; set; }
     [Networked] float reloadTimer { get; set; }
     [Networked] float reloadFraction { get; set; }
-    [Networked, OnChangedRender(nameof(OnPointsChanged))] float points { get; set; }
+    [Networked, OnChangedRender(nameof(OnManaChanged))] float Mana { get; set; }
     [Networked] float timeToWaitForBullet { get; set; }
     [Networked, OnChangedRender(nameof(OnHealthChanged))] float currentHealth { get; set; }
     [Networked] int team { get; set; }
@@ -56,7 +56,7 @@ public class Player : NetworkBehaviour
     Animator animator;
     [SerializeField] Image mainHealthBar;
     [SerializeField] Image teamHealthBar;
-    [SerializeField] Image mainPointsBar;
+    [SerializeField] Image mainManaBar;
     [SerializeField] Image minimapIndicator;
     [SerializeField] Image enemyHealthBar;
     [SerializeField] UIController uIController;
@@ -91,7 +91,7 @@ public class Player : NetworkBehaviour
     {
         Character character = Resources.Load($"ScriptableObjects/Characters/{characterName}") as Character;
         maxHealth = character.MaxHealth;
-        maxPoints = 30f;
+        maxMana = 30f;
         speed = character.Speed;
         damage = character.Damage;
         maxAmmo = character.MaxAmmo;
@@ -104,7 +104,7 @@ public class Player : NetworkBehaviour
         this.respawnPoint = respawnPoint;
         this.team = team;
         this.characterName = characterName;
-        points = 30f;
+        Mana = 30f;
         reloadTime = 3.0f;
         respawnTime = 10.0f;
         aoeDamage = 5;
@@ -209,12 +209,11 @@ public class Player : NetworkBehaviour
         // Set the initial flag indicator visibility
         OnCarryingChanged();
 
-        //Set points bar
-        UpdatePointsBar();
+        //Set Mana bar
+        UpdateManaBar();
         DisableMeleeHitbox();
         if (characterName == "Knight")
         {
-            Debug.Log("disabled mana");
             mainbulletIcon.SetActive(false);
         }
     }
@@ -372,14 +371,11 @@ public class Player : NetworkBehaviour
                     {
                         isAttacking = true;
                         EnableMeleeHitbox();
-                        Debug.Log("enabled");
                     }
                     else
                     {
                         isAttacking = false;
                         DisableMeleeHitbox();
-                        Debug.Log("disabled");
-
                     }
                 }
 
@@ -662,28 +658,28 @@ public class Player : NetworkBehaviour
             UpdateHealthBar(newHealth);
     }
 
-    public void GainPoints(int amount)
+    public void GainMana(int amount)
     {
-        points += amount;
-        if(points > maxPoints){
-            points = maxPoints;
+        Mana += amount;
+        if(Mana > maxMana){
+            Mana = maxMana;
         }
 
         if (!Runner.IsResimulation)
-            UpdatePointsBar();
+            UpdateManaBar();
     }
 
-    public void SpendPoints(int amount)
+    public void SpendMana(int amount)
     {
-        if(amount > points)
+        if(amount > Mana)
         {
-            Debug.Log("Not enough points");
+            Debug.Log("Not enough Mana");
         }
         else
         {
-            points -= amount;
+            Mana -= amount;
             if (!Runner.IsResimulation)
-                UpdatePointsBar();
+                UpdateManaBar();
         }
     }
 
@@ -707,13 +703,13 @@ public class Player : NetworkBehaviour
             DropObject();
         }
 
-        // Award points to killer
+        // Award Mana to killer
         if (Runner.TryGetPlayerObject(killer, out NetworkObject networkPlayerObject))
         {
             Player player = networkPlayerObject.GetComponent<Player>();
             if (player.team != team)
             {
-                player.GainPoints(10);
+                player.GainMana(10);
             }
         }
 
@@ -758,14 +754,14 @@ public class Player : NetworkBehaviour
         }
     }
 
-    void OnPointsChanged()
+    void OnManaChanged()
     {
-        UpdatePointsBar();
+        UpdateManaBar();
     }
 
-    void UpdatePointsBar(){
-        float fillAmount = points/maxPoints;
-        mainPointsBar.fillAmount = fillAmount;
+    void UpdateManaBar(){
+        float fillAmount = Mana/maxMana;
+        mainManaBar.fillAmount = fillAmount;
     }
 
     void Reload()
@@ -773,7 +769,7 @@ public class Player : NetworkBehaviour
         if (currentAmmo >= maxAmmo)
         {
             if (!Runner.IsResimulation)
-                ShowMessage("Mana is full!", 0.1f, Color.white);
+                ShowMessage("Energy is full!", 0.1f, Color.white);
             return; 
         }
         if (reloadTimer <= 0)
@@ -785,7 +781,7 @@ public class Player : NetworkBehaviour
 
             if (!Runner.IsResimulation)
             {
-                ShowMessage("Gathering Mana", 0.3f, Color.green);
+                ShowMessage("Gathering Energy", 0.3f, Color.green);
                 reloadIcon.enabled = true;
                 reloadIconLayer.enabled = true;
                 reloadHandler.StartCooldown(reloadTimer);
@@ -794,7 +790,7 @@ public class Player : NetworkBehaviour
         else
         {
             if (!Runner.IsResimulation)
-                ShowMessage("Still gathering mana", 0.3f, Color.white);
+                ShowMessage("Still gathering energy", 0.3f, Color.white);
         }
     }
 
@@ -905,9 +901,9 @@ public class Player : NetworkBehaviour
         } 
     }
 
-    public float GetPoints()
+    public float GetMana()
     {
-        return points;
+        return Mana;
     }
 
     public void GetSlowed(float amount, float time)

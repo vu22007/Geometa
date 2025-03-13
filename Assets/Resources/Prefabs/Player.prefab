@@ -162,7 +162,7 @@ GameObject:
   - component: {fileID: 768561658158936433}
   - component: {fileID: 1413040121094791050}
   m_Layer: 5
-  m_Name: Points
+  m_Name: Mana
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1891,7 +1891,7 @@ MonoBehaviour:
   cam: {fileID: 3093333144043118080}
   mainHealthBar: {fileID: 8395293536219763284}
   teamHealthBar: {fileID: 8623719664100579951}
-  mainPointsBar: {fileID: 1413040121094791050}
+  mainManaBar: {fileID: 1413040121094791050}
   minimapIndicator: {fileID: 8374197079019752597}
   enemyHealthBar: {fileID: 871756147968111674}
   uIController: {fileID: 2701067427050605302}
@@ -5058,7 +5058,7 @@ GameObject:
   m_Component:
   - component: {fileID: 43841663140173312}
   m_Layer: 5
-  m_Name: Points Bar (Main)
+  m_Name: Mana Bar (Main)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

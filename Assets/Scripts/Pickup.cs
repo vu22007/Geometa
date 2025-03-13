@@ -33,8 +33,8 @@ public class Pickup : NetworkBehaviour
                         player.Heal(amount);
                         Debug.Log("Healing player");
                         break;
-                    case 1: //Points
-                        player.GainPoints(amount);
+                    case 1: //Mana
+                        player.GainMana(amount);
                         break;
                     default:
                         Debug.Log("Unknown type of pickup");
@@ -55,7 +55,7 @@ public class Pickup : NetworkBehaviour
                 sprite = Resources.Load<Sprite>("Sprites/HealthPickup");
                 Debug.Log("It is a health pickup");
                 break;
-            case 1: //Points
+            case 1: //Mana
                 sprite = Resources.Load<Sprite>("Sprites/PointsPickup");
                 break;
             default:
