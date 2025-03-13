@@ -12,7 +12,7 @@ public class Player : NetworkBehaviour
     [Networked] float maxPoints { get; set; }
     [Networked] float damage { get; set; }
     [Networked] int maxAmmo { get; set; }
-    [Networked] int currentAmmo { get; set; }
+    [Networked, OnChangedRender(nameof(OnCurrentAmmoChanged))] int currentAmmo { get; set; }
     [Networked] int missingAmmo { get; set; }
     [Networked] float fireRate { get; set; }
     [Networked] float reloadTime { get; set; }
@@ -46,7 +46,11 @@ public class Player : NetworkBehaviour
     [Networked] private bool isAoEUsed { get; set; }
     [Networked] public float aoeMaxRad { get; set; }
     [Networked] private bool normalShoot { get; set; }
-    [Networked] private bool gamePaused { get; set; }
+    [Networked, OnChangedRender(nameof(OnGamePausedChanged))] private bool gamePaused { get; set; }
+    [Networked, OnChangedRender(nameof(ShootRender))] private int bulletFired { get; set; }
+    [Networked, OnChangedRender(nameof(ShootAoERender))] private int aoeFired { get; set; }
+    [Networked, OnChangedRender(nameof(ReloadRender))] private int reloadPerformed { get; set; }
+    [Networked, OnChangedRender(nameof(DashRender))] private int dashPerformed { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
@@ -396,16 +400,12 @@ public class Player : NetworkBehaviour
                 {
                     Dash(input.moveDirection);
                 }
-
             }
 
             // Activate Menu
             if (input.buttons.WasPressed(previousButtons, InputButtons.Menu))
             {
                 gamePaused = !gamePaused;
-
-                if (!Runner.IsResimulation)
-                    escapeMenu.SetActive(!escapeMenu.gameObject.activeSelf);
             }
 
             if (gamePaused)
@@ -463,10 +463,24 @@ public class Player : NetworkBehaviour
             dashTimer = dashDuration;
             dashCooldownTimer = dashCooldown;
         }
-        else
+
+        // Signal that the dash was performed for DashRender to be called
+        dashPerformed++;
+    }
+
+    void DashRender() {
+        if (dashCooldownTimer > 0)
         {
-            if (!Runner.IsResimulation)
-                ShowMessage("Dash in cooldown", 0.2f, Color.white);
+            ShowMessage("Dash in cooldown", 0.2f, Color.white);
+        }
+    }
+
+    void OnIsDashingChanged()
+    {
+        if (isDashing)
+        {
+            dashCDHandler.StartCooldown(dashCooldown);
+            audioSource.PlayOneShot(dashSound);
         }
     }
 
@@ -498,24 +512,30 @@ public class Player : NetworkBehaviour
                     PrefabFactory.SpawnBullet(Runner, Object.InputAuthority, bulletPrefab, gameObject.transform.position, aimDirection, 40.0f, damage, team, Object.InputAuthority);
                 }
 
-                // Just the player that shoot listens to the sound
-                if (HasInputAuthority && !Runner.IsResimulation)
-                {
-                    PlayShootSound();
-                }
-
                 currentAmmo--;
 
-                if (!Runner.IsResimulation)
-                {
-                    if (characterName != "Knight")
-                    {
-                        ammoText.text = currentAmmo.ToString();
-                        bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
-                    }
-                }
+                // Signal that bullet was fired for ShootRender to be called
+                bulletFired++;
             }
         }
+    }
+
+    void ShootRender()
+    {
+        // Just the player that shoots listens to the sound
+        if (HasInputAuthority)
+        {
+            PlayShootSound();
+        }
+
+        OnCurrentAmmoChanged();
+    }
+
+    void OnCurrentAmmoChanged()
+    {
+        // Update ammo indicator to new value
+        ammoText.text = currentAmmo.ToString();
+        bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
     }
 
     // Shoots a bullet by spawning the prefab on the network
@@ -534,19 +554,24 @@ public class Player : NetworkBehaviour
             });
         }
 
+        isAoEEnabled = false;
+        normalShoot = true;
+
+        // Signal that AoE was fired for ShootAoERender to be called
+        aoeFired++;
+    }
+
+    void ShootAoERender()
+    {
         // Just the player that shoot listens to the sound
-        if (HasInputAuthority && !Runner.IsResimulation)
+        if (HasInputAuthority)
         {
             PlayShootSound();
         }
 
-        isAoEEnabled = false;
-        normalShoot = true;
-        
-        if (!Runner.IsResimulation)
-            aoeIcon.enabled = false;
+        // Hide the AoE icon
+        aoeIcon.enabled = false;
     }
-    
 
     public void PlayShootSound()
     {
@@ -595,11 +620,7 @@ public class Player : NetworkBehaviour
 
     public void SpendPoints(int amount)
     {
-        if (amount > points)
-        {
-            Debug.Log("Not enough points");
-        }
-        else
+        if (amount <= points)
         {
             points -= amount;
         }
@@ -634,8 +655,44 @@ public class Player : NetworkBehaviour
         }
     }
 
+    void OnIsAliveChanged()
+    {
+        if (isAlive)
+        {
+            if (HasInputAuthority && deathOverlay != null)
+            {
+                deathOverlay.SetActive(false);
+            }
+
+            // Show the player
+            SetPlayerEnabled(true);
+        }
+        else
+        {
+            // Ensure health bar is empty
+            UpdateHealthBar();
+
+            // Enable the death overlay
+            if (HasInputAuthority) // Only show for the local player
+            {
+                if (deathOverlay != null)
+                {
+                    Debug.Log("Activating death overlay...");
+                    deathOverlay.SetActive(true); // Enable the overlay
+                }
+            }
+
+            // Play sound
+            PlayDyingSound(transform.position);
+
+            // Hide the player
+            SetPlayerEnabled(false);
+        }
+    }
+
     public void PlayDyingSound(Vector3 pos)
     {
+        // TODO: Check that the right camera is being used below
         Vector3 viewportPos = Camera.main.WorldToViewportPoint(pos);
         bool onScreen =
             viewportPos.x >= 0f && viewportPos.x <= 1f &&
@@ -686,29 +743,57 @@ public class Player : NetworkBehaviour
     }
 
     void UpdatePointsBar(){
-        float fillAmount = points/maxPoints;
-        mainPointsBar.fillAmount = fillAmount;
+        mainPointsBar.fillAmount = points / maxPoints;
     }
 
     void Reload()
     {
-        if (currentAmmo >= maxAmmo)
-        {
-            if (!Runner.IsResimulation)
-                ShowMessage("Mana is full!", 0.1f, Color.white);
-            return; 
-        }
-        if (reloadTimer <= 0)
+        bool manaFull = currentAmmo >= maxAmmo;
+
+        if (!manaFull && reloadTimer <= 0)
         {
             missingAmmo = maxAmmo - currentAmmo;
             reloadFraction = (float)missingAmmo / maxAmmo;
             reloadTimer = reloadTime * reloadFraction;
             timeToWaitForBullet = reloadTimer;
         }
-        else
+
+        // Signal that the reload was performed for ReloadRender to be called
+        reloadPerformed++;
+    }
+
+    void ReloadRender()
+    {
+        if (currentAmmo >= maxAmmo)
         {
-            if (!Runner.IsResimulation)
-                ShowMessage("Still gathering mana", 0.3f, Color.white);
+            ShowMessage("Mana is full!", 0.1f, Color.white);
+        }
+        else if (reloadTimer > 0)
+        {
+            ShowMessage("Still gathering mana", 0.3f, Color.white);
+        }
+    }
+
+    void OnReloadTimerChanged(NetworkBehaviourBuffer previous)
+    {
+        float previousTimerVal = GetPropertyReader<float>(nameof(reloadTimer)).Read(previous);
+
+        // If previous timer < 0, and timer is now > 0, then reload has started
+        if (previousTimerVal <= 0 && reloadTimer > 0)
+        {
+            ShowMessage("Gathering Mana", 0.3f, Color.green);
+            reloadIcon.enabled = true;
+            reloadIconLayer.enabled = true;
+            reloadHandler.StartCooldown(reloadTimer);
+        }
+
+        // If previous timer > 0, and timer is now < 0, then reload has finished
+        if (previousTimerVal > 0 && reloadTimer <= 0)
+        {
+            ammoText.text = maxAmmo.ToString();
+            bulletIcon.fillAmount = 1;
+            reloadIcon.enabled = false;
+            reloadIconLayer.enabled = false;
         }
     }
 
@@ -751,7 +836,8 @@ public class Player : NetworkBehaviour
         }
     }
 
-    public void ShowMessage(string message, float speed, Color color) {
+    public void ShowMessage(string message, float speed, Color color)
+    {
         if (HasInputAuthority) {
             uIController.MakePopupText(message, speed, color);
         }
@@ -859,73 +945,6 @@ public class Player : NetworkBehaviour
         transform.Find("MinimapIndicator").gameObject.SetActive(enabled);
     }
 
-    void OnIsAliveChanged()
-    {
-        if (isAlive)
-        {
-            if (HasInputAuthority && deathOverlay != null)
-            {
-                deathOverlay.SetActive(false);
-            }
-
-            // Show the player
-            SetPlayerEnabled(true);
-        }
-        else
-        {
-            // Ensure health bar is empty
-            UpdateHealthBar();
-
-            // Enable the death overlay
-            if (HasInputAuthority) // Only show for the local player
-            {
-                if (deathOverlay != null)
-                {
-                    Debug.Log("Activating death overlay...");
-                    deathOverlay.SetActive(true); // Enable the overlay
-                }
-            }
-
-            // Play sound
-            PlayDyingSound(transform.position);
-
-            // Hide the player
-            SetPlayerEnabled(false);
-        }
-    }
-
-    void OnReloadTimerChanged(NetworkBehaviourBuffer previous)
-    {
-        float previousTimerVal = GetPropertyReader<float>(nameof(reloadTimer)).Read(previous);
-
-        // If previous timer < 0, and timer is now > 0, then reload has started
-        if (previousTimerVal <= 0 && reloadTimer > 0)
-        {
-            ShowMessage("Gathering Mana", 0.3f, Color.green);
-            reloadIcon.enabled = true;
-            reloadIconLayer.enabled = true;
-            reloadHandler.StartCooldown(reloadTimer);
-        }
-
-        // If previous timer > 0, and timer is now < 0, then reload has finished
-        if (previousTimerVal > 0 && reloadTimer <= 0)
-        {
-            ammoText.text = maxAmmo.ToString();
-            bulletIcon.fillAmount = 1;
-            reloadIcon.enabled = false;
-            reloadIconLayer.enabled = false;
-        }
-    }
-
-    void OnIsDashingChanged()
-    {
-        if (isDashing)
-        {
-            dashCDHandler.StartCooldown(dashCooldown);
-            audioSource.PlayOneShot(dashSound);
-        }
-    }
-
     void OnIsMovingChanged()
     {
         // Play idle or walking animation
@@ -941,5 +960,9 @@ public class Player : NetworkBehaviour
         {
             animator.SetTrigger("Attack");
         }
+    }
+
+    void OnGamePausedChanged() {
+        escapeMenu.SetActive(gamePaused);
     }
 }
