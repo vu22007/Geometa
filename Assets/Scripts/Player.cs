@@ -387,14 +387,23 @@ public class Player : NetworkBehaviour
                 {
                     if (input.buttons.IsSet(InputButtons.Shoot))
                     {
-                        if (isAoEEnabled && !normalShoot)
-                        {
-                            ShootAoE(input.aimDirection, input.cursorWorldPoint);
-                        }
-                        else if (normalShoot && !isAoEEnabled)
+                        if (normalShoot && !isAoEEnabled)
                         {
                             Shoot(input.aimDirection);
                         }
+                        isAttacking = true;
+                    }
+                    else
+                    {
+                        isAttacking = false;
+                    }
+                }
+
+                if (input.buttons.WasPressed(previousButtons, InputButtons.AoE))
+                {
+                    if (isAoEEnabled && !normalShoot)
+                    {
+                        ShootAoE(input.aimDirection, input.cursorWorldPoint);
                         isAttacking = true;
                     }
                     else
