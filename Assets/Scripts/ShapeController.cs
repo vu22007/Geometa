@@ -13,8 +13,8 @@ public class ShapeController : NetworkBehaviour
     [Networked] private float score { get; set; }
     [Networked, Capacity(5)] private NetworkLinkedList<Vector3> vertices { get; }
 
-    private int triangleCost = 3;
-    private int squareCost = 5;
+    private int triangleCost = 10;
+    private int squareCost = 15;
     private int pentagonCost = 8;
     GameController gameController { get; set; }
     Player parentPlayer { get; set; }

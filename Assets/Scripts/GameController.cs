@@ -89,7 +89,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
         if(manaTopupCooldownCurrent < 0){
             foreach (Player player in players)
             {
-                player.GainMana(5);
+                player.GainMana(1);
             }
             manaTopupCooldownCurrent = pointsTopupCooldownMax;
         }
