@@ -24,7 +24,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
 
     // For only the server/host to use when broadcasting messages
     private bool gameOver = false;
-
+    // Test
     [Networked] private float pointsTopupCooldownMax { get; set; }
     [Networked] private float pointsTopupCooldownCurrent { get; set; }
     [Networked] private int gameStartTick { get; set; }
