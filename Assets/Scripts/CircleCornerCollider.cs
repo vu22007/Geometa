@@ -83,6 +83,7 @@ public class CircleCornerCollider : NetworkBehaviour
             {
                 Debug.Log("Enemy slowed");
                 player.GetSlowed(2f * score, 1f);
+                player.TakeDamage(2.5f * score, Object.InputAuthority);
                 slowedPlayers.Add(player);
             }
         }
