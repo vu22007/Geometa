@@ -96,8 +96,6 @@ public class GameController : NetworkBehaviour, IPlayerLeft
 
         foreach (Player player in players)
         {
-            player.PlayerUpdate();
-
             // If player is dead and respawn timer is done then respawn player
             if (!player.IsAlive() && player.RespawnTimerDone())
             {

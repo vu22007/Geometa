@@ -3,7 +3,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Fusion.Addons.Physics;
-using System.Collections;
 
 public class Player : NetworkBehaviour
 {
@@ -42,10 +41,13 @@ public class Player : NetworkBehaviour
     [Networked] public float aoeCooldown { get; set; }
     [Networked] public float aoeDuration { get; set; }
     [Networked] public float aoeCooldownTimer { get; set; }
-    [Networked] public bool isAoEEnabled { get; set; }
+    [Networked, OnChangedRender(nameof(OnAoEEnabledChanged))] public bool isAoEEnabled { get; set; }
     [Networked] private bool isAoEUsed { get; set; }
     [Networked] public float aoeMaxRad { get; set; }
     [Networked] private bool normalShoot { get; set; }
+    [Networked] private TickTimer aoeEnabledTimer { get; set; }
+    [Networked] float slowedAmount { get; set; }
+    [Networked] TickTimer getSlowedTimer { get; set; }
     [Networked, OnChangedRender(nameof(OnGamePausedChanged))] private bool gamePaused { get; set; }
     [Networked, OnChangedRender(nameof(ShootRender))] private int bulletFired { get; set; }
     [Networked, OnChangedRender(nameof(ShootAoERender))] private int aoeFired { get; set; }
@@ -280,7 +282,7 @@ public class Player : NetworkBehaviour
         }
     }
 
-    public void PlayerUpdate()
+    public override void FixedUpdateNetwork()
     {
         // Check if player is dead
         if (!isAlive)
@@ -328,6 +330,31 @@ public class Player : NetworkBehaviour
         if (currentAmmo == 0 && reloadTimer <= 0) 
         {
             Reload();
+        }
+
+        // AoE timer
+        if (aoeEnabledTimer.Expired(Runner))
+        {
+            if (!isAoEUsed)
+            {
+                // Disable AoE
+                isAoEEnabled = false;
+                normalShoot = true;
+            }
+
+            // Reset timer
+            aoeEnabledTimer = TickTimer.None;
+        }
+
+        // Get slowed timer
+        if (getSlowedTimer.Expired(Runner))
+        {
+            // Restore speed
+            speed += slowedAmount;
+            slowedAmount = 0;
+
+            // Reset timer
+            getSlowedTimer = TickTimer.None;
         }
 
         // GetInput will return true on the StateAuthority (the server) and the InputAuthority (the client who controls this player)
@@ -468,8 +495,10 @@ public class Player : NetworkBehaviour
         dashPerformed++;
     }
 
-    void DashRender() {
-        if (dashCooldownTimer > 0)
+    void DashRender(NetworkBehaviourBuffer previous) {
+        float previousTimerVal = GetPropertyReader<float>(nameof(dashCooldownTimer)).Read(previous);
+
+        if (previousTimerVal > 0 && dashCooldownTimer > 0)
         {
             ShowMessage("Dash in cooldown", 0.2f, Color.white);
         }
@@ -568,9 +597,11 @@ public class Player : NetworkBehaviour
         {
             PlayShootSound();
         }
+    }
 
-        // Hide the AoE icon
-        aoeIcon.enabled = false;
+    void OnAoEEnabledChanged()
+    {
+        aoeIcon.enabled = isAoEEnabled;
     }
 
     public void PlayShootSound()
@@ -762,13 +793,15 @@ public class Player : NetworkBehaviour
         reloadPerformed++;
     }
 
-    void ReloadRender()
+    void ReloadRender(NetworkBehaviourBuffer previous)
     {
+        float previousTimerVal = GetPropertyReader<float>(nameof(reloadTimer)).Read(previous);
+
         if (currentAmmo >= maxAmmo)
         {
             ShowMessage("Mana is full!", 0.1f, Color.white);
         }
-        else if (reloadTimer > 0)
+        else if (previousTimerVal > 0 && reloadTimer > 0)
         {
             ShowMessage("Still gathering mana", 0.3f, Color.white);
         }
@@ -899,9 +932,8 @@ public class Player : NetworkBehaviour
         {
             isAoEEnabled = true; // Enable AoE
             normalShoot = false;
-            aoeIcon.enabled = true;
             isAoEUsed = false;
-            StartCoroutine(EnableAoETemporarily());
+            aoeEnabledTimer = TickTimer.CreateFromSeconds(Runner, 5f);
         } 
     }
 
@@ -912,26 +944,17 @@ public class Player : NetworkBehaviour
 
     public void GetSlowed(float amount, float time)
     {
-        this.speed -= amount;
-        StartCoroutine(timeSlowed(amount, time));
-    }
-
-    IEnumerator timeSlowed(float amount, float time)
-    {
-        yield return new WaitForSeconds(time);
-        this.speed += amount;
-    }
-
-    private IEnumerator EnableAoETemporarily()
-    {
-        yield return new WaitForSeconds(5f); 
-        if (!isAoEUsed)
+        // If not already slowed, slow the player
+        if (slowedAmount == 0)
         {
-            isAoEEnabled = false; // Disable AoE
-            normalShoot = true;
-            aoeIcon.enabled = false;
+            speed -= amount;
+            slowedAmount = amount;
         }
-        
+
+        // Set timer until the player's speed returns to normal
+        // Note: If they are already slowed, this resets the timer so they have to wait longer, but the above
+        // prevents their speed from getting even slower
+        getSlowedTimer = TickTimer.CreateFromSeconds(Runner, time);
     }
 
     void SetPlayerEnabled(bool enabled)
