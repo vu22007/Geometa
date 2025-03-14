@@ -76,7 +76,7 @@ public class CircleCornerCollider : NetworkBehaviour
             if (player != null && Object.IsValid && player.GetTeam() != team && !slowedPlayers.Contains(player))
             {
                 Debug.Log("Enemy slowed");
-                player.GetSlowed(2f * score, 1f);
+                player.GetSlowed(2f * score, 3f);
                 slowedPlayers.Add(player);
             }
         }
