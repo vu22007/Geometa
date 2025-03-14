@@ -372,14 +372,11 @@ public class Player : NetworkBehaviour
                     {
                         isAttacking = true;
                         EnableMeleeHitbox();
-                        Debug.Log("enabled");
                     }
                     else
                     {
                         isAttacking = false;
                         DisableMeleeHitbox();
-                        Debug.Log("disabled");
-
                     }
                 }
 
