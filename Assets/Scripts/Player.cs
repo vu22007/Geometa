@@ -247,7 +247,6 @@ public class Player : NetworkBehaviour
 
         // Activate the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = true;
-        gameController.RegisterAlivePlayer(this);
     }
 
     public override void Render()
@@ -650,11 +649,8 @@ public class Player : NetworkBehaviour
 
         respawnTimer = TickTimer.CreateFromSeconds(Runner, respawnTime);
 
-        // TODO: Fix unregister alive player below, since this changes a non-networked property in game controller, so state not synced
-
         // Disable the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = false;
-        gameController.UnregisterAlivePlayer(this);
 
         // Player will drop the flag if they died
         if (isCarrying)
@@ -692,6 +688,10 @@ public class Player : NetworkBehaviour
         {
             PlayDyingSound(transform.position);
         }
+
+        // Register/unregister player with game controller depending on if alive or dead
+        if (isAlive) gameController.RegisterAlivePlayer(this);
+        else gameController.UnregisterAlivePlayer(this);
     }
 
     public void PlayDyingSound(Vector3 pos)

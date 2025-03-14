@@ -4,11 +4,14 @@ using UnityEngine;
 
 public class GameController : NetworkBehaviour, IPlayerLeft
 {
-    [SerializeField] Vector3 respawnPoint1;
-    [SerializeField] Vector3 respawnPoint2;
-
-    public float maxTime;
     [Networked, HideInInspector] public float currentTime { get; set; }
+    [Networked] private float pointsTopupCooldownMax { get; set; }
+    [Networked] private float pointsTopupCooldownCurrent { get; set; }
+    [Networked] private int gameStartTick { get; set; }
+
+    [SerializeField] private Vector3 respawnPoint1;
+    [SerializeField] private Vector3 respawnPoint2;
+    [SerializeField] private float maxTime;
 
     private List<Player> players;
     private List<Player> alivePlayers;
@@ -16,16 +19,12 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     // For only the server/host to use so that it can manage the spawn and despawn of players
     private Dictionary<PlayerRef, NetworkObject> spawnedPlayers = new Dictionary<PlayerRef, NetworkObject>();
 
-    // Flags
-    private PickupFlag team1Flag;
-    private PickupFlag team2Flag;
-
     // For only the server/host to use when broadcasting messages
     private bool gameOver = false;
 
-    [Networked] private float pointsTopupCooldownMax { get; set; }
-    [Networked] private float pointsTopupCooldownCurrent { get; set; }
-    [Networked] private int gameStartTick { get; set; }
+    // Flags
+    private PickupFlag team1Flag;
+    private PickupFlag team2Flag;
 
     // Initialisation
     public override void Spawned()
@@ -277,6 +276,10 @@ public class GameController : NetworkBehaviour, IPlayerLeft
                 player.OnCreated(characterName, respawnPoint1, 2);
             });
         }
+    }
 
+    public float GetMaxTime()
+    {
+        return maxTime;
     }
 }
