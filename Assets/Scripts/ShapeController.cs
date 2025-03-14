@@ -257,7 +257,7 @@ public class ShapeController : NetworkBehaviour
                 if (parentPlayer.GetCharacterName() == "Wizard")
                 {
                     parentPlayer.ActivateTri(true);
-                    triangleCooldown = 1f;
+                    triangleCooldown = 3.0f;
                     parentPlayer.SpendPoints(triangleCost);
                     triangleLineRenderer.enabled = false;
                 }
@@ -266,7 +266,7 @@ public class ShapeController : NetworkBehaviour
                     if (HasStateAuthority)
                     {
                         triangleShape.CastAbility(playerPositions, score);
-                        triangleCooldown = 1f;
+                        triangleCooldown = 3.0f;
                         parentPlayer.SpendPoints(triangleCost);
 
                         RPC_PlayTriangleSound(playerPositions.ToArray(), 3, "Knight");
@@ -275,6 +275,8 @@ public class ShapeController : NetworkBehaviour
                         shapeActivationToggle = !shapeActivationToggle;
                     }
                 }
+                parentPlayer.activateTriCD(triangleCooldown);
+
             }
             else if (nVertices == 4)
             {
@@ -291,13 +293,14 @@ public class ShapeController : NetworkBehaviour
                     if (HasStateAuthority)
                     {
                         squareShape.CastAbility(playerPositions, score);
-                        squareCooldown = 3f;
+                        squareCooldown = 5f;
                         parentPlayer.SpendPoints(squareCost);
 
                         RPC_PlayTriangleSound(playerPositions.ToArray(), 4, "Knight");
                         // Set networked property so everyone can draw lines in OnShapeActivationToggleChanged method
                         shapeActivationToggle = !shapeActivationToggle;
                     }
+                    parentPlayer.activateSqCD(squareCooldown);
                 }
             }
             else if (nVertices == 5)
