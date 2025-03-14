@@ -20,4 +20,4 @@ MonoBehaviour:
   fireRate: 3
   dashSpeed: 3
   dashDuration: 0.2
-  dashCooldown: 2
+  dashCooldown: 5
