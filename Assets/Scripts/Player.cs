@@ -24,7 +24,7 @@ public class Player : NetworkBehaviour
     [Networked] Vector3 respawnPoint { get; set; }
     [Networked, OnChangedRender(nameof(OnIsAliveChanged))] bool isAlive { get; set; }
     [Networked] float respawnTime { get; set; }
-    [Networked] float currentRespawn { get; set; }
+    [Networked] TickTimer respawnTimer { get; set; }
     [Networked, Capacity(30)] string characterName { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
     [Networked] private NetworkObject carriedObject { get; set; }
@@ -118,7 +118,6 @@ public class Player : NetworkBehaviour
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
         isAlive = true;
-        currentRespawn = 0.0f;
         timeToWaitForBullet = 0.0f;
         isCarrying = false;
         isAoEEnabled = false;
@@ -238,7 +237,7 @@ public class Player : NetworkBehaviour
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
         isAlive = true;
-        currentRespawn = 0.0f;
+        respawnTimer = TickTimer.None;
         timeToWaitForBullet = 0.0f;
 
         // Refill the health bar
@@ -251,9 +250,6 @@ public class Player : NetworkBehaviour
             ammoText.text = currentAmmo.ToString();
             bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
         }
-        // // Set the ammo counter
-        // ammoText.text = currentAmmo.ToString();
-        // bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
 
         // Activate the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = true;
@@ -274,11 +270,9 @@ public class Player : NetworkBehaviour
             if (respawnTimerTxt != null)
             {
                 // Calculate the remaining respawn time
-                float remainingTime = respawnTime - currentRespawn;
-                respawnTimerTxt.text = $"Respawning in {Mathf.CeilToInt(remainingTime)}s";
+                float remainingTime = (float)respawnTimer.RemainingTime(Runner);
+                respawnTimerTxt.text = $"Respawning in {Mathf.CeilToInt(remainingTime)}";
             }
-
-            return;
         }
     }
 
@@ -287,8 +281,11 @@ public class Player : NetworkBehaviour
         // Check if player is dead
         if (!isAlive)
         {
-            // Update respawn timer
-            currentRespawn += Runner.DeltaTime;
+            // Respawn player if timer is over
+            if (respawnTimer.Expired(Runner))
+            {
+                Respawn();
+            }
 
             // Stop player movement and prevent player from infinitely sliding when pushed by another player
             rb.linearVelocity = new Vector2(0, 0);
@@ -663,6 +660,8 @@ public class Player : NetworkBehaviour
 
         isAlive = false;
 
+        respawnTimer = TickTimer.CreateFromSeconds(Runner, respawnTime);
+
         // TODO: Fix unregister alive player below, since this changes a non-networked property in game controller, so state not synced
 
         // Disable the shape controller
@@ -904,11 +903,6 @@ public class Player : NetworkBehaviour
     public void RPC_ShowMessage(string message, float speed, Color color)
     {
         ShowMessage(message, speed, color);
-    }
-
-    public bool RespawnTimerDone()
-    {
-        return currentRespawn >= respawnTime;
     }
 
     public bool IsAlive()

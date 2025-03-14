@@ -94,15 +94,6 @@ public class GameController : NetworkBehaviour, IPlayerLeft
             pointsTopupCooldownCurrent = pointsTopupCooldownMax;
         }
 
-        foreach (Player player in players)
-        {
-            // If player is dead and respawn timer is done then respawn player
-            if (!player.IsAlive() && player.RespawnTimerDone())
-            {
-                player.Respawn();
-            }
-        }
-
         for (int i = bullets.Count - 1; i >= 0; i--)
         {
             Bullet bullet = bullets[i];
