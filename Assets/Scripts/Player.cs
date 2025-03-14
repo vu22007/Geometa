@@ -80,6 +80,7 @@ public class Player : NetworkBehaviour
     private AudioClip shootSound;
     private AudioClip dyingSound;
     private AudioClip dashSound;
+    private AudioClip reloadSound;
     private AudioSource audioSource;
     [SerializeField] Image bulletIcon;
     [SerializeField] GameObject mainbulletIcon;
@@ -205,6 +206,7 @@ public class Player : NetworkBehaviour
         shootSound = Resources.Load<AudioClip>("Sounds/Shoot");
         dyingSound = Resources.Load<AudioClip>("Sounds/Dying");
         dashSound = Resources.Load<AudioClip>("Sounds/Dash");
+        reloadSound = Resources.Load<AudioClip>("Sounds/WizardReload");
 
         // Set the initial flag indicator visibility
         OnCarryingChanged();
@@ -516,7 +518,7 @@ public class Player : NetworkBehaviour
             dashTimer = dashDuration;
             dashCooldownTimer = dashCooldown;
 
-            if (!Runner.IsResimulation)
+            if (HasInputAuthority && !Runner.IsResimulation)
             {
                 dashCDHandler.StartCooldown(dashCooldown);
                 audioSource.PlayOneShot(dashSound);
@@ -790,8 +792,10 @@ public class Player : NetworkBehaviour
             reloadTimer = reloadTime * reloadFraction;
             timeToWaitForBullet = reloadTimer;
 
-            if (!Runner.IsResimulation)
+            if (HasInputAuthority && !Runner.IsResimulation)
             {
+                audioSource.pitch = 2.7f / missingAmmo;
+                audioSource.PlayOneShot(reloadSound);
                 ShowMessage("Gathering Mana", 0.3f, Color.green);
                 reloadIcon.enabled = true;
                 reloadIconLayer.enabled = true;
