@@ -17,6 +17,10 @@ public class TriangleCollider : NetworkBehaviour
     MeshFilter meshFilter;
     Material meshMaterial;
 
+    Color lowScoreColor = new Color(0.2f, 0.4f, 0.8f);  // Blue
+    Color medScoreColor = new Color(0.8f, 0.2f, 0.8f);  // Purple
+    Color highScoreColor = new Color(1.0f, 0.2f, 0.2f); // Red
+
     // This object is created with no parent because it should be static with a 
     // position in (0, 0, 0). If the object is attached to the ShapeController the
     // edge collider works with local coordinates and the coordinates of the vertices
@@ -37,10 +41,6 @@ public class TriangleCollider : NetworkBehaviour
     // Activate is always true when used for now but it should stay
     public void DrawTriangle(List<Vector3> vertices, bool activate, float score)
     {
-        // Draw debug lines to visualize the triangle in Scene view
-        Debug.DrawLine(vertices[0], vertices[1], Color.red, 5f);
-        Debug.DrawLine(vertices[1], vertices[2], Color.red, 5f);
-        Debug.DrawLine(vertices[2], vertices[0], Color.red, 5f);
 
         int nVertices = vertices.Count;
 
@@ -54,17 +54,12 @@ public class TriangleCollider : NetworkBehaviour
 
         // Assign the mesh to our mesh filter
         meshFilter.mesh = mesh;
-
-        // Set up color and transparency
-        Color meshColor = meshMaterial.color;
-        if (activate)
-        {
-            meshColor.a = 1f * score;
-        }
+        
+        Color meshColor;
+        if (score < 0.6f)
+            meshColor = Color.Lerp(lowScoreColor, medScoreColor, score / 0.6f);
         else
-        {
-            meshColor.a = 0.3f;
-        }
+            meshColor = Color.Lerp(medScoreColor, highScoreColor, (score - 0.6f) / 0.4f);
         meshMaterial.color = meshColor;
 
         meshRenderer.enabled = true;

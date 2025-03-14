@@ -402,9 +402,8 @@ public class ShapeController : NetworkBehaviour
 
             // Calculate a new alpha based on the elapsed time
             float newAlpha = Mathf.Lerp(startAlpha, 0f, timer / delay);
-
             startColor.a = endColor.a = newAlpha;
-
+            
             lineRenderer.startColor = startColor;
             lineRenderer.endColor = endColor;
 
