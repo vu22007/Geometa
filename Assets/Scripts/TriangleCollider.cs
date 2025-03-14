@@ -27,37 +27,14 @@ public class TriangleCollider : NetworkBehaviour
         meshRenderer = gameObject.GetComponent<MeshRenderer>();
         meshFilter = gameObject.GetComponent<MeshFilter>();
 
-        //if (meshMaterial == null)
-        //{
-            
-        //    //// Create a default material if none is provided
-        //    //meshMaterial = new Material(Shader.Find("Default-Line"));
-
-        //}
-
         meshMaterial = meshRenderer.material;
-        meshMaterial.color = Color.blue;
-        // meshRenderer.material = meshMaterial;
-        // SetupTransparentMaterial();
 
         polygonCollider = GetComponent<PolygonCollider2D>();
         polygonCollider.enabled = false;
         polygonCollider.isTrigger = true;
     }
 
-    private void SetupTransparentMaterial()
-    {
-        // Make sure the material is set to be transparent
-        meshRenderer.material.SetFloat("_Mode", 3); // Transparent mode
-        meshRenderer.material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-        meshRenderer.material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-        meshRenderer.material.SetInt("_ZWrite", 0);
-        meshRenderer.material.DisableKeyword("_ALPHATEST_ON");
-        meshRenderer.material.EnableKeyword("_ALPHABLEND_ON");
-        meshRenderer.material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-        meshRenderer.material.renderQueue = 3000;
-    }
-
+    // Activate is always true when used for now but it should stay
     public void DrawTriangle(List<Vector3> vertices, bool activate, float score)
     {
         // Draw debug lines to visualize the triangle in Scene view

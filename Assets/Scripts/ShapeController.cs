@@ -11,9 +11,11 @@ public class ShapeController : NetworkBehaviour
     [Networked] public bool isActive { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
     [Networked, OnChangedRender(nameof(OnShapeActivationToggleChanged))] private bool shapeActivationToggle { get; set; }
+    [Networked, OnChangedRender(nameof(OnTriangleActivationToggleChanged))] private bool triangleActivationToggle { get; set; }
     [Networked] private float score { get; set; }
     [Networked, Capacity(5)] private NetworkLinkedList<Vector3> vertices { get; }
 
+    private List<Vector3> playerPositions; 
     private int triangleCost = 3;
     private int squareCost = 5;
     GameController gameController { get; set; }
@@ -63,6 +65,11 @@ public class ShapeController : NetworkBehaviour
         squareCooldown = 0;
 
         shapeActivationToggle = false;
+    }
+
+    void OnTriangleActivationToggleChanged()
+    {
+        triangleShape.DrawTriangle(playerPositions, true, score);
     }
 
     void OnShapeActivationToggleChanged()
@@ -198,6 +205,7 @@ public class ShapeController : NetworkBehaviour
         // Sort by angle relative to centroid, counterclockwise. If this isn't done 
         // we might connect the diagonal of square instead of the edge
         playerPositions = SortVerticesAroundCentroid(playerPositions);
+        this.playerPositions = playerPositions;
 
         // Calculate the angles for each vertice of the shape
         List<float> angles = GetAngles(playerPositions);
@@ -231,6 +239,7 @@ public class ShapeController : NetworkBehaviour
                 {
                     if (HasStateAuthority)
                     {
+                        triangleLineRenderer.enabled = false;
                         triangleShape.CastAbility(playerPositions, score);
                         triangleCooldown = 1f;
                         parentPlayer.SpendPoints(triangleCost);
@@ -238,7 +247,9 @@ public class ShapeController : NetworkBehaviour
                         RPC_PlayTriangleSound(playerPositions.ToArray(), 3, "Knight");
 
                         // Set networked property so everyone can draw lines in OnShapeActivationToggleChanged method
-                        shapeActivationToggle = !shapeActivationToggle;
+
+                        triangleActivationToggle = !triangleActivationToggle;
+                        // shapeActivationToggle = !shapeActivationToggle;
                     }
                 }
             }
@@ -271,7 +282,7 @@ public class ShapeController : NetworkBehaviour
         // Draw lines locally when just preview
         if (HasInputAuthority)
         {
-            triangleShape.DrawTriangle(playerPositions, true, score);
+
         }
 
         // Draw lines locally when just preview
