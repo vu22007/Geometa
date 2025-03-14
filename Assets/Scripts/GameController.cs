@@ -32,9 +32,6 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     // Initialisation
     public override void Spawned()
     {
-        // Make FixedUpdateNetwork run on all clients
-        Runner.SetIsSimulated(Object, true);
-
         bullets = new List<Bullet>();
         players = new List<Player>();
         pickups = new List<Pickup>();
@@ -84,36 +81,14 @@ public class GameController : NetworkBehaviour, IPlayerLeft
             //end game
         }
 
-        //topup players points by 5 every 10 seconds
+        // Topup players points by 5 every 10 seconds
         pointsTopupCooldownCurrent -= Runner.DeltaTime;
-        if(pointsTopupCooldownCurrent < 0){
+        if (pointsTopupCooldownCurrent < 0){
             foreach (Player player in players)
             {
                 player.GainPoints(5);
             }
             pointsTopupCooldownCurrent = pointsTopupCooldownMax;
-        }
-
-        for (int i = bullets.Count - 1; i >= 0; i--)
-        {
-            Bullet bullet = bullets[i];
-            bullet.BulletUpdate();
-
-            if (bullet.done)
-            {
-                bullets.Remove(bullet);
-
-                if (Runner.IsServer)
-                {
-                    // Despawn bullet from network (only the server can do this)
-                    Runner.Despawn(bullet.GetComponent<NetworkObject>());
-                }
-                else
-                {
-                    // Disable the bullet locally so that it isn't frozen while the client waits for the server to despawn it
-                    bullet.gameObject.SetActive(false);
-                }
-            }
         }
     }
 

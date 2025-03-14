@@ -10,9 +10,9 @@ public class Bullet : NetworkBehaviour
     [Networked] Quaternion rotation { get; set; }
     [Networked] float damage { get; set; }
     [Networked] public bool done { get; set; }
-    [Networked] float lifespan { get; set; }
     [Networked] int team { get; set; }
     [Networked] private PlayerRef playerShooting { get; set; }
+    [Networked] private TickTimer bulletLifespanTimer { get; set; }
 
     GameController gameController;
 
@@ -25,14 +25,19 @@ public class Bullet : NetworkBehaviour
         this.rotation = rotation;
         this.damage = damage;
         done = false;
-        lifespan = 20.0f;
         this.team = team;
         this.playerShooting = playerShooting;
+
+        float lifespan = 20.0f;
+        bulletLifespanTimer = TickTimer.CreateFromSeconds(Runner, lifespan);
     }
 
     // Bullet initialisation (called on each client and server when bullet is spawned on network)
     public override void Spawned()
     {
+        // Make FixedUpdateNetwork run on all clients
+        Runner.SetIsSimulated(Object, true);
+
         // Get game controller component
         gameController = GameObject.Find("Game Controller").GetComponent<GameController>();
 
@@ -61,20 +66,29 @@ public class Bullet : NetworkBehaviour
         gameController.UnregisterBullet(this);
     }
 
-    // Update function (called from the game controller on all clients and server with the list of all currently active bullets)
-    public void BulletUpdate()
+    public override void Render()
     {
-        // Check if bullet's lifespan has been reached
-        lifespan -= Runner.DeltaTime;
-        if (lifespan <= 0.0f)
-        {
-            done = true;
-            return;
-        }
+        if (done) return;
 
         // Set current position of bullet
         Vector3 position = GetMovePosition(Runner.Tick);
         gameObject.transform.position = position;
+    }
+
+    // Runs on all clients and host, so that the clients can react the moment the bullet hits something
+    public override void FixedUpdateNetwork()
+    {
+        if (done) return;
+
+        // Check if bullet's lifespan has been reached
+        if (bulletLifespanTimer.Expired(Runner))
+        {
+            BulletDone();
+            return;
+        }
+
+        // Get current position of bullet for hit detection purposes
+        Vector3 position = GetMovePosition(Runner.Tick);
 
         // Lag-compensated hit detection
         int layerMask = LayerMask.GetMask("Default"); // Only register collisions with colliders and hitboxes on the "Default" layer
@@ -123,7 +137,7 @@ public class Bullet : NetworkBehaviour
                 if (player.GetTeam() != team)
                 {
                     player.TakeDamage(damage, playerShooting);
-                    done = true; // Doesn't pierce
+                    BulletDone(); // Doesn't pierce
                 }
             }
         }
@@ -135,7 +149,23 @@ public class Bullet : NetworkBehaviour
         // Destroy bullet if collide with wall
         if (collider.CompareTag("Wall"))
         {
-            done = true;
+            BulletDone();
+        }
+    }
+
+    void BulletDone()
+    {
+        done = true;
+
+        // Despawn bullet from network (only the server can do this)
+        if (HasStateAuthority)
+        {
+            Runner.Despawn(Object);
+        }
+        // Hide the bullet so clients can't see it until the server's despawn is received
+        else
+        {
+            GetComponent<SpriteRenderer>().enabled = false;
         }
     }
 }
