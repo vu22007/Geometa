@@ -62,7 +62,8 @@ public class Player : NetworkBehaviour
     [SerializeField] UIController uIController;
     [SerializeField] cooldownHandler dashCDHandler;
     [SerializeField] cooldownHandler reloadHandler;
-    [SerializeField] cooldownHandler aoeHandler;
+    [SerializeField] cooldownHandler squareHandler;
+    [SerializeField] cooldownHandler triangleHandler;
     [SerializeField] Image reloadIcon;
     [SerializeField] Image reloadIconLayer;
     [SerializeField] Image aoeIcon;
@@ -913,6 +914,16 @@ public class Player : NetworkBehaviour
             isAoEUsed = false;
             StartCoroutine(EnableAoETemporarily());
         } 
+    }
+
+    public void activateTriCD(float triCD)
+    {
+        triangleHandler.StartCooldown(triCD);
+    }
+
+    public void activateSqCD(float sqCD)
+    {
+        squareHandler.StartCooldown(sqCD);
     }
 
     public float GetPoints()
