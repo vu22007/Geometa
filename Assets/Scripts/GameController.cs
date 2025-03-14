@@ -10,10 +10,8 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     public float maxTime;
     [Networked, HideInInspector] public float currentTime { get; set; }
 
-    private List<Bullet> bullets;
     private List<Player> players;
     private List<Player> alivePlayers;
-    private List<Pickup> pickups;
 
     // For only the server/host to use so that it can manage the spawn and despawn of players
     private Dictionary<PlayerRef, NetworkObject> spawnedPlayers = new Dictionary<PlayerRef, NetworkObject>();
@@ -32,16 +30,14 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     // Initialisation
     public override void Spawned()
     {
-        bullets = new List<Bullet>();
         players = new List<Player>();
-        pickups = new List<Pickup>();
         alivePlayers = new List<Player>();
         currentTime = 0.0f;
         pointsTopupCooldownMax = 10f;
         pointsTopupCooldownCurrent = pointsTopupCooldownMax;
         gameStartTick = Runner.Tick;
 
-        if (Runner.IsServer)
+        if (HasStateAuthority)
         {
             SpawnPlayers();
             SpawnItems();
@@ -51,7 +47,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     void SpawnItems()
     {
         // Spawn initial items (only the server can do this)
-        if (Runner.IsServer)
+        if (HasStateAuthority)
         {
             // Spawn pickup
             GameObject pickupPrefab = Resources.Load("Prefabs/Pickup") as GameObject;
@@ -104,26 +100,6 @@ public class GameController : NetworkBehaviour, IPlayerLeft
         UnregisterAlivePlayer(player);
     }
 
-    public void RegisterBullet(Bullet bullet)
-    {
-        bullets.Add(bullet);
-    }
-
-    public void UnregisterBullet(Bullet bullet)
-    {
-        bullets.Remove(bullet);
-    }
-
-    public void RegisterPickup(Pickup pickup)
-    {
-        pickups.Add(pickup);
-    }
-
-    public void UnregisterPickup(Pickup pickup)
-    {
-        pickups.Remove(pickup);
-    }
-
     public void RegisterAlivePlayer(Player player)
     {
         alivePlayers.Add(player);
@@ -136,7 +112,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
 
     public void SpawnPlayers()
     {
-        if (Runner.IsServer)
+        if (HasStateAuthority)
         {
             NetworkManager networkManager = GameObject.Find("Network Runner").GetComponent<NetworkManager>();
 
@@ -160,7 +136,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
 
     void SpawnPlayer(PlayerRef player, string characterName, int team)
     {
-        if (Runner.IsServer)
+        if (HasStateAuthority)
         {
             // Load prefab
             GameObject playerPrefab = Resources.Load("Prefabs/Player") as GameObject;
@@ -179,7 +155,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     public void PlayerLeft(PlayerRef player)
     {
         // Run the following only on the server
-        if (Runner.IsServer)
+        if (HasStateAuthority)
         {
             if (spawnedPlayers.TryGetValue(player, out NetworkObject networkPlayerObject))
             {
@@ -198,7 +174,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     // Check if two flags are near each other
     public void CheckForWinCondition()
     {
-        if (!Runner.IsServer) return;
+        if (!HasStateAuthority) return;
 
         // Max distance for flags to be from a base to count as a win
         float maxDistance = 8.0f;
@@ -221,7 +197,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
 
     public void BroadcastCarryFlag(int playerTeam, int flagTeam)
     {
-        if (!Runner.IsServer || gameOver) return;
+        if (!HasStateAuthority || gameOver) return;
 
         int otherTeam = playerTeam == 1 ? 2 : 1;
         if (flagTeam == playerTeam)
@@ -238,7 +214,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
 
     public void BroadcastDropFlag(int playerTeam, int flagTeam)
     {
-        if (!Runner.IsServer || gameOver) return;
+        if (!HasStateAuthority || gameOver) return;
 
         int otherTeam = playerTeam == 1 ? 2 : 1;
         if (flagTeam == playerTeam)
@@ -255,7 +231,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
 
     public void BroadcastMessageToAll(string message, float speed, Color color)
     {
-        if (!Runner.IsServer) return;
+        if (!HasStateAuthority) return;
 
         foreach (Player player in players)
         {
@@ -265,7 +241,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
 
     public void BroadcastMessageToTeam(int team, string message, float speed, Color color)
     {
-        if (!Runner.IsServer) return;
+        if (!HasStateAuthority) return;
 
         foreach (Player player in players)
         {

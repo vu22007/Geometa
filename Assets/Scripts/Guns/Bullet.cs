@@ -41,9 +41,6 @@ public class Bullet : NetworkBehaviour
         // Get game controller component
         gameController = GameObject.Find("Game Controller").GetComponent<GameController>();
 
-        // Add this bullet to game controller bullet list
-        gameController.RegisterBullet(this);
-
         // Rotate the bullet into the correct orientation
         transform.rotation = rotation;
 
@@ -52,18 +49,11 @@ public class Bullet : NetworkBehaviour
         {
             // If this bullet and the dummy bullet were created in the same tick, then the dummy bullet
             // corresponds to this bullet, so destroy it
-            if (dummyBullet.getInitialTick() == initialTick)
+            if (dummyBullet.GetInitialTick() == initialTick)
             {
                 Destroy(dummyBullet.gameObject);
             }
         }
-    }
-
-    // Called on each client and server when bullet is despawned from network
-    public override void Despawned(NetworkRunner runner, bool hasState)
-    {
-        // Remove this bullet from game controller bullet list
-        gameController.UnregisterBullet(this);
     }
 
     public override void Render()

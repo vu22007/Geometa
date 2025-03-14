@@ -5,8 +5,6 @@ public class UIController : MonoBehaviour
 {
     [SerializeField] GameObject popUpTextPrefab;
     [SerializeField] TMP_Text popUpText;
-    private Player player;
-    private float maxTime;
     GameController gameController;
     [SerializeField] TextMeshProUGUI timeLeftText;
 
@@ -38,15 +36,5 @@ public class UIController : MonoBehaviour
 
         Animator animator = popUp.GetComponent<Animator>();
         animator.speed = speed;
-    }
-
-    public void SetPlayer(Player player)
-    {
-        this.player = player;
-    }
-
-    public void SetMaxTime(float maxTime)
-    {
-        this.maxTime = maxTime;
     }
 }

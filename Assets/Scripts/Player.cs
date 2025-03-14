@@ -130,8 +130,8 @@ public class Player : NetworkBehaviour
     public override void Spawned()
     {
         uIController = GetComponentInChildren<UIController>();
-        uIController.SetPlayer(this);
         uIController.transform.SetParent(null);
+
         // Disable the camera if client does not control this player
         if (!HasInputAuthority)
         {
@@ -192,6 +192,10 @@ public class Player : NetworkBehaviour
         // Set the health bar
         UpdateHealthBar();
 
+        //Set the points bar
+        UpdatePointsBar();
+
+        // Disable the death overlay
         if (deathOverlay != null)
         {
             deathOverlay.SetActive(false);
@@ -212,12 +216,11 @@ public class Player : NetworkBehaviour
         // Set the initial flag indicator visibility
         OnCarryingChanged();
 
-        //Set points bar
-        UpdatePointsBar();
         DisableMeleeHitbox();
+
+        // Disable ammo indicator for knight
         if (characterName == "Knight")
         {
-            Debug.Log("disabled mana");
             mainbulletIcon.SetActive(false);
         }
     }
@@ -232,34 +235,19 @@ public class Player : NetworkBehaviour
     // Player initialisation when respawning
     public void Respawn()
     {
-        gameObject.SetActive(true);
+        // Teleport player to respawn point
         gameObject.GetComponent<NetworkRigidbody2D>().Teleport(respawnPoint);
+
+        // Reset state
+        isAlive = true;
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
-        isAlive = true;
         respawnTimer = TickTimer.None;
         timeToWaitForBullet = 0.0f;
-
-        // Refill the health bar
-        if (healthBar != null)
-            healthBar.fillAmount = currentHealth / maxHealth;
-        
-        if (characterName != "Knight")
-        {
-            // Set the ammo counter
-            ammoText.text = currentAmmo.ToString();
-            bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
-        }
 
         // Activate the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = true;
         gameController.RegisterAlivePlayer(this);
-
-        // Disable the death overlay
-        if (HasInputAuthority && deathOverlay != null)
-        {
-            deathOverlay.SetActive(false);
-        }
     }
 
     public override void Render()
@@ -687,36 +675,22 @@ public class Player : NetworkBehaviour
 
     void OnIsAliveChanged()
     {
-        if (isAlive)
-        {
-            if (HasInputAuthority && deathOverlay != null)
-            {
-                deathOverlay.SetActive(false);
-            }
+        // Ensure health bar is updated
+        UpdateHealthBar();
 
-            // Show the player
-            SetPlayerEnabled(true);
+        // Toggle the death overlay
+        if (HasInputAuthority && deathOverlay != null)
+        {
+            deathOverlay.SetActive(!isAlive);
         }
-        else
+
+        // Toggle player visibility
+        SetPlayerEnabled(isAlive);
+
+        // Play death sound if dead
+        if (!isAlive)
         {
-            // Ensure health bar is empty
-            UpdateHealthBar();
-
-            // Enable the death overlay
-            if (HasInputAuthority) // Only show for the local player
-            {
-                if (deathOverlay != null)
-                {
-                    Debug.Log("Activating death overlay...");
-                    deathOverlay.SetActive(true); // Enable the overlay
-                }
-            }
-
-            // Play sound
             PlayDyingSound(transform.position);
-
-            // Hide the player
-            SetPlayerEnabled(false);
         }
     }
 
