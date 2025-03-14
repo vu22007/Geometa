@@ -81,6 +81,7 @@ public class Player : NetworkBehaviour
     private AudioClip dyingSound;
     private AudioClip dashSound;
     private AudioClip reloadSound;
+    private AudioClip knightSwordSound;
     private AudioSource audioSource;
     [SerializeField] Image bulletIcon;
     [SerializeField] GameObject mainbulletIcon;
@@ -207,6 +208,7 @@ public class Player : NetworkBehaviour
         dyingSound = Resources.Load<AudioClip>("Sounds/Dying");
         dashSound = Resources.Load<AudioClip>("Sounds/Dash");
         reloadSound = Resources.Load<AudioClip>("Sounds/WizardReload");
+        knightSwordSound = Resources.Load<AudioClip>("Sounds/KnightSword");
 
         // Set the initial flag indicator visibility
         OnCarryingChanged();
@@ -372,6 +374,11 @@ public class Player : NetworkBehaviour
                 {
                     if (input.buttons.IsSet(InputButtons.Shoot))
                     {
+                        // NOTE: Add this when set cooldown to knights attack
+                        if (HasInputAuthority && !Runner.IsResimulation)
+                        {
+                            // audioSource.PlayOneShot(knightSwordSound);
+                        }
                         isAttacking = true;
                         EnableMeleeHitbox();
                     }
@@ -796,6 +803,7 @@ public class Player : NetworkBehaviour
             {
                 audioSource.pitch = 2.7f / missingAmmo;
                 audioSource.PlayOneShot(reloadSound);
+                audioSource.pitch = 1f;
                 ShowMessage("Gathering Mana", 0.3f, Color.green);
                 reloadIcon.enabled = true;
                 reloadIconLayer.enabled = true;
