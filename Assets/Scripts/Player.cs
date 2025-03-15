@@ -81,6 +81,8 @@ public class Player : NetworkBehaviour
     private AudioClip shootSound;
     private AudioClip dyingSound;
     private AudioClip dashSound;
+    private AudioClip reloadSound;
+    private AudioClip knightSwordSound;
     private AudioSource audioSource;
     [SerializeField] Image bulletIcon;
     [SerializeField] GameObject mainbulletIcon;
@@ -206,6 +208,8 @@ public class Player : NetworkBehaviour
         shootSound = Resources.Load<AudioClip>("Sounds/Shoot");
         dyingSound = Resources.Load<AudioClip>("Sounds/Dying");
         dashSound = Resources.Load<AudioClip>("Sounds/Dash");
+        reloadSound = Resources.Load<AudioClip>("Sounds/WizardReload");
+        knightSwordSound = Resources.Load<AudioClip>("Sounds/KnightSword");
 
         // Set the initial flag indicator visibility
         OnCarryingChanged();
@@ -371,16 +375,18 @@ public class Player : NetworkBehaviour
                 {
                     if (input.buttons.IsSet(InputButtons.Shoot))
                     {
+                        // NOTE: Add this when set cooldown to knights attack
+                        if (HasInputAuthority && !Runner.IsResimulation)
+                        {
+                            // audioSource.PlayOneShot(knightSwordSound);
+                        }
                         isAttacking = true;
                         EnableMeleeHitbox();
-                        Debug.Log("enabled");
                     }
                     else
                     {
                         isAttacking = false;
                         DisableMeleeHitbox();
-                        Debug.Log("disabled");
-
                     }
                 }
 
@@ -520,7 +526,7 @@ public class Player : NetworkBehaviour
             dashTimer = dashDuration;
             dashCooldownTimer = dashCooldown;
 
-            if (!Runner.IsResimulation)
+            if (HasInputAuthority && !Runner.IsResimulation)
             {
                 dashCDHandler.StartCooldown(dashCooldown);
                 audioSource.PlayOneShot(dashSound);
@@ -794,8 +800,11 @@ public class Player : NetworkBehaviour
             reloadTimer = reloadTime * reloadFraction;
             timeToWaitForBullet = reloadTimer;
 
-            if (!Runner.IsResimulation)
+            if (HasInputAuthority && !Runner.IsResimulation)
             {
+                audioSource.pitch = 2.7f / missingAmmo;
+                audioSource.PlayOneShot(reloadSound);
+                audioSource.pitch = 1f;
                 ShowMessage("Gathering Mana", 0.3f, Color.green);
                 reloadIcon.enabled = true;
                 reloadIconLayer.enabled = true;

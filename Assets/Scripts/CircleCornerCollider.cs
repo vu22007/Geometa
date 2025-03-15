@@ -10,6 +10,8 @@ public class CircleCornerCollider : NetworkBehaviour
     private CircleCollider2D circleCollider;
     private List<Player> slowedPlayers;
     private Animator shockwaveAnimator;
+    private Vector3 defaultScale;
+    private float defaultRadius;
 
     public override void Spawned()
     {
@@ -17,15 +19,18 @@ public class CircleCornerCollider : NetworkBehaviour
         circleCollider = GetComponent<CircleCollider2D>();
         circleCollider.enabled = false;
 
-        shockwaveAnimator = GetComponentInChildren<Animator>();
+        shockwaveAnimator = GetComponent<Animator>();
         // Change the localScale to change the size of the animation
-        shockwaveAnimator.transform.localScale = new Vector3(5f, 5f, 5f);
+        defaultScale = new Vector3(16f, 16f, 16f);
+        defaultRadius = 0.33f;
+
+        circleCollider.radius = defaultRadius;
     }
 
     public void ActivateCollider(Vector3 pos, float score)
     {
         this.score = score;
-        
+        transform.localScale = defaultScale * score;
         circleCollider.transform.position = pos;
         circleCollider.enabled = true;
 
@@ -37,6 +42,7 @@ public class CircleCornerCollider : NetworkBehaviour
     [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
     public void RPC_TriggerShockwave(Vector3 pos)
     {
+
         circleCollider.transform.position = pos;
         TriggerShockwave(pos);
     }
@@ -77,6 +83,7 @@ public class CircleCornerCollider : NetworkBehaviour
             {
                 Debug.Log("Enemy slowed");
                 player.GetSlowed(2f * score, 1f);
+                player.TakeDamage(2.5f * score, Object.InputAuthority);
                 slowedPlayers.Add(player);
             }
         }
