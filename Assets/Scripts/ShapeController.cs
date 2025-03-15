@@ -79,7 +79,6 @@ public class ShapeController : NetworkBehaviour
     {
         if (!isActive) return;
 
-        // TODO: Need cooldown for every shape separately
         triangleCooldown = (triangleCooldown > 0) ? triangleCooldown - Runner.DeltaTime : 0;
         squareCooldown = (squareCooldown > 0) ? squareCooldown - Runner.DeltaTime : 0;
 

@@ -8,13 +8,14 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     [Networked] private float pointsTopupCooldownMax { get; set; }
     [Networked] private float pointsTopupCooldownCurrent { get; set; }
     [Networked] private int gameStartTick { get; set; }
+    [Networked] public NetworkDictionary<PlayerRef, int> playersToTeams { get; }
 
     [SerializeField] private Vector3 respawnPoint1;
     [SerializeField] private Vector3 respawnPoint2;
     [SerializeField] private float maxTime;
 
-    private List<Player> players;
-    private List<Player> alivePlayers;
+    private List<Player> players = new List<Player>();
+    private List<Player> alivePlayers = new List<Player>();
 
     // For only the server/host to use so that it can manage the spawn and despawn of players
     private Dictionary<PlayerRef, NetworkObject> spawnedPlayers = new Dictionary<PlayerRef, NetworkObject>();
@@ -29,8 +30,6 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     // Initialisation
     public override void Spawned()
     {
-        players = new List<Player>();
-        alivePlayers = new List<Player>();
         currentTime = 0.0f;
         pointsTopupCooldownMax = 10f;
         pointsTopupCooldownCurrent = pointsTopupCooldownMax;
@@ -38,6 +37,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
 
         if (HasStateAuthority)
         {
+            CreatePlayersToTeams();
             SpawnPlayers();
             SpawnItems();
         }
@@ -107,6 +107,21 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     public void UnregisterAlivePlayer(Player player)
     {
         alivePlayers.Remove(player);
+    }
+
+    // Create mapping between PlayerRefs and teams
+    public void CreatePlayersToTeams()
+    {
+        if (HasStateAuthority)
+        {
+            NetworkManager networkManager = GameObject.Find("Network Runner").GetComponent<NetworkManager>();
+
+            foreach (KeyValuePair<PlayerRef, string> item in networkManager.team1Players)
+                playersToTeams.Add(item.Key, 1);
+
+            foreach (KeyValuePair<PlayerRef, string> item in networkManager.team2Players)
+                playersToTeams.Add(item.Key, 2);
+        }
     }
 
     public void SpawnPlayers()

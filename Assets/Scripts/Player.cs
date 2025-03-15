@@ -157,8 +157,7 @@ public class Player : NetworkBehaviour
         //Set animator controller
         animator.runtimeAnimatorController = Resources.Load("Animations/"+character.name) as RuntimeAnimatorController;
 
-        Player localPlayer = Runner.GetPlayerObject(Runner.LocalPlayer)?.GetComponent<Player>();
-        int localPlayerTeam = localPlayer.GetTeam();
+        int localPlayerTeam = gameController.playersToTeams[Runner.LocalPlayer];
 
         //Setup minimap
         minimap.Setup();
