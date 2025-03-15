@@ -14,8 +14,6 @@ public class Bullet : NetworkBehaviour
     [Networked] private PlayerRef playerShooting { get; set; }
     [Networked] private TickTimer bulletLifespanTimer { get; set; }
 
-    GameController gameController;
-
     // Bullet intialisation (called from a player object on server when creating the bullet)
     public void OnCreated(Vector2 position, Vector2 direction, Quaternion rotation, float speed, float damage, int team, PlayerRef playerShooting)
     {
@@ -37,9 +35,6 @@ public class Bullet : NetworkBehaviour
     {
         // Make FixedUpdateNetwork run on all clients
         Runner.SetIsSimulated(Object, true);
-
-        // Get game controller component
-        gameController = GameObject.Find("Game Controller").GetComponent<GameController>();
 
         // Rotate the bullet into the correct orientation
         transform.rotation = rotation;
@@ -84,7 +79,7 @@ public class Bullet : NetworkBehaviour
         int layerMask = LayerMask.GetMask("Default"); // Only register collisions with colliders and hitboxes on the "Default" layer
         HitOptions options = HitOptions.IncludeBox2D | HitOptions.IgnoreInputAuthority;
         List<LagCompensatedHit> hits = new List<LagCompensatedHit>();
-        if (Runner.LagCompensation.OverlapBox(position, new Vector3(0.07f, 0.13f, 0), rotation, Object.InputAuthority, hits, layerMask, options) != 0)
+        if (Runner.LagCompensation.OverlapBox(position, new Vector3(0.325f, 0.49f, 0), rotation, Object.InputAuthority, hits, layerMask, options) != 0)
         {
             // Resolve collision
             OnCollision(hits[0]);

@@ -234,7 +234,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3376469863312065693}
-  - component: {fileID: 1492483678350380008}
   - component: {fileID: 2428781577068820673}
   m_Layer: 0
   m_Name: meleeHitbox
@@ -258,42 +257,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 981996023074110673}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!58 &1492483678350380008
-CircleCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 325978928209685445}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 1
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 1
-  m_UsedByEffector: 0
-  m_CompositeOperation: 0
-  m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
-  m_Radius: 0.5
 --- !u!114 &2428781577068820673
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2122,8 +2085,7 @@ MonoBehaviour:
   flagIndicator: {fileID: 3617242858135019408}
   bulletIcon: {fileID: 1478925092546808149}
   mainbulletIcon: {fileID: 3391385062733595157}
-  meleePoint: {fileID: 0}
-  meleeHitbox: {fileID: 325978928209685445}
+  meleeHitbox: {fileID: 2428781577068820673}
 --- !u!50 &-5256008576835943960
 Rigidbody2D:
   serializedVersion: 5

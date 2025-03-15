@@ -88,8 +88,7 @@ public class Player : NetworkBehaviour
     private AudioSource audioSource;
     [SerializeField] Image bulletIcon;
     [SerializeField] GameObject mainbulletIcon;
-    [SerializeField] Transform meleePoint;
-    [SerializeField] GameObject meleeHitbox;
+    [SerializeField] MeleeHitbox meleeHitbox;
     
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(string characterName, Vector3 respawnPoint, int team)
@@ -215,8 +214,6 @@ public class Player : NetworkBehaviour
 
         // Set the initial flag indicator visibility
         OnCarryingChanged();
-
-        DisableMeleeHitbox();
 
         // Disable ammo indicator for knight
         if (characterName == "Knight")
@@ -356,15 +353,10 @@ public class Player : NetworkBehaviour
                 // Firing the weapon
                 if (characterName == "Knight")
                 {
-                    if (input.buttons.IsSet(InputButtons.Shoot))
+                    if (input.buttons.WasPressed(previousButtons, InputButtons.Shoot))
                     {
-                        isAttacking = true;
-                        EnableMeleeHitbox();
-                    }
-                    else
-                    {
-                        isAttacking = false;
-                        DisableMeleeHitbox();
+                        isAttacking = !isAttacking;
+                        meleeHitbox.CheckForHit();
                     }
                 }
 
@@ -732,16 +724,6 @@ public class Player : NetworkBehaviour
         }
 
     }
-
-    public void EnableMeleeHitbox()
-    {
-        meleeHitbox.SetActive(true);
-    }
-
-    public void DisableMeleeHitbox()
-    {
-        meleeHitbox.SetActive(false);
-    }
     
     void OnHealthChanged(NetworkBehaviourBuffer previous)
     {
@@ -970,9 +952,18 @@ public class Player : NetworkBehaviour
 
     void OnIsAttackingChanged()
     {
-        if (isAttacking)
+        if (characterName == "Knight")
         {
+            // Regardless of value, trigger animation when attacking property is toggled
             animator.SetTrigger("Attack");
+        }
+        else
+        {
+            // Only when attacking property is set to true, trigger animation
+            if (isAttacking)
+            {
+                animator.SetTrigger("Attack");
+            }
         }
     }
 
