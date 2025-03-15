@@ -4,12 +4,14 @@ using UnityEngine;
 
 public class MeleeHitbox : NetworkBehaviour
 {
-    public float damage = 5f;
-    public Player player;
+    [Networked] private float damage { get; set; }
 
-    public void Start()
+    private Player player;
+
+    public override void Spawned()
     {
         player = GetComponentInParent<Player>();
+        damage = player.GetDamage();
     }
 
     public void CheckForHit()

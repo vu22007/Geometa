@@ -13,12 +13,12 @@ public class Player : NetworkBehaviour
     [Networked] int maxAmmo { get; set; }
     [Networked, OnChangedRender(nameof(OnCurrentAmmoChanged))] int currentAmmo { get; set; }
     [Networked] int missingAmmo { get; set; }
-    [Networked] float fireRate { get; set; }
+    [Networked] float attackRate { get; set; }
     [Networked] float reloadTime { get; set; }
     [Networked, OnChangedRender(nameof(OnReloadTimerChanged))] float reloadTimer { get; set; }
     [Networked] float reloadFraction { get; set; }
     [Networked, OnChangedRender(nameof(OnPointsChanged))] float points { get; set; }
-    [Networked] float timeToWaitForBullet { get; set; }
+    [Networked] TickTimer attackWaitTimer { get; set; }
     [Networked, OnChangedRender(nameof(OnHealthChanged))] float currentHealth { get; set; }
     [Networked] int team { get; set; }
     [Networked] Vector3 respawnPoint { get; set; }
@@ -99,7 +99,7 @@ public class Player : NetworkBehaviour
         speed = character.Speed;
         damage = character.Damage;
         maxAmmo = character.MaxAmmo;
-        fireRate = character.FireRate;
+        attackRate = character.AttackRate;
         dashSpeed = character.DashSpeed;
         dashDuration = character.DashDuration;
         dashCooldown = character.DashCooldown;
@@ -118,7 +118,6 @@ public class Player : NetworkBehaviour
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
         isAlive = true;
-        timeToWaitForBullet = 0.0f;
         isCarrying = false;
         isAoEEnabled = false;
         isAoEUsed = false;
@@ -240,7 +239,7 @@ public class Player : NetworkBehaviour
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
         respawnTimer = TickTimer.None;
-        timeToWaitForBullet = 0.0f;
+        attackWaitTimer = TickTimer.None;
 
         // Activate the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = true;
@@ -279,9 +278,6 @@ public class Player : NetworkBehaviour
 
             return;
         }
-
-        // Decrease bullet timer and clamp to 0 if below 0
-        timeToWaitForBullet = (timeToWaitForBullet > 0) ? timeToWaitForBullet - Runner.DeltaTime : 0;
 
         // Handle reloading
         if (reloadTimer > 0)
@@ -356,7 +352,7 @@ public class Player : NetworkBehaviour
                     if (input.buttons.WasPressed(previousButtons, InputButtons.Shoot))
                     {
                         isAttacking = !isAttacking;
-                        meleeHitbox.CheckForHit();
+                        MeleeAttack();
                     }
                 }
 
@@ -501,12 +497,21 @@ public class Player : NetworkBehaviour
         }
     }
 
+    void MeleeAttack()
+    {
+        if (attackWaitTimer.Expired(Runner) || !attackWaitTimer.IsRunning)
+        {
+            attackWaitTimer = TickTimer.CreateFromSeconds(Runner, 1 / attackRate);
+            meleeHitbox.CheckForHit();
+        }
+    }
+
     // Shoots a bullet by spawning the prefab on the network
     void Shoot(Vector2 aimDirection)
     {
-        if (timeToWaitForBullet <= 0)
+        if (attackWaitTimer.Expired(Runner) || !attackWaitTimer.IsRunning)
         {
-            timeToWaitForBullet = 1 / fireRate;
+            attackWaitTimer = TickTimer.CreateFromSeconds(Runner, 1 / attackRate);
             if (currentAmmo != 0)
             {
                 // Spawn dummy bullet
@@ -765,7 +770,7 @@ public class Player : NetworkBehaviour
             missingAmmo = maxAmmo - currentAmmo;
             reloadFraction = (float)missingAmmo / maxAmmo;
             reloadTimer = reloadTime * reloadFraction;
-            timeToWaitForBullet = reloadTimer;
+            attackWaitTimer = TickTimer.CreateFromSeconds(Runner, reloadTimer);
         }
 
         // Signal that the reload was performed for ReloadRender to be called
@@ -893,6 +898,11 @@ public class Player : NetworkBehaviour
     public int GetTeam()
     {
         return team;
+    }
+
+    public float GetDamage()
+    {
+        return damage;
     }
 
     public string GetCharacterName()
