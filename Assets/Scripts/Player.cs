@@ -49,6 +49,7 @@ public class Player : NetworkBehaviour
     [Networked] float slowedAmount { get; set; }
     [Networked] TickTimer getSlowedTimer { get; set; }
     [Networked, OnChangedRender(nameof(OnGamePausedChanged))] private bool gamePaused { get; set; }
+    [Networked, OnChangedRender(nameof(MeleeAttackRender))] private int meleeAttacked { get; set; }
     [Networked, OnChangedRender(nameof(ShootRender))] private int bulletFired { get; set; }
     [Networked, OnChangedRender(nameof(ShootAoERender))] private int aoeFired { get; set; }
     [Networked, OnChangedRender(nameof(ReloadRender))] private int reloadPerformed { get; set; }
@@ -355,10 +356,6 @@ public class Player : NetworkBehaviour
                 {
                     if (input.buttons.WasPressed(previousButtons, InputButtons.Shoot))
                     {
-                        if (HasInputAuthority && !Runner.IsResimulation)
-                        {
-                            audioSource.PlayOneShot(knightSwordSound);
-                        }
                         isAttacking = !isAttacking;
                         MeleeAttack();
                     }
@@ -481,12 +478,6 @@ public class Player : NetworkBehaviour
             isDashing = true;
             dashTimer = dashDuration;
             dashCooldownTimer = dashCooldown;
-
-            if (HasInputAuthority && !Runner.IsResimulation)
-            {
-                dashCDHandler.StartCooldown(dashCooldown);
-                audioSource.PlayOneShot(dashSound);
-            }
         }
 
         // Signal that the dash was performed for DashRender to be called
@@ -504,7 +495,7 @@ public class Player : NetworkBehaviour
 
     void OnIsDashingChanged()
     {
-        if (isDashing)
+        if (isDashing && HasInputAuthority)
         {
             dashCDHandler.StartCooldown(dashCooldown);
             audioSource.PlayOneShot(dashSound);
@@ -517,6 +508,18 @@ public class Player : NetworkBehaviour
         {
             attackWaitTimer = TickTimer.CreateFromSeconds(Runner, 1 / attackRate);
             meleeHitbox.CheckForHit();
+
+            // Signal that the melee attack was performed for MeleeAttackRender to be called
+            meleeAttacked++;
+        }
+    }
+
+    void MeleeAttackRender()
+    {
+        // Just the player that does the melee attack listens to the sound
+        if (HasInputAuthority)
+        {
+            audioSource.PlayOneShot(knightSwordSound);
         }
     }
 
@@ -785,17 +788,6 @@ public class Player : NetworkBehaviour
             reloadFraction = (float)missingAmmo / maxAmmo;
             reloadTimer = reloadTime * reloadFraction;
             attackWaitTimer = TickTimer.CreateFromSeconds(Runner, reloadTimer);
-
-            if (HasInputAuthority && !Runner.IsResimulation)
-            {
-                audioSource.pitch = 2.7f / missingAmmo;
-                audioSource.PlayOneShot(reloadSound);
-                audioSource.pitch = 1f;
-                ShowMessage("Gathering Mana", 0.3f, Color.green);
-                reloadIcon.enabled = true;
-                reloadIconLayer.enabled = true;
-                reloadHandler.StartCooldown(reloadTimer);
-            }
         }
 
         // Signal that the reload was performed for ReloadRender to be called
@@ -820,22 +812,28 @@ public class Player : NetworkBehaviour
     {
         float previousTimerVal = GetPropertyReader<float>(nameof(reloadTimer)).Read(previous);
 
-        // If previous timer < 0, and timer is now > 0, then reload has started
-        if (previousTimerVal <= 0 && reloadTimer > 0)
+        if (HasInputAuthority)
         {
-            ShowMessage("Gathering Mana", 0.3f, Color.green);
-            reloadIcon.enabled = true;
-            reloadIconLayer.enabled = true;
-            reloadHandler.StartCooldown(reloadTimer);
-        }
+            // If previous timer < 0, and timer is now > 0, then reload has started
+            if (previousTimerVal <= 0 && reloadTimer > 0)
+            {
+                audioSource.pitch = 2.7f / missingAmmo;
+                audioSource.PlayOneShot(reloadSound);
+                audioSource.pitch = 1f;
+                ShowMessage("Gathering Mana", 0.3f, Color.green);
+                reloadIcon.enabled = true;
+                reloadIconLayer.enabled = true;
+                reloadHandler.StartCooldown(reloadTimer);
+            }
 
-        // If previous timer > 0, and timer is now < 0, then reload has finished
-        if (previousTimerVal > 0 && reloadTimer <= 0)
-        {
-            ammoText.text = maxAmmo.ToString();
-            bulletIcon.fillAmount = 1;
-            reloadIcon.enabled = false;
-            reloadIconLayer.enabled = false;
+            // If previous timer > 0, and timer is now < 0, then reload has finished
+            if (previousTimerVal > 0 && reloadTimer <= 0)
+            {
+                ammoText.text = maxAmmo.ToString();
+                bulletIcon.fillAmount = 1;
+                reloadIcon.enabled = false;
+                reloadIconLayer.enabled = false;
+            }
         }
     }
 
