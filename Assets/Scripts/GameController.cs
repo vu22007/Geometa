@@ -4,10 +4,10 @@ using UnityEngine;
 
 public class GameController : NetworkBehaviour, IPlayerLeft
 {
-    [Networked, HideInInspector] public float currentTime { get; set; }
+    [Networked] private bool gameOver { get; set; }
     [Networked] private float pointsTopupCooldownMax { get; set; }
-    [Networked] private float pointsTopupCooldownCurrent { get; set; }
-    [Networked] private int gameStartTick { get; set; }
+    [Networked] private TickTimer pointsTopupTimer { get; set; }
+    [Networked] private TickTimer gameTimer { get; set; }
     [Networked] public NetworkDictionary<PlayerRef, int> playersToTeams { get; }
 
     [SerializeField] private Vector3 respawnPoint1;
@@ -20,9 +20,6 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     // For only the server/host to use so that it can manage the spawn and despawn of players
     private Dictionary<PlayerRef, NetworkObject> spawnedPlayers = new Dictionary<PlayerRef, NetworkObject>();
 
-    // For only the server/host to use when broadcasting messages
-    private bool gameOver = false;
-
     // Flags
     private PickupFlag team1Flag;
     private PickupFlag team2Flag;
@@ -30,10 +27,10 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     // Initialisation
     public override void Spawned()
     {
-        currentTime = 0.0f;
+        gameOver = false;
         pointsTopupCooldownMax = 10f;
-        pointsTopupCooldownCurrent = pointsTopupCooldownMax;
-        gameStartTick = Runner.Tick;
+        pointsTopupTimer = TickTimer.CreateFromSeconds(Runner, pointsTopupCooldownMax);
+        gameTimer = TickTimer.CreateFromSeconds(Runner, maxTime);
 
         if (HasStateAuthority)
         {
@@ -66,24 +63,24 @@ public class GameController : NetworkBehaviour, IPlayerLeft
         }
     }
 
-    // Update for every server simulation tick
     public override void FixedUpdateNetwork()
     {
-        currentTime = (Runner.Tick - gameStartTick) * Runner.DeltaTime;
+        if (gameOver) return;
 
-        if (currentTime >= maxTime)
+        // End game if game timer has finished
+        if (gameTimer.Expired(Runner))
         {
-            //end game
+            gameOver = true;
         }
 
         // Topup players points by 5 every 10 seconds
-        pointsTopupCooldownCurrent -= Runner.DeltaTime;
-        if (pointsTopupCooldownCurrent < 0){
+        if (pointsTopupTimer.Expired(Runner))
+        {
             foreach (Player player in players)
             {
                 player.GainPoints(5);
             }
-            pointsTopupCooldownCurrent = pointsTopupCooldownMax;
+            pointsTopupTimer = TickTimer.CreateFromSeconds(Runner, pointsTopupCooldownMax);
         }
     }
 
@@ -293,8 +290,8 @@ public class GameController : NetworkBehaviour, IPlayerLeft
         }
     }
 
-    public float GetMaxTime()
+    public float GetTimeLeft()
     {
-        return maxTime;
+        return (float)gameTimer.RemainingTime(Runner);
     }
 }

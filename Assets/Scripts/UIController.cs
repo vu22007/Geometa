@@ -1,3 +1,4 @@
+using Fusion;
 using TMPro;
 using UnityEngine;
 
@@ -16,7 +17,7 @@ public class UIController : MonoBehaviour
     private void Update()
     {
         // Update the time left in the UI if the client controls this player
-        float timeLeft = gameController.GetMaxTime() - gameController.currentTime;
+        float timeLeft = gameController.GetTimeLeft();
         int secondsLeft = (int)Mathf.Ceil(timeLeft);
         int mins = secondsLeft / 60;
         int secs = secondsLeft % 60;
