@@ -85,6 +85,8 @@ public class Player : NetworkBehaviour
     private AudioClip shootSound;
     private AudioClip dyingSound;
     private AudioClip dashSound;
+    private AudioClip reloadSound;
+    private AudioClip knightSwordSound;
     private AudioSource audioSource;
     [SerializeField] Image bulletIcon;
     [SerializeField] GameObject mainbulletIcon;
@@ -210,6 +212,8 @@ public class Player : NetworkBehaviour
         shootSound = Resources.Load<AudioClip>("Sounds/Shoot");
         dyingSound = Resources.Load<AudioClip>("Sounds/Dying");
         dashSound = Resources.Load<AudioClip>("Sounds/Dash");
+        reloadSound = Resources.Load<AudioClip>("Sounds/WizardReload");
+        knightSwordSound = Resources.Load<AudioClip>("Sounds/KnightSword");
 
         // Set the initial flag indicator visibility
         OnCarryingChanged();
@@ -351,6 +355,10 @@ public class Player : NetworkBehaviour
                 {
                     if (input.buttons.WasPressed(previousButtons, InputButtons.Shoot))
                     {
+                        if (HasInputAuthority && !Runner.IsResimulation)
+                        {
+                            audioSource.PlayOneShot(knightSwordSound);
+                        }
                         isAttacking = !isAttacking;
                         MeleeAttack();
                     }
@@ -473,6 +481,12 @@ public class Player : NetworkBehaviour
             isDashing = true;
             dashTimer = dashDuration;
             dashCooldownTimer = dashCooldown;
+
+            if (HasInputAuthority && !Runner.IsResimulation)
+            {
+                dashCDHandler.StartCooldown(dashCooldown);
+                audioSource.PlayOneShot(dashSound);
+            }
         }
 
         // Signal that the dash was performed for DashRender to be called
@@ -771,6 +785,17 @@ public class Player : NetworkBehaviour
             reloadFraction = (float)missingAmmo / maxAmmo;
             reloadTimer = reloadTime * reloadFraction;
             attackWaitTimer = TickTimer.CreateFromSeconds(Runner, reloadTimer);
+
+            if (HasInputAuthority && !Runner.IsResimulation)
+            {
+                audioSource.pitch = 2.7f / missingAmmo;
+                audioSource.PlayOneShot(reloadSound);
+                audioSource.pitch = 1f;
+                ShowMessage("Gathering Mana", 0.3f, Color.green);
+                reloadIcon.enabled = true;
+                reloadIconLayer.enabled = true;
+                reloadHandler.StartCooldown(reloadTimer);
+            }
         }
 
         // Signal that the reload was performed for ReloadRender to be called
