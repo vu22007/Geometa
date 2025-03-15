@@ -301,6 +301,6 @@ public class GameController : NetworkBehaviour, IPlayerLeft
 
     public float GetTimeLeft()
     {
-        return (float)gameTimer.RemainingTime(Runner);
+        return gameTimer.RemainingTime(Runner).GetValueOrDefault();
     }
 }

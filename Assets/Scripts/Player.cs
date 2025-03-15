@@ -15,8 +15,8 @@ public class Player : NetworkBehaviour
     [Networked] int missingAmmo { get; set; }
     [Networked] float attackRate { get; set; }
     [Networked] float reloadTime { get; set; }
-    [Networked, OnChangedRender(nameof(OnReloadTimerChanged))] float reloadTimer { get; set; }
-    [Networked] float reloadFraction { get; set; }
+    [Networked] bool alreadyReloading { get; set; }
+    [Networked, OnChangedRender(nameof(OnReloadTimerChanged))] TickTimer reloadTimer { get; set; }
     [Networked, OnChangedRender(nameof(OnPointsChanged))] float points { get; set; }
     [Networked] TickTimer attackWaitTimer { get; set; }
     [Networked, OnChangedRender(nameof(OnHealthChanged))] float currentHealth { get; set; }
@@ -261,7 +261,7 @@ public class Player : NetworkBehaviour
             if (respawnTimerTxt != null)
             {
                 // Calculate the remaining respawn time
-                float remainingTime = (float)respawnTimer.RemainingTime(Runner);
+                float remainingTime = respawnTimer.RemainingTime(Runner).GetValueOrDefault();
                 respawnTimerTxt.text = $"Respawning in {Mathf.CeilToInt(remainingTime)}";
             }
         }
@@ -285,14 +285,11 @@ public class Player : NetworkBehaviour
         }
 
         // Handle reloading
-        if (reloadTimer > 0)
+        if (reloadTimer.Expired(Runner))
         {
-            reloadTimer -= Runner.DeltaTime;
-            if (reloadTimer <= 0)
-            {
-                // Reloading is complete, update ammo
-                currentAmmo = maxAmmo;
-            }
+            // Reloading is complete, update ammo
+            currentAmmo = maxAmmo;
+            reloadTimer = TickTimer.None;
         }
 
         // Handle dash cooldown
@@ -311,8 +308,8 @@ public class Player : NetworkBehaviour
             }
         }
 
-        // auto reload 
-        if (currentAmmo == 0 && reloadTimer <= 0) 
+        // Auto reload 
+        if (currentAmmo == 0 && !reloadTimer.IsRunning)
         {
             Reload();
         }
@@ -782,52 +779,62 @@ public class Player : NetworkBehaviour
     {
         bool manaFull = currentAmmo >= maxAmmo;
 
-        if (!manaFull && reloadTimer <= 0)
+        if (!manaFull)
         {
-            missingAmmo = maxAmmo - currentAmmo;
-            reloadFraction = (float)missingAmmo / maxAmmo;
-            reloadTimer = reloadTime * reloadFraction;
-            attackWaitTimer = TickTimer.CreateFromSeconds(Runner, reloadTimer);
+            if (!reloadTimer.IsRunning)
+            {
+                missingAmmo = maxAmmo - currentAmmo;
+                float reloadFraction = (float)missingAmmo / maxAmmo;
+                float time = reloadTime * reloadFraction;
+                reloadTimer = TickTimer.CreateFromSeconds(Runner, time);
+                attackWaitTimer = TickTimer.CreateFromSeconds(Runner, time);
+                alreadyReloading = false;
+            }
+            else
+            {
+                alreadyReloading = true;
+            }
         }
 
         // Signal that the reload was performed for ReloadRender to be called
         reloadPerformed++;
     }
 
-    void ReloadRender(NetworkBehaviourBuffer previous)
+    void ReloadRender()
     {
-        float previousTimerVal = GetPropertyReader<float>(nameof(reloadTimer)).Read(previous);
-
         if (currentAmmo >= maxAmmo)
         {
             ShowMessage("Mana is full!", 0.1f, Color.white);
         }
-        else if (previousTimerVal > 0 && reloadTimer > 0)
+        else if (alreadyReloading)
         {
             ShowMessage("Still gathering mana", 0.3f, Color.white);
         }
     }
 
-    void OnReloadTimerChanged(NetworkBehaviourBuffer previous)
+    void OnReloadTimerChanged()
     {
-        float previousTimerVal = GetPropertyReader<float>(nameof(reloadTimer)).Read(previous);
-
         if (HasInputAuthority)
         {
-            // If previous timer < 0, and timer is now > 0, then reload has started
-            if (previousTimerVal <= 0 && reloadTimer > 0)
+            // Reload has started
+            if (reloadTimer.IsRunning)
             {
+                ShowMessage("Gathering Mana", 0.3f, Color.green);
+
+                // Play sound
                 audioSource.pitch = 2.7f / missingAmmo;
                 audioSource.PlayOneShot(reloadSound);
                 audioSource.pitch = 1f;
-                ShowMessage("Gathering Mana", 0.3f, Color.green);
+
+                // Update icon
+                float time = reloadTimer.RemainingTime(Runner).GetValueOrDefault();
                 reloadIcon.enabled = true;
                 reloadIconLayer.enabled = true;
-                reloadHandler.StartCooldown(reloadTimer);
+                reloadHandler.StartCooldown(time);
             }
 
-            // If previous timer > 0, and timer is now < 0, then reload has finished
-            if (previousTimerVal > 0 && reloadTimer <= 0)
+            // Reload has finished
+            else
             {
                 ammoText.text = maxAmmo.ToString();
                 bulletIcon.fillAmount = 1;
