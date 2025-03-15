@@ -247,6 +247,9 @@ public class Player : NetworkBehaviour
 
         // Activate the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = true;
+
+        // Enable the hitbox
+        gameObject.GetComponent<HitboxRoot>().HitboxRootActive = true;
     }
 
     public override void Render()
@@ -662,6 +665,9 @@ public class Player : NetworkBehaviour
         // Disable the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = false;
 
+        // Disable the hitbox
+        gameObject.GetComponent<HitboxRoot>().HitboxRootActive = false;
+
         // Player will drop the flag if they died
         if (isCarrying)
         {
@@ -702,6 +708,14 @@ public class Player : NetworkBehaviour
         // Register/unregister player with game controller depending on if alive or dead
         if (isAlive) gameController.RegisterAlivePlayer(this);
         else gameController.UnregisterAlivePlayer(this);
+    }
+
+    void SetPlayerEnabled(bool enabled)
+    {
+        GetComponent<SpriteRenderer>().enabled = enabled;
+        transform.Find("Collider").gameObject.SetActive(enabled);
+        transform.Find("Overhead UI").gameObject.SetActive(enabled);
+        transform.Find("MinimapIndicator").gameObject.SetActive(enabled);
     }
 
     public void PlayDyingSound(Vector3 pos)
@@ -943,17 +957,6 @@ public class Player : NetworkBehaviour
         // Note: If they are already slowed, this resets the timer so they have to wait longer, but the above
         // prevents their speed from getting even slower
         getSlowedTimer = TickTimer.CreateFromSeconds(Runner, time);
-    }
-
-    void SetPlayerEnabled(bool enabled)
-    {
-        GetComponent<SpriteRenderer>().enabled = enabled;
-        GetComponent<HitboxRoot>().enabled = enabled;
-        GetComponent<Hitbox>().enabled = enabled;
-        transform.Find("Collider").gameObject.SetActive(enabled);
-        transform.Find("Overhead UI").gameObject.SetActive(enabled);
-        transform.Find("meleeHitbox").gameObject.SetActive(enabled);
-        transform.Find("MinimapIndicator").gameObject.SetActive(enabled);
     }
 
     void OnIsMovingChanged()
