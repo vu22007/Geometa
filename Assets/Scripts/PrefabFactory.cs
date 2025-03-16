@@ -26,18 +26,22 @@ public static class PrefabFactory
 
         return worldCollider;
     }
+    
+    public static NetworkObject SpawnCircleCollider(NetworkRunner runner, PlayerRef playerRef, GameObject prefab, int team)
+    {
+        NetworkObject circleCollider = runner.Spawn(prefab, Vector3.zero, Quaternion.identity, playerRef, (runner, networkObject) =>
+        {
+            CircleCornerCollider circleCornerCollider = networkObject.GetComponent<CircleCornerCollider>();
+            circleCornerCollider.OnCreated(team, playerRef);
+        });
+        return circleCollider;
+    }
 
     public static void SpawnDamagePopup(GameObject prefab, int damage, int team, Vector3 position)
     {
         GameObject damagePopupObject = GameObject.Instantiate(prefab, position, Quaternion.identity);
         DamagePopup damagePopup = damagePopupObject.GetComponent<DamagePopup>();
         damagePopup.Setup(damage, team);
-    }
-    
-    public static NetworkObject SpawnCircleCollider(NetworkRunner runner, GameObject prefab)
-    {
-        NetworkObject circleCollider = runner.Spawn(prefab, Vector3.zero);
-        return circleCollider;
     }
 
     public static NetworkObject SpawnBullet(NetworkRunner runner, PlayerRef playerRef, GameObject prefab, Vector3 spawnPosition, Vector2 moveDirection, float speed, float damage, int team, PlayerRef playerShooting){

@@ -302,11 +302,11 @@ public class ShapeController : NetworkBehaviour
 
     void OnPreviewActiveChanged()
     {
-        int nVertices = playerPositions.Count;
-
         // Disable preview lines when preview no longer active
         if (HasInputAuthority && !previewActive)
         {
+            int nVertices = playerPositions.Count;
+
             // Prevent lines from deactivating when square is activated,
             // since activated square uses the lines
             if (nVertices == 4 && squareIsActivated) return;
