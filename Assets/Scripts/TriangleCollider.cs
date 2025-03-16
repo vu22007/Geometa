@@ -41,7 +41,6 @@ public class TriangleCollider : NetworkBehaviour
     // Activate is always true when used for now but it should stay
     public void DrawTriangle(List<Vector3> vertices, bool activate, float score)
     {
-
         int nVertices = vertices.Count;
 
         // Choose different lines for different abilities
