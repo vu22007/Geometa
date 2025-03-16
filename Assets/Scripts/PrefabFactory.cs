@@ -16,9 +16,14 @@ public static class PrefabFactory
         return networkPlayerObject;
     }
 
-    public static NetworkObject SpawnWorldCollider(NetworkRunner runner, GameObject prefab)
+    public static NetworkObject SpawnWorldCollider(NetworkRunner runner, PlayerRef playerRef, GameObject prefab, int team)
     {
-        NetworkObject worldCollider = runner.Spawn(prefab, Vector3.zero);
+        NetworkObject worldCollider = runner.Spawn(prefab, Vector3.zero, Quaternion.identity, playerRef, (runner, networkObject) =>
+        {
+            TriangleCollider triangleCollider = networkObject.GetComponent<TriangleCollider>();
+            triangleCollider.OnCreated(team, playerRef);
+        });
+
         return worldCollider;
     }
 

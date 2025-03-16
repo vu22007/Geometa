@@ -322,10 +322,10 @@ public class ShapeController : NetworkBehaviour
         if (parentPlayer.GetCharacterName() == "Knight")
         {
             PlayShapeSound(vertices.ToArray(), 3, "Knight");
-        }
 
-        // Draw triangle for everyone
-        triangleShape.DrawTriangle(vertices.ToList(), true, score);
+            // Draw triangle for everyone
+            triangleShape.DrawTriangle(vertices.ToList(), true, score);
+        }
     }
 
     void OnSquareActivated()
