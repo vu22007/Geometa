@@ -2,8 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Fusion;
-using NUnit.Framework.Internal;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class ShapeController : NetworkBehaviour

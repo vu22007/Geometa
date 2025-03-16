@@ -87,6 +87,7 @@ public class Player : NetworkBehaviour
     private AudioClip reloadSound;
     private AudioClip knightSwordSound;
     private AudioSource audioSource;
+    private AudioSource reloadAudioSource;
     [SerializeField] Image bulletIcon;
     [SerializeField] GameObject mainbulletIcon;
     [SerializeField] MeleeHitbox meleeHitbox;
@@ -211,6 +212,9 @@ public class Player : NetworkBehaviour
         dashSound = Resources.Load<AudioClip>("Sounds/Dash");
         reloadSound = Resources.Load<AudioClip>("Sounds/WizardReload");
         knightSwordSound = Resources.Load<AudioClip>("Sounds/KnightSword");
+
+        // Create separate audio source just for reload sounds, so the pitch can be changed without affecting other sounds
+        reloadAudioSource = gameObject.AddComponent<AudioSource>();
 
         // Set the initial flag indicator visibility
         OnCarryingChanged();
@@ -723,7 +727,6 @@ public class Player : NetworkBehaviour
 
     public void PlayDyingSound(Vector3 pos)
     {
-        // TODO: Check that the right camera is being used below
         Vector3 viewportPos = Camera.main.WorldToViewportPoint(pos);
         bool onScreen =
             viewportPos.x >= 0f && viewportPos.x <= 1f &&
@@ -813,11 +816,9 @@ public class Player : NetworkBehaviour
             {
                 ShowMessage("Gathering Mana", 0.3f, Color.green);
 
-                // Play sound (create a temporary audio source so that the pitch can be adjusted without affecting other sounds)
-                AudioSource reloadAudioSource = gameObject.AddComponent<AudioSource>();
+                // Play sound (use separate reload audio source so that the pitch can be adjusted without affecting other sounds)
                 reloadAudioSource.pitch = 2.7f / missingAmmo;
                 reloadAudioSource.PlayOneShot(reloadSound);
-                Destroy(reloadAudioSource, reloadSound.length / reloadAudioSource.pitch);
 
                 // Update icon
                 float time = reloadTimer.RemainingTime(Runner).GetValueOrDefault();
