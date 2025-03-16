@@ -32,18 +32,16 @@ public class Player : NetworkBehaviour
     [Networked, OnChangedRender(nameof(OnIsMovingChanged))] bool isMoving { get; set; }
     [Networked, OnChangedRender(nameof(OnIsAttackingChanged))] bool isAttacking { get; set; }
     [Networked, OnChangedRender(nameof(OnIsDashingChanged))] bool isDashing { get; set; }
-    [Networked] float dashTimer { get; set; }
-    [Networked] float dashCooldownTimer { get; set; }
+    [Networked] TickTimer dashTimer { get; set; }
+    [Networked] TickTimer dashCooldownTimer { get; set; }
     [Networked] float dashSpeed { get; set; }
     [Networked] float dashDuration { get; set; }
     [Networked] float dashCooldown { get; set; }
+    [Networked] bool alreadyDashing { get; set; }
     [Networked] public float aoeDamage { get; set; }
-    [Networked] public float aoeCooldown { get; set; }
     [Networked] public float aoeDuration { get; set; }
-    [Networked] public float aoeCooldownTimer { get; set; }
     [Networked, OnChangedRender(nameof(OnAoEEnabledChanged))] public bool isAoEEnabled { get; set; }
     [Networked] private bool isAoEUsed { get; set; }
-    [Networked] public float aoeMaxRad { get; set; }
     [Networked] private bool normalShoot { get; set; }
     [Networked] private TickTimer aoeEnabledTimer { get; set; }
     [Networked] float slowedAmount { get; set; }
@@ -115,9 +113,7 @@ public class Player : NetworkBehaviour
         reloadTime = 3.0f;
         respawnTime = 10.0f;
         aoeDamage = 5;
-        aoeCooldown = 10;
         aoeDuration = 5;
-        aoeMaxRad = 10;
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
         isAlive = true;
@@ -292,17 +288,10 @@ public class Player : NetworkBehaviour
             reloadTimer = TickTimer.None;
         }
 
-        // Handle dash cooldown
-        if (dashCooldownTimer > 0)
-        {
-            dashCooldownTimer -= Runner.DeltaTime;
-        }
-
         // Handle dash duration
         if (isDashing)
         {
-            dashTimer -= Runner.DeltaTime;
-            if (dashTimer <= 0)
+            if (dashTimer.Expired(Runner))
             {
                 isDashing = false; // End dash
             }
@@ -470,21 +459,24 @@ public class Player : NetworkBehaviour
     // Dash mechanic
     void Dash(Vector2 moveDirection)
     {
-        if (dashCooldownTimer <= 0) // Only allow dash if cooldown is over
+        if (dashCooldownTimer.Expired(Runner) || !dashCooldownTimer.IsRunning) // Only allow dash if cooldown is over
         {
             isDashing = true;
-            dashTimer = dashDuration;
-            dashCooldownTimer = dashCooldown;
+            dashTimer = TickTimer.CreateFromSeconds(Runner, dashDuration);
+            dashCooldownTimer = TickTimer.CreateFromSeconds(Runner, dashCooldown);
+            alreadyDashing = false;
+        }
+        else
+        {
+            alreadyDashing = true;
         }
 
         // Signal that the dash was performed for DashRender to be called
         dashPerformed++;
     }
 
-    void DashRender(NetworkBehaviourBuffer previous) {
-        float previousTimerVal = GetPropertyReader<float>(nameof(dashCooldownTimer)).Read(previous);
-
-        if (previousTimerVal > 0 && dashCooldownTimer > 0)
+    void DashRender() {
+        if (alreadyDashing)
         {
             ShowMessage("Dash in cooldown", 0.2f, Color.white);
         }
