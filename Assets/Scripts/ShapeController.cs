@@ -12,8 +12,9 @@ public class ShapeController : NetworkBehaviour
     [Networked] NetworkButtons previousButtons { get; set; }
     [Networked, OnChangedRender(nameof(OnTriangleActivated))] private int activatedTriangle { get; set; }
     [Networked, OnChangedRender(nameof(OnSquareActivated))] private int activatedSquare { get; set; }
+    [Networked, OnChangedRender(nameof(OnPreviewActiveChanged))] private bool previewActive { get; set; }
     [Networked] private float score { get; set; }
-    [Networked, Capacity(5)] private NetworkLinkedList<Vector3> vertices { get; }
+    [Networked, Capacity(4)] private NetworkLinkedList<Vector3> vertices { get; }
     [Networked] private TickTimer triangleCooldownTimer { get; set; }
     [Networked] private TickTimer squareCooldownTimer { get; set; }
     [Networked, OnChangedRender(nameof(OnActivateShapeFailed))] private int activateShapeFailed { get; set; }
@@ -24,6 +25,8 @@ public class ShapeController : NetworkBehaviour
     private int squareCost = 5;
     private float triangleCooldown = 3f;
     private float squareCooldown = 5f;
+
+    private bool squareIsActivated = false;
 
     GameController gameController { get; set; }
     Player parentPlayer { get; set; }
@@ -65,6 +68,16 @@ public class ShapeController : NetworkBehaviour
         squareWizardSound = Resources.Load<AudioClip>("Sounds/Shoot");
 
         isActive = true;
+    }
+
+    public override void Render()
+    {
+        // Draw shape previews locally
+        if (HasInputAuthority && previewActive)
+        {
+            // Use local playerPositions property since vertices networked property is only set when shape is activated
+            DrawLines(playerPositions, false, 0); // Note: Score doesn't matter for preview, so set it to 0
+        }
     }
 
     public override void FixedUpdateNetwork()
@@ -139,7 +152,7 @@ public class ShapeController : NetworkBehaviour
 
             if (parentPlayer.GetPoints() < triangleCost)
             {
-                triangleLineRenderer.enabled = false;
+                previewActive = false;
                 if (activate)
                 {
                     errorMessage = "Not enough points!";
@@ -162,7 +175,7 @@ public class ShapeController : NetworkBehaviour
 
             if (parentPlayer.GetPoints() < squareCost)
             {
-                squareLineRenderer.enabled = false;
+                previewActive = false;
                 if (activate)
                 {
                     errorMessage = "Not enough points!";
@@ -170,6 +183,9 @@ public class ShapeController : NetworkBehaviour
                 }
                 return;
             }
+
+            if (!activate)
+                squareIsActivated = false;
         }
 
         List<Player> closestPlayers = GetClosestPlayers(parentPlayer, nVertices - 1);
@@ -185,7 +201,7 @@ public class ShapeController : NetworkBehaviour
         // Checking if there is enough players for each vertice
         if (playerPositions.Count < nVertices)
         {
-            ChooseLineRenderer(nVertices).enabled = false;
+            previewActive = false;
             if (activate)
             {
                 errorMessage = "Not enough players to activate shape!";
@@ -194,10 +210,10 @@ public class ShapeController : NetworkBehaviour
             return;
         }
 
-        // checking if all players are close enough
+        // Checking if all players are close enough
         if (Vector3.Distance(parentPlayer.transform.position, playerPositions.Last()) > maxDistance)
         {
-            ChooseLineRenderer(nVertices).enabled = false;
+            previewActive = false;
             if (activate)
             {
                 errorMessage = "Players too far away to activate shape!";
@@ -219,7 +235,10 @@ public class ShapeController : NetworkBehaviour
         // Give buffs/do damage if the player activates the ability, and make shape visible to everyone
         if (activate)
         {
-            // Set score and vertices networked properties for everyone (server, input authority and all other clients) to use to draw lines in OnShapeActivationToggleChanged method
+            // Disable the preview
+            previewActive = false;
+
+            // Set score and vertices networked properties for everyone (server, input authority and all other clients) to use to draw lines in OnTriangleActivated and OnSquareActivated methods
             this.score = score;
             vertices.Clear();
             foreach (Vector3 position in playerPositions)
@@ -249,7 +268,6 @@ public class ShapeController : NetworkBehaviour
                 // If it's not convex don't activate it
                 if (!IsConvex(angles))
                 {
-                    squareLineRenderer.enabled = false;
                     errorMessage = "Shape is not convex!";
                     activateShapeFailed++;
                     return;
@@ -267,10 +285,10 @@ public class ShapeController : NetworkBehaviour
             }
         }
 
-        // Draw lines locally when just preview
-        if (HasInputAuthority && !activate)
+        // If not activated, draw a preview (this is done only for local player in Render method)
+        if (!activate)
         {
-            DrawLines(playerPositions, false, score);
+            previewActive = true;
         }
     }
 
@@ -282,10 +300,23 @@ public class ShapeController : NetworkBehaviour
         }
     }
 
+    void OnPreviewActiveChanged()
+    {
+        int nVertices = playerPositions.Count;
+
+        // Disable preview lines when preview no longer active
+        if (HasInputAuthority && !previewActive)
+        {
+            // Prevent lines from deactivating when square is activated,
+            // since activated square uses the lines
+            if (nVertices == 4 && squareIsActivated) return;
+
+            ChooseLineRenderer(nVertices).enabled = false;
+        }
+    }
+
     void OnTriangleActivated()
     {
-        triangleLineRenderer.enabled = false;
-
         parentPlayer.activateTriCD(triangleCooldown);
 
         if (parentPlayer.GetCharacterName() == "Knight")
@@ -299,8 +330,10 @@ public class ShapeController : NetworkBehaviour
 
     void OnSquareActivated()
     {
+        squareIsActivated = true;
+
         parentPlayer.activateSqCD(squareCooldown);
-        PlayShapeSound(playerPositions.ToArray(), 4, "Knight");
+        PlayShapeSound(vertices.ToArray(), 4, "Knight");
 
         // Draw square for everyone
         DrawLines(vertices.ToList(), true, score);
