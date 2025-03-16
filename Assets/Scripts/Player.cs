@@ -813,10 +813,11 @@ public class Player : NetworkBehaviour
             {
                 ShowMessage("Gathering Mana", 0.3f, Color.green);
 
-                // Play sound
-                audioSource.pitch = 2.7f / missingAmmo;
-                audioSource.PlayOneShot(reloadSound);
-                audioSource.pitch = 1f;
+                // Play sound (create a temporary audio source so that the pitch can be adjusted without affecting other sounds)
+                AudioSource reloadAudioSource = gameObject.AddComponent<AudioSource>();
+                reloadAudioSource.pitch = 2.7f / missingAmmo;
+                reloadAudioSource.PlayOneShot(reloadSound);
+                Destroy(reloadAudioSource, reloadSound.length / reloadAudioSource.pitch);
 
                 // Update icon
                 float time = reloadTimer.RemainingTime(Runner).GetValueOrDefault();
