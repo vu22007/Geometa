@@ -5,7 +5,10 @@ public class Pickup : NetworkBehaviour
 {
     [Networked] int amount { get; set; }
     [Networked] int type { get; set; }
+    [Networked] TickTimer respawnTimer { get; set; }
+    private float respawnTime;
     SpriteRenderer spriteRenderer;
+    BoxCollider2D boxCollider2D;
 
     // Pickup intialisation (called from game controller on server when creating the pickup)
     public void OnCreated(int type, int amount){
@@ -17,8 +20,17 @@ public class Pickup : NetworkBehaviour
     public override void Spawned()
     {
         spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
+        boxCollider2D = gameObject.GetComponent<BoxCollider2D>();
         Sprite sprite = GetSprite();
         spriteRenderer.sprite = sprite;
+        respawnTime = 20f;
+    }
+
+    public override void FixedUpdateNetwork()
+    {
+        if(respawnTimer.Expired(Runner)){
+            RespawnPickup();
+        }
     }
 
     void OnTriggerEnter2D(Collider2D other){
@@ -39,14 +51,14 @@ public class Pickup : NetworkBehaviour
                         break;
                     case 2: //Speed
                         player.IncreaseSpeed(amount, 5f);
-                        player.ShowMessage("Speed increased!!", 0.3f, Color.blue);
+                        player.ShowMessage("Speed increased!!", 0.3f, Color.green);
                         break;
                     default:
                         Debug.Log("Unknown type of pickup");
                         break;
                 }
             }
-            DestroyPickup();
+            DisablePickup();
         }
     }
 
@@ -71,6 +83,18 @@ public class Pickup : NetworkBehaviour
         }
 
         return sprite;
+    }
+
+    public void DisablePickup()
+    {
+        spriteRenderer.enabled = false;
+        boxCollider2D.enabled = false;
+        respawnTimer = TickTimer.CreateFromSeconds(Runner, respawnTime);
+    }
+
+    public void RespawnPickup(){
+        spriteRenderer.enabled = true;
+        boxCollider2D.enabled = true;
     }
 
     public void DestroyPickup(){
