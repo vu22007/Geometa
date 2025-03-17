@@ -154,7 +154,7 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
             Runner.SessionInfo.IsOpen = false;
 
             // Switch to map scene to start the game, and the game controller will spawn player objects using the player dicts in the network manager
-            Runner.LoadScene(SceneRef.FromIndex(SceneManager.GetActiveScene().buildIndex + 1));
+            Runner.LoadScene(SceneRef.FromIndex(SceneManager.GetActiveScene().buildIndex + 2));
         }
     }
 

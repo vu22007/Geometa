@@ -15,7 +15,8 @@ public class Map : MonoBehaviour
 
     void Start()
     {
-        StartCoroutine(LoadMapFromBoundingBox(51.453232, -2.612708, 51.461628, -2.588997));
+        // StartCoroutine(LoadMapFromBoundingBox(51.4576, -2.60128, 51.4588, -2.59851));
+        StartCoroutine(LoadMapFromBoundingBox(51.450, -2.603, 51.451, -2.599));
     }
 
     IEnumerator LoadMapFromBoundingBox(double lowLat, double lowLong, double highLat, double highLong)
