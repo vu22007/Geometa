@@ -32,7 +32,7 @@ public class AoESpell : NetworkBehaviour
         this.maxDistance = maxDistance;
         distanceTraveled = 0f;
         isActivated = false;
-        maxDamageCooldown = 1f;
+        maxDamageCooldown = 0.8f;
         damageCooldown = 0.2f;
     }
 
@@ -51,7 +51,7 @@ public class AoESpell : NetworkBehaviour
         if (isActivated)
         {
             damageCooldown -= Runner.DeltaTime;
-            if(damageCooldown < -1f){
+            if(damageCooldown < 0f){
                 DamagePlayers();
                 damageCooldown = maxDamageCooldown;
             }
@@ -92,12 +92,10 @@ public class AoESpell : NetworkBehaviour
     }
 
     private void OnTriggerEnter2D(Collider2D other){
-        if(isActivated && other.CompareTag("Player")){
+        if(other.CompareTag("Player")){
             Player player = other.GetComponentInParent<Player>();
             if(player != null){
-                Debug.Log("Found player");
                 if(player.GetTeam() != team){
-                    Debug.Log("Added a player");
                     players.Add(player);
                 }
             }
@@ -105,11 +103,10 @@ public class AoESpell : NetworkBehaviour
     }
 
     private void OnTriggerExit2D(Collider2D other){
-        if(isActivated && other.CompareTag("Player")){
+        if(other.CompareTag("Player")){
             Player player = other.GetComponentInParent<Player>();
             if(player != null){
                 if(players.Contains(player)){
-                    Debug.Log("Removed a player");
                     players.Remove(player);
                 }
             }
