@@ -174,16 +174,6 @@ public class ShapeController : NetworkBehaviour
                 return;
             }
         }
-        else if (nVertices == 5)
-        {
-            if (parentPlayer.GetMana() < pentagonCost)
-            {
-                pentagonLineRenderer.enabled = false;
-                Debug.Log("You don't have enough mana to activate a pentagon");
-                if (activate && !Runner.IsResimulation) parentPlayer.ShowMessage("Not enough mana!", 0.2f, Color.white);
-                return;
-            }
-        }
 
         List<Player> closestPlayers = GetClosestPlayers(parentPlayer, nVertices - 1);
 
