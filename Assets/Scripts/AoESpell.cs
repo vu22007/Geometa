@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
@@ -13,13 +14,13 @@ public class AoESpell : NetworkBehaviour
     [Networked] private float speed { get; set; }
     [Networked] private float maxDistance { get; set; }
     [Networked] private float distanceTraveled { get; set; }
-    [Networked] private float damageCooldown { get; set; }
-    [Networked] private float maxDamageCooldown { get; set; }
+    [Networked] private TickTimer damageCooldown { get; set; }
     [Networked, OnChangedRender(nameof(OnActivatedChanged))] private bool isActivated { get; set; }
     [SerializeField] private Sprite aoeSmall;
     [SerializeField] private Sprite aoeNormal;
     private SpriteRenderer spriteRenderer;
     private List<Player> players;
+    private float damageCooldownMax = 0.6f;
 
     public void OnCreated(Vector2 direction, float speed, float maxDistance, float damage, int team, float duration, PlayerRef playerCasting)
     {
@@ -32,8 +33,7 @@ public class AoESpell : NetworkBehaviour
         this.maxDistance = maxDistance;
         distanceTraveled = 0f;
         isActivated = false;
-        maxDamageCooldown = 0.8f;
-        damageCooldown = 0.2f;
+        damageCooldown = TickTimer.CreateFromSeconds(Runner, damageCooldownMax);
     }
 
     public override void Spawned()
@@ -47,10 +47,9 @@ public class AoESpell : NetworkBehaviour
     {
         if (isActivated)
         {
-            damageCooldown -= Runner.DeltaTime;
-            if(damageCooldown < 0f){
+            if(damageCooldown.Expired(Runner)){
                 DamagePlayers();
-                damageCooldown = maxDamageCooldown;
+                damageCooldown = TickTimer.CreateFromSeconds(Runner, damageCooldownMax);
             }
             
             // Check if the despawn timer has expired
