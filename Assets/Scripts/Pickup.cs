@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class Pickup : NetworkBehaviour
 {
+    [Networked, OnChangedRender(nameof(OnPickupActiveChanged))] bool pickupActive { get; set; }
+    [Networked] PlayerRef playerPickedUp { get; set; }
     [Networked] int amount { get; set; }
     [Networked] int type { get; set; }
     [Networked] TickTimer respawnTimer { get; set; }
@@ -11,9 +13,11 @@ public class Pickup : NetworkBehaviour
     BoxCollider2D boxCollider2D;
 
     // Pickup intialisation (called from game controller on server when creating the pickup)
-    public void OnCreated(int type, int amount){
+    public void OnCreated(int type, int amount)
+    {
         this.type = type;
         this.amount = amount;
+        pickupActive = true;
     }
 
     // Pickup initialisation (called on each client and server when pickup is spawned on network)
@@ -28,12 +32,17 @@ public class Pickup : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
-        if(respawnTimer.Expired(Runner)){
-            RespawnPickup();
+        if (respawnTimer.Expired(Runner))
+        {
+            pickupActive = true;
+            respawnTimer = TickTimer.None;
         }
     }
 
-    void OnTriggerEnter2D(Collider2D other){
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        if (!pickupActive) return;
+
         // Check if object is a player
         if (other.CompareTag("Player")){
             Player player = other.GetComponentInParent<Player>();
@@ -43,22 +52,21 @@ public class Pickup : NetworkBehaviour
                 {
                     case 0: //Health
                         player.Heal(amount);
-                        player.ShowMessage("+"+amount+" health", 0.2f, Color.green);
                         break;
                     case 1: //Mana
                         player.GainMana(amount);
-                        player.ShowMessage("+"+amount+" mana", 0.2f, Color.cyan);
                         break;
                     case 2: //Speed
                         player.IncreaseSpeed(amount, 5f);
-                        player.ShowMessage("Speed increased!!", 0.3f, Color.green);
                         break;
                     default:
                         Debug.Log("Unknown type of pickup");
                         break;
                 }
+                playerPickedUp = player.Object.InputAuthority;
             }
-            DisablePickup();
+            pickupActive = false;
+            respawnTimer = TickTimer.CreateFromSeconds(Runner, respawnTime);
         }
     }
 
@@ -85,19 +93,53 @@ public class Pickup : NetworkBehaviour
         return sprite;
     }
 
+    void OnPickupActiveChanged()
+    {
+        if (pickupActive)
+        {
+            RespawnPickup();
+        }
+        else
+        {
+            DisablePickup();
+
+            // Show message for player who used the pickup
+            if (Runner.TryGetPlayerObject(playerPickedUp, out NetworkObject networkObject))
+            {
+                Player player = networkObject.GetComponent<Player>();
+                switch (type)
+                {
+                    case 0: //Health
+                        player.ShowMessage("+" + amount + " health", 0.2f, Color.green);
+                        break;
+                    case 1: //Mana
+                        player.ShowMessage("+" + amount + " mana", 0.2f, Color.cyan);
+                        break;
+                    case 2: //Speed
+                        player.ShowMessage("Speed increased!!", 0.3f, Color.green);
+                        break;
+                    default:
+                        Debug.Log("Unknown type of pickup");
+                        break;
+                }
+            }
+        }
+    }
+
     public void DisablePickup()
     {
         spriteRenderer.enabled = false;
         boxCollider2D.enabled = false;
-        respawnTimer = TickTimer.CreateFromSeconds(Runner, respawnTime);
     }
 
-    public void RespawnPickup(){
+    public void RespawnPickup()
+    {
         spriteRenderer.enabled = true;
         boxCollider2D.enabled = true;
     }
 
-    public void DestroyPickup(){
+    public void DestroyPickup()
+    {
         // Despawn the pickup (only the server can do this)
         if (HasStateAuthority)
         {
