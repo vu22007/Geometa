@@ -37,30 +37,12 @@ public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
         actionAoE = playerInputActions.Player.AoE;
         actionMenu = playerInputActions.Player.Menu;
 
-        actionShoot.Enable();
-        actionReload.Enable();
-        actionPlaceShape.Enable();
-        actionTriangle.Enable();
-        actionSquare.Enable();
-        actionPentagon.Enable();
-        actionPickup.Enable();
-        actionDash.Enable();
-        actionAoE.Enable();
-        actionMenu.Enable();
+        playerInputActions.Player.Enable();
     }
 
     private void OnDisable()
     {
-        actionShoot.Disable();
-        actionReload.Disable();
-        actionPlaceShape.Disable();
-        actionTriangle.Disable();
-        actionSquare.Disable();
-        actionPentagon.Disable();
-        actionPickup.Disable();
-        actionDash.Disable();
-        actionAoE.Disable();
-        actionMenu.Disable();
+        playerInputActions.Player.Disable();
     }
 
     public void OnInput(NetworkRunner runner, NetworkInput input)

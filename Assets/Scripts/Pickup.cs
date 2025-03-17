@@ -53,13 +53,11 @@ public class Pickup : NetworkBehaviour
         {
             case 0: //Health
                 sprite = Resources.Load<Sprite>("Sprites/HealthPickup");
-                Debug.Log("It is a health pickup");
                 break;
             case 1: //Points
                 sprite = Resources.Load<Sprite>("Sprites/PointsPickup");
                 break;
             default:
-                Debug.Log("Unknown type of pickup");
                 sprite = null;
                 break;
         }

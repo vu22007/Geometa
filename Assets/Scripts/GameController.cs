@@ -4,16 +4,18 @@ using UnityEngine;
 
 public class GameController : NetworkBehaviour, IPlayerLeft
 {
-    [SerializeField] Vector3 respawnPoint1;
-    [SerializeField] Vector3 respawnPoint2;
+    [Networked] private bool gameOver { get; set; }
+    [Networked] private float pointsTopupCooldownMax { get; set; }
+    [Networked] private TickTimer pointsTopupTimer { get; set; }
+    [Networked] private TickTimer gameTimer { get; set; }
+    [Networked] public NetworkDictionary<PlayerRef, int> playersToTeams { get; }
 
-    public float maxTime;
-    [Networked, HideInInspector] public float currentTime { get; set; }
+    [SerializeField] private Vector3 respawnPoint1;
+    [SerializeField] private Vector3 respawnPoint2;
+    [SerializeField] private float maxTime;
 
-    private List<Bullet> bullets;
-    private List<Player> players;
-    private List<Player> alivePlayers;
-    private List<Pickup> pickups;
+    private List<Player> players = new List<Player>();
+    private List<Player> alivePlayers = new List<Player>();
 
     // For only the server/host to use so that it can manage the spawn and despawn of players
     private Dictionary<PlayerRef, NetworkObject> spawnedPlayers = new Dictionary<PlayerRef, NetworkObject>();
@@ -22,30 +24,17 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     private PickupFlag team1Flag;
     private PickupFlag team2Flag;
 
-    // For only the server/host to use when broadcasting messages
-    private bool gameOver = false;
-
-    [Networked] private float pointsTopupCooldownMax { get; set; }
-    [Networked] private float pointsTopupCooldownCurrent { get; set; }
-    [Networked] private int gameStartTick { get; set; }
-
     // Initialisation
     public override void Spawned()
     {
-        // Make FixedUpdateNetwork run on all clients
-        Runner.SetIsSimulated(Object, true);
-
-        bullets = new List<Bullet>();
-        players = new List<Player>();
-        pickups = new List<Pickup>();
-        alivePlayers = new List<Player>();
-        currentTime = 0.0f;
+        gameOver = false;
         pointsTopupCooldownMax = 10f;
-        pointsTopupCooldownCurrent = pointsTopupCooldownMax;
-        gameStartTick = Runner.Tick;
+        pointsTopupTimer = TickTimer.CreateFromSeconds(Runner, pointsTopupCooldownMax);
+        gameTimer = TickTimer.CreateFromSeconds(Runner, maxTime);
 
-        if (Runner.IsServer)
+        if (HasStateAuthority)
         {
+            CreatePlayersToTeams();
             SpawnPlayers();
             SpawnItems();
         }
@@ -54,7 +43,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     void SpawnItems()
     {
         // Spawn initial items (only the server can do this)
-        if (Runner.IsServer)
+        if (HasStateAuthority)
         {
             // Spawn pickup
             GameObject pickupPrefab = Resources.Load("Prefabs/Pickup") as GameObject;
@@ -70,61 +59,28 @@ public class GameController : NetworkBehaviour, IPlayerLeft
             team2Flag = flag2Obj.GetComponent<PickupFlag>();
 
             // Spawn NPCs for testing
-            SpawnPlayersForTesting(3, 3);
+            SpawnPlayersForTesting(3, 3, true);
         }
     }
 
-    // Update for every server simulation tick
     public override void FixedUpdateNetwork()
     {
-        currentTime = (Runner.Tick - gameStartTick) * Runner.DeltaTime;
+        if (gameOver) return;
 
-        if (currentTime >= maxTime)
+        // End game if game timer has finished
+        if (gameTimer.Expired(Runner))
         {
-            //end game
+            gameOver = true;
         }
 
-        //topup players points by 5 every 10 seconds
-        pointsTopupCooldownCurrent -= Runner.DeltaTime;
-        if(pointsTopupCooldownCurrent < 0){
+        // Topup players points by 5 every 10 seconds
+        if (pointsTopupTimer.Expired(Runner))
+        {
             foreach (Player player in players)
             {
                 player.GainPoints(5);
             }
-            pointsTopupCooldownCurrent = pointsTopupCooldownMax;
-        }
-
-        foreach (Player player in players)
-        {
-            player.PlayerUpdate();
-
-            // If player is dead and respawn timer is done then respawn player
-            if (!player.IsAlive() && player.RespawnTimerDone())
-            {
-                player.Respawn();
-            }
-        }
-
-        for (int i = bullets.Count - 1; i >= 0; i--)
-        {
-            Bullet bullet = bullets[i];
-            bullet.BulletUpdate();
-
-            if (bullet.done)
-            {
-                bullets.Remove(bullet);
-
-                if (Runner.IsServer)
-                {
-                    // Despawn bullet from network (only the server can do this)
-                    Runner.Despawn(bullet.GetComponent<NetworkObject>());
-                }
-                else
-                {
-                    // Disable the bullet locally so that it isn't frozen while the client waits for the server to despawn it
-                    bullet.gameObject.SetActive(false);
-                }
-            }
+            pointsTopupTimer = TickTimer.CreateFromSeconds(Runner, pointsTopupCooldownMax);
         }
     }
 
@@ -140,26 +96,6 @@ public class GameController : NetworkBehaviour, IPlayerLeft
         UnregisterAlivePlayer(player);
     }
 
-    public void RegisterBullet(Bullet bullet)
-    {
-        bullets.Add(bullet);
-    }
-
-    public void UnregisterBullet(Bullet bullet)
-    {
-        bullets.Remove(bullet);
-    }
-
-    public void RegisterPickup(Pickup pickup)
-    {
-        pickups.Add(pickup);
-    }
-
-    public void UnregisterPickup(Pickup pickup)
-    {
-        pickups.Remove(pickup);
-    }
-
     public void RegisterAlivePlayer(Player player)
     {
         alivePlayers.Add(player);
@@ -170,9 +106,24 @@ public class GameController : NetworkBehaviour, IPlayerLeft
         alivePlayers.Remove(player);
     }
 
+    // Create mapping between PlayerRefs and teams
+    public void CreatePlayersToTeams()
+    {
+        if (HasStateAuthority)
+        {
+            NetworkManager networkManager = GameObject.Find("Network Runner").GetComponent<NetworkManager>();
+
+            foreach (KeyValuePair<PlayerRef, string> item in networkManager.team1Players)
+                playersToTeams.Add(item.Key, 1);
+
+            foreach (KeyValuePair<PlayerRef, string> item in networkManager.team2Players)
+                playersToTeams.Add(item.Key, 2);
+        }
+    }
+
     public void SpawnPlayers()
     {
-        if (Runner.IsServer)
+        if (HasStateAuthority)
         {
             NetworkManager networkManager = GameObject.Find("Network Runner").GetComponent<NetworkManager>();
 
@@ -196,7 +147,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
 
     void SpawnPlayer(PlayerRef player, string characterName, int team)
     {
-        if (Runner.IsServer)
+        if (HasStateAuthority)
         {
             // Load prefab
             GameObject playerPrefab = Resources.Load("Prefabs/Player") as GameObject;
@@ -215,7 +166,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     public void PlayerLeft(PlayerRef player)
     {
         // Run the following only on the server
-        if (Runner.IsServer)
+        if (HasStateAuthority)
         {
             if (spawnedPlayers.TryGetValue(player, out NetworkObject networkPlayerObject))
             {
@@ -234,7 +185,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     // Check if two flags are near each other
     public void CheckForWinCondition()
     {
-        if (!Runner.IsServer) return;
+        if (!HasStateAuthority) return;
 
         // Max distance for flags to be from a base to count as a win
         float maxDistance = 8.0f;
@@ -257,7 +208,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
 
     public void BroadcastCarryFlag(int playerTeam, int flagTeam)
     {
-        if (!Runner.IsServer || gameOver) return;
+        if (!HasStateAuthority || gameOver) return;
 
         int otherTeam = playerTeam == 1 ? 2 : 1;
         if (flagTeam == playerTeam)
@@ -274,7 +225,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
 
     public void BroadcastDropFlag(int playerTeam, int flagTeam)
     {
-        if (!Runner.IsServer || gameOver) return;
+        if (!HasStateAuthority || gameOver) return;
 
         int otherTeam = playerTeam == 1 ? 2 : 1;
         if (flagTeam == playerTeam)
@@ -291,7 +242,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
 
     public void BroadcastMessageToAll(string message, float speed, Color color)
     {
-        if (!Runner.IsServer) return;
+        if (!HasStateAuthority) return;
 
         foreach (Player player in players)
         {
@@ -301,7 +252,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
 
     public void BroadcastMessageToTeam(int team, string message, float speed, Color color)
     {
-        if (!Runner.IsServer) return;
+        if (!HasStateAuthority) return;
 
         foreach (Player player in players)
         {
@@ -311,7 +262,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
         }
     }
 
-    void SpawnPlayersForTesting(int allies, int enemies)
+    void SpawnPlayersForTesting(int allies, int enemies, bool testing)
     {
         GameObject playerPrefab = Resources.Load("Prefabs/Player") as GameObject;
         string characterName = "Wizard";
@@ -327,16 +278,29 @@ public class GameController : NetworkBehaviour, IPlayerLeft
             });
         }
 
+        Vector3 enemyRespawnPoint;
+
         for (int i = 0; i < enemies; i++)
         {
-            // Spawn the player network object
-            NetworkObject networkPlayerObject = Runner.Spawn(playerPrefab, respawnPoint2 + new Vector3(2f, 2f, 0f) * i, Quaternion.identity, null, (runner, networkObject) =>
+            if (testing)
             {
-                // Initialise the player (this is called before the player is spawned)
-                Player player = networkObject.GetComponent<Player>();
-                player.OnCreated(characterName, respawnPoint1, 2);
-            });
+                enemyRespawnPoint = respawnPoint1;
+            } else
+            {
+                enemyRespawnPoint = respawnPoint2;
+            }
+                // Spawn the player network object
+                NetworkObject networkPlayerObject = Runner.Spawn(playerPrefab, enemyRespawnPoint + new Vector3(2f, 2f, 0f) * i, Quaternion.identity, null, (runner, networkObject) =>
+                {
+                    // Initialise the player (this is called before the player is spawned)
+                    Player player = networkObject.GetComponent<Player>();
+                    player.OnCreated(characterName, respawnPoint1, 2);
+                });
         }
+    }
 
+    public float GetTimeLeft()
+    {
+        return gameTimer.RemainingTime(Runner).GetValueOrDefault();
     }
 }

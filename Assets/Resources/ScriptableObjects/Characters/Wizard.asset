@@ -17,7 +17,7 @@ MonoBehaviour:
   damage: 6
   sprite: {fileID: 711129131, guid: 465b0d734e07360429b5e06c529c0e8a, type: 3}
   maxAmmo: 6
-  fireRate: 3
+  attackRate: 3
   dashSpeed: 3
   dashDuration: 0.2
   dashCooldown: 2
