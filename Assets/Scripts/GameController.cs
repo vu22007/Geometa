@@ -45,9 +45,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
         // Spawn initial items (only the server can do this)
         if (HasStateAuthority)
         {
-            // Spawn pickup
-            GameObject pickupPrefab = Resources.Load("Prefabs/Pickup") as GameObject;
-            PrefabFactory.SpawnPickup(Runner, pickupPrefab, new Vector3(5f, 5f, 0f), 0, 20);
+            SpawnTestPickups();
             
             // Spawn team 1 flag
             GameObject flagPrefab = Resources.Load("Prefabs/Flag") as GameObject;
@@ -61,6 +59,17 @@ public class GameController : NetworkBehaviour, IPlayerLeft
             // Spawn NPCs for testing
             SpawnPlayersForTesting(3, 3, true);
         }
+    }
+
+    void SpawnTestPickups(){
+        // Spawn pickups
+        GameObject pickupPrefab = Resources.Load("Prefabs/Pickup") as GameObject;
+        //health
+        PrefabFactory.SpawnPickup(Runner, pickupPrefab, respawnPoint1 - new Vector3(5,0,0), 0, 20);
+        //mana
+        PrefabFactory.SpawnPickup(Runner, pickupPrefab, respawnPoint1 - new Vector3(10,0,0), 1, 10);
+        //speed
+        PrefabFactory.SpawnPickup(Runner, pickupPrefab, respawnPoint1 - new Vector3(15,0,0), 2, 5);
     }
 
     public override void FixedUpdateNetwork()

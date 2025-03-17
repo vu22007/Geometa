@@ -31,11 +31,11 @@ public class Pickup : NetworkBehaviour
                 {
                     case 0: //Health
                         player.Heal(amount);
-                        player.ShowMessage("+"+amount, 0.2f, Color.green);
+                        player.ShowMessage("+"+amount+" health", 0.2f, Color.green);
                         break;
                     case 1: //Mana
                         player.GainMana(amount);
-                        player.ShowMessage("+"+amount, 0.2f, Color.cyan);
+                        player.ShowMessage("+"+amount+" mana", 0.2f, Color.cyan);
                         break;
                     case 2: //Speed
                         player.IncreaseSpeed(amount, 5f);
