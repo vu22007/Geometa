@@ -10,8 +10,10 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
 {
     [Networked, Capacity(6), OnChangedRender(nameof(OnTeam1PlayersChanged))] private NetworkDictionary<PlayerRef, string> team1Players { get; }
     [Networked, Capacity(6), OnChangedRender(nameof(OnTeam2PlayersChanged))] private NetworkDictionary<PlayerRef, string> team2Players { get; }
+    [Networked, Capacity(12), OnChangedRender(nameof(OnPlayersChanged))] private NetworkLinkedList<PlayerInfo> playerList { get; }
 
     private NetworkManager networkManager;
+    private TMP_InputField usernameInput;
     private Button team1Button;
     private Button team2Button;
     private Button knightButton;
@@ -23,6 +25,7 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
     private TextMeshProUGUI playerCounter;
     private TextMeshProUGUI readyCounter;
     private GameObject playerCardPrefab;
+    private string username = "";
     private int team = 0;
     private string characterName = "";
     private bool playerIsReady = false;
@@ -30,6 +33,7 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
     public override void Spawned()
     {
         networkManager = GameObject.Find("Network Runner").GetComponent<NetworkManager>();
+        usernameInput = GameObject.Find("Username Input").GetComponent<TMP_InputField>();
         team1Button = GameObject.Find("Team 1 Button").GetComponent<Button>();
         team2Button = GameObject.Find("Team 2 Button").GetComponent<Button>();
         knightButton = GameObject.Find("Knight Button").GetComponent<Button>();
@@ -76,6 +80,11 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
         }
     }
 
+    public void OnUsernameChanged(string newUsername)
+    {
+        username = newUsername;
+    }
+
     public void SelectTeam1()
     {
         team = 1;
@@ -113,14 +122,15 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
         readyButton.onClick.RemoveAllListeners();
         readyButton.onClick.AddListener(PlayerUnready);
 
-        // Disable team and character selection
+        // Disable username, team and character selection
+        usernameInput.interactable = false;
         team1Button.interactable = false;
         team2Button.interactable = false;
         knightButton.interactable = false;
         wizardButton.interactable = false;
 
         // Send selection to host
-        RPC_PlayerReady(team, characterName);
+        RPC_PlayerReady(username, team, characterName);
     }
 
     public void PlayerUnready()
@@ -132,7 +142,8 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
         readyButton.onClick.RemoveAllListeners();
         readyButton.onClick.AddListener(PlayerReady);
 
-        // Enable the team and character selection, with the current selection applied
+        // Enable the username, team and character selection, with the current selection applied
+        usernameInput.interactable = true;
         team1Button.interactable = team != 1;
         team2Button.interactable = team != 2;
         knightButton.interactable = characterName != "Knight";
@@ -177,7 +188,7 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
 
     // Anyone can call this RPC, and it will run only on the server
     [Rpc(sources: RpcSources.All, targets: RpcTargets.StateAuthority, HostMode = RpcHostMode.SourceIsHostPlayer)]
-    public void RPC_PlayerReady(int team, string characterName, RpcInfo info = default)
+    public void RPC_PlayerReady(string username, int team, string characterName, RpcInfo info = default)
     {
         PlayerRef player = info.Source;
 
@@ -185,6 +196,9 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
         bool teamIsValid = team == 1 || team == 2;
         bool characterIsValid = characterName == "Knight" || characterName == "Wizard";
         if (!teamIsValid || !characterIsValid) return;
+
+        // Use the character name as the username if username not provided
+        if (username == "") username = characterName;
 
         // Add player to chosen team if they aren't already in a team
         if (!team1Players.ContainsKey(player) && !team2Players.ContainsKey(player))
@@ -220,6 +234,11 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
 
         // Populate team list based on new player info
         AddPlayerCardsToTeamList(team2List, team2Players);
+    }
+
+    void OnPlayersChanged()
+    {
+        Debug.Log("Players changed");
     }
 
     void UpdatePlayerCounter(int numPlayersInLobby)
@@ -302,5 +321,13 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
             var dict = team2Players;
             dict.Remove(player);
         }
+    }
+
+    struct PlayerInfo : INetworkStruct
+    {
+        public PlayerRef playerRef;
+        public NetworkString<_32> username;
+        public int team;
+        public NetworkString<_32> characterName;
     }
 }
