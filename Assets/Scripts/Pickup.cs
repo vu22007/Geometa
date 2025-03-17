@@ -31,10 +31,11 @@ public class Pickup : NetworkBehaviour
                 {
                     case 0: //Health
                         player.Heal(amount);
-                        Debug.Log("Healing player");
+                        player.ShowMessage("+"+amount, 0.2f, Color.green);
                         break;
                     case 1: //Mana
                         player.GainMana(amount);
+                        player.ShowMessage("+"+amount, 0.2f, Color.cyan);
                         break;
                     default:
                         Debug.Log("Unknown type of pickup");
@@ -52,7 +53,7 @@ public class Pickup : NetworkBehaviour
         switch (type)
         {
             case 0: //Health
-                sprite = Resources.Load<Sprite>("Sprites/HealthPickup");
+                sprite = Resources.Load<Sprite>("Sprites/HealthPickup2");
                 break;
             case 1: //Mana
                 sprite = Resources.Load<Sprite>("Sprites/PointsPickup");
