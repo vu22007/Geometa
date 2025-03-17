@@ -39,10 +39,7 @@ public class AoESpell : NetworkBehaviour
     public override void Spawned()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
-        if (spriteRenderer != null && aoeSmall != null)
-        {
-            spriteRenderer.sprite = aoeSmall;
-        }
+        OnActivatedChanged();
         players = new List<Player>();
     }
 
@@ -72,14 +69,9 @@ public class AoESpell : NetworkBehaviour
             if (distanceTraveled >= maxDistance)
             {
                 isActivated = true;
-                if (spriteRenderer != null && aoeNormal != null)
-                {
-                    spriteRenderer.sprite = aoeNormal;
-                }
                 despawnTimer = TickTimer.CreateFromSeconds(Runner, duration);
             }
         }
-        
     }
 
     private void DamagePlayers()
@@ -90,7 +82,7 @@ public class AoESpell : NetworkBehaviour
             player.TakeDamage(damage, playerCasting);
         }
     }
-
+    
     private void OnTriggerEnter2D(Collider2D other){
         if(other.CompareTag("Player")){
             Player player = other.GetComponentInParent<Player>();
@@ -115,12 +107,17 @@ public class AoESpell : NetworkBehaviour
 
 
 
-    // Called on all clients when AoE spell is activated, so that all clients see the sprite change
+    // Called on all clients and host when AoE spell is activated, so that everyone sees the correct sprite
     void OnActivatedChanged()
     {
         if (isActivated && spriteRenderer != null && aoeNormal != null)
         {
             spriteRenderer.sprite = aoeNormal;
+        }
+
+        if (!isActivated && spriteRenderer != null && aoeSmall != null)
+        {
+            spriteRenderer.sprite = aoeSmall;
         }
     }
 }

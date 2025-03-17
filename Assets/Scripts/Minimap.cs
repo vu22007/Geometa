@@ -9,7 +9,6 @@ public class Minimap : MonoBehaviour
     private float minFOV;
     private float maxFOV;
 
-
     public void Setup(){
         //Create render texture
         renderTexture = new RenderTexture(180, 180, 32, RenderTextureFormat.ARGB32);

@@ -3,9 +3,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Fusion.Addons.Physics;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine.EventSystems;
 
 public class Player : NetworkBehaviour
 {
@@ -14,41 +11,47 @@ public class Player : NetworkBehaviour
     [Networked] float maxMana { get; set; }
     [Networked] float damage { get; set; }
     [Networked] int maxAmmo { get; set; }
-    [Networked] int currentAmmo { get; set; }
+    [Networked, OnChangedRender(nameof(OnCurrentAmmoChanged))] int currentAmmo { get; set; }
     [Networked] int missingAmmo { get; set; }
-    [Networked] float fireRate { get; set; }
+    [Networked] float attackRate { get; set; }
     [Networked] float reloadTime { get; set; }
-    [Networked] float reloadTimer { get; set; }
-    [Networked] float reloadFraction { get; set; }
-    [Networked, OnChangedRender(nameof(OnManaChanged))] float Mana { get; set; }
-    [Networked] float timeToWaitForBullet { get; set; }
+    [Networked] bool alreadyReloading { get; set; }
+    [Networked, OnChangedRender(nameof(OnReloadTimerChanged))] TickTimer reloadTimer { get; set; }
+    [Networked, OnChangedRender(nameof(OnPointsChanged))] float points { get; set; }
+    [Networked] TickTimer attackWaitTimer { get; set; }
     [Networked, OnChangedRender(nameof(OnHealthChanged))] float currentHealth { get; set; }
     [Networked] int team { get; set; }
     [Networked] Vector3 respawnPoint { get; set; }
-    [Networked] bool isAlive { get; set; }
+    [Networked, OnChangedRender(nameof(OnIsAliveChanged))] bool isAlive { get; set; }
     [Networked] float respawnTime { get; set; }
-    [Networked] float currentRespawn { get; set; }
+    [Networked] TickTimer respawnTimer { get; set; }
     [Networked, Capacity(30)] string characterName { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
     [Networked] private NetworkObject carriedObject { get; set; }
     [Networked, OnChangedRender(nameof(OnCarryingChanged)), HideInInspector] public bool isCarrying { get; set; }
-    [Networked] bool isMoving { get; set; }
-    [Networked] bool isAttacking { get; set; }
-    [Networked] bool isDashing { get; set; }
-    [Networked] float dashTimer { get; set; }
-    [Networked] float dashCooldownTimer { get; set; }
+    [Networked, OnChangedRender(nameof(OnIsMovingChanged))] bool isMoving { get; set; }
+    [Networked, OnChangedRender(nameof(OnIsAttackingChanged))] bool isAttacking { get; set; }
+    [Networked, OnChangedRender(nameof(OnIsDashingChanged))] bool isDashing { get; set; }
+    [Networked] TickTimer dashTimer { get; set; }
+    [Networked] TickTimer dashCooldownTimer { get; set; }
     [Networked] float dashSpeed { get; set; }
     [Networked] float dashDuration { get; set; }
     [Networked] float dashCooldown { get; set; }
+    [Networked] bool alreadyDashing { get; set; }
     [Networked] public float aoeDamage { get; set; }
-    [Networked] public float aoeCooldown { get; set; }
     [Networked] public float aoeDuration { get; set; }
-    [Networked] public float aoeCooldownTimer { get; set; }
-    [Networked] public bool isAoEEnabled { get; set; }
+    [Networked, OnChangedRender(nameof(OnAoEEnabledChanged))] public bool isAoEEnabled { get; set; }
     [Networked] private bool isAoEUsed { get; set; }
-    [Networked] public float aoeMaxRad { get; set; }
     [Networked] private bool normalShoot { get; set; }
-    [Networked] private bool gamePaused { get; set; }
+    [Networked] private TickTimer aoeEnabledTimer { get; set; }
+    [Networked] float slowedAmount { get; set; }
+    [Networked] TickTimer getSlowedTimer { get; set; }
+    [Networked, OnChangedRender(nameof(OnGamePausedChanged))] private bool gamePaused { get; set; }
+    [Networked, OnChangedRender(nameof(MeleeAttackRender))] private int meleeAttacked { get; set; }
+    [Networked, OnChangedRender(nameof(ShootRender))] private int bulletFired { get; set; }
+    [Networked, OnChangedRender(nameof(ShootAoERender))] private int aoeFired { get; set; }
+    [Networked, OnChangedRender(nameof(ReloadRender))] private int reloadPerformed { get; set; }
+    [Networked, OnChangedRender(nameof(DashRender))] private int dashPerformed { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
@@ -84,10 +87,10 @@ public class Player : NetworkBehaviour
     private AudioClip reloadSound;
     private AudioClip knightSwordSound;
     private AudioSource audioSource;
+    private AudioSource reloadAudioSource;
     [SerializeField] Image bulletIcon;
     [SerializeField] GameObject mainbulletIcon;
-    [SerializeField] Transform meleePoint;
-    [SerializeField] GameObject meleeHitbox;
+    [SerializeField] MeleeHitbox meleeHitbox;
     
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(string characterName, Vector3 respawnPoint, int team)
@@ -98,7 +101,7 @@ public class Player : NetworkBehaviour
         speed = character.Speed;
         damage = character.Damage;
         maxAmmo = character.MaxAmmo;
-        fireRate = character.FireRate;
+        attackRate = character.AttackRate;
         dashSpeed = character.DashSpeed;
         dashDuration = character.DashDuration;
         dashCooldown = character.DashCooldown;
@@ -111,14 +114,10 @@ public class Player : NetworkBehaviour
         reloadTime = 3.0f;
         respawnTime = 10.0f;
         aoeDamage = 5;
-        aoeCooldown = 10;
         aoeDuration = 5;
-        aoeMaxRad = 10;
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
         isAlive = true;
-        currentRespawn = 0.0f;
-        timeToWaitForBullet = 0.0f;
         isCarrying = false;
         isAoEEnabled = false;
         isAoEUsed = false;
@@ -130,8 +129,8 @@ public class Player : NetworkBehaviour
     public override void Spawned()
     {
         uIController = GetComponentInChildren<UIController>();
-        uIController.SetPlayer(this);
         uIController.transform.SetParent(null);
+
         // Disable the camera if client does not control this player
         if (!HasInputAuthority)
         {
@@ -156,8 +155,7 @@ public class Player : NetworkBehaviour
         //Set animator controller
         animator.runtimeAnimatorController = Resources.Load("Animations/"+character.name) as RuntimeAnimatorController;
 
-        Player localPlayer = Runner.GetPlayerObject(Runner.LocalPlayer)?.GetComponent<Player>();
-        int localPlayerTeam = localPlayer.GetTeam();
+        int localPlayerTeam = gameController.playersToTeams[Runner.LocalPlayer];
 
         //Setup minimap
         minimap.Setup();
@@ -190,8 +188,12 @@ public class Player : NetworkBehaviour
         }
 
         // Set the health bar
-        UpdateHealthBar(currentHealth);
+        UpdateHealthBar();
 
+        //Set the points bar
+        UpdatePointsBar();
+
+        // Disable the death overlay
         if (deathOverlay != null)
         {
             deathOverlay.SetActive(false);
@@ -211,12 +213,13 @@ public class Player : NetworkBehaviour
         reloadSound = Resources.Load<AudioClip>("Sounds/WizardReload");
         knightSwordSound = Resources.Load<AudioClip>("Sounds/KnightSword");
 
+        // Create separate audio source just for reload sounds, so the pitch can be changed without affecting other sounds
+        reloadAudioSource = gameObject.AddComponent<AudioSource>();
+
         // Set the initial flag indicator visibility
         OnCarryingChanged();
 
-        //Set Mana bar
-        UpdateManaBar();
-        DisableMeleeHitbox();
+        // Disable ammo indicator for knight
         if (characterName == "Knight")
         {
             mainbulletIcon.SetActive(false);
@@ -233,131 +236,100 @@ public class Player : NetworkBehaviour
     // Player initialisation when respawning
     public void Respawn()
     {
-        gameObject.SetActive(true);
+        // Teleport player to respawn point
         gameObject.GetComponent<NetworkRigidbody2D>().Teleport(respawnPoint);
+
+        // Reset state
+        isAlive = true;
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
-        isAlive = true;
-        currentRespawn = 0.0f;
-        timeToWaitForBullet = 0.0f;
-
-        // Refill the health bar
-        if (healthBar != null)
-            healthBar.fillAmount = currentHealth / maxHealth;
-        
-        if (characterName != "Knight")
-        {
-            // Set the ammo counter
-            ammoText.text = currentAmmo.ToString();
-            bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
-        }
-        // // Set the ammo counter
-        // ammoText.text = currentAmmo.ToString();
-        // bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
+        respawnTimer = TickTimer.None;
+        attackWaitTimer = TickTimer.None;
 
         // Activate the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = true;
-        gameController.RegisterAlivePlayer(this);
 
-        // Disable the death overlay
-        if (HasInputAuthority && deathOverlay != null)
+        // Enable the hitbox
+        gameObject.GetComponent<HitboxRoot>().HitboxRootActive = true;
+    }
+
+    public override void Render()
+    {
+        if (!isAlive)
         {
-            deathOverlay.SetActive(false);
+            // Update the respawn timer text
+            if (respawnTimerTxt != null)
+            {
+                // Calculate the remaining respawn time
+                float remainingTime = respawnTimer.RemainingTime(Runner).GetValueOrDefault();
+                respawnTimerTxt.text = $"Respawning in {Mathf.CeilToInt(remainingTime)}";
+            }
         }
     }
 
-    // Update function (called from the game controller on all clients and server)
-    public void PlayerUpdate()
+    public override void FixedUpdateNetwork()
     {
         // Check if player is dead
         if (!isAlive)
         {
-            // Update respawn timer
-            currentRespawn += Runner.DeltaTime;
+            // Respawn player if timer is over
+            if (respawnTimer.Expired(Runner))
+            {
+                Respawn();
+            }
 
             // Stop player movement and prevent player from infinitely sliding when pushed by another player
             rb.linearVelocity = new Vector2(0, 0);
 
-            if (!Runner.IsResimulation)
-            {
-                // Enable the death overlay and update the respawn timer text
-                if (HasInputAuthority) // Only show for the local player
-                {
-                    if (deathOverlay != null)
-                    {
-                        deathOverlay.SetActive(true); // Enable the overlay
-                    }
-
-                    if (respawnTimerTxt != null)
-                    {
-                        // Calculate the remaining respawn time
-                        float remainingTime = respawnTime - currentRespawn;
-                        respawnTimerTxt.text = $"Respawning in {Mathf.CeilToInt(remainingTime)}s";
-                    }
-                }
-
-                // Hide the player
-                gameObject.SetActive(false);
-            }
-
             return;
         }
-        else
-        {
-            if (!Runner.IsResimulation)
-            {
-                if (HasInputAuthority && deathOverlay != null)
-                {
-                    deathOverlay.SetActive(false);
-                }
-
-                // Show the player
-                gameObject.SetActive(true);
-            }
-        }
-
-        // Decrease bullet timer and clamp to 0 if below 0
-        timeToWaitForBullet = (timeToWaitForBullet > 0) ? timeToWaitForBullet - Runner.DeltaTime : 0;
 
         // Handle reloading
-        if (reloadTimer > 0)
+        if (reloadTimer.Expired(Runner))
         {
-            reloadTimer -= Runner.DeltaTime;
-            if (reloadTimer <= 0)
-            {
-                // Reloading is complete, update ammo
-                currentAmmo = maxAmmo;
-
-                if (!Runner.IsResimulation)
-                {
-                    ammoText.text = currentAmmo.ToString();
-                    bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
-                    reloadIcon.enabled = false;
-                    reloadIconLayer.enabled = false;
-                }
-            }
-        }
-
-        // Handle dash cooldown
-        if (dashCooldownTimer > 0)
-        {
-            dashCooldownTimer -= Runner.DeltaTime;
+            // Reloading is complete, update ammo
+            currentAmmo = maxAmmo;
+            reloadTimer = TickTimer.None;
         }
 
         // Handle dash duration
         if (isDashing)
         {
-            dashTimer -= Runner.DeltaTime;
-            if (dashTimer <= 0)
+            if (dashTimer.Expired(Runner))
             {
                 isDashing = false; // End dash
             }
         }
 
-        // auto reload 
-        if (currentAmmo == 0 && reloadTimer <= 0) 
+        // Auto reload 
+        if (currentAmmo == 0 && !reloadTimer.IsRunning)
         {
             Reload();
+        }
+
+        // AoE timer
+        if (aoeEnabledTimer.Expired(Runner))
+        {
+            if (!isAoEUsed)
+            {
+                // Disable AoE
+                isAoEEnabled = false;
+                normalShoot = true;
+            }
+
+            // Reset timer
+            aoeEnabledTimer = TickTimer.None;
+        }
+
+        // Get slowed timer
+        if (getSlowedTimer.Expired(Runner))
+        {
+            // Restore speed
+            speed += slowedAmount;
+            slowedAmount = 0;
+
+            // Reset timer
+            getSlowedTimer = TickTimer.None;
         }
 
         // GetInput will return true on the StateAuthority (the server) and the InputAuthority (the client who controls this player)
@@ -372,20 +344,10 @@ public class Player : NetworkBehaviour
                 // Firing the weapon
                 if (characterName == "Knight")
                 {
-                    if (input.buttons.IsSet(InputButtons.Shoot))
+                    if (input.buttons.WasPressed(previousButtons, InputButtons.Shoot))
                     {
-                        // NOTE: Add this when set cooldown to knights attack
-                        if (HasInputAuthority && !Runner.IsResimulation)
-                        {
-                            // audioSource.PlayOneShot(knightSwordSound);
-                        }
-                        isAttacking = true;
-                        EnableMeleeHitbox();
-                    }
-                    else
-                    {
-                        isAttacking = false;
-                        DisableMeleeHitbox();
+                        isAttacking = !isAttacking;
+                        MeleeAttack();
                     }
                 }
 
@@ -444,16 +406,12 @@ public class Player : NetworkBehaviour
                 {
                     Dash(input.moveDirection);
                 }
-
             }
 
             // Activate Menu
             if (input.buttons.WasPressed(previousButtons, InputButtons.Menu))
             {
                 gamePaused = !gamePaused;
-
-                if (!Runner.IsResimulation)
-                    escapeMenu.SetActive(!escapeMenu.gameObject.activeSelf);
             }
 
             if (gamePaused)
@@ -471,20 +429,6 @@ public class Player : NetworkBehaviour
             cam.gameObject.transform.rotation = Quaternion.identity;
             
             previousButtons = input.buttons;
-        }
-
-        if (!Runner.IsResimulation)
-        {
-            // Play idle or walking animation
-            if (isMoving)
-                animator.SetFloat("Speed", 0.02f);
-            else
-                animator.SetFloat("Speed", 0f);
-
-            if (isAttacking)
-            {
-                animator.SetTrigger("Attack");
-            }
         }
 
         // If carrying an object, move it to player's position
@@ -519,31 +463,65 @@ public class Player : NetworkBehaviour
     // Dash mechanic
     void Dash(Vector2 moveDirection)
     {
-        if (dashCooldownTimer <= 0) // Only allow dash if cooldown is over
+        if (dashCooldownTimer.Expired(Runner) || !dashCooldownTimer.IsRunning) // Only allow dash if cooldown is over
         {
             isDashing = true;
-            dashTimer = dashDuration;
-            dashCooldownTimer = dashCooldown;
-
-            if (HasInputAuthority && !Runner.IsResimulation)
-            {
-                dashCDHandler.StartCooldown(dashCooldown);
-                audioSource.PlayOneShot(dashSound);
-            }
+            dashTimer = TickTimer.CreateFromSeconds(Runner, dashDuration);
+            dashCooldownTimer = TickTimer.CreateFromSeconds(Runner, dashCooldown);
+            alreadyDashing = false;
         }
         else
         {
-            if (!Runner.IsResimulation)
-                ShowMessage("Dash in cooldown", 0.2f, Color.white);
+            alreadyDashing = true;
+        }
+
+        // Signal that the dash was performed for DashRender to be called
+        dashPerformed++;
+    }
+
+    void DashRender() {
+        if (alreadyDashing)
+        {
+            ShowMessage("Dash in cooldown", 0.2f, Color.white);
+        }
+    }
+
+    void OnIsDashingChanged()
+    {
+        if (isDashing && HasInputAuthority)
+        {
+            dashCDHandler.StartCooldown(dashCooldown);
+            audioSource.PlayOneShot(dashSound);
+        }
+    }
+
+    void MeleeAttack()
+    {
+        if (attackWaitTimer.Expired(Runner) || !attackWaitTimer.IsRunning)
+        {
+            attackWaitTimer = TickTimer.CreateFromSeconds(Runner, 1 / attackRate);
+            meleeHitbox.CheckForHit();
+
+            // Signal that the melee attack was performed for MeleeAttackRender to be called
+            meleeAttacked++;
+        }
+    }
+
+    void MeleeAttackRender()
+    {
+        // Just the player that does the melee attack listens to the sound
+        if (HasInputAuthority)
+        {
+            audioSource.PlayOneShot(knightSwordSound);
         }
     }
 
     // Shoots a bullet by spawning the prefab on the network
     void Shoot(Vector2 aimDirection)
     {
-        if (timeToWaitForBullet <= 0)
+        if (attackWaitTimer.Expired(Runner) || !attackWaitTimer.IsRunning)
         {
-            timeToWaitForBullet = 1 / fireRate;
+            attackWaitTimer = TickTimer.CreateFromSeconds(Runner, 1 / attackRate);
             if (currentAmmo != 0)
             {
                 // Spawn dummy bullet
@@ -566,24 +544,30 @@ public class Player : NetworkBehaviour
                     PrefabFactory.SpawnBullet(Runner, Object.InputAuthority, bulletPrefab, gameObject.transform.position, aimDirection, 40.0f, damage, team, Object.InputAuthority);
                 }
 
-                // Just the player that shoot listens to the sound
-                if (HasInputAuthority && !Runner.IsResimulation)
-                {
-                    PlayShootSound();
-                }
-
                 currentAmmo--;
 
-                if (!Runner.IsResimulation)
-                {
-                    if (characterName != "Knight")
-                    {
-                        ammoText.text = currentAmmo.ToString();
-                        bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
-                    }
-                }
+                // Signal that bullet was fired for ShootRender to be called
+                bulletFired++;
             }
         }
+    }
+
+    void ShootRender()
+    {
+        // Just the player that shoots listens to the sound
+        if (HasInputAuthority)
+        {
+            PlayShootSound();
+        }
+
+        OnCurrentAmmoChanged();
+    }
+
+    void OnCurrentAmmoChanged()
+    {
+        // Update ammo indicator to new value
+        ammoText.text = currentAmmo.ToString();
+        bulletIcon.fillAmount = (float)currentAmmo / maxAmmo;
     }
 
     // Shoots a bullet by spawning the prefab on the network
@@ -603,19 +587,26 @@ public class Player : NetworkBehaviour
             });
         }
 
+        isAoEEnabled = false;
+        normalShoot = true;
+
+        // Signal that AoE was fired for ShootAoERender to be called
+        aoeFired++;
+    }
+
+    void ShootAoERender()
+    {
         // Just the player that shoot listens to the sound
-        if (HasInputAuthority && !Runner.IsResimulation)
+        if (HasInputAuthority)
         {
             PlayShootSound();
         }
-
-        isAoEEnabled = false;
-        normalShoot = true;
-        
-        if (!Runner.IsResimulation)
-            aoeIcon.enabled = false;
     }
-    
+
+    void OnAoEEnabledChanged()
+    {
+        aoeIcon.enabled = isAoEEnabled;
+    }
 
     public void PlayShootSound()
     {
@@ -625,21 +616,9 @@ public class Player : NetworkBehaviour
     //take damage equal to input, includes check for death
     public void TakeDamage(float damage, PlayerRef damageDealer)
     {
-        if (!isAlive) return;
+        currentHealth -= damage;
 
-        float newHealth = currentHealth - damage;
-
-        if (HasStateAuthority)
-            currentHealth = newHealth;
-
-        if (!Runner.IsResimulation)
-            UpdateHealthBar(newHealth);
-
-        // Play hurt animation and sounds for all clients
-        if (HasStateAuthority)
-            RPC_HurtEffects(damage);
-
-        if (newHealth <= 0.0f) {
+        if (currentHealth <= 0.0f) {
             Die(damageDealer);
         }
     }
@@ -655,27 +634,14 @@ public class Player : NetworkBehaviour
         PrefabFactory.SpawnDamagePopup(damagePopupPrefab, (int)damage, team, transform.position);
     }
 
-    // Only server can call this RPC, and it will run only on all clients
-    [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
-    public void RPC_HurtEffects(float damage)
-    {
-        HurtEffects(damage);
-    }
-
     //heal equal to input, includes check for max health
     public void Heal(float amount)
     {
-        float newHealth = currentHealth + amount;
-
-        if (HasStateAuthority)
-            currentHealth = newHealth;
+        currentHealth += amount;
 
         if (currentHealth >= maxHealth) {
             currentHealth = maxHealth;
         }
-
-        if (!Runner.IsResimulation)
-            UpdateHealthBar(newHealth);
     }
 
     public void GainMana(int amount)
@@ -684,42 +650,33 @@ public class Player : NetworkBehaviour
         if(Mana > maxMana){
             Mana = maxMana;
         }
-
-        if (!Runner.IsResimulation)
-            UpdateManaBar();
     }
 
     public void SpendMana(int amount)
     {
-        if(amount > Mana)
+        if (amount <= mana)
         {
-            Debug.Log("Not enough Mana");
-        }
-        else
-        {
-            Mana -= amount;
-            if (!Runner.IsResimulation)
-                UpdateManaBar();
+            points -= amount;
         }
     }
 
     void Die(PlayerRef killer)
     {
+        if (!isAlive) return;
+
         isAlive = false;
 
-        // Ensure health bar is empty
-        UpdateHealthBar(0.0f);
+        respawnTimer = TickTimer.CreateFromSeconds(Runner, respawnTime);
 
         // Disable the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = false;
-        gameController.UnregisterAlivePlayer(this);
-        
-        if (HasStateAuthority)
-            RPC_PlayDyingSound(transform.position);
 
+        // Disable the hitbox
+        gameObject.GetComponent<HitboxRoot>().HitboxRootActive = false;
+
+        // Player will drop the flag if they died
         if (isCarrying)
         {
-            // Player will drop the flag if they died
             DropObject();
         }
 
@@ -732,12 +689,42 @@ public class Player : NetworkBehaviour
                 player.GainMana(10);
             }
         }
-
-        gameObject.SetActive(false);
     }
 
-    [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
-    public void RPC_PlayDyingSound(Vector3 pos)
+    void OnIsAliveChanged()
+    {
+        // Ensure health bar is updated
+        UpdateHealthBar();
+
+        // Toggle the death overlay
+        if (HasInputAuthority && deathOverlay != null)
+        {
+            deathOverlay.SetActive(!isAlive);
+        }
+
+        // Toggle player visibility
+        SetPlayerEnabled(isAlive);
+
+        // Play death sound if dead
+        if (!isAlive)
+        {
+            PlayDyingSound(transform.position);
+        }
+
+        // Register/unregister player with game controller depending on if alive or dead
+        if (isAlive) gameController.RegisterAlivePlayer(this);
+        else gameController.UnregisterAlivePlayer(this);
+    }
+
+    void SetPlayerEnabled(bool enabled)
+    {
+        GetComponent<SpriteRenderer>().enabled = enabled;
+        transform.Find("Collider").gameObject.SetActive(enabled);
+        transform.Find("Overhead UI").gameObject.SetActive(enabled);
+        transform.Find("MinimapIndicator").gameObject.SetActive(enabled);
+    }
+
+    public void PlayDyingSound(Vector3 pos)
     {
         Vector3 viewportPos = Camera.main.WorldToViewportPoint(pos);
         bool onScreen =
@@ -750,27 +737,26 @@ public class Player : NetworkBehaviour
         }
 
     }
-
-    public void EnableMeleeHitbox()
-    {
-        meleeHitbox.SetActive(true);
-    }
-
-    public void DisableMeleeHitbox()
-    {
-        meleeHitbox.SetActive(false);
-    }
     
-    void OnHealthChanged()
+    void OnHealthChanged(NetworkBehaviourBuffer previous)
     {
-        UpdateHealthBar(currentHealth);
+        float previousHealth = GetPropertyReader<float>(nameof(currentHealth)).Read(previous);
+
+        UpdateHealthBar();
+
+        if (currentHealth < previousHealth)
+        {
+            // Player took damage so show hurt effects
+            float damage = previousHealth - currentHealth;
+            HurtEffects(damage);
+        }
     }
 
-    void UpdateHealthBar(float health)
+    void UpdateHealthBar()
     {
         if (healthBar != null)
         {
-            healthBar.fillAmount = health / maxHealth;
+            healthBar.fillAmount = currentHealth / maxHealth;
         }
     }
 
@@ -780,40 +766,74 @@ public class Player : NetworkBehaviour
     }
 
     void UpdateManaBar(){
-        float fillAmount = Mana/maxMana;
-        mainManaBar.fillAmount = fillAmount;
+        mainPointsBar.fillAmount = Mana/maxMana;;
     }
 
     void Reload()
     {
-        if (currentAmmo >= maxAmmo)
-        {
-            if (!Runner.IsResimulation)
-                ShowMessage("Energy is full!", 0.1f, Color.white);
-            return; 
-        }
-        if (reloadTimer <= 0)
-        {
-            missingAmmo = maxAmmo - currentAmmo;
-            reloadFraction = (float)missingAmmo / maxAmmo;
-            reloadTimer = reloadTime * reloadFraction;
-            timeToWaitForBullet = reloadTimer;
+        bool manaFull = currentAmmo >= maxAmmo;
 
-            if (HasInputAuthority && !Runner.IsResimulation)
+        if (!manaFull)
+        {
+            if (!reloadTimer.IsRunning)
             {
-                audioSource.pitch = 2.7f / missingAmmo;
-                audioSource.PlayOneShot(reloadSound);
-                audioSource.pitch = 1f;
-                ShowMessage("Gathering Energy", 0.3f, Color.green);
-                reloadIcon.enabled = true;
-                reloadIconLayer.enabled = true;
-                reloadHandler.StartCooldown(reloadTimer);
+                missingAmmo = maxAmmo - currentAmmo;
+                float reloadFraction = (float)missingAmmo / maxAmmo;
+                float time = reloadTime * reloadFraction;
+                reloadTimer = TickTimer.CreateFromSeconds(Runner, time);
+                attackWaitTimer = TickTimer.CreateFromSeconds(Runner, time);
+                alreadyReloading = false;
+            }
+            else
+            {
+                alreadyReloading = true;
             }
         }
-        else
+
+        // Signal that the reload was performed for ReloadRender to be called
+        reloadPerformed++;
+    }
+
+    void ReloadRender()
+    {
+        if (currentAmmo >= maxAmmo)
         {
-            if (!Runner.IsResimulation)
-                ShowMessage("Still gathering energy", 0.3f, Color.white);
+            ShowMessage("Energy is full!", 0.1f, Color.white);
+        }
+        else if (alreadyReloading)
+        {
+            ShowMessage("Still gathering energy", 0.3f, Color.white);
+        }
+    }
+
+    void OnReloadTimerChanged()
+    {
+        if (HasInputAuthority)
+        {
+            // Reload has started
+            if (reloadTimer.IsRunning)
+            {
+                ShowMessage("Gathering Energy", 0.3f, Color.green);
+
+                // Play sound (use separate reload audio source so that the pitch can be adjusted without affecting other sounds)
+                reloadAudioSource.pitch = 2.7f / missingAmmo;
+                reloadAudioSource.PlayOneShot(reloadSound);
+
+                // Update icon
+                float time = reloadTimer.RemainingTime(Runner).GetValueOrDefault();
+                reloadIcon.enabled = true;
+                reloadIconLayer.enabled = true;
+                reloadHandler.StartCooldown(time);
+            }
+
+            // Reload has finished
+            else
+            {
+                ammoText.text = maxAmmo.ToString();
+                bulletIcon.fillAmount = 1;
+                reloadIcon.enabled = false;
+                reloadIconLayer.enabled = false;
+            }
         }
     }
 
@@ -856,7 +876,8 @@ public class Player : NetworkBehaviour
         }
     }
 
-    public void ShowMessage(string message, float speed, Color color) {
+    public void ShowMessage(string message, float speed, Color color)
+    {
         if (HasInputAuthority) {
             uIController.MakePopupText(message, speed, color);
         }
@@ -892,11 +913,6 @@ public class Player : NetworkBehaviour
         ShowMessage(message, speed, color);
     }
 
-    public bool RespawnTimerDone()
-    {
-        return currentRespawn >= respawnTime;
-    }
-
     public bool IsAlive()
     {
         return isAlive;
@@ -905,6 +921,11 @@ public class Player : NetworkBehaviour
     public int GetTeam()
     {
         return team;
+    }
+
+    public float GetDamage()
+    {
+        return damage;
     }
 
     public string GetCharacterName()
@@ -918,9 +939,8 @@ public class Player : NetworkBehaviour
         {
             isAoEEnabled = true; // Enable AoE
             normalShoot = false;
-            aoeIcon.enabled = true;
             isAoEUsed = false;
-            StartCoroutine(EnableAoETemporarily());
+            aoeEnabledTimer = TickTimer.CreateFromSeconds(Runner, 5f);
         } 
     }
 
@@ -941,25 +961,46 @@ public class Player : NetworkBehaviour
 
     public void GetSlowed(float amount, float time)
     {
-        this.speed -= amount;
-        StartCoroutine(timeSlowed(amount, time));
-    }
-
-    IEnumerator timeSlowed(float amount, float time)
-    {
-        yield return new WaitForSeconds(time);
-        this.speed += amount;
-    }
-
-    private IEnumerator EnableAoETemporarily()
-    {
-        yield return new WaitForSeconds(5f); 
-        if (!isAoEUsed)
+        // If not already slowed, slow the player
+        if (slowedAmount == 0)
         {
-            isAoEEnabled = false; // Disable AoE
-            normalShoot = true;
-            aoeIcon.enabled = false;
+            speed -= amount;
+            slowedAmount = amount;
         }
-        
+
+        // Set timer until the player's speed returns to normal
+        // Note: If they are already slowed, this resets the timer so they have to wait longer, but the above
+        // prevents their speed from getting even slower
+        getSlowedTimer = TickTimer.CreateFromSeconds(Runner, time);
+    }
+
+    void OnIsMovingChanged()
+    {
+        // Play idle or walking animation
+        if (isMoving)
+            animator.SetFloat("Speed", 0.02f);
+        else
+            animator.SetFloat("Speed", 0f);
+    }
+
+    void OnIsAttackingChanged()
+    {
+        if (characterName == "Knight")
+        {
+            // Regardless of value, trigger animation when attacking property is toggled
+            animator.SetTrigger("Attack");
+        }
+        else
+        {
+            // Only when attacking property is set to true, trigger animation
+            if (isAttacking)
+            {
+                animator.SetTrigger("Attack");
+            }
+        }
+    }
+
+    void OnGamePausedChanged() {
+        escapeMenu.SetActive(gamePaused);
     }
 }

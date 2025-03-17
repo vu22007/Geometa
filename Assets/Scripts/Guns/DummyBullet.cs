@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
 
@@ -50,7 +49,7 @@ public class DummyBullet : MonoBehaviour
         }
     }
 
-    public Tick getInitialTick()
+    public Tick GetInitialTick()
     {
         return initialTick;
     }

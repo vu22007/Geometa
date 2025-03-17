@@ -1,24 +1,23 @@
+using Fusion;
 using TMPro;
 using UnityEngine;
 
-public class UIController : MonoBehaviour
+public class UIController : NetworkBehaviour
 {
     [SerializeField] GameObject popUpTextPrefab;
     [SerializeField] TMP_Text popUpText;
-    private Player player;
-    private float maxTime;
     GameController gameController;
     [SerializeField] TextMeshProUGUI timeLeftText;
 
-    private void Start()
+    public override void Spawned()
     {
         gameController = GameObject.Find("Game Controller").GetComponent<GameController>();
     }
 
-    private void Update()
+    public override void Render()
     {
         // Update the time left in the UI if the client controls this player
-        float timeLeft = gameController.maxTime - gameController.currentTime;
+        float timeLeft = gameController.GetTimeLeft();
         int secondsLeft = (int)Mathf.Ceil(timeLeft);
         int mins = secondsLeft / 60;
         int secs = secondsLeft % 60;
@@ -38,15 +37,5 @@ public class UIController : MonoBehaviour
 
         Animator animator = popUp.GetComponent<Animator>();
         animator.speed = speed;
-    }
-
-    public void SetPlayer(Player player)
-    {
-        this.player = player;
-    }
-
-    public void SetMaxTime(float maxTime)
-    {
-        this.maxTime = maxTime;
     }
 }
