@@ -8,9 +8,8 @@ using UnityEngine.UI;
 
 public class Lobby : NetworkBehaviour, IPlayerLeft
 {
-    [Networked, Capacity(6), OnChangedRender(nameof(OnTeam1PlayersChanged))] private NetworkDictionary<PlayerRef, string> team1Players { get; }
-    [Networked, Capacity(6), OnChangedRender(nameof(OnTeam2PlayersChanged))] private NetworkDictionary<PlayerRef, string> team2Players { get; }
-    [Networked, Capacity(12), OnChangedRender(nameof(OnPlayersChanged))] private NetworkLinkedList<PlayerInfo> playerList { get; }
+    [Networked, Capacity(6), OnChangedRender(nameof(OnTeam1PlayersChanged))] private NetworkDictionary<PlayerRef, PlayerInfo> team1Players { get; }
+    [Networked, Capacity(6), OnChangedRender(nameof(OnTeam2PlayersChanged))] private NetworkDictionary<PlayerRef, PlayerInfo> team2Players { get; }
 
     private NetworkManager networkManager;
     private TMP_InputField usernameInput;
@@ -82,7 +81,10 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
 
     public void OnUsernameChanged(string newUsername)
     {
+        int charLimit = 16;
+        newUsername = new string(newUsername.Take(charLimit).ToArray());
         username = newUsername;
+        usernameInput.text = newUsername;
     }
 
     public void SelectTeam1()
@@ -157,9 +159,11 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
     {
         if (HasStateAuthority)
         {
+            // TODO: Hand over the player info to network manager in here
+
             // Give the network manager the player dictionaries, but first convert the networked ones to standard ones
-            networkManager.team1Players = ConvertFromNetworkDictionary(team1Players);
-            networkManager.team2Players = ConvertFromNetworkDictionary(team2Players);
+            //networkManager.team1Players = ConvertFromNetworkDictionary(team1Players);
+            //networkManager.team2Players = ConvertFromNetworkDictionary(team2Players);
 
             // Prevent new players from joining
             Runner.SessionInfo.IsOpen = false;
@@ -203,8 +207,9 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
         // Add player to chosen team if they aren't already in a team
         if (!team1Players.ContainsKey(player) && !team2Players.ContainsKey(player))
         {
+            PlayerInfo playerInfo = new PlayerInfo(player, username, team, characterName);
             var dict = (team == 1) ? team1Players : team2Players;
-            dict.Add(player, characterName);
+            dict.Add(player, playerInfo);
         }
     }
 
@@ -262,7 +267,7 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
         }
     }
 
-    void AddPlayerCardsToTeamList(GameObject teamList, NetworkDictionary<PlayerRef, string> players)
+    void AddPlayerCardsToTeamList(GameObject teamList, NetworkDictionary<PlayerRef, PlayerInfo> players)
     {
         // Get card and list height
         float cardHeight = playerCardPrefab.GetComponent<RectTransform>().rect.height;
@@ -274,24 +279,25 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
         Vector3 cardPosition = new Vector3(cardX, cardY, 0);
 
         // Add each player to team list
-        foreach (KeyValuePair<PlayerRef, string> item in players)
+        foreach (KeyValuePair<PlayerRef, PlayerInfo> item in players)
         {
             PlayerRef playerRef = item.Key;
-            string characterName = item.Value;
+            PlayerInfo playerInfo = item.Value;
+            string username = (string)playerInfo.username;
 
             // Create and position the player card relative to the list
             GameObject playerCard = Instantiate(playerCardPrefab, new Vector3(0, 0, 0), Quaternion.identity, teamList.transform);
             playerCard.transform.localPosition = cardPosition;
 
-            // Set card text to character name, with an indicator to show if the player is the client's own player
+            // Set card text to username, with an indicator to show if the player is the client's own player
             TextMeshProUGUI cardText = playerCard.GetComponentInChildren<TextMeshProUGUI>();
-            cardText.text = Runner.LocalPlayer.Equals(playerRef) ? characterName + " (You)" : characterName;
+            cardText.text = Runner.LocalPlayer.Equals(playerRef) ? username + " (You)" : username;
             cardText.color = Runner.LocalPlayer.Equals(playerRef) ? Color.green : Color.white;
 
             // Set card character image based on chosen character
             GameObject knightImage = playerCard.transform.Find("Knight Image").gameObject;
             GameObject wizardImage = playerCard.transform.Find("Wizard Image").gameObject;
-            if (characterName == "Knight") wizardImage.SetActive(false);
+            if (username == "Knight") wizardImage.SetActive(false);
             else knightImage.SetActive(false);
 
             // Set position for next card
@@ -326,8 +332,16 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
     struct PlayerInfo : INetworkStruct
     {
         public PlayerRef playerRef;
-        public NetworkString<_32> username;
+        public NetworkString<_16> username;
         public int team;
-        public NetworkString<_32> characterName;
+        public NetworkString<_16> characterName;
+
+        public PlayerInfo(PlayerRef playerRef, NetworkString<_16> username, int team, NetworkString<_16> characterName)
+        {
+            this.playerRef = playerRef;
+            this.username = username;
+            this.team = team;
+            this.characterName = characterName;
+        }
     }
 }
