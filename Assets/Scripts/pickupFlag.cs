@@ -8,7 +8,7 @@ public class PickupFlag : NetworkBehaviour
     [Networked] private Player picker { get; set; } // Track which player picked up the object
     [Networked] public int team { get; set; }
 
-    [SerializeField] UnityEngine.UI.Image SpriteIndicator;
+    [SerializeField] Image spriteIndicator;
 
     public void OnCreated(int team)
     {
@@ -34,7 +34,7 @@ public class PickupFlag : NetworkBehaviour
 
             SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
             spriteRenderer.sprite = Resources.Load<Sprite>(spritePath);
-            SpriteIndicator.sprite = Resources.Load<Sprite>(spritePath);
+            spriteIndicator.sprite = Resources.Load<Sprite>(spritePath);
         }
     }
 
@@ -57,8 +57,6 @@ public class PickupFlag : NetworkBehaviour
             isPickedUp = true;
             picker = player;
             player.CarryObject(Object);
-            SetActive(false);
-            Debug.Log($"flag has been pickup");
         }
     }
 
@@ -68,8 +66,6 @@ public class PickupFlag : NetworkBehaviour
         {
             isPickedUp = false;
             picker = null;
-            SetActive(true);
-            Debug.Log($"flag dropped");
         }
     }
 
@@ -82,9 +78,6 @@ public class PickupFlag : NetworkBehaviour
     void OnPickupChanged()
     {
         // Disable flag if picked up, otherwise enable flag
-        if (isPickedUp)
-            SetActive(false);
-        else
-            SetActive(true);
+        SetActive(!isPickedUp);
     }
 }

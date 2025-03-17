@@ -234,7 +234,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3376469863312065693}
-  - component: {fileID: 1492483678350380008}
   - component: {fileID: 2428781577068820673}
   m_Layer: 0
   m_Name: meleeHitbox
@@ -258,42 +257,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 981996023074110673}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!58 &1492483678350380008
-CircleCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 325978928209685445}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 1
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 1
-  m_UsedByEffector: 0
-  m_CompositeOperation: 0
-  m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
-  m_Radius: 0.5
 --- !u!114 &2428781577068820673
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -306,8 +269,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 898618e388711204c802ec28caaf7ae4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  damage: 5
-  player: {fileID: 6975032210494896427}
 --- !u!1 &718205540657660913
 GameObject:
   m_ObjectHideFlags: 0
@@ -1673,7 +1634,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2983073624312878985}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
@@ -2091,11 +2052,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _isCarrying: 0
   _aoeDamage: 20
-  _aoeCooldown: 5
   _aoeDuration: 0
-  _aoeCooldownTimer: 0
   _isAoEEnabled: 0
-  _aoeMaxRad: 0
   cam: {fileID: 3093333144043118080}
   mainHealthBar: {fileID: 8395293536219763284}
   teamHealthBar: {fileID: 8623719664100579951}
@@ -2121,8 +2079,7 @@ MonoBehaviour:
   flagIndicator: {fileID: 3617242858135019408}
   bulletIcon: {fileID: 1478925092546808149}
   mainbulletIcon: {fileID: 3391385062733595157}
-  meleePoint: {fileID: 0}
-  meleeHitbox: {fileID: 325978928209685445}
+  meleeHitbox: {fileID: 2428781577068820673}
 --- !u!50 &-5256008576835943960
 Rigidbody2D:
   serializedVersion: 5
@@ -2169,10 +2126,12 @@ MonoBehaviour:
   - {fileID: 8869814900265295120}
   - {fileID: 259212883900260163}
   - {fileID: 1161169819697743717}
+  - {fileID: 9082641302484715406}
   NetworkedBehaviours:
   - {fileID: 6975032210494896427}
   - {fileID: 4562077412377926483}
   - {fileID: -8433905836698240597}
+  - {fileID: 2428781577068820673}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &4562077412377926483
 MonoBehaviour:
@@ -4872,6 +4831,7 @@ GameObject:
   - component: {fileID: 1051879175246726060}
   - component: {fileID: 3325362716360511297}
   - component: {fileID: 2701067427050605302}
+  - component: {fileID: 9082641302484715406}
   m_Layer: 5
   m_Name: UI
   m_TagString: Untagged
@@ -5017,6 +4977,25 @@ MonoBehaviour:
   popUpTextPrefab: {fileID: 2075306469595700386, guid: b548b5ef87d184627bcf594c3c5f7acb, type: 3}
   popUpText: {fileID: 2040430487038617038, guid: b548b5ef87d184627bcf594c3c5f7acb, type: 3}
   timeLeftText: {fileID: 5253126099504964119}
+--- !u!114 &9082641302484715406
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8614039415812819164}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SortKey: 1694946337
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 2701067427050605302}
+  ForceRemoteRenderTimeframe: 0
 --- !u!1 &8744208852700158081
 GameObject:
   m_ObjectHideFlags: 0
