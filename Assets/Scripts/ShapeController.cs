@@ -10,7 +10,8 @@ public class ShapeController : NetworkBehaviour
     [Networked] NetworkButtons previousButtons { get; set; }
     [Networked, OnChangedRender(nameof(OnTriangleActivated))] private int activatedTriangle { get; set; }
     [Networked, OnChangedRender(nameof(OnSquareActivated))] private int activatedSquare { get; set; }
-    [Networked, OnChangedRender(nameof(OnPreviewActiveChanged))] private bool previewActive { get; set; }
+    [Networked, OnChangedRender(nameof(OnTrianglePreviewActiveChanged))] private bool trianglePreviewActive { get; set; }
+    [Networked, OnChangedRender(nameof(OnSquarePreviewActiveChanged))] private bool squarePreviewActive { get; set; }
     [Networked] private float score { get; set; }
     [Networked, Capacity(4)] private NetworkLinkedList<Vector3> vertices { get; }
     [Networked] private TickTimer triangleCooldownTimer { get; set; }
@@ -71,7 +72,7 @@ public class ShapeController : NetworkBehaviour
     public override void Render()
     {
         // Draw shape previews locally
-        if (HasInputAuthority && previewActive)
+        if (HasInputAuthority && (trianglePreviewActive || squarePreviewActive))
         {
             // Use local playerPositions property since vertices networked property is only set when shape is activated
             DrawLines(playerPositions, false, 0); // Note: Score doesn't matter for preview, so set it to 0
@@ -109,7 +110,9 @@ public class ShapeController : NetworkBehaviour
         // The line renderer will be disable for all others
         if (HasInputAuthority)
         {
-            PreviewShape(3, false);
+            // Only allow triangle preview if no square preview active
+            if (!squarePreviewActive)
+                PreviewShape(3, false);
         }
     }
 
@@ -119,18 +122,22 @@ public class ShapeController : NetworkBehaviour
         // The line renderer will be disable for all others
         if (HasInputAuthority)
         {
-            PreviewShape(4, false);
+            // Only allow square preview if no triangle preview active
+            if (!trianglePreviewActive)
+                PreviewShape(4, false);
         }
     }
 
     private void TriangleActivated()
     {
-        PreviewShape(3, true);
+        if (!squarePreviewActive) // Helps stop issue when both square and triangle keys are down
+            PreviewShape(3, true);
     }
 
     private void SquareActivated()
     {
-        PreviewShape(4, true);
+        if (!trianglePreviewActive) // Helps stop issue when both square and triangle keys are down
+            PreviewShape(4, true);
     }
 
     void PreviewShape(int nVertices, bool activate)
@@ -150,7 +157,7 @@ public class ShapeController : NetworkBehaviour
 
             if (parentPlayer.GetPoints() < triangleCost)
             {
-                previewActive = false;
+                trianglePreviewActive = false;
                 if (activate)
                 {
                     errorMessage = "Not enough points!";
@@ -173,7 +180,7 @@ public class ShapeController : NetworkBehaviour
 
             if (parentPlayer.GetPoints() < squareCost)
             {
-                previewActive = false;
+                squarePreviewActive = false;
                 if (activate)
                 {
                     errorMessage = "Not enough points!";
@@ -199,7 +206,7 @@ public class ShapeController : NetworkBehaviour
         // Checking if there is enough players for each vertice
         if (playerPositions.Count < nVertices)
         {
-            previewActive = false;
+            SetPreviewActive(nVertices, false);
             if (activate)
             {
                 errorMessage = "Not enough players to activate shape!";
@@ -211,7 +218,7 @@ public class ShapeController : NetworkBehaviour
         // Checking if all players are close enough
         if (Vector3.Distance(parentPlayer.transform.position, playerPositions.Last()) > maxDistance)
         {
-            previewActive = false;
+            SetPreviewActive(nVertices, false);
             if (activate)
             {
                 errorMessage = "Players too far away to activate shape!";
@@ -234,7 +241,7 @@ public class ShapeController : NetworkBehaviour
         if (activate)
         {
             // Disable the preview
-            previewActive = false;
+            SetPreviewActive(nVertices, false);
 
             // Set score and vertices networked properties for everyone (server, input authority and all other clients) to use to draw lines in OnTriangleActivated and OnSquareActivated methods
             this.score = score;
@@ -286,7 +293,7 @@ public class ShapeController : NetworkBehaviour
         // If not activated, draw a preview (this is done only for local player in Render method)
         if (!activate)
         {
-            previewActive = true;
+            SetPreviewActive(nVertices, true);
         }
     }
 
@@ -298,18 +305,24 @@ public class ShapeController : NetworkBehaviour
         }
     }
 
-    void OnPreviewActiveChanged()
+    void OnTrianglePreviewActiveChanged()
     {
         // Disable preview lines when preview no longer active
-        if (HasInputAuthority && !previewActive)
+        if (HasInputAuthority && !trianglePreviewActive)
         {
-            int nVertices = playerPositions.Count;
+            triangleLineRenderer.enabled = false;
+        }
+    }
 
-            // Prevent lines from deactivating when square is activated,
-            // since activated square uses the lines
-            if (nVertices == 4 && squareIsActivated) return;
+    void OnSquarePreviewActiveChanged()
+    {
+        // Disable preview lines when preview no longer active
+        if (HasInputAuthority && !squarePreviewActive)
+        {
+            // Prevent lines from deactivating when square is activated, since activated square uses the lines
+            if (squareIsActivated) return;
 
-            ChooseLineRenderer(nVertices).enabled = false;
+            squareLineRenderer.enabled = false;
         }
     }
 
@@ -335,6 +348,14 @@ public class ShapeController : NetworkBehaviour
 
         // Draw square for everyone
         DrawLines(vertices.ToList(), true, score);
+    }
+
+    void SetPreviewActive(int nVertices, bool active)
+    {
+        if (nVertices == 3)
+            trianglePreviewActive = active;
+        else if (nVertices == 4)
+            squarePreviewActive = active;
     }
 
     public void PlayShapeSound(Vector3[] playerPositions, int nVertices, string character)
