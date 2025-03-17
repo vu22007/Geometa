@@ -278,6 +278,11 @@ public class Player : NetworkBehaviour
                 respawnTimerTxt.text = $"Respawning in {Mathf.CeilToInt(remainingTime)}";
             }
         }
+
+        if (isCarrying)
+        {
+            UpdatePointer();
+        }
     }
 
     public override void FixedUpdateNetwork()
@@ -344,26 +349,14 @@ public class Player : NetworkBehaviour
             // Reset timer
             getSlowedTimer = TickTimer.None;
         }
-
-        if (isCarrying)
-        {
-            circleRenderer.enabled = true;
-            pointer.gameObject.SetActive(true);
-            updatePointer();
-            DrawCircle(respawnPoint, circleRadius);
-        }
-        else
-        {
-            circleRenderer.enabled = false;
-            pointer.gameObject.SetActive(false);
-        }
         
         // GetInput will return true on the StateAuthority (the server) and the InputAuthority (the client who controls this player)
         // So the following is ran for just the server and the client who controls this player
         if (GetInput(out NetworkInputData input))
         {
             // If game is not paused
-            if (!gamePaused){
+            if (!gamePaused)
+            {
                 // WASD movement
                 PlayerMovement(input.moveDirection);
 
@@ -639,27 +632,6 @@ public class Player : NetworkBehaviour
         audioSource.PlayOneShot(shootSound);
     }
 
-    void DrawCircle(Vector3 center, float radius)
-    {
-        for (int i = 0; i <= circleSegments; i++)
-        {
-            float angle = (float)i / circleSegments * Mathf.PI * 2;
-            float x = Mathf.Cos(angle) * radius; 
-            float y = Mathf.Sin(angle) * radius; 
-            Vector3 point = center + new Vector3(x, y, 0); 
-            circleRenderer.SetPosition(i, point); 
-        }
-    }
-
-    void updatePointer()
-    {
-        if (pointer == null) return;
-
-        Vector3 direction = (respawnPoint - transform.position).normalized;
-        Quaternion rotation = Quaternion.LookRotation(Vector3.forward, direction);
-        pointer.rotation = rotation;
-    }
-
     //take damage equal to input, includes check for death
     public void TakeDamage(float damage, PlayerRef damageDealer)
     {
@@ -901,15 +873,15 @@ public class Player : NetworkBehaviour
         if (carriedObject != null)
         {
             PickupFlag flag = carriedObject.GetComponent<PickupFlag>();
-            if (flag != null)
+            if (!flag.IsInsideCollider())
             {
-                flag.Drop(); // Call the Drop method on the pickupable object
+                flag.Drop();
+                carriedObject = null;
+                isCarrying = false;
+                speed *= 2;
+                gameController.CheckForWinCondition();
+                gameController.BroadcastDropFlag(team, flag.team);
             }
-            carriedObject = null;
-            isCarrying = false;
-            speed *= 2;
-            gameController.CheckForWinCondition();
-            gameController.BroadcastDropFlag(team, flag.team);
         }
     }
 
@@ -921,6 +893,43 @@ public class Player : NetworkBehaviour
             PickupFlag flag = carriedObject.GetComponent<PickupFlag>();
             flagIndicator.SetColour(flag.team);
         }
+
+        if (HasInputAuthority)
+        {
+            if (isCarrying)
+            {
+                circleRenderer.enabled = true;
+                pointer.gameObject.SetActive(true);
+                UpdatePointer();
+                DrawCircle(respawnPoint, circleRadius);
+            }
+            else
+            {
+                circleRenderer.enabled = false;
+                pointer.gameObject.SetActive(false);
+            }
+        }
+    }
+
+    void DrawCircle(Vector3 center, float radius)
+    {
+        for (int i = 0; i <= circleSegments; i++)
+        {
+            float angle = (float)i / circleSegments * Mathf.PI * 2;
+            float x = Mathf.Cos(angle) * radius;
+            float y = Mathf.Sin(angle) * radius;
+            Vector3 point = center + new Vector3(x, y, 0);
+            circleRenderer.SetPosition(i, point);
+        }
+    }
+
+    void UpdatePointer()
+    {
+        if (pointer == null) return;
+
+        Vector3 direction = (respawnPoint - transform.position).normalized;
+        Quaternion rotation = Quaternion.LookRotation(Vector3.forward, direction);
+        pointer.rotation = rotation;
     }
 
     public void ShowMessage(string message, float speed, Color color)
@@ -991,12 +1000,12 @@ public class Player : NetworkBehaviour
         } 
     }
 
-    public void activateTriCD(float triCD)
+    public void ActivateTriCD(float triCD)
     {
         triangleHandler.StartCooldown(triCD);
     }
 
-    public void activateSqCD(float sqCD)
+    public void ActivateSqCD(float sqCD)
     {
         squareHandler.StartCooldown(sqCD);
     }
