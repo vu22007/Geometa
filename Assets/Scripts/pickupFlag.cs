@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,6 +10,8 @@ public class PickupFlag : NetworkBehaviour
     [Networked] public int team { get; set; }
 
     [SerializeField] Image spriteIndicator;
+    private SpriteRenderer spriteRenderer;
+    private Collider2D flagCollider;
 
     public void OnCreated(int team)
     {
@@ -20,6 +23,9 @@ public class PickupFlag : NetworkBehaviour
 
     public override void Spawned()
     {
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        flagCollider = GetComponent<Collider2D>();
+
         // Set state depending on isPickedUp networked variable
         OnPickupChanged();
 
@@ -32,7 +38,6 @@ public class PickupFlag : NetworkBehaviour
             // Blue for local player's team flag, red for enemy's flag
             string spritePath = playerTeam == team ? "Sprites/BlueFlag" : "Sprites/RedFlag";
 
-            SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
             spriteRenderer.sprite = Resources.Load<Sprite>(spritePath);
             spriteIndicator.sprite = Resources.Load<Sprite>(spritePath);
         }
@@ -79,5 +84,12 @@ public class PickupFlag : NetworkBehaviour
     {
         // Disable flag if picked up, otherwise enable flag
         SetActive(!isPickedUp);
+    }
+
+    public bool IsInsideCollider()
+    {
+        Vector2 flagDimensions = spriteRenderer.bounds.size;
+        Collider2D otherCollider = Physics2D.OverlapBox(transform.position, flagDimensions, 0);
+        return otherCollider != null;
     }
 }
