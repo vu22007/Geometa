@@ -344,19 +344,6 @@ public class Player : NetworkBehaviour
             // Reset timer
             getSlowedTimer = TickTimer.None;
         }
-
-        if (isCarrying)
-        {
-            circleRenderer.enabled = true;
-            pointer.gameObject.SetActive(true);
-            updatePointer();
-            DrawCircle(respawnPoint, circleRadius);
-        }
-        else
-        {
-            circleRenderer.enabled = false;
-            pointer.gameObject.SetActive(false);
-        }
         
         // GetInput will return true on the StateAuthority (the server) and the InputAuthority (the client who controls this player)
         // So the following is ran for just the server and the client who controls this player
@@ -920,6 +907,22 @@ public class Player : NetworkBehaviour
         {
             PickupFlag flag = carriedObject.GetComponent<PickupFlag>();
             flagIndicator.SetColour(flag.team);
+        }
+
+        if (HasInputAuthority)
+        {
+            if (isCarrying)
+            {
+                circleRenderer.enabled = true;
+                pointer.gameObject.SetActive(true);
+                updatePointer();
+                DrawCircle(respawnPoint, circleRadius);
+            }
+            else
+            {
+                circleRenderer.enabled = false;
+                pointer.gameObject.SetActive(false);
+            }
         }
     }
 
