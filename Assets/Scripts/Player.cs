@@ -17,7 +17,7 @@ public class Player : NetworkBehaviour
     [Networked] float reloadTime { get; set; }
     [Networked] bool alreadyReloading { get; set; }
     [Networked, OnChangedRender(nameof(OnReloadTimerChanged))] TickTimer reloadTimer { get; set; }
-    [Networked, OnChangedRender(nameof(OnPointsChanged))] float points { get; set; }
+    [Networked, OnChangedRender(nameof(OnManaChanged))] float mana { get; set; }
     [Networked] TickTimer attackWaitTimer { get; set; }
     [Networked, OnChangedRender(nameof(OnHealthChanged))] float currentHealth { get; set; }
     [Networked] int team { get; set; }
@@ -110,7 +110,7 @@ public class Player : NetworkBehaviour
         this.respawnPoint = respawnPoint;
         this.team = team;
         this.characterName = characterName;
-        Mana = 30f;
+        mana = 30f;
         reloadTime = 3.0f;
         respawnTime = 10.0f;
         aoeDamage = 5;
@@ -191,7 +191,7 @@ public class Player : NetworkBehaviour
         UpdateHealthBar();
 
         //Set the points bar
-        UpdatePointsBar();
+        UpdateManaBar();
 
         // Disable the death overlay
         if (deathOverlay != null)
@@ -646,9 +646,9 @@ public class Player : NetworkBehaviour
 
     public void GainMana(int amount)
     {
-        Mana += amount;
-        if(Mana > maxMana){
-            Mana = maxMana;
+        mana += amount;
+        if(mana > maxMana){
+            mana = maxMana;
         }
     }
 
@@ -656,7 +656,7 @@ public class Player : NetworkBehaviour
     {
         if (amount <= mana)
         {
-            points -= amount;
+            mana -= amount;
         }
     }
 
@@ -766,7 +766,7 @@ public class Player : NetworkBehaviour
     }
 
     void UpdateManaBar(){
-        mainPointsBar.fillAmount = Mana/maxMana;;
+        mainManaBar.fillAmount = mana/maxMana;;
     }
 
     void Reload()
@@ -956,7 +956,7 @@ public class Player : NetworkBehaviour
 
     public float GetMana()
     {
-        return Mana;
+        return mana;
     }
 
     public void GetSlowed(float amount, float time)

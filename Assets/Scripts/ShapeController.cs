@@ -257,7 +257,7 @@ public class ShapeController : NetworkBehaviour
                 activatedTriangle++;
 
                 triangleCooldownTimer = TickTimer.CreateFromSeconds(Runner, triangleCooldown);
-                parentPlayer.SpendPoints(triangleCost);
+                parentPlayer.SpendMana(triangleCost);
 
                 if (parentPlayer.GetCharacterName() == "Wizard")
                 {
