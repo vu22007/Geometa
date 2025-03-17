@@ -1,15 +1,27 @@
-using Fusion;
 using System.Collections;
 using System.Collections.Generic;
+using Fusion;
 using UnityEngine;
 
 public class CircleCornerCollider : NetworkBehaviour
 {
     [Networked] public int team { get; set; }
     [Networked] float score { get; set; }
+    [Networked] public PlayerRef parentPlayerRef { get; set; }
+    [Networked] private TickTimer disableTimer { get; set; }
+    [Networked, OnChangedRender(nameof(OnColliderActivated))] private int activatedCollider { get; set; }
+
     private CircleCollider2D circleCollider;
     private List<Player> slowedPlayers;
     private Animator shockwaveAnimator;
+    private Vector3 defaultScale;
+    private float defaultRadius;
+
+    public void OnCreated(int team, PlayerRef parentPlayerRef)
+    {
+        this.team = team;
+        this.parentPlayerRef = parentPlayerRef;
+    }
 
     public override void Spawned()
     {
@@ -17,34 +29,55 @@ public class CircleCornerCollider : NetworkBehaviour
         circleCollider = GetComponent<CircleCollider2D>();
         circleCollider.enabled = false;
 
-        shockwaveAnimator = GetComponentInChildren<Animator>();
+        shockwaveAnimator = GetComponent<Animator>();
         // Change the localScale to change the size of the animation
-        shockwaveAnimator.transform.localScale = new Vector3(5f, 5f, 5f);
+        defaultScale = new Vector3(16f, 16f, 16f);
+        defaultRadius = 0.33f;
+
+        circleCollider.radius = defaultRadius;
+
+        // Register with the collider's associated SquareShape object
+        if (Runner.TryGetPlayerObject(parentPlayerRef, out NetworkObject playerNetworkObject))
+        {
+            Transform shapeController = playerNetworkObject.transform.Find("ShapeController");
+            SquareShape squareShape = shapeController.Find("SquareShape").GetComponent<SquareShape>();
+            squareShape.RegisterCircleCornerCollider(this);
+        }
+    }
+
+    public override void FixedUpdateNetwork()
+    {
+        if (disableTimer.Expired(Runner))
+        {
+            circleCollider.enabled = false;
+            slowedPlayers = new List<Player>();
+            disableTimer = TickTimer.None;
+        }
     }
 
     public void ActivateCollider(Vector3 pos, float score)
     {
         this.score = score;
-        
-        circleCollider.transform.position = pos;
+        transform.localScale = defaultScale * score;
+        transform.position = pos;
         circleCollider.enabled = true;
+        disableTimer = TickTimer.CreateFromSeconds(Runner, 0.1f);
 
-        // Trigger animation
-        RPC_TriggerShockwave(pos);
-        StartCoroutine(DelayDisable(0.1f));
+        // Signal that the collider was activated for OnColliderActivated to be called
+        activatedCollider++;
     }
 
-    [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
-    public void RPC_TriggerShockwave(Vector3 pos)
+    void OnColliderActivated()
     {
-        circleCollider.transform.position = pos;
-        TriggerShockwave(pos);
+        // Show shockwave animation on all clients and host
+        TriggerShockwave();
     }
 
-    void TriggerShockwave(Vector3 position)
+    void TriggerShockwave()
     {
         shockwaveAnimator.Play("ShockWave", 0, 0f);
         shockwaveAnimator.SetBool("Play", true);
+
         // Called so there is time for the animator to realise it is true
         StartCoroutine(DelayDisableAnimation(0.1f));
     }
@@ -55,28 +88,16 @@ public class CircleCornerCollider : NetworkBehaviour
         shockwaveAnimator.SetBool("Play", false);
     }
 
-    IEnumerator DelayDisable(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        circleCollider.enabled = false;
-        // Set an empty list when ability ends
-        slowedPlayers = new List<Player>();
-    }
-
     void OnTriggerEnter2D(Collider2D collider)
     {
-        // Prevent running if not fully spawned in the network
-        if (!Object || !HasStateAuthority || !Runner.IsRunning) return;
-
         if (collider.gameObject.tag == "Player")
         {
             Player player = collider.GetComponentInParent<Player>();
 
-            // Ensure 'team' is accessed only after Spawned() is called
-            if (player != null && Object.IsValid && player.GetTeam() != team && !slowedPlayers.Contains(player))
+            if (player.GetTeam() != team && !slowedPlayers.Contains(player))
             {
-                Debug.Log("Enemy slowed");
-                player.GetSlowed(2f * score, 1f);
+                player.GetSlowed(2f * score, 3f);
+                player.TakeDamage(2.5f * score, Object.InputAuthority);
                 slowedPlayers.Add(player);
             }
         }

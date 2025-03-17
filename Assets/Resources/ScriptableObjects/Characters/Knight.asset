@@ -14,11 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 8
   maxHealth: 100
-  damage: 4
+  damage: 8
   sprite: {fileID: 558781374, guid: 8c496e6564e6bbb4496002a6855204b6, type: 3}
-  animatorController: {fileID: 9100000, guid: 6f3c15ce244b748a7a12967678fe92f6, type: 2}
   maxAmmo: 10
-  fireRate: 3
+  attackRate: 3
   dashSpeed: 3
   dashDuration: 0.2
   dashCooldown: 2

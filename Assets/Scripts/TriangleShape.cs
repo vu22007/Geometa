@@ -5,48 +5,59 @@ using UnityEngine;
 
 public class TriangleShape : NetworkBehaviour
 {
+    [Networked] private TickTimer disableTimer { get; set; }
+
     private TriangleCollider triangleCollider;
-    private EdgeCollider2D edgeCollider;
+    private PolygonCollider2D polygonCollider;
 
     public override void Spawned()
     {
         // Only the server can spawn the collider
         if (HasStateAuthority)
         {
-            // This is the object
+            Player parentPlayer = GetComponentInParent<Player>();
+            PlayerRef parentPlayerRef = parentPlayer.Object.InputAuthority;
+            int team = parentPlayer.GetTeam();
+
+            // Spawn the triangle collider
             GameObject worldColliderPrefab = Resources.Load("Prefabs/TriangleCollider") as GameObject;
-            NetworkObject triangleColliderObject = PrefabFactory.SpawnWorldCollider(Runner, worldColliderPrefab);
+            NetworkObject triangleColliderObject = PrefabFactory.SpawnWorldCollider(Runner, parentPlayerRef, worldColliderPrefab, team);
+        }
+    }
 
-            PlayerRef parentPlayerRef = GetComponentInParent<Player>().Object.InputAuthority;
-
-            // This is the script of the object
-            triangleCollider = triangleColliderObject.GetComponent<TriangleCollider>();
-            triangleCollider.team = transform.GetComponentInParent<Player>().GetTeam();
-            triangleCollider.parentPlayerRef = parentPlayerRef;
-
-            edgeCollider = triangleCollider.GetComponent<EdgeCollider2D>();
+    public override void FixedUpdateNetwork()
+    {
+        if (disableTimer.Expired(Runner))
+        {
+            polygonCollider.enabled = false;
+            triangleCollider.RestartCollider();
+            disableTimer = TickTimer.None;
         }
     }
 
     public void CastAbility(List<Vector3> playerPositions, float score)
     {
         List<Vector2> points = new List<Vector2>();
-        points.Add(playerPositions[2]);
         foreach (Vector3 position in playerPositions)
         {
             points.Add(new Vector2(position.x, position.y));
         }
 
         triangleCollider.SetScore(score);
-        edgeCollider.SetPoints(points);
-        edgeCollider.enabled = true;
-        StartCoroutine(DelayDisable(0.1f));
+        polygonCollider.points = points.ToArray();
+        polygonCollider.enabled = true;
+        disableTimer = TickTimer.CreateFromSeconds(Runner, 0.1f);
     }
 
-    IEnumerator DelayDisable(float delay)
+    public void DrawTriangle(List<Vector3> vertices, bool activate, float score)
     {
-        yield return new WaitForSeconds(delay);
-        edgeCollider.enabled = false;
-        triangleCollider.RestartCollider();
+        triangleCollider.DrawTriangle(vertices, activate, score);
+    }
+
+    // For triangle collider to call when it spawns
+    public void RegisterTriangleCollider(TriangleCollider triangleCollider)
+    {
+        this.triangleCollider = triangleCollider;
+        polygonCollider = triangleCollider.GetComponent<PolygonCollider2D>();
     }
 }
