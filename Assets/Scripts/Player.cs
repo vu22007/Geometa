@@ -127,14 +127,6 @@ public class Player : NetworkBehaviour
         isAoEUsed = false;
         normalShoot = true;
         gamePaused = false;
-        circleSegments = 128;
-        circleRadius = 8f;
-        circleRenderer.positionCount = circleSegments + 1;
-        circleRenderer.loop = true; 
-        circleRenderer.startWidth = 0.3f; 
-        circleRenderer.endWidth = 0.3f;
-        circleRenderer.material = new Material(Shader.Find("Unlit/Color"));
-        circleRenderer.material.color = Color.red;
     }
 
     // Player initialisation (called on each client and server when player is spawned on network)
@@ -236,6 +228,15 @@ public class Player : NetworkBehaviour
         {
             mainbulletIcon.SetActive(false);
         }
+
+        circleSegments = 128;
+        circleRadius = 8f;
+        circleRenderer.positionCount = circleSegments + 1;
+        circleRenderer.loop = true; 
+        circleRenderer.startWidth = 0.3f; 
+        circleRenderer.endWidth = 0.3f;
+        circleRenderer.material = new Material(Shader.Find("Unlit/Color"));
+        circleRenderer.material.color = Color.red;
     }
 
     // Called on each client and server when player is despawned from network
