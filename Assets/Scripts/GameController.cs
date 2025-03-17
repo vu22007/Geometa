@@ -24,7 +24,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
 
     // For only the server/host to use when broadcasting messages
     private bool gameOver = false;
-
+    // Test
     [Networked] private float pointsTopupCooldownMax { get; set; }
     [Networked] private float manaTopupCooldownCurrent { get; set; }
     [Networked] private int gameStartTick { get; set; }
@@ -70,7 +70,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
             team2Flag = flag2Obj.GetComponent<PickupFlag>();
 
             // Spawn NPCs for testing
-            SpawnPlayersForTesting(3, 3);
+            SpawnPlayersForTesting(3, 3, true);
         }
     }
 
@@ -311,7 +311,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
         }
     }
 
-    void SpawnPlayersForTesting(int allies, int enemies)
+    void SpawnPlayersForTesting(int allies, int enemies, bool testing)
     {
         GameObject playerPrefab = Resources.Load("Prefabs/Player") as GameObject;
         string characterName = "Wizard";
@@ -327,15 +327,24 @@ public class GameController : NetworkBehaviour, IPlayerLeft
             });
         }
 
+        Vector3 enemyRespawnPoint;
+
         for (int i = 0; i < enemies; i++)
         {
-            // Spawn the player network object
-            NetworkObject networkPlayerObject = Runner.Spawn(playerPrefab, respawnPoint2 + new Vector3(2f, 2f, 0f) * i, Quaternion.identity, null, (runner, networkObject) =>
+            if (testing)
             {
-                // Initialise the player (this is called before the player is spawned)
-                Player player = networkObject.GetComponent<Player>();
-                player.OnCreated(characterName, respawnPoint1, 2);
-            });
+                enemyRespawnPoint = respawnPoint1;
+            } else
+            {
+                enemyRespawnPoint = respawnPoint2;
+            }
+                // Spawn the player network object
+                NetworkObject networkPlayerObject = Runner.Spawn(playerPrefab, enemyRespawnPoint + new Vector3(2f, 2f, 0f) * i, Quaternion.identity, null, (runner, networkObject) =>
+                {
+                    // Initialise the player (this is called before the player is spawned)
+                    Player player = networkObject.GetComponent<Player>();
+                    player.OnCreated(characterName, respawnPoint1, 2);
+                });
         }
 
     }

@@ -6,7 +6,7 @@ using UnityEngine;
 public class TriangleShape : NetworkBehaviour
 {
     private TriangleCollider triangleCollider;
-    private EdgeCollider2D edgeCollider;
+    private PolygonCollider2D polygonCollider;
 
     public override void Spawned()
     {
@@ -24,29 +24,33 @@ public class TriangleShape : NetworkBehaviour
             triangleCollider.team = transform.GetComponentInParent<Player>().GetTeam();
             triangleCollider.parentPlayerRef = parentPlayerRef;
 
-            edgeCollider = triangleCollider.GetComponent<EdgeCollider2D>();
+            polygonCollider = triangleCollider.GetComponent<PolygonCollider2D>();
         }
     }
 
     public void CastAbility(List<Vector3> playerPositions, float score)
     {
         List<Vector2> points = new List<Vector2>();
-        points.Add(playerPositions[2]);
         foreach (Vector3 position in playerPositions)
         {
             points.Add(new Vector2(position.x, position.y));
         }
 
         triangleCollider.SetScore(score);
-        edgeCollider.SetPoints(points);
-        edgeCollider.enabled = true;
+        polygonCollider.points = points.ToArray();
+        polygonCollider.enabled = true;
         StartCoroutine(DelayDisable(0.1f));
+    }
+
+    public void DrawTriangle(List<Vector3> vertices, bool activate, float score)
+    {
+        triangleCollider.DrawTriangle(vertices, activate, score);
     }
 
     IEnumerator DelayDisable(float delay)
     {
         yield return new WaitForSeconds(delay);
-        edgeCollider.enabled = false;
+        polygonCollider.enabled = false;
         triangleCollider.RestartCollider();
     }
 }

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Fusion;
+using NUnit.Framework.Internal;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -10,12 +11,13 @@ public class ShapeController : NetworkBehaviour
     [Networked] public bool isActive { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
     [Networked, OnChangedRender(nameof(OnShapeActivationToggleChanged))] private bool shapeActivationToggle { get; set; }
+    [Networked, OnChangedRender(nameof(OnTriangleActivationToggleChanged))] private bool triangleActivationToggle { get; set; }
     [Networked] private float score { get; set; }
     [Networked, Capacity(5)] private NetworkLinkedList<Vector3> vertices { get; }
 
+    private List<Vector3> playerPositions; 
     private int triangleCost = 10;
     private int squareCost = 15;
-    private int pentagonCost = 8;
     GameController gameController { get; set; }
     Player parentPlayer { get; set; }
 
@@ -25,11 +27,9 @@ public class ShapeController : NetworkBehaviour
 
     private LineRenderer triangleLineRenderer;
     private LineRenderer squareLineRenderer;
-    private LineRenderer pentagonLineRenderer;
 
     private TriangleShape triangleShape;
     private SquareShape squareShape;
-    private PentagonShape pentagonShape;
 
     private AudioSource audioSource;
     private AudioClip triangleKnightSound;
@@ -38,6 +38,7 @@ public class ShapeController : NetworkBehaviour
     private AudioClip squareWizardSound;
 
     // Shape controller intialisation (called on each client and server when shape controller is spawned on network)
+
     public override void Spawned()
     {
         // Get game controller component
@@ -47,14 +48,11 @@ public class ShapeController : NetworkBehaviour
    
         triangleShape = GetComponentInChildren<TriangleShape>();
         squareShape = GetComponentInChildren<SquareShape>();
-        pentagonShape = GetComponentInChildren<PentagonShape>();
 
         triangleLineRenderer = triangleShape.GetComponent<LineRenderer>();
         triangleLineRenderer.enabled = false; 
         squareLineRenderer = squareShape.GetComponent<LineRenderer>();
         squareLineRenderer.enabled = false;
-        pentagonLineRenderer = pentagonShape.GetComponent<LineRenderer>();
-        pentagonLineRenderer.enabled = false;
 
         audioSource = GetComponentInParent<AudioSource>();
         triangleKnightSound = Resources.Load<AudioClip>("Sounds/TriangleKnight");
@@ -67,6 +65,11 @@ public class ShapeController : NetworkBehaviour
         squareCooldown = 0;
 
         shapeActivationToggle = false;
+    }
+
+    void OnTriangleActivationToggleChanged()
+    {
+        triangleShape.DrawTriangle(playerPositions, true, score);
     }
 
     void OnShapeActivationToggleChanged()
@@ -90,7 +93,6 @@ public class ShapeController : NetworkBehaviour
             // On key down for specific shape (only on moment when key is pressed down)
             if (input.buttons.IsSet(InputButtons.Triangle)) TrianglePerformed();
             if (input.buttons.IsSet(InputButtons.Square)) SquarePerformed();
-            if (input.buttons.IsSet(InputButtons.Pentagon)) PentagonPerformed();
 
             if (input.buttons.WasReleased(previousButtons, InputButtons.Triangle))
             {
@@ -99,10 +101,6 @@ public class ShapeController : NetworkBehaviour
             if (input.buttons.WasReleased(previousButtons, InputButtons.Square))
             {
                 SquareActivated();
-            }
-            if (input.buttons.WasReleased(previousButtons, InputButtons.Pentagon))
-            {
-                PentagonActivated();
             }
 
             previousButtons = input.buttons;
@@ -129,16 +127,6 @@ public class ShapeController : NetworkBehaviour
         }
     }
 
-    private void PentagonPerformed()
-    {
-        // Preview shape only locally 
-        // The line renderer will be disable for all others
-        if (HasInputAuthority)
-        {
-            PreviewShape(5, false);
-        }
-    }
-
     private void TriangleActivated()
     {
         PreviewShape(3, true);
@@ -147,11 +135,6 @@ public class ShapeController : NetworkBehaviour
     private void SquareActivated()
     {
         PreviewShape(4, true);
-    }
-
-    private void PentagonActivated()
-    {
-        PreviewShape(5, true);
     }
 
     void PreviewShape(int nVertices, bool activate)
@@ -196,8 +179,8 @@ public class ShapeController : NetworkBehaviour
             if (parentPlayer.GetMana() < pentagonCost)
             {
                 pentagonLineRenderer.enabled = false;
-                Debug.Log("You don't have enough Mana to activate a pentagon");
-                if (activate && !Runner.IsResimulation) parentPlayer.ShowMessage("Not enough Mana!", 0.2f, Color.white);
+                Debug.Log("You don't have enough mana to activate a pentagon");
+                if (activate && !Runner.IsResimulation) parentPlayer.ShowMessage("Not enough mana!", 0.2f, Color.white);
                 return;
             }
         }
@@ -232,6 +215,7 @@ public class ShapeController : NetworkBehaviour
         // Sort by angle relative to centroid, counterclockwise. If this isn't done 
         // we might connect the diagonal of square instead of the edge
         playerPositions = SortVerticesAroundCentroid(playerPositions);
+        this.playerPositions = playerPositions;
 
         // Calculate the angles for each vertice of the shape
         List<float> angles = GetAngles(playerPositions);
@@ -257,7 +241,7 @@ public class ShapeController : NetworkBehaviour
                 if (parentPlayer.GetCharacterName() == "Wizard")
                 {
                     parentPlayer.ActivateTri(true);
-                    triangleCooldown = 1f;
+                    triangleCooldown = 3.0f;
                     parentPlayer.SpendMana(triangleCost);
                     triangleLineRenderer.enabled = false;
                 }
@@ -265,16 +249,21 @@ public class ShapeController : NetworkBehaviour
                 {
                     if (HasStateAuthority)
                     {
+                        triangleLineRenderer.enabled = false;
                         triangleShape.CastAbility(playerPositions, score);
-                        triangleCooldown = 1f;
+                        triangleCooldown = 3.0f;
                         parentPlayer.SpendMana(triangleCost);
 
                         RPC_PlayTriangleSound(playerPositions.ToArray(), 3, "Knight");
 
                         // Set networked property so everyone can draw lines in OnShapeActivationToggleChanged method
-                        shapeActivationToggle = !shapeActivationToggle;
+
+                        triangleActivationToggle = !triangleActivationToggle;
+                        // shapeActivationToggle = !shapeActivationToggle;
                     }
                 }
+                parentPlayer.activateTriCD(triangleCooldown);
+
             }
             else if (nVertices == 4)
             {
@@ -291,44 +280,22 @@ public class ShapeController : NetworkBehaviour
                     if (HasStateAuthority)
                     {
                         squareShape.CastAbility(playerPositions, score);
-                        squareCooldown = 3f;
+                        squareCooldown = 5f;
                         parentPlayer.SpendMana(squareCost);
 
                         RPC_PlayTriangleSound(playerPositions.ToArray(), 4, "Knight");
                         // Set networked property so everyone can draw lines in OnShapeActivationToggleChanged method
                         shapeActivationToggle = !shapeActivationToggle;
                     }
+                    parentPlayer.activateSqCD(squareCooldown);
                 }
             }
-            else if (nVertices == 5)
-            {
-                if (!IsConvex(angles))
-                {
-                    pentagonLineRenderer.enabled = false;
-                    Debug.Log("Shape is not convex - can't activate buff!");
-                    if (!Runner.IsResimulation) parentPlayer.ShowMessage("Shape is not convex!", 0.2f, Color.white);
-                    return;
-                }
-                else
-                {
-                    if (HasStateAuthority)
-                    {
-                        Vector3 centroid = Vector3.zero;
-                        foreach (var v in playerPositions)
-                        {
-                            centroid += v;
-                        }
-                        centroid /= playerPositions.Count;
+        }
 
-                        // TODO: Spawn creature in the center
+        // Draw lines locally when just preview
+        if (HasInputAuthority)
+        {
 
-                        parentPlayer.SpendMana(pentagonCost);
-
-                        // Set networked property so everyone can draw lines in OnShapeActivationToggleChanged method
-                        shapeActivationToggle = !shapeActivationToggle;
-                    }
-                }
-            }
         }
 
         // Draw lines locally when just preview
@@ -448,9 +415,8 @@ public class ShapeController : NetworkBehaviour
 
             // Calculate a new alpha based on the elapsed time
             float newAlpha = Mathf.Lerp(startAlpha, 0f, timer / delay);
-
             startColor.a = endColor.a = newAlpha;
-
+            
             lineRenderer.startColor = startColor;
             lineRenderer.endColor = endColor;
 
@@ -466,13 +432,9 @@ public class ShapeController : NetworkBehaviour
         {
             return triangleLineRenderer;
         }
-        else if (nVertices == 4)
-        {
-            return squareLineRenderer;
-        }
         else
         {
-            return pentagonLineRenderer;
+            return squareLineRenderer;
         }
     }
 

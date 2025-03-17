@@ -62,7 +62,8 @@ public class Player : NetworkBehaviour
     [SerializeField] UIController uIController;
     [SerializeField] cooldownHandler dashCDHandler;
     [SerializeField] cooldownHandler reloadHandler;
-    [SerializeField] cooldownHandler aoeHandler;
+    [SerializeField] cooldownHandler squareHandler;
+    [SerializeField] cooldownHandler triangleHandler;
     [SerializeField] Image reloadIcon;
     [SerializeField] Image reloadIconLayer;
     [SerializeField] Image aoeIcon;
@@ -80,6 +81,8 @@ public class Player : NetworkBehaviour
     private AudioClip shootSound;
     private AudioClip dyingSound;
     private AudioClip dashSound;
+    private AudioClip reloadSound;
+    private AudioClip knightSwordSound;
     private AudioSource audioSource;
     [SerializeField] Image bulletIcon;
     [SerializeField] GameObject mainbulletIcon;
@@ -205,6 +208,8 @@ public class Player : NetworkBehaviour
         shootSound = Resources.Load<AudioClip>("Sounds/Shoot");
         dyingSound = Resources.Load<AudioClip>("Sounds/Dying");
         dashSound = Resources.Load<AudioClip>("Sounds/Dash");
+        reloadSound = Resources.Load<AudioClip>("Sounds/WizardReload");
+        knightSwordSound = Resources.Load<AudioClip>("Sounds/KnightSword");
 
         // Set the initial flag indicator visibility
         OnCarryingChanged();
@@ -369,6 +374,11 @@ public class Player : NetworkBehaviour
                 {
                     if (input.buttons.IsSet(InputButtons.Shoot))
                     {
+                        // NOTE: Add this when set cooldown to knights attack
+                        if (HasInputAuthority && !Runner.IsResimulation)
+                        {
+                            // audioSource.PlayOneShot(knightSwordSound);
+                        }
                         isAttacking = true;
                         EnableMeleeHitbox();
                     }
@@ -383,14 +393,23 @@ public class Player : NetworkBehaviour
                 {
                     if (input.buttons.IsSet(InputButtons.Shoot))
                     {
-                        if (isAoEEnabled && !normalShoot)
-                        {
-                            ShootAoE(input.aimDirection);
-                        }
-                        else if (normalShoot && !isAoEEnabled)
+                        if (normalShoot && !isAoEEnabled)
                         {
                             Shoot(input.aimDirection);
                         }
+                        isAttacking = true;
+                    }
+                    else
+                    {
+                        isAttacking = false;
+                    }
+                }
+
+                if (input.buttons.WasPressed(previousButtons, InputButtons.AoE))
+                {
+                    if (isAoEEnabled && !normalShoot)
+                    {
+                        ShootAoE(input.aimDirection, input.cursorWorldPoint);
                         isAttacking = true;
                     }
                     else
@@ -506,7 +525,7 @@ public class Player : NetworkBehaviour
             dashTimer = dashDuration;
             dashCooldownTimer = dashCooldown;
 
-            if (!Runner.IsResimulation)
+            if (HasInputAuthority && !Runner.IsResimulation)
             {
                 dashCDHandler.StartCooldown(dashCooldown);
                 audioSource.PlayOneShot(dashSound);
@@ -568,8 +587,9 @@ public class Player : NetworkBehaviour
     }
 
     // Shoots a bullet by spawning the prefab on the network
-    void ShootAoE(Vector2 aimDirection)
+    void ShootAoE(Vector2 aimDirection, Vector2 cursorWorldPoint)
     {
+        float distance = Vector2.Distance(transform.position, cursorWorldPoint);
         if (HasStateAuthority)
         {
             GameObject aoeSpellPrefab = Resources.Load("Prefabs/AoE1") as GameObject;
@@ -578,7 +598,7 @@ public class Player : NetworkBehaviour
                 AoESpell aoeSpell = networkObject.GetComponent<AoESpell>();
                 if (aoeSpell != null)
                 {
-                    aoeSpell.OnCreated(aimDirection, 10f, 10f, aoeDamage, team, aoeDuration, Object.InputAuthority);
+                    aoeSpell.OnCreated(aimDirection, 10f, distance, aoeDamage, team, aoeDuration, Object.InputAuthority);
                 }
             });
         }
@@ -779,8 +799,11 @@ public class Player : NetworkBehaviour
             reloadTimer = reloadTime * reloadFraction;
             timeToWaitForBullet = reloadTimer;
 
-            if (!Runner.IsResimulation)
+            if (HasInputAuthority && !Runner.IsResimulation)
             {
+                audioSource.pitch = 2.7f / missingAmmo;
+                audioSource.PlayOneShot(reloadSound);
+                audioSource.pitch = 1f;
                 ShowMessage("Gathering Energy", 0.3f, Color.green);
                 reloadIcon.enabled = true;
                 reloadIconLayer.enabled = true;
@@ -899,6 +922,16 @@ public class Player : NetworkBehaviour
             isAoEUsed = false;
             StartCoroutine(EnableAoETemporarily());
         } 
+    }
+
+    public void activateTriCD(float triCD)
+    {
+        triangleHandler.StartCooldown(triCD);
+    }
+
+    public void activateSqCD(float sqCD)
+    {
+        squareHandler.StartCooldown(sqCD);
     }
 
     public float GetMana()
