@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
 
@@ -12,12 +14,13 @@ public class AoESpell : NetworkBehaviour
     [Networked] private float speed { get; set; }
     [Networked] private float maxDistance { get; set; }
     [Networked] private float distanceTraveled { get; set; }
+    [Networked] private TickTimer damageCooldown { get; set; }
     [Networked, OnChangedRender(nameof(OnActivatedChanged))] private bool isActivated { get; set; }
-
     [SerializeField] private Sprite aoeSmall;
     [SerializeField] private Sprite aoeNormal;
-
     private SpriteRenderer spriteRenderer;
+    private List<Player> players;
+    private float damageCooldownMax = 0.6f;
 
     public void OnCreated(Vector2 direction, float speed, float maxDistance, float damage, int team, float duration, PlayerRef playerCasting)
     {
@@ -28,20 +31,27 @@ public class AoESpell : NetworkBehaviour
         this.direction = direction.normalized;
         this.speed = speed;
         this.maxDistance = maxDistance;
-        this.distanceTraveled = 0f;
-        this.isActivated = false;
+        distanceTraveled = 0f;
+        isActivated = false;
+        damageCooldown = TickTimer.CreateFromSeconds(Runner, damageCooldownMax);
     }
 
     public override void Spawned()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
         OnActivatedChanged();
+        players = new List<Player>();
     }
 
     public override void FixedUpdateNetwork()
     {
         if (isActivated)
         {
+            if(damageCooldown.Expired(Runner)){
+                DamagePlayers();
+                damageCooldown = TickTimer.CreateFromSeconds(Runner, damageCooldownMax);
+            }
+            
             // Check if the despawn timer has expired
             if (despawnTimer.Expired(Runner))
             {
@@ -63,19 +73,37 @@ public class AoESpell : NetworkBehaviour
         }
     }
 
-    private void OnTriggerStay2D(Collider2D other)
+    private void DamagePlayers()
     {
-        // Check if the colliding object is a player
-        if (isActivated && other.CompareTag("Player"))
+        foreach (Player player in players)
         {
-            Player player = other.GetComponentInParent<Player>();
+            player.TakeDamage(damage, playerCasting);
+        }
+    }
 
-            if (player != null)
-            {
-                player.TakeDamage(damage * Runner.DeltaTime, playerCasting);
+    private void OnTriggerEnter2D(Collider2D other){
+        if(other.CompareTag("Player")){
+            Player player = other.GetComponentInParent<Player>();
+            if(player != null){
+                if(player.GetTeam() != team){
+                    players.Add(player);
+                }
             }
         }
     }
+
+    private void OnTriggerExit2D(Collider2D other){
+        if(other.CompareTag("Player")){
+            Player player = other.GetComponentInParent<Player>();
+            if(player != null){
+                if(players.Contains(player)){
+                    players.Remove(player);
+                }
+            }
+        }
+    }
+
+
 
     // Called on all clients and host when AoE spell is activated, so that everyone sees the correct sprite
     void OnActivatedChanged()

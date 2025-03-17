@@ -8,7 +8,7 @@ public class Player : NetworkBehaviour
 {
     [Networked] float speed { get; set; }
     [Networked] float maxHealth { get; set; }
-    [Networked] float maxPoints { get; set; }
+    [Networked] float maxMana { get; set; }
     [Networked] float damage { get; set; }
     [Networked] int maxAmmo { get; set; }
     [Networked, OnChangedRender(nameof(OnCurrentAmmoChanged))] int currentAmmo { get; set; }
@@ -17,7 +17,7 @@ public class Player : NetworkBehaviour
     [Networked] float reloadTime { get; set; }
     [Networked] bool alreadyReloading { get; set; }
     [Networked, OnChangedRender(nameof(OnReloadTimerChanged))] TickTimer reloadTimer { get; set; }
-    [Networked, OnChangedRender(nameof(OnPointsChanged))] float points { get; set; }
+    [Networked, OnChangedRender(nameof(OnManaChanged))] float mana { get; set; }
     [Networked] TickTimer attackWaitTimer { get; set; }
     [Networked, OnChangedRender(nameof(OnHealthChanged))] float currentHealth { get; set; }
     [Networked] int team { get; set; }
@@ -59,7 +59,7 @@ public class Player : NetworkBehaviour
     Animator animator;
     [SerializeField] Image mainHealthBar;
     [SerializeField] Image teamHealthBar;
-    [SerializeField] Image mainPointsBar;
+    [SerializeField] Image mainManaBar;
     [SerializeField] Image minimapIndicator;
     [SerializeField] Image enemyHealthBar;
     [SerializeField] UIController uIController;
@@ -97,7 +97,7 @@ public class Player : NetworkBehaviour
     {
         Character character = Resources.Load($"ScriptableObjects/Characters/{characterName}") as Character;
         maxHealth = character.MaxHealth;
-        maxPoints = 30f;
+        maxMana = 30f;
         speed = character.Speed;
         damage = character.Damage;
         maxAmmo = character.MaxAmmo;
@@ -110,7 +110,7 @@ public class Player : NetworkBehaviour
         this.respawnPoint = respawnPoint;
         this.team = team;
         this.characterName = characterName;
-        points = 30f;
+        mana = 30f;
         reloadTime = 3.0f;
         respawnTime = 10.0f;
         aoeDamage = 5;
@@ -191,7 +191,7 @@ public class Player : NetworkBehaviour
         UpdateHealthBar();
 
         //Set the points bar
-        UpdatePointsBar();
+        UpdateManaBar();
 
         // Disable the death overlay
         if (deathOverlay != null)
@@ -644,20 +644,19 @@ public class Player : NetworkBehaviour
         }
     }
 
-    public void GainPoints(int amount)
+    public void GainMana(int amount)
     {
-        points += amount;
-
-        if (points > maxPoints){
-            points = maxPoints;
+        mana += amount;
+        if(mana > maxMana){
+            mana = maxMana;
         }
     }
 
-    public void SpendPoints(int amount)
+    public void SpendMana(int amount)
     {
-        if (amount <= points)
+        if (amount <= mana)
         {
-            points -= amount;
+            mana -= amount;
         }
     }
 
@@ -681,13 +680,13 @@ public class Player : NetworkBehaviour
             DropObject();
         }
 
-        // Award points to killer
+        // Award Mana to killer
         if (Runner.TryGetPlayerObject(killer, out NetworkObject networkPlayerObject))
         {
             Player player = networkPlayerObject.GetComponent<Player>();
             if (player.team != team)
             {
-                player.GainPoints(10);
+                player.GainMana(10);
             }
         }
     }
@@ -761,13 +760,13 @@ public class Player : NetworkBehaviour
         }
     }
 
-    void OnPointsChanged()
+    void OnManaChanged()
     {
-        UpdatePointsBar();
+        UpdateManaBar();
     }
 
-    void UpdatePointsBar(){
-        mainPointsBar.fillAmount = points / maxPoints;
+    void UpdateManaBar(){
+        mainManaBar.fillAmount = mana/maxMana;;
     }
 
     void Reload()
@@ -799,11 +798,11 @@ public class Player : NetworkBehaviour
     {
         if (currentAmmo >= maxAmmo)
         {
-            ShowMessage("Mana is full!", 0.1f, Color.white);
+            ShowMessage("Energy is full!", 0.1f, Color.white);
         }
         else if (alreadyReloading)
         {
-            ShowMessage("Still gathering mana", 0.3f, Color.white);
+            ShowMessage("Still gathering energy", 0.3f, Color.white);
         }
     }
 
@@ -814,7 +813,7 @@ public class Player : NetworkBehaviour
             // Reload has started
             if (reloadTimer.IsRunning)
             {
-                ShowMessage("Gathering Mana", 0.3f, Color.green);
+                ShowMessage("Gathering Energy", 0.3f, Color.green);
 
                 // Play sound (use separate reload audio source so that the pitch can be adjusted without affecting other sounds)
                 reloadAudioSource.pitch = 2.7f / missingAmmo;
@@ -955,9 +954,9 @@ public class Player : NetworkBehaviour
         squareHandler.StartCooldown(sqCD);
     }
 
-    public float GetPoints()
+    public float GetMana()
     {
-        return points;
+        return mana;
     }
 
     public void GetSlowed(float amount, float time)

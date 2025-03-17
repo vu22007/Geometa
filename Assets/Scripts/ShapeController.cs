@@ -20,8 +20,8 @@ public class ShapeController : NetworkBehaviour
     [Networked, Capacity(50)] private string errorMessage { get; set; }
 
     private List<Vector3> playerPositions;
-    private int triangleCost = 3;
-    private int squareCost = 5;
+    private int triangleCost = 10;
+    private int squareCost = 15;
     private float triangleCooldown = 3f;
     private float squareCooldown = 5f;
 
@@ -155,12 +155,12 @@ public class ShapeController : NetworkBehaviour
                 return;
             }
 
-            if (parentPlayer.GetPoints() < triangleCost)
+            if (parentPlayer.GetMana() < triangleCost)
             {
                 trianglePreviewActive = false;
                 if (activate)
                 {
-                    errorMessage = "Not enough points!";
+                    errorMessage = "Not enough mana!";
                     activateShapeFailed++;
                 }
                 return;
@@ -178,12 +178,12 @@ public class ShapeController : NetworkBehaviour
                 return;
             }
 
-            if (parentPlayer.GetPoints() < squareCost)
+            if (parentPlayer.GetMana() < squareCost)
             {
                 squarePreviewActive = false;
                 if (activate)
                 {
-                    errorMessage = "Not enough points!";
+                    errorMessage = "Not enough mana!";
                     activateShapeFailed++;
                 }
                 return;
@@ -257,7 +257,7 @@ public class ShapeController : NetworkBehaviour
                 activatedTriangle++;
 
                 triangleCooldownTimer = TickTimer.CreateFromSeconds(Runner, triangleCooldown);
-                parentPlayer.SpendPoints(triangleCost);
+                parentPlayer.SpendMana(triangleCost);
 
                 if (parentPlayer.GetCharacterName() == "Wizard")
                 {
@@ -283,7 +283,7 @@ public class ShapeController : NetworkBehaviour
                     activatedSquare++;
 
                     squareCooldownTimer = TickTimer.CreateFromSeconds(Runner, squareCooldown);
-                    parentPlayer.SpendPoints(squareCost);
+                    parentPlayer.SpendMana(squareCost);
 
                     squareShape.CastAbility(playerPositions, score);
                 }
@@ -528,7 +528,7 @@ public class ShapeController : NetworkBehaviour
         int count = angles.Count;
         float sum = angles.Sum();
 
-        // sum is a sum of floating points so we put 0.1 as an allowed error margin
+        // sum is a sum of floating Mana so we put 0.1 as an allowed error margin
         if(Mathf.Abs(sum - ((count - 2) * 180f)) > 0.1)
         {
             return false;
