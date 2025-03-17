@@ -56,7 +56,7 @@ public class Pickup : NetworkBehaviour
                 sprite = Resources.Load<Sprite>("Sprites/HealthPickup2");
                 break;
             case 1: //Mana
-                sprite = Resources.Load<Sprite>("Sprites/PointsPickup");
+                sprite = Resources.Load<Sprite>("Sprites/ManaPickup");
                 break;
             default:
                 sprite = null;
