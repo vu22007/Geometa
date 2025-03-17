@@ -49,6 +49,8 @@ public class Player : NetworkBehaviour
     [Networked] public float aoeMaxRad { get; set; }
     [Networked] private bool normalShoot { get; set; }
     [Networked] private bool gamePaused { get; set; }
+    [Networked] int circleSegments { get; set; }
+    [Networked] float circleRadius { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
@@ -86,6 +88,8 @@ public class Player : NetworkBehaviour
     [SerializeField] GameObject mainbulletIcon;
     [SerializeField] Transform meleePoint;
     [SerializeField] GameObject meleeHitbox;
+    public LineRenderer circleRenderer;
+    [SerializeField] Transform pointer;
     
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(string characterName, Vector3 respawnPoint, int team)
@@ -122,6 +126,14 @@ public class Player : NetworkBehaviour
         isAoEUsed = false;
         normalShoot = true;
         gamePaused = false;
+        circleSegments = 128;
+        circleRadius = 8f;
+        circleRenderer.positionCount = circleSegments + 1;
+        circleRenderer.loop = true; 
+        circleRenderer.startWidth = 0.3f; 
+        circleRenderer.endWidth = 0.3f;
+        circleRenderer.material = new Material(Shader.Find("Unlit/Color"));
+        circleRenderer.material.color = Color.red;
     }
 
     // Player initialisation (called on each client and server when player is spawned on network)
@@ -357,6 +369,19 @@ public class Player : NetworkBehaviour
             Reload();
         }
 
+        if (isCarrying)
+        {
+            circleRenderer.enabled = true;
+            pointer.gameObject.SetActive(true);
+            updatePointer();
+            DrawCircle(respawnPoint, circleRadius);
+        }
+        else
+        {
+            circleRenderer.enabled = false;
+            pointer.gameObject.SetActive(false);
+        }
+        
         // GetInput will return true on the StateAuthority (the server) and the InputAuthority (the client who controls this player)
         // So the following is ran for just the server and the client who controls this player
         if (GetInput(out NetworkInputData input))
@@ -615,6 +640,27 @@ public class Player : NetworkBehaviour
     public void PlayShootSound()
     {
         audioSource.PlayOneShot(shootSound);
+    }
+
+    void DrawCircle(Vector3 center, float radius)
+    {
+        for (int i = 0; i <= circleSegments; i++)
+        {
+            float angle = (float)i / circleSegments * Mathf.PI * 2;
+            float x = Mathf.Cos(angle) * radius; 
+            float y = Mathf.Sin(angle) * radius; 
+            Vector3 point = center + new Vector3(x, y, 0); 
+            circleRenderer.SetPosition(i, point); 
+        }
+    }
+
+    void updatePointer()
+    {
+        if (pointer == null) return;
+
+        Vector3 direction = (respawnPoint - transform.position).normalized;
+        Quaternion rotation = Quaternion.LookRotation(Vector3.forward, direction);
+        pointer.rotation = rotation;
     }
 
     //take damage equal to input, includes check for death
