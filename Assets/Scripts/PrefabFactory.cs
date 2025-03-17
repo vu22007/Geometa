@@ -76,4 +76,15 @@ public static class PrefabFactory
         return networkFlagObject;
     }
 
+
+    public static NetworkObject SpawnSummon(NetworkRunner runner, GameObject prefab, Vector3 spawnPosition, int team, PlayerRef summoner)
+    {
+        NetworkObject summonObject = runner.Spawn(prefab, spawnPosition, Quaternion.identity, summoner, (runner, networkObject) =>
+        {
+            SummonAI summonAI = networkObject.GetComponent<SummonAI>();
+            summonAI.OnCreated(team, summoner);
+        });
+
+        return summonObject;
+    }
 }
