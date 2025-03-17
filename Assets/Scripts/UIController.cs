@@ -2,19 +2,19 @@ using Fusion;
 using TMPro;
 using UnityEngine;
 
-public class UIController : MonoBehaviour
+public class UIController : NetworkBehaviour
 {
     [SerializeField] GameObject popUpTextPrefab;
     [SerializeField] TMP_Text popUpText;
     GameController gameController;
     [SerializeField] TextMeshProUGUI timeLeftText;
 
-    private void Start()
+    public override void Spawned()
     {
         gameController = GameObject.Find("Game Controller").GetComponent<GameController>();
     }
 
-    private void Update()
+    public override void Render()
     {
         // Update the time left in the UI if the client controls this player
         float timeLeft = gameController.GetTimeLeft();
