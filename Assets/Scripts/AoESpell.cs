@@ -76,13 +76,12 @@ public class AoESpell : NetworkBehaviour
 
     private void DamagePlayers()
     {
-        Debug.Log(players);
         foreach (Player player in players)
         {
             player.TakeDamage(damage, playerCasting);
         }
     }
-    
+
     private void OnTriggerEnter2D(Collider2D other){
         if(other.CompareTag("Player")){
             Player player = other.GetComponentInParent<Player>();
