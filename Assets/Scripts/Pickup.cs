@@ -37,6 +37,10 @@ public class Pickup : NetworkBehaviour
                         player.GainMana(amount);
                         player.ShowMessage("+"+amount, 0.2f, Color.cyan);
                         break;
+                    case 2: //Speed
+                        player.IncreaseSpeed(amount, 5f);
+                        player.ShowMessage("Speed increased!!", 0.3f, Color.blue);
+                        break;
                     default:
                         Debug.Log("Unknown type of pickup");
                         break;
@@ -57,6 +61,9 @@ public class Pickup : NetworkBehaviour
                 break;
             case 1: //Mana
                 sprite = Resources.Load<Sprite>("Sprites/ManaPickup");
+                break;
+            case 2: //Speed
+                sprite = Resources.Load<Sprite>("Sprites/SpeedPickup");
                 break;
             default:
                 sprite = null;
