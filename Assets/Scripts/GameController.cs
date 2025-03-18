@@ -113,10 +113,10 @@ public class GameController : NetworkBehaviour, IPlayerLeft
         {
             NetworkManager networkManager = GameObject.Find("Network Runner").GetComponent<NetworkManager>();
 
-            foreach (KeyValuePair<PlayerRef, string> item in networkManager.team1Players)
+            foreach (KeyValuePair<PlayerRef, Lobby.PlayerInfo> item in networkManager.team1Players)
                 playersToTeams.Add(item.Key, 1);
 
-            foreach (KeyValuePair<PlayerRef, string> item in networkManager.team2Players)
+            foreach (KeyValuePair<PlayerRef, Lobby.PlayerInfo> item in networkManager.team2Players)
                 playersToTeams.Add(item.Key, 2);
         }
     }
@@ -128,24 +128,24 @@ public class GameController : NetworkBehaviour, IPlayerLeft
             NetworkManager networkManager = GameObject.Find("Network Runner").GetComponent<NetworkManager>();
 
             // Create team 1 players
-            foreach (KeyValuePair<PlayerRef, string> item in networkManager.team1Players)
+            foreach (KeyValuePair<PlayerRef, Lobby.PlayerInfo> item in networkManager.team1Players)
             {
                 PlayerRef playerRef = item.Key;
-                string characterName = item.Value;
-                SpawnPlayer(playerRef, characterName, 1);
+                Lobby.PlayerInfo playerInfo = item.Value;
+                SpawnPlayer(playerRef, (string)playerInfo.username, (string)playerInfo.characterName, 1);
             }
 
             // Create team 2 players
-            foreach (KeyValuePair<PlayerRef, string> item in networkManager.team2Players)
+            foreach (KeyValuePair<PlayerRef, Lobby.PlayerInfo> item in networkManager.team2Players)
             {
                 PlayerRef playerRef = item.Key;
-                string characterName = item.Value;
-                SpawnPlayer(playerRef, characterName, 2);
+                Lobby.PlayerInfo playerInfo = item.Value;
+                SpawnPlayer(playerRef, (string)playerInfo.username, (string)playerInfo.characterName, 2);
             }
         }
     }
 
-    void SpawnPlayer(PlayerRef player, string characterName, int team)
+    void SpawnPlayer(PlayerRef player, string username, string characterName, int team)
     {
         if (HasStateAuthority)
         {
@@ -156,7 +156,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
             Vector3 respawnPoint = (team == 1) ? respawnPoint1 : respawnPoint2;
 
             // Spawn the player network object
-            NetworkObject networkPlayerObject = PrefabFactory.SpawnPlayer(Runner, player, playerPrefab, respawnPoint, characterName, team);
+            NetworkObject networkPlayerObject = PrefabFactory.SpawnPlayer(Runner, player, playerPrefab, respawnPoint, username, characterName, team);
 
             // Add player network object to dictionary
             spawnedPlayers.Add(player, networkPlayerObject);
@@ -274,7 +274,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
             {
                 // Initialise the player (this is called before the player is spawned)
                 Player player = networkObject.GetComponent<Player>();
-                player.OnCreated(characterName, respawnPoint1, 1);
+                player.OnCreated("NPC", characterName, respawnPoint1, 1);
             });
         }
 
@@ -294,7 +294,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
                 {
                     // Initialise the player (this is called before the player is spawned)
                     Player player = networkObject.GetComponent<Player>();
-                    player.OnCreated(characterName, respawnPoint1, 2);
+                    player.OnCreated("NPC", characterName, respawnPoint1, 2);
                 });
         }
     }

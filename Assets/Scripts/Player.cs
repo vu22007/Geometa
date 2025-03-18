@@ -6,6 +6,7 @@ using Fusion.Addons.Physics;
 
 public class Player : NetworkBehaviour
 {
+    [Networked] string username { get; set; }
     [Networked] float speed { get; set; }
     [Networked] float maxHealth { get; set; }
     [Networked] float maxMana { get; set; }
@@ -97,7 +98,7 @@ public class Player : NetworkBehaviour
     [SerializeField] Transform pointer;
     
     // Player intialisation (called from game controller on server when creating the player)
-    public void OnCreated(string characterName, Vector3 respawnPoint, int team)
+    public void OnCreated(string username, string characterName, Vector3 respawnPoint, int team)
     {
         Character character = Resources.Load($"ScriptableObjects/Characters/{characterName}") as Character;
         maxHealth = character.MaxHealth;
@@ -110,7 +111,8 @@ public class Player : NetworkBehaviour
         dashDuration = character.DashDuration;
         dashCooldown = character.DashCooldown;
         characterName = character.name;
-        
+
+        this.username = username;
         this.respawnPoint = respawnPoint;
         this.team = team;
         this.characterName = characterName;

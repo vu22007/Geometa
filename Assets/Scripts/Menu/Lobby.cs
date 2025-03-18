@@ -161,11 +161,9 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
     {
         if (HasStateAuthority)
         {
-            // TODO: Hand over the player info to network manager in here
-
             // Give the network manager the player dictionaries, but first convert the networked ones to standard ones
-            //networkManager.team1Players = ConvertFromNetworkDictionary(team1Players);
-            //networkManager.team2Players = ConvertFromNetworkDictionary(team2Players);
+            networkManager.team1Players = ConvertFromNetworkDictionary(team1Players);
+            networkManager.team2Players = ConvertFromNetworkDictionary(team2Players);
 
             // Prevent new players from joining
             Runner.SessionInfo.IsOpen = false;
@@ -182,10 +180,10 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
     }
 
     // Convert a network dictionary into a standard dictionary
-    Dictionary<PlayerRef, string> ConvertFromNetworkDictionary(NetworkDictionary<PlayerRef, string> networkDictionary)
+    Dictionary<PlayerRef, PlayerInfo> ConvertFromNetworkDictionary(NetworkDictionary<PlayerRef, PlayerInfo> networkDictionary)
     {
-        Dictionary<PlayerRef, string> dictionary = new Dictionary<PlayerRef, string>();
-        foreach (KeyValuePair<PlayerRef, string> item in networkDictionary)
+        Dictionary<PlayerRef, PlayerInfo> dictionary = new Dictionary<PlayerRef, PlayerInfo>();
+        foreach (KeyValuePair<PlayerRef, PlayerInfo> item in networkDictionary)
         {
             dictionary.Add(item.Key, item.Value);
         }
@@ -331,7 +329,7 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
         }
     }
 
-    struct PlayerInfo : INetworkStruct
+    public struct PlayerInfo : INetworkStruct
     {
         public PlayerRef playerRef;
         public NetworkString<_16> username;
