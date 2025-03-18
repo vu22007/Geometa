@@ -5,7 +5,6 @@ using UnityEngine;
 public class SquareShape : NetworkBehaviour
 {
     private List<CircleCornerCollider> circleColliders;
-
     [SerializeField] private GameObject summonPrefab;
 
     public override void Spawned()
@@ -18,9 +17,7 @@ public class SquareShape : NetworkBehaviour
             GameObject circleColliderPrefab = Resources.Load("Prefabs/CircleCornerCollider") as GameObject;
             for (int i = 0; i < 4; i++)
             {
-                // The prefab is disabled by default
                 NetworkObject circleColliderObject = PrefabFactory.SpawnCircleCollider(Runner, circleColliderPrefab);
-
                 CircleCornerCollider temp = circleColliderObject.GetComponent<CircleCornerCollider>();
                 temp.team = transform.GetComponentInParent<Player>().GetTeam();
                 circleColliders.Add(temp);
@@ -39,12 +36,10 @@ public class SquareShape : NetworkBehaviour
         }
         else
         {
-            for (int i=0; i<4; i++)
+            for (int i = 0; i < 4; i++)
             {
                 circleColliders[i].ActivateCollider(playerPositions[i], score);
             }
         }
-    }   
+    }
 }
-
-

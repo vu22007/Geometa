@@ -1,5 +1,6 @@
 using Fusion;
 using UnityEngine;
+using System.Collections;
 
 public class SummonAI : NetworkBehaviour
 {
@@ -10,6 +11,8 @@ public class SummonAI : NetworkBehaviour
     [Networked] private float damage { get; set; } = 10f; 
     [Networked] private TickTimer despawnTimer { get; set; }
     
+    private Coroutine damageCoroutine;
+
     private Transform target;
 
     public void OnCreated(int team, PlayerRef summoner)
@@ -65,6 +68,7 @@ public class SummonAI : NetworkBehaviour
         target = closestPlayer;
     }
 
+
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Player"))
@@ -72,9 +76,31 @@ public class SummonAI : NetworkBehaviour
             Player player = other.GetComponentInParent<Player>();
             if (player != null && player.GetTeam() != team)
             {
-                player.TakeDamage(damage, summonerRef);
-                Runner.Despawn(Object);
+                // Start dealing continuous damage
+                damageCoroutine = StartCoroutine(DealContinuousDamage(player));
             }
+        }
+    }
+
+    private void OnTriggerExit2D(Collider2D other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            // Stop dealing damage when the summon leaves the player
+            if (damageCoroutine != null)
+            {
+                StopCoroutine(damageCoroutine);
+                damageCoroutine = null;
+            }
+        }
+    }
+
+    private IEnumerator DealContinuousDamage(Player player)
+    {
+        while (true)
+        {
+            player.TakeDamage(damage, summonerRef);
+            yield return new WaitForSeconds(1f); // Damage every second
         }
     }
 }
