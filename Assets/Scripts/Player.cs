@@ -6,6 +6,7 @@ using Fusion.Addons.Physics;
 
 public class Player : NetworkBehaviour
 {
+    [Networked] string displayName { get; set; }
     [Networked] float speed { get; set; }
     [Networked] float maxHealth { get; set; }
     [Networked] float maxMana { get; set; }
@@ -85,6 +86,7 @@ public class Player : NetworkBehaviour
     [SerializeField] GameObject deathOverlay;
     [SerializeField] TextMeshProUGUI respawnTimerTxt;
     [SerializeField] FlagIndicator flagIndicator;
+    [SerializeField] TextMeshProUGUI displayNameText;
     private AudioClip shootSound;
     private AudioClip dyingSound;
     private AudioClip dashSound;
@@ -99,7 +101,7 @@ public class Player : NetworkBehaviour
     [SerializeField] Transform pointer;
     
     // Player intialisation (called from game controller on server when creating the player)
-    public void OnCreated(string characterName, Vector3 respawnPoint, int team)
+    public void OnCreated(string displayName, string characterName, Vector3 respawnPoint, int team)
     {
         Character character = Resources.Load($"ScriptableObjects/Characters/{characterName}") as Character;
         maxHealth = character.MaxHealth;
@@ -112,7 +114,8 @@ public class Player : NetworkBehaviour
         dashDuration = character.DashDuration;
         dashCooldown = character.DashCooldown;
         characterName = character.name;
-        
+
+        this.displayName = displayName;
         this.respawnPoint = respawnPoint;
         this.team = team;
         this.characterName = characterName;
@@ -225,6 +228,13 @@ public class Player : NetworkBehaviour
         // Set the initial flag indicator visibility
         OnCarryingChanged();
 
+        // Set display name text
+        displayNameText.text = displayName;
+
+        // Disable display name text if client controls this player
+        if (HasInputAuthority)
+            displayNameText.gameObject.SetActive(false);
+
         // Disable ammo indicator for knight
         if (characterName == "Knight")
         {
@@ -279,6 +289,11 @@ public class Player : NetworkBehaviour
                 float remainingTime = respawnTimer.RemainingTime(Runner).GetValueOrDefault();
                 respawnTimerTxt.text = $"Respawning in {Mathf.CeilToInt(remainingTime)}";
             }
+        }
+
+        if (isCarrying)
+        {
+            UpdatePointer();
         }
     }
 
@@ -346,6 +361,7 @@ public class Player : NetworkBehaviour
             // Reset timer
             getSlowedTimer = TickTimer.None;
         }
+
         // Increase speed timer
         if (speedIncreaseTimer.Expired(Runner))
         {
@@ -356,26 +372,14 @@ public class Player : NetworkBehaviour
             // Reset timer
             speedIncreaseTimer = TickTimer.None;
         }
-
-        if (isCarrying)
-        {
-            circleRenderer.enabled = true;
-            pointer.gameObject.SetActive(true);
-            updatePointer();
-            DrawCircle(respawnPoint, circleRadius);
-        }
-        else
-        {
-            circleRenderer.enabled = false;
-            pointer.gameObject.SetActive(false);
-        }
         
         // GetInput will return true on the StateAuthority (the server) and the InputAuthority (the client who controls this player)
         // So the following is ran for just the server and the client who controls this player
         if (GetInput(out NetworkInputData input))
         {
             // If game is not paused
-            if (!gamePaused){
+            if (!gamePaused)
+            {
                 // WASD movement
                 PlayerMovement(input.moveDirection);
 
@@ -651,27 +655,6 @@ public class Player : NetworkBehaviour
         audioSource.PlayOneShot(shootSound);
     }
 
-    void DrawCircle(Vector3 center, float radius)
-    {
-        for (int i = 0; i <= circleSegments; i++)
-        {
-            float angle = (float)i / circleSegments * Mathf.PI * 2;
-            float x = Mathf.Cos(angle) * radius; 
-            float y = Mathf.Sin(angle) * radius; 
-            Vector3 point = center + new Vector3(x, y, 0); 
-            circleRenderer.SetPosition(i, point); 
-        }
-    }
-
-    void updatePointer()
-    {
-        if (pointer == null) return;
-
-        Vector3 direction = (respawnPoint - transform.position).normalized;
-        Quaternion rotation = Quaternion.LookRotation(Vector3.forward, direction);
-        pointer.rotation = rotation;
-    }
-
     //take damage equal to input, includes check for death
     public void TakeDamage(float damage, PlayerRef damageDealer)
     {
@@ -913,15 +896,15 @@ public class Player : NetworkBehaviour
         if (carriedObject != null)
         {
             PickupFlag flag = carriedObject.GetComponent<PickupFlag>();
-            if (flag != null)
+            if (!flag.IsInsideCollider())
             {
-                flag.Drop(); // Call the Drop method on the pickupable object
+                flag.Drop();
+                carriedObject = null;
+                isCarrying = false;
+                speed *= 2;
+                gameController.CheckForWinCondition();
+                gameController.BroadcastDropFlag(team, flag.team);
             }
-            carriedObject = null;
-            isCarrying = false;
-            speed *= 2;
-            gameController.CheckForWinCondition();
-            gameController.BroadcastDropFlag(team, flag.team);
         }
     }
 
@@ -933,6 +916,43 @@ public class Player : NetworkBehaviour
             PickupFlag flag = carriedObject.GetComponent<PickupFlag>();
             flagIndicator.SetColour(flag.team);
         }
+
+        if (HasInputAuthority)
+        {
+            if (isCarrying)
+            {
+                circleRenderer.enabled = true;
+                pointer.gameObject.SetActive(true);
+                UpdatePointer();
+                DrawCircle(respawnPoint, circleRadius);
+            }
+            else
+            {
+                circleRenderer.enabled = false;
+                pointer.gameObject.SetActive(false);
+            }
+        }
+    }
+
+    void DrawCircle(Vector3 center, float radius)
+    {
+        for (int i = 0; i <= circleSegments; i++)
+        {
+            float angle = (float)i / circleSegments * Mathf.PI * 2;
+            float x = Mathf.Cos(angle) * radius;
+            float y = Mathf.Sin(angle) * radius;
+            Vector3 point = center + new Vector3(x, y, 0);
+            circleRenderer.SetPosition(i, point);
+        }
+    }
+
+    void UpdatePointer()
+    {
+        if (pointer == null) return;
+
+        Vector3 direction = (respawnPoint - transform.position).normalized;
+        Quaternion rotation = Quaternion.LookRotation(Vector3.forward, direction);
+        pointer.rotation = rotation;
     }
 
     public void ShowMessage(string message, float speed, Color color)
@@ -1003,12 +1023,12 @@ public class Player : NetworkBehaviour
         } 
     }
 
-    public void activateTriCD(float triCD)
+    public void ActivateTriCD(float triCD)
     {
         triangleHandler.StartCooldown(triCD);
     }
 
-    public void activateSqCD(float sqCD)
+    public void ActivateSqCD(float sqCD)
     {
         squareHandler.StartCooldown(sqCD);
     }

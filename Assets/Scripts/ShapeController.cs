@@ -328,7 +328,7 @@ public class ShapeController : NetworkBehaviour
 
     void OnTriangleActivated()
     {
-        parentPlayer.activateTriCD(triangleCooldown);
+        parentPlayer.ActivateTriCD(triangleCooldown);
 
         if (parentPlayer.GetCharacterName() == "Knight")
         {
@@ -343,7 +343,7 @@ public class ShapeController : NetworkBehaviour
     {
         squareIsActivated = true;
 
-        parentPlayer.activateSqCD(squareCooldown);
+        parentPlayer.ActivateSqCD(squareCooldown);
         PlayShapeSound(vertices.ToArray(), 4, "Knight");
 
         // Draw square for everyone
