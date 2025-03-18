@@ -12,7 +12,7 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
     [Networked, Capacity(6), OnChangedRender(nameof(OnTeam2PlayersChanged))] private NetworkDictionary<PlayerRef, PlayerInfo> team2Players { get; }
 
     private NetworkManager networkManager;
-    private TMP_InputField usernameInput;
+    private TMP_InputField displayNameInput;
     private Button team1Button;
     private Button team2Button;
     private Button knightButton;
@@ -24,7 +24,7 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
     private TextMeshProUGUI playerCounter;
     private TextMeshProUGUI readyCounter;
     private GameObject playerCardPrefab;
-    private string username = "";
+    private string displayName = "";
     private int team = 0;
     private string characterName = "";
     private bool playerIsReady = false;
@@ -32,7 +32,7 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
     public override void Spawned()
     {
         networkManager = GameObject.Find("Network Runner").GetComponent<NetworkManager>();
-        usernameInput = GameObject.Find("Username Input").GetComponent<TMP_InputField>();
+        displayNameInput = GameObject.Find("Display Name Input").GetComponent<TMP_InputField>();
         team1Button = GameObject.Find("Team 1 Button").GetComponent<Button>();
         team2Button = GameObject.Find("Team 2 Button").GetComponent<Button>();
         knightButton = GameObject.Find("Knight Button").GetComponent<Button>();
@@ -79,14 +79,14 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
         }
     }
 
-    public void OnUsernameChanged(string newUsername)
+    public void OnDisplayNameChanged(string newDisplayName)
     {
-        // Limit username length
+        // Limit name length
         int charLimit = 16;
-        newUsername = new string(newUsername.Take(charLimit).ToArray());
+        newDisplayName = new string(newDisplayName.Take(charLimit).ToArray());
 
-        username = newUsername;
-        usernameInput.text = newUsername;
+        displayName = newDisplayName;
+        displayNameInput.text = newDisplayName;
     }
 
     public void SelectTeam1()
@@ -126,15 +126,15 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
         readyButton.onClick.RemoveAllListeners();
         readyButton.onClick.AddListener(PlayerUnready);
 
-        // Disable username, team and character selection
-        usernameInput.interactable = false;
+        // Disable display name, team and character selection
+        displayNameInput.interactable = false;
         team1Button.interactable = false;
         team2Button.interactable = false;
         knightButton.interactable = false;
         wizardButton.interactable = false;
 
         // Send selection to host
-        RPC_PlayerReady(username, team, characterName);
+        RPC_PlayerReady(displayName, team, characterName);
     }
 
     public void PlayerUnready()
@@ -146,8 +146,8 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
         readyButton.onClick.RemoveAllListeners();
         readyButton.onClick.AddListener(PlayerReady);
 
-        // Enable the username, team and character selection, with the current selection applied
-        usernameInput.interactable = true;
+        // Enable display name, team and character selection, with the current selection applied
+        displayNameInput.interactable = true;
         team1Button.interactable = team != 1;
         team2Button.interactable = team != 2;
         knightButton.interactable = characterName != "Knight";
@@ -192,7 +192,7 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
 
     // Anyone can call this RPC, and it will run only on the server
     [Rpc(sources: RpcSources.All, targets: RpcTargets.StateAuthority, HostMode = RpcHostMode.SourceIsHostPlayer)]
-    public void RPC_PlayerReady(string username, int team, string characterName, RpcInfo info = default)
+    public void RPC_PlayerReady(string displayName, int team, string characterName, RpcInfo info = default)
     {
         PlayerRef player = info.Source;
 
@@ -201,13 +201,13 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
         bool characterIsValid = characterName == "Knight" || characterName == "Wizard";
         if (!teamIsValid || !characterIsValid) return;
 
-        // Use the character name as the username if username not provided
-        if (username == "") username = characterName;
+        // Use the character name as the display name if one is not provided
+        if (displayName == "") displayName = characterName;
 
         // Add player to chosen team if they aren't already in a team
         if (!team1Players.ContainsKey(player) && !team2Players.ContainsKey(player))
         {
-            PlayerInfo playerInfo = new PlayerInfo(player, username, team, characterName);
+            PlayerInfo playerInfo = new PlayerInfo(player, displayName, team, characterName);
             var dict = (team == 1) ? team1Players : team2Players;
             dict.Add(player, playerInfo);
         }
@@ -283,21 +283,22 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
         {
             PlayerRef playerRef = item.Key;
             PlayerInfo playerInfo = item.Value;
-            string username = (string)playerInfo.username;
+            string displayname = (string)playerInfo.displayName;
+            string characterName = (string)playerInfo.characterName;
 
             // Create and position the player card relative to the list
             GameObject playerCard = Instantiate(playerCardPrefab, new Vector3(0, 0, 0), Quaternion.identity, teamList.transform);
             playerCard.transform.localPosition = cardPosition;
 
-            // Set card text to username, with green colour to show if the player is the client's own player
+            // Set card text to display name, with green colour to show if the player is the client's own player
             TextMeshProUGUI cardText = playerCard.GetComponentInChildren<TextMeshProUGUI>();
-            cardText.text = username;
+            cardText.text = displayname;
             cardText.color = Runner.LocalPlayer.Equals(playerRef) ? Color.green : Color.white;
 
             // Set card character image based on chosen character
             GameObject knightImage = playerCard.transform.Find("Knight Image").gameObject;
             GameObject wizardImage = playerCard.transform.Find("Wizard Image").gameObject;
-            if (username == "Knight") wizardImage.SetActive(false);
+            if (characterName == "Knight") wizardImage.SetActive(false);
             else knightImage.SetActive(false);
 
             // Set position for next card
@@ -332,14 +333,14 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
     public struct PlayerInfo : INetworkStruct
     {
         public PlayerRef playerRef;
-        public NetworkString<_16> username;
+        public NetworkString<_16> displayName;
         public int team;
         public NetworkString<_16> characterName;
 
-        public PlayerInfo(PlayerRef playerRef, NetworkString<_16> username, int team, NetworkString<_16> characterName)
+        public PlayerInfo(PlayerRef playerRef, NetworkString<_16> displayName, int team, NetworkString<_16> characterName)
         {
             this.playerRef = playerRef;
-            this.username = username;
+            this.displayName = displayName;
             this.team = team;
             this.characterName = characterName;
         }

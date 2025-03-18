@@ -132,7 +132,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
             {
                 PlayerRef playerRef = item.Key;
                 Lobby.PlayerInfo playerInfo = item.Value;
-                SpawnPlayer(playerRef, (string)playerInfo.username, (string)playerInfo.characterName, 1);
+                SpawnPlayer(playerRef, (string)playerInfo.displayName, (string)playerInfo.characterName, 1);
             }
 
             // Create team 2 players
@@ -140,12 +140,12 @@ public class GameController : NetworkBehaviour, IPlayerLeft
             {
                 PlayerRef playerRef = item.Key;
                 Lobby.PlayerInfo playerInfo = item.Value;
-                SpawnPlayer(playerRef, (string)playerInfo.username, (string)playerInfo.characterName, 2);
+                SpawnPlayer(playerRef, (string)playerInfo.displayName, (string)playerInfo.characterName, 2);
             }
         }
     }
 
-    void SpawnPlayer(PlayerRef player, string username, string characterName, int team)
+    void SpawnPlayer(PlayerRef player, string displayName, string characterName, int team)
     {
         if (HasStateAuthority)
         {
@@ -156,7 +156,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
             Vector3 respawnPoint = (team == 1) ? respawnPoint1 : respawnPoint2;
 
             // Spawn the player network object
-            NetworkObject networkPlayerObject = PrefabFactory.SpawnPlayer(Runner, player, playerPrefab, respawnPoint, username, characterName, team);
+            NetworkObject networkPlayerObject = PrefabFactory.SpawnPlayer(Runner, player, playerPrefab, respawnPoint, displayName, characterName, team);
 
             // Add player network object to dictionary
             spawnedPlayers.Add(player, networkPlayerObject);

@@ -2154,7 +2154,7 @@ MonoBehaviour:
   deathOverlay: {fileID: 2983073624312878985}
   respawnTimerTxt: {fileID: 6655207839670368177}
   flagIndicator: {fileID: 3617242858135019408}
-  usernameText: {fileID: 5860526208113428874}
+  displayNameText: {fileID: 5860526208113428874}
   bulletIcon: {fileID: 1478925092546808149}
   mainbulletIcon: {fileID: 3391385062733595157}
   meleeHitbox: {fileID: 2428781577068820673}
@@ -3957,7 +3957,7 @@ GameObject:
   - component: {fileID: 7826223646389503109}
   - component: {fileID: 5860526208113428874}
   m_Layer: 5
-  m_Name: Username
+  m_Name: Display Name
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -1665,7 +1665,7 @@ GameObject:
   m_Component:
   - component: {fileID: 889829803}
   m_Layer: 0
-  m_Name: Username
+  m_Name: Display Name
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1705,7 +1705,7 @@ GameObject:
   - component: {fileID: 919445829}
   - component: {fileID: 919445828}
   m_Layer: 0
-  m_Name: Username Input
+  m_Name: Display Name Input
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1813,7 +1813,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 266661889}
         m_TargetAssemblyTypeName: Lobby, Assembly-CSharp
-        m_MethodName: OnUsernameChanged
+        m_MethodName: OnDisplayNameChanged
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2601,7 +2601,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Username:
+  m_text: 'Display name:
 
 '
   m_isRightToLeft: 0
@@ -4195,7 +4195,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Username...
+  m_text: Enter here...
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d6c64988eb57e495ebc19ded5bd42455, type: 2}
   m_sharedMaterial: {fileID: -3448430924341693857, guid: d6c64988eb57e495ebc19ded5bd42455, type: 2}

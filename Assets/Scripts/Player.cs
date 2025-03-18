@@ -6,7 +6,7 @@ using Fusion.Addons.Physics;
 
 public class Player : NetworkBehaviour
 {
-    [Networked] string username { get; set; }
+    [Networked] string displayName { get; set; }
     [Networked] float speed { get; set; }
     [Networked] float maxHealth { get; set; }
     [Networked] float maxMana { get; set; }
@@ -84,7 +84,7 @@ public class Player : NetworkBehaviour
     [SerializeField] GameObject deathOverlay;
     [SerializeField] TextMeshProUGUI respawnTimerTxt;
     [SerializeField] FlagIndicator flagIndicator;
-    [SerializeField] TextMeshProUGUI usernameText;
+    [SerializeField] TextMeshProUGUI displayNameText;
     private AudioClip shootSound;
     private AudioClip dyingSound;
     private AudioClip dashSound;
@@ -99,7 +99,7 @@ public class Player : NetworkBehaviour
     [SerializeField] Transform pointer;
     
     // Player intialisation (called from game controller on server when creating the player)
-    public void OnCreated(string username, string characterName, Vector3 respawnPoint, int team)
+    public void OnCreated(string displayName, string characterName, Vector3 respawnPoint, int team)
     {
         Character character = Resources.Load($"ScriptableObjects/Characters/{characterName}") as Character;
         maxHealth = character.MaxHealth;
@@ -113,7 +113,7 @@ public class Player : NetworkBehaviour
         dashCooldown = character.DashCooldown;
         characterName = character.name;
 
-        this.username = username;
+        this.displayName = displayName;
         this.respawnPoint = respawnPoint;
         this.team = team;
         this.characterName = characterName;
@@ -226,12 +226,12 @@ public class Player : NetworkBehaviour
         // Set the initial flag indicator visibility
         OnCarryingChanged();
 
-        // Set username text
-        usernameText.text = username;
+        // Set display name text
+        displayNameText.text = displayName;
 
-        // Disable username text if client controls this player
+        // Disable display name text if client controls this player
         if (HasInputAuthority)
-            usernameText.gameObject.SetActive(false);
+            displayNameText.gameObject.SetActive(false);
 
         // Disable ammo indicator for knight
         if (characterName == "Knight")
