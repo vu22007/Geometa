@@ -81,8 +81,10 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
 
     public void OnUsernameChanged(string newUsername)
     {
+        // Limit username length
         int charLimit = 16;
         newUsername = new string(newUsername.Take(charLimit).ToArray());
+
         username = newUsername;
         usernameInput.text = newUsername;
     }
@@ -289,9 +291,9 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
             GameObject playerCard = Instantiate(playerCardPrefab, new Vector3(0, 0, 0), Quaternion.identity, teamList.transform);
             playerCard.transform.localPosition = cardPosition;
 
-            // Set card text to username, with an indicator to show if the player is the client's own player
+            // Set card text to username, with green colour to show if the player is the client's own player
             TextMeshProUGUI cardText = playerCard.GetComponentInChildren<TextMeshProUGUI>();
-            cardText.text = Runner.LocalPlayer.Equals(playerRef) ? username + " (You)" : username;
+            cardText.text = username;
             cardText.color = Runner.LocalPlayer.Equals(playerRef) ? Color.green : Color.white;
 
             // Set card character image based on chosen character
