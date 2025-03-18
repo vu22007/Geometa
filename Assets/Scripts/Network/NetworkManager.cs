@@ -15,8 +15,8 @@ public class NetworkManager : SimulationBehaviour, INetworkRunnerCallbacks
     private NetworkRunner runner;
 
     // For the game controller to use for spawning players based on lobby selections
-    public Dictionary<PlayerRef, string> team1Players;
-    public Dictionary<PlayerRef, string> team2Players;
+    public Dictionary<PlayerRef, Lobby.PlayerInfo> team1Players;
+    public Dictionary<PlayerRef, Lobby.PlayerInfo> team2Players;
 
     async public void StartGame(GameMode mode, string sessionName)
     {
