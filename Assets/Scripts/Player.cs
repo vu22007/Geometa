@@ -84,6 +84,7 @@ public class Player : NetworkBehaviour
     [SerializeField] GameObject deathOverlay;
     [SerializeField] TextMeshProUGUI respawnTimerTxt;
     [SerializeField] FlagIndicator flagIndicator;
+    [SerializeField] TextMeshProUGUI usernameText;
     private AudioClip shootSound;
     private AudioClip dyingSound;
     private AudioClip dashSound;
@@ -224,6 +225,13 @@ public class Player : NetworkBehaviour
 
         // Set the initial flag indicator visibility
         OnCarryingChanged();
+
+        // Set username text
+        usernameText.text = username;
+
+        // Disable username text if client controls this player
+        if (HasInputAuthority)
+            usernameText.gameObject.SetActive(false);
 
         // Disable ammo indicator for knight
         if (characterName == "Knight")
