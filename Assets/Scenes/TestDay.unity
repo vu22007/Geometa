@@ -2789,10 +2789,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e06333a752e842b7b7390cb414ea92b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _playersToTeams:
+    _items: []
   respawnPoint1: {x: -44, y: -82, z: 0}
   respawnPoint2: {x: 20, y: 16, z: 0}
+  pickupLocations:
+  - {x: -18, y: -50, z: 0}
+  - {x: -60, y: -10, z: 0}
+  - {x: -25, y: -25, z: 0}
+  - {x: 30, y: -15, z: 0}
+  - {x: 12, y: -70, z: 0}
+  - {x: 67, y: -39, z: 0}
   maxTime: 480
-  _currentTime: 0
 --- !u!1 &1784948813
 GameObject:
   m_ObjectHideFlags: 0

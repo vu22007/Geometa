@@ -47,6 +47,8 @@ public class Player : NetworkBehaviour
     [Networked] private TickTimer aoeEnabledTimer { get; set; }
     [Networked] float slowedAmount { get; set; }
     [Networked] TickTimer getSlowedTimer { get; set; }
+    [Networked] float speedIncrease { get; set; }
+    [Networked] TickTimer speedIncreaseTimer { get; set; }
     [Networked, OnChangedRender(nameof(OnGamePausedChanged))] private bool gamePaused { get; set; }
     [Networked, OnChangedRender(nameof(MeleeAttackRender))] private int meleeAttacked { get; set; }
     [Networked, OnChangedRender(nameof(ShootRender))] private int bulletFired { get; set; }
@@ -358,6 +360,17 @@ public class Player : NetworkBehaviour
 
             // Reset timer
             getSlowedTimer = TickTimer.None;
+        }
+
+        // Increase speed timer
+        if (speedIncreaseTimer.Expired(Runner))
+        {
+            // Restore speed
+            speed -= speedIncrease;
+            speedIncrease = 0;
+
+            // Reset timer
+            speedIncreaseTimer = TickTimer.None;
         }
         
         // GetInput will return true on the StateAuthority (the server) and the InputAuthority (the client who controls this player)
@@ -1025,6 +1038,14 @@ public class Player : NetworkBehaviour
         return mana;
     }
 
+    public void IncreaseSpeed(float amount, float time){
+        if(speedIncrease == 0){
+            speed += amount;
+            speedIncrease += amount;
+        }
+
+        speedIncreaseTimer = TickTimer.CreateFromSeconds(Runner, time);
+    }
     public void GetSlowed(float amount, float time)
     {
         // If not already slowed, slow the player
