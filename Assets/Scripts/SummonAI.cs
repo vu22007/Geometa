@@ -29,6 +29,18 @@ public class SummonAI : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
+        // Make sure there's a target
+        if (target != null)
+        {
+            // Calculate direction to target
+            Vector3 direction = (target.position - transform.position).normalized;
+
+            // Rotate sprite to face movement direction
+            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+            transform.rotation = Quaternion.Euler(0, 0, angle);
+        }
+
+    
         if (despawnTimer.Expired(Runner))
         {
             Runner.Despawn(Object);
@@ -44,6 +56,7 @@ public class SummonAI : NetworkBehaviour
         {
             FindTarget();
         }
+
     }
 
     private void FindTarget()
