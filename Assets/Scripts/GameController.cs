@@ -8,7 +8,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     [Networked] private float pointsTopupCooldownMax { get; set; }
     [Networked] private TickTimer pointsTopupTimer { get; set; }
     [Networked] private TickTimer gameTimer { get; set; }
-    [Networked] public NetworkDictionary<PlayerRef, int> playersToTeams { get; }
+    [Networked, Capacity(12)] public NetworkDictionary<PlayerRef, int> playersToTeams { get; }
 
     [SerializeField] private Vector3 respawnPoint1;
     [SerializeField] private Vector3 respawnPoint2;
