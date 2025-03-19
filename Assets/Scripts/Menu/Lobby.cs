@@ -301,6 +301,11 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
             if (characterName == "Knight") wizardImage.SetActive(false);
             else knightImage.SetActive(false);
 
+            //Puts a nice star next to the host
+            GameObject starImage = playerCard.transform.Find("Star Image").gameObject;
+            //Runner.TryGetPlayerObject(playerRef, out NetworkObject networkObject);
+            if (Equals(Object.StateAuthority,playerRef)) Debug.Log("You are the host"); starImage.SetActive(true);
+
             // Set position for next card
             cardPosition.y -= cardHeight;
         }
