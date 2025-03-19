@@ -81,7 +81,12 @@ public class ShapeController : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
-        if (!isActive) return;
+        if (!isActive)
+        {
+            trianglePreviewActive = false;
+            squarePreviewActive = false;
+            return;
+        }
 
         // GetInput will return true on the StateAuthority (the server) and the InputAuthority (the client who controls this shape controller)
         // So the following is ran for just the server and the client who controls this shape controller
@@ -238,7 +243,7 @@ public class ShapeController : NetworkBehaviour
         float score = CalculateScore(angles);
 
         // Give buffs/do damage if the player activates the ability, and make shape visible to everyone
-        if (activate)
+        if (activate && IsPreviewActive(nVertices))
         {
             // Disable the preview
             SetPreviewActive(nVertices, false);
@@ -350,11 +355,19 @@ public class ShapeController : NetworkBehaviour
         DrawLines(vertices.ToList(), true, score);
     }
 
+    bool IsPreviewActive(int nVertices)
+    {
+        if (nVertices == 3)
+            return trianglePreviewActive;
+        else
+            return squarePreviewActive;
+    }
+
     void SetPreviewActive(int nVertices, bool active)
     {
         if (nVertices == 3)
             trianglePreviewActive = active;
-        else if (nVertices == 4)
+        else
             squarePreviewActive = active;
     }
 

@@ -6,7 +6,7 @@ using TMPro;
 public class MainMenu : MonoBehaviour
 {
     private NetworkManager networkManager;
-    private string sessionName;
+    private string sessionName = "";
 
     public void OnEnable() {
         networkManager = GameObject.Find("Network Runner").GetComponent<NetworkManager>();
