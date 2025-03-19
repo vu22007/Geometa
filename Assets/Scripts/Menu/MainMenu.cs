@@ -24,14 +24,14 @@ public class MainMenu : MonoBehaviour
     {
         DisableMenu();
         UpdateErrorMessage(ShutdownReason.Ok); // Clear error message
-        networkManager.StartGame(GameMode.Host, sessionName);
+        networkManager.StartGame(GameMode.Host, sessionName.ToLower());
     }
 
     public void JoinGame()
     {
         DisableMenu();
         UpdateErrorMessage(ShutdownReason.Ok); // Clear error message
-        networkManager.StartGame(GameMode.Client, sessionName);
+        networkManager.StartGame(GameMode.Client, sessionName.ToLower());
     }
 
     public void QuitGame()
