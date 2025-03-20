@@ -49,7 +49,7 @@ public class Player : NetworkBehaviour
     [Networked] TickTimer getSlowedTimer { get; set; }
     [Networked] float speedIncrease { get; set; }
     [Networked] TickTimer speedIncreaseTimer { get; set; }
-    [Networked] bool invinsible { get; set; }
+    [Networked, OnChangedRender(nameof(OnInvinsibleChanged))] bool invinsible { get; set; }
     [Networked] TickTimer invinsibleTimer { get; set; }
     [Networked, OnChangedRender(nameof(OnGamePausedChanged))] private bool gamePaused { get; set; }
     [Networked, OnChangedRender(nameof(MeleeAttackRender))] private int meleeAttacked { get; set; }
@@ -89,6 +89,7 @@ public class Player : NetworkBehaviour
     [SerializeField] TextMeshProUGUI respawnTimerTxt;
     [SerializeField] FlagIndicator flagIndicator;
     [SerializeField] TextMeshProUGUI displayNameText;
+    [SerializeField] GameObject invinsibleImage;
     private AudioClip shootSound;
     private AudioClip dyingSound;
     private AudioClip dashSound;
@@ -1109,5 +1110,9 @@ public class Player : NetworkBehaviour
 
     void OnGamePausedChanged() {
         escapeMenu.SetActive(gamePaused);
+    }
+
+    void OnInvinsibleChanged() {
+        invinsibleImage.SetActive(invinsible);
     }
 }
