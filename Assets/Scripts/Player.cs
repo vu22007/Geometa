@@ -423,7 +423,7 @@ public class Player : NetworkBehaviour
                 }
                 
                 // Reloading
-                if (input.buttons.WasPressed(previousButtons, InputButtons.Reload))
+                if (input.buttons.WasPressed(previousButtons, InputButtons.Reload) && characterName != "Knight")
                 {
                     Reload();
                 }
