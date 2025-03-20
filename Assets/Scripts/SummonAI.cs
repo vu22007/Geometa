@@ -49,14 +49,10 @@ public class SummonAI : NetworkBehaviour
 
         if (target != null)
         {
+            FindTarget();
             Vector3 direction = (target.position - transform.position).normalized;
             transform.position += direction * speed * Runner.DeltaTime;
         }
-        else
-        {
-            FindTarget();
-        }
-
     }
 
     private void FindTarget()

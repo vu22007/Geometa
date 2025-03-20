@@ -103,10 +103,10 @@ TextureImporter:
       name: Dragon_0
       rect:
         serializedVersion: 2
-        x: 58
-        y: 37
-        width: 134
-        height: 182
+        x: 37
+        y: 58
+        width: 182
+        height: 134
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
