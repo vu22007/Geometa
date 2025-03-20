@@ -72,10 +72,13 @@ public class Player : NetworkBehaviour
     [SerializeField] cooldownHandler reloadHandler;
     [SerializeField] cooldownHandler squareHandler;
     [SerializeField] cooldownHandler triangleHandler;
+    [SerializeField] cooldownHandler speedHandler;
     [SerializeField] Image reloadIcon;
     [SerializeField] Image reloadIconLayer;
     [SerializeField] Image aoeIcon;
     [SerializeField] Image aoeIconLayer;
+    [SerializeField] Image speedIcon;
+    [SerializeField] Image speedIconLayer;
     [SerializeField] GameObject escapeMenu;
     [SerializeField] Minimap minimap;
     Image healthBar;
@@ -368,6 +371,8 @@ public class Player : NetworkBehaviour
             // Restore speed
             speed -= speedIncrease;
             speedIncrease = 0;
+            speedIcon.enabled = false;
+            speedIconLayer.enabled = false;
 
             // Reset timer
             speedIncreaseTimer = TickTimer.None;
@@ -1045,6 +1050,9 @@ public class Player : NetworkBehaviour
         }
 
         speedIncreaseTimer = TickTimer.CreateFromSeconds(Runner, time);
+        speedIcon.enabled = true;
+        speedIconLayer.enabled = true;
+        speedHandler.StartCooldown(time);
     }
     public void GetSlowed(float amount, float time)
     {
