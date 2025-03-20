@@ -57,6 +57,10 @@ public class Player : NetworkBehaviour
     [Networked, OnChangedRender(nameof(DashRender))] private int dashPerformed { get; set; }
     [Networked] int circleSegments { get; set; }
     [Networked] float circleRadius { get; set; }
+    [Networked] float totalDamageDealt { get; set; }
+    [Networked] int totalKills { get; set; }
+    [Networked] int totalDeaths { get; set; }
+    [Networked] int totalFlagsCaptured { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
@@ -80,8 +84,6 @@ public class Player : NetworkBehaviour
     [SerializeField] Minimap minimap;
     Image healthBar;
     public TextMeshProUGUI ammoText;
-    public TextMeshProUGUI timeLeftText;
-    [HideInInspector] public Transform holdPosition;
     GameController gameController;
     [SerializeField] GameObject deathOverlay;
     [SerializeField] TextMeshProUGUI respawnTimerTxt;
@@ -659,6 +661,16 @@ public class Player : NetworkBehaviour
     public void TakeDamage(float damage, PlayerRef damageDealer)
     {
         currentHealth -= damage;
+        
+        // Add damage to damage dealer's total damage dealt counter
+        if (Runner.TryGetPlayerObject(damageDealer, out NetworkObject networkPlayerObject))
+        {
+            Player player = networkPlayerObject.GetComponent<Player>();
+            if (player.team != team)
+            {
+                player.IncreaseDamageDealtCounter(damage);
+            }
+        }
 
         if (currentHealth <= 0.0f) {
             Die(damageDealer);
@@ -707,6 +719,7 @@ public class Player : NetworkBehaviour
         if (!isAlive) return;
 
         isAlive = false;
+        totalDeaths++;
 
         respawnTimer = TickTimer.CreateFromSeconds(Runner, respawnTime);
 
@@ -722,13 +735,14 @@ public class Player : NetworkBehaviour
             DropObject();
         }
 
-        // Award Mana to killer
+        // Award Mana to killer and increment their kill count
         if (Runner.TryGetPlayerObject(killer, out NetworkObject networkPlayerObject))
         {
             Player player = networkPlayerObject.GetComponent<Player>();
             if (player.team != team)
             {
                 player.GainMana(10);
+                player.IncrementKillCount();
             }
         }
     }
@@ -777,7 +791,16 @@ public class Player : NetworkBehaviour
         {
             audioSource.PlayOneShot(dyingSound, 0.7f);
         }
+    }
 
+    void IncrementKillCount()
+    {
+        totalKills++;
+    }
+
+    void IncreaseDamageDealtCounter(float damage)
+    {
+        totalDamageDealt += damage;
     }
     
     void OnHealthChanged(NetworkBehaviourBuffer previous)
