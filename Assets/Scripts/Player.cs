@@ -49,6 +49,8 @@ public class Player : NetworkBehaviour
     [Networked] TickTimer getSlowedTimer { get; set; }
     [Networked] float speedIncrease { get; set; }
     [Networked] TickTimer speedIncreaseTimer { get; set; }
+    [Networked, OnChangedRender(nameof(OnInvinsibleChanged))] bool invinsible { get; set; }
+    [Networked] TickTimer invinsibleTimer { get; set; }
     [Networked, OnChangedRender(nameof(OnGamePausedChanged))] private bool gamePaused { get; set; }
     [Networked, OnChangedRender(nameof(MeleeAttackRender))] private int meleeAttacked { get; set; }
     [Networked, OnChangedRender(nameof(ShootRender))] private int bulletFired { get; set; }
@@ -89,6 +91,7 @@ public class Player : NetworkBehaviour
     [SerializeField] TextMeshProUGUI respawnTimerTxt;
     [SerializeField] FlagIndicator flagIndicator;
     [SerializeField] TextMeshProUGUI displayNameText;
+    [SerializeField] GameObject invinsibleImage;
     private AudioClip shootSound;
     private AudioClip dyingSound;
     private AudioClip dashSound;
@@ -134,12 +137,12 @@ public class Player : NetworkBehaviour
         isAoEUsed = false;
         normalShoot = true;
         gamePaused = false;
+        invinsible = false;
     }
 
     // Player initialisation (called on each client and server when player is spawned on network)
     public override void Spawned()
     {
-        uIController = GetComponentInChildren<UIController>();
         uIController.transform.SetParent(null);
 
         // Disable the camera if client does not control this player
@@ -278,6 +281,10 @@ public class Player : NetworkBehaviour
 
         // Enable the hitbox
         gameObject.GetComponent<HitboxRoot>().HitboxRootActive = true;
+
+        // Make invinsible (Spawn protection)
+        invinsible = true;
+        invinsibleTimer = TickTimer.CreateFromSeconds(Runner, 4f);
     }
 
     public override void Render()
@@ -374,6 +381,16 @@ public class Player : NetworkBehaviour
             // Reset timer
             speedIncreaseTimer = TickTimer.None;
         }
+
+        // Spawn protection timer
+        if (invinsibleTimer.Expired(Runner))
+        {
+            //Make damageable
+            invinsible = false;
+
+            //Reset timer
+            speedIncreaseTimer = TickTimer.None;
+        }
         
         // GetInput will return true on the StateAuthority (the server) and the InputAuthority (the client who controls this player)
         // So the following is ran for just the server and the client who controls this player
@@ -425,7 +442,7 @@ public class Player : NetworkBehaviour
                 }
                 
                 // Reloading
-                if (input.buttons.WasPressed(previousButtons, InputButtons.Reload))
+                if (input.buttons.WasPressed(previousButtons, InputButtons.Reload) && characterName != "Knight")
                 {
                     Reload();
                 }
@@ -660,20 +677,24 @@ public class Player : NetworkBehaviour
     //take damage equal to input, includes check for death
     public void TakeDamage(float damage, PlayerRef damageDealer)
     {
-        currentHealth -= damage;
-        
-        // Add damage to damage dealer's total damage dealt counter
-        if (Runner.TryGetPlayerObject(damageDealer, out NetworkObject networkPlayerObject))
+        if (!invinsible)
         {
-            Player player = networkPlayerObject.GetComponent<Player>();
-            if (player.team != team)
-            {
-                player.IncreaseDamageDealtCounter(damage);
-            }
-        }
+            currentHealth -= damage;
 
-        if (currentHealth <= 0.0f) {
-            Die(damageDealer);
+            // Add damage to damage dealer's total damage dealt counter
+            if (Runner.TryGetPlayerObject(damageDealer, out NetworkObject networkPlayerObject))
+            {
+                Player player = networkPlayerObject.GetComponent<Player>();
+                if (player.team != team)
+                {
+                    player.IncreaseDamageDealtCounter(damage);
+                }
+            }
+
+            if (currentHealth <= 0.0f)
+            {
+                Die(damageDealer);
+            }
         }
     }
     
@@ -1112,5 +1133,9 @@ public class Player : NetworkBehaviour
 
     void OnGamePausedChanged() {
         escapeMenu.SetActive(gamePaused);
+    }
+
+    void OnInvinsibleChanged() {
+        invinsibleImage.SetActive(invinsible);
     }
 }

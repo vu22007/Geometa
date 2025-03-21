@@ -74,7 +74,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
             gameOver = true;
         }
 
-        // Topup players points by 5 every 10 seconds
+        // Topup players points by 1 every 10 seconds
         if (pointsTopupTimer.Expired(Runner))
         {
             foreach (Player player in players)
