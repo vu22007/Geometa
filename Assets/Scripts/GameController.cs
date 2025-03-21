@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameController : NetworkBehaviour, IPlayerLeft
 {
@@ -28,6 +29,9 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     // Initialisation
     public override void Spawned()
     {
+        // TEMP - DELETE THIS!
+        maxTime = 5;
+
         gameOver = false;
         pointsTopupCooldownMax = 10f;
         pointsTopupTimer = TickTimer.CreateFromSeconds(Runner, pointsTopupCooldownMax);
@@ -60,7 +64,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
             team2Flag = flag2Obj.GetComponent<PickupFlag>();
 
             // Spawn NPCs for testing
-            //SpawnPlayersForTesting(3, 3, true);
+            SpawnPlayersForTesting(3, 3, true);
         }
     }
 
@@ -72,6 +76,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
         if (gameTimer.Expired(Runner))
         {
             gameOver = true;
+            GoToLeaderboard();
         }
 
         // Topup players points by 1 every 10 seconds
@@ -346,6 +351,35 @@ public class GameController : NetworkBehaviour, IPlayerLeft
                 pickupType = 0;
             }
         }
+    }
+
+    void GoToLeaderboard()
+    {
+        if (!HasStateAuthority) return;
+
+        // Give player stats to network manager for leaderboard to use
+        NetworkManager networkManager = GameObject.Find("Network Runner").GetComponent<NetworkManager>();
+        networkManager.team1PlayerStats = GetPlayerStats(1);
+        networkManager.team2PlayerStats = GetPlayerStats(2);
+
+        // Switch to leaderboard scene, and the leaderboard will fetch the player stats from the network manager
+        Runner.LoadScene(SceneRef.FromIndex(SceneManager.GetActiveScene().buildIndex + 1));
+    }
+
+    List<Leaderboard.PlayerInfo> GetPlayerStats(int team)
+    {
+        List<Leaderboard.PlayerInfo> playerList = new List<Leaderboard.PlayerInfo>();
+
+        foreach (Player player in players)
+        {
+            if (player.GetTeam() == team)
+            {
+                Leaderboard.PlayerInfo playerInfo = new Leaderboard.PlayerInfo(player);
+                playerList.Add(playerInfo);
+            }
+        }
+
+        return playerList;
     }
 
     public float GetTimeLeft()

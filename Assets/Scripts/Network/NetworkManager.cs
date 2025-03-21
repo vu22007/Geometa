@@ -18,6 +18,10 @@ public class NetworkManager : SimulationBehaviour, INetworkRunnerCallbacks
     public Dictionary<PlayerRef, Lobby.PlayerInfo> team1Players;
     public Dictionary<PlayerRef, Lobby.PlayerInfo> team2Players;
 
+    // For the leaderboard to use for showing player stats
+    public List<Leaderboard.PlayerInfo> team1PlayerStats;
+    public List<Leaderboard.PlayerInfo> team2PlayerStats;
+
     async public void StartGame(GameMode mode, string sessionName)
     {
         runner = gameObject.GetComponent<NetworkRunner>();

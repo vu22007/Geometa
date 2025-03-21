@@ -242,11 +242,6 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         AddPlayerCardsToTeamList(team2List, team2Players);
     }
 
-    void OnPlayersChanged()
-    {
-        Debug.Log("Players changed");
-    }
-
     void UpdatePlayerCounter(int numPlayersInLobby)
     {
         playerCounter.text = "Players in lobby: " + numPlayersInLobby;
