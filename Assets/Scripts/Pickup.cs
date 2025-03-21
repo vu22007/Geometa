@@ -1,5 +1,6 @@
 using Fusion;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Pickup : NetworkBehaviour
 {
@@ -11,6 +12,7 @@ public class Pickup : NetworkBehaviour
     private float respawnTime;
     SpriteRenderer spriteRenderer;
     BoxCollider2D boxCollider2D;
+    [SerializeField] Image spriteIndicator;
 
     // Pickup intialisation (called from game controller on server when creating the pickup)
     public void OnCreated(int type, int amount)
@@ -27,6 +29,7 @@ public class Pickup : NetworkBehaviour
         boxCollider2D = gameObject.GetComponent<BoxCollider2D>();
         Sprite sprite = GetSprite();
         spriteRenderer.sprite = sprite;
+        spriteIndicator. sprite = sprite;
         respawnTime = 20f;
     }
 
@@ -129,12 +132,14 @@ public class Pickup : NetworkBehaviour
     public void DisablePickup()
     {
         spriteRenderer.enabled = false;
+        spriteIndicator.enabled = false;
         boxCollider2D.enabled = false;
     }
 
     public void RespawnPickup()
     {
         spriteRenderer.enabled = true;
+        spriteIndicator.enabled = true;
         boxCollider2D.enabled = true;
     }
 
