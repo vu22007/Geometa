@@ -138,6 +138,11 @@ public class Player : NetworkBehaviour
         normalShoot = true;
         gamePaused = false;
         invinsible = false;
+
+        totalDamageDealt = 0;
+        totalKills = 0;
+        totalDeaths = 0;
+        totalFlagsCaptured = 0;
     }
 
     // Player initialisation (called on each client and server when player is spawned on network)

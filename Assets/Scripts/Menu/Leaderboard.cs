@@ -129,8 +129,8 @@ public class Leaderboard : NetworkBehaviour
             // Set player stats
             killsText.text = kills.ToString();
             deathsText.text = deaths.ToString();
-            killDeathRatioText.text = killDeathRatio.ToString();
-            damageText.text = damage.ToString();
+            killDeathRatioText.text = (deaths == 0) ? "-" : killDeathRatio.ToString("0.00");
+            damageText.text = Mathf.RoundToInt(damage).ToString();
             flagsText.text = flags.ToString();
 
             // Set position for next card
