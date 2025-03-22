@@ -1,8 +1,10 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Fusion;
 using UnityEngine;
+using UnityEngine.SocialPlatforms.Impl;
 
 public class ShapeController : NetworkBehaviour
 {
@@ -12,7 +14,7 @@ public class ShapeController : NetworkBehaviour
     [Networked, OnChangedRender(nameof(OnSquareActivated))] private int activatedSquare { get; set; }
     [Networked, OnChangedRender(nameof(OnTrianglePreviewActiveChanged))] private bool trianglePreviewActive { get; set; }
     [Networked, OnChangedRender(nameof(OnSquarePreviewActiveChanged))] private bool squarePreviewActive { get; set; }
-    [Networked] private float score { get; set; }
+    private float score { get; set; }
     [Networked, Capacity(4)] private NetworkLinkedList<Vector3> vertices { get; }
     [Networked] private TickTimer triangleCooldownTimer { get; set; }
     [Networked] private TickTimer squareCooldownTimer { get; set; }
@@ -34,6 +36,10 @@ public class ShapeController : NetworkBehaviour
 
     private LineRenderer triangleLineRenderer;
     private LineRenderer squareLineRenderer;
+
+    Color lowScoreColor = new Color(0.2f, 0.4f, 0.8f);  // Blue
+    Color medScoreColor = new Color(0.8f, 0.2f, 0.8f);  // Purple
+    Color highScoreColor = new Color(1.0f, 0.2f, 0.2f); // Red
 
     private TriangleShape triangleShape;
     private SquareShape squareShape;
@@ -75,7 +81,7 @@ public class ShapeController : NetworkBehaviour
         if (HasInputAuthority && (trianglePreviewActive || squarePreviewActive))
         {
             // Use local playerPositions property since vertices networked property is only set when shape is activated
-            DrawLines(playerPositions, false, 0); // Note: Score doesn't matter for preview, so set it to 0
+            DrawLines(playerPositions, false, score); // Note: Score doesn't matter for preview, so set it to 0
         }
     }
 
@@ -241,6 +247,7 @@ public class ShapeController : NetworkBehaviour
         List<float> angles = GetAngles(playerPositions);
 
         float score = CalculateScore(angles);
+        this.score = score;
 
         // Give buffs/do damage if the player activates the ability, and make shape visible to everyone
         if (activate && IsPreviewActive(nVertices))
@@ -431,6 +438,13 @@ public class ShapeController : NetworkBehaviour
         LineRenderer lineRenderer = ChooseLineRenderer(nVertices);
         lineRenderer.positionCount = nVertices + 1;
 
+        Color strengthColor;
+        if (score < 0.6f)
+            strengthColor = Color.Lerp(lowScoreColor, medScoreColor, score / 0.6f);
+        else
+            strengthColor = Color.Lerp(medScoreColor, highScoreColor, (score - 0.6f) / 0.4f);
+        //meshMaterial.color = meshColor;
+
         // Lines are drawn between the adjacent vertices. The last vertice is added first so there
         // is a line between 0th and (nVertices - 1)th vertice
         lineRenderer.SetPosition(0, vertices[nVertices - 1]);
@@ -445,18 +459,18 @@ public class ShapeController : NetworkBehaviour
 
         if (activate)
         {
-            startColor.a = 1f * score;
+            strengthColor.a = 1f * score;
             endColor.a = 1f * score;
         }
         // More transparent color for preview
         else
         {
-            startColor.a = 0.3f;
+            strengthColor.a = 0.3f;
             endColor.a = 0.3f;
         }
 
-        lineRenderer.startColor = startColor;
-        lineRenderer.endColor = endColor;
+        lineRenderer.startColor = strengthColor;
+        lineRenderer.endColor = strengthColor;
         lineRenderer.enabled = true;
 
         if (activate)
