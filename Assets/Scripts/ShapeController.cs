@@ -256,7 +256,6 @@ public class ShapeController : NetworkBehaviour
             SetPreviewActive(nVertices, false);
 
             // Set score and vertices networked properties for everyone (server, input authority and all other clients) to use to draw lines in OnTriangleActivated and OnSquareActivated methods
-            this.score = score;
             vertices.Clear();
             foreach (Vector3 position in playerPositions)
             {
