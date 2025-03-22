@@ -7,6 +7,7 @@ public class Leaderboard : NetworkBehaviour
 {
     [Networked, Capacity(6), OnChangedRender(nameof(OnTeam1PlayerStatsChanged))] private NetworkLinkedList<PlayerInfo> team1PlayerStats { get; }
     [Networked, Capacity(6), OnChangedRender(nameof(OnTeam2PlayerStatsChanged))] private NetworkLinkedList<PlayerInfo> team2PlayerStats { get; }
+    [Networked] PlayerRef hostPlayerRef { get; set; }
 
     private NetworkManager networkManager;
     private GameObject team1List;
@@ -37,6 +38,9 @@ public class Leaderboard : NetworkBehaviour
             {
                 team2Players.Add(player);
             }
+
+            // Set host player
+            hostPlayerRef = networkManager.hostPlayerRef;
         }
 
         // Populate team lists
@@ -118,6 +122,10 @@ public class Leaderboard : NetworkBehaviour
             GameObject wizardImage = playerCard.transform.Find("Wizard Image").gameObject;
             if (characterName == "Knight") wizardImage.SetActive(false);
             else knightImage.SetActive(false);
+
+            // Puts a nice star next to the host
+            GameObject starImage = playerCard.transform.Find("Star Image").gameObject;
+            if (hostPlayerRef.Equals(playerRef)) starImage.SetActive(true);
 
             // Get stat text components
             TextMeshProUGUI killsText = playerCard.transform.Find("Kills").GetComponent<TextMeshProUGUI>();

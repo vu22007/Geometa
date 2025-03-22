@@ -22,6 +22,9 @@ public class NetworkManager : SimulationBehaviour, INetworkRunnerCallbacks
     public List<Leaderboard.PlayerInfo> team1PlayerStats;
     public List<Leaderboard.PlayerInfo> team2PlayerStats;
 
+    // For the leaderboard to use to know who the host is
+    public PlayerRef hostPlayerRef;
+
     async public void StartGame(GameMode mode, string sessionName)
     {
         runner = gameObject.GetComponent<NetworkRunner>();

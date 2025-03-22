@@ -297,7 +297,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             if (characterName == "Knight") wizardImage.SetActive(false);
             else knightImage.SetActive(false);
 
-            //Puts a nice star next to the host
+            // Puts a nice star next to the host
             GameObject starImage = playerCard.transform.Find("Star Image").gameObject;
             if (hostPlayerRef.Equals(playerRef)) starImage.SetActive(true);
 
@@ -310,7 +310,10 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     {
         // Store the PlayerRef of the host
         if (HasStateAuthority && Runner.LocalPlayer.Equals(player))
+        {
             hostPlayerRef = player;
+            networkManager.hostPlayerRef = player;
+        }
     }
 
     public void PlayerLeft(PlayerRef player)
