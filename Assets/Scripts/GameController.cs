@@ -29,9 +29,6 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     // Initialisation
     public override void Spawned()
     {
-        // TEMP - DELETE THIS!
-        maxTime = 5;
-
         gameOver = false;
         pointsTopupCooldownMax = 10f;
         pointsTopupTimer = TickTimer.CreateFromSeconds(Runner, pointsTopupCooldownMax);
@@ -50,8 +47,6 @@ public class GameController : NetworkBehaviour, IPlayerLeft
         // Spawn initial items (only the server can do this)
         if (HasStateAuthority)
         {
-            //SpawnTestPickups();
-
             SpawnPickups();
             
             // Spawn team 1 flag
@@ -64,7 +59,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
             team2Flag = flag2Obj.GetComponent<PickupFlag>();
 
             // Spawn NPCs for testing
-            SpawnPlayersForTesting(3, 3, true);
+            //SpawnPlayersForTesting(3, 3, true);
         }
     }
 
@@ -303,18 +298,6 @@ public class GameController : NetworkBehaviour, IPlayerLeft
                     player.OnCreated("NPC", characterName, respawnPoint1, 2);
                 });
         }
-    }
-
-    void SpawnTestPickups()
-    {
-        // Spawn pickups
-        GameObject pickupPrefab = Resources.Load("Prefabs/Pickup") as GameObject;
-        //health
-        PrefabFactory.SpawnPickup(Runner, pickupPrefab, respawnPoint1 - new Vector3(5,0,0), 0, 20);
-        //mana
-        PrefabFactory.SpawnPickup(Runner, pickupPrefab, respawnPoint1 - new Vector3(10,0,0), 1, 10);
-        //speed
-        PrefabFactory.SpawnPickup(Runner, pickupPrefab, respawnPoint1 - new Vector3(15,0,0), 2, 5);
     }
 
     void SpawnPickups()
