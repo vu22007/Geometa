@@ -442,7 +442,6 @@ public class ShapeController : NetworkBehaviour
             strengthColor = Color.Lerp(lowScoreColor, medScoreColor, score / 0.6f);
         else
             strengthColor = Color.Lerp(medScoreColor, highScoreColor, (score - 0.6f) / 0.4f);
-        //meshMaterial.color = meshColor;
 
         // Lines are drawn between the adjacent vertices. The last vertice is added first so there
         // is a line between 0th and (nVertices - 1)th vertice
@@ -453,19 +452,15 @@ public class ShapeController : NetworkBehaviour
         }
 
         lineRenderer.startWidth = 0.5f;
-        Color startColor = lineRenderer.startColor;
-        Color endColor = lineRenderer.endColor;
 
         if (activate)
         {
             strengthColor.a = 1f * score;
-            endColor.a = 1f * score;
         }
         // More transparent color for preview
         else
         {
             strengthColor.a = 0.3f;
-            endColor.a = 0.3f;
         }
 
         lineRenderer.startColor = strengthColor;
