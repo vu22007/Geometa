@@ -14,7 +14,7 @@ public class ShapeController : NetworkBehaviour
     [Networked, OnChangedRender(nameof(OnSquareActivated))] private int activatedSquare { get; set; }
     [Networked, OnChangedRender(nameof(OnTrianglePreviewActiveChanged))] private bool trianglePreviewActive { get; set; }
     [Networked, OnChangedRender(nameof(OnSquarePreviewActiveChanged))] private bool squarePreviewActive { get; set; }
-    private float score { get; set; }
+    [Networked] private float score { get; set; }
     [Networked, Capacity(4)] private NetworkLinkedList<Vector3> vertices { get; }
     [Networked] private TickTimer triangleCooldownTimer { get; set; }
     [Networked] private TickTimer squareCooldownTimer { get; set; }
