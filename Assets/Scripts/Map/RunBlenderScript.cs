@@ -5,7 +5,7 @@ using Debug = UnityEngine.Debug;
 public class RunBlenderScript : MonoBehaviour
 {
     // Set the path to your Python script that Blender should run.
-    string scriptPath = @"C:\Path\To\YourScript.py";
+    string scriptPath = @"C:\Users\josif\Documents\Geometa\Non-Unity\blenderPythonScript.py";
 
     void Start()
     {
