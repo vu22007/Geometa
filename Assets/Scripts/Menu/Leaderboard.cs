@@ -133,6 +133,16 @@ public class Leaderboard : NetworkBehaviour
             damageText.text = Mathf.RoundToInt(damage).ToString();
             flagsText.text = flags.ToString();
 
+            // Make stats green colour if player is the client's own player
+            if (Runner.LocalPlayer.Equals(playerRef))
+            {
+                killsText.color = Color.green;
+                deathsText.color = Color.green;
+                killDeathRatioText.color = Color.green;
+                damageText.color = Color.green;
+                flagsText.color = Color.green;
+            }
+
             // Set position for next card
             cardPosition.y -= cardHeight;
         }
