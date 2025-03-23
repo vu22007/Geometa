@@ -554,11 +554,13 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1916434194}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a6eaa993361caf34a8d4edd169037ab4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  blenderExePath: C:\Program Files\Blender Foundation\Blender 4.3\blender.exe
+  unityImportPath: Assets/ImportedMaps/
 --- !u!4 &1916434196
 Transform:
   m_ObjectHideFlags: 0

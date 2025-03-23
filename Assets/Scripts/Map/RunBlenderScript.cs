@@ -15,7 +15,7 @@ public class RunBlenderScript : MonoBehaviour
 
     void Start()
     {
-        RunBlender(51.450, -2.603, 51.451, -2.599);
+        RunBlender(51.450, 51.451, -2.603, -2.599);
         ImportFbxToUnity();
     }
 

@@ -34,10 +34,10 @@ if source_type == "server":
     
     blosm_props.osmSource = "server"
     # Make sure your addon has properties to store these parameters. For example:
-    blosm_props.serverMinLat = min_lat
-    blosm_props.serverMaxLat = max_lat
-    blosm_props.serverMinLon = min_lon
-    blosm_props.serverMaxLon = max_lon
+    blosm_props.minLat = min_lat
+    blosm_props.maxLat = max_lat
+    blosm_props.minLon = min_lon
+    blosm_props.maxLon = max_lon
 
 elif source_type == "file":
     blosm_props.osmSource = "file"
@@ -51,13 +51,6 @@ elif source_type == "file":
         print(f"Using file mode with default path: {defaultFilePath}")
 else:
     raise ValueError("Invalid source type. Use 'server' or 'file'.")
-
-# Switch to importing from a server
-# blosm_props.osmSource = "server"
-
-# Or switch to importing from a local file:
-# blosm_props.osmSource = "file"
-# blosm_props.osmFilepath = "C:\\Users\\josif\\Downloads\\map.osm"
 
 blosm_props.mode = "2D"
 blosm_props.buildings = True   # Import buildings
@@ -79,11 +72,12 @@ try:
 except Exception as e:
     print("Warning: Error during BLOSM import:", e)
     
-bpy.context.object.location[2] = 0
+# bpy.context.object.location[2] = 0
 
+bpy.ops.object.select_all(action='SELECT')
 bpy.ops.object.duplicates_make_real()
 
-# output_path = "..\\Assets\\Resources\\Prefabs\\Map\\scriptTest1.fbx"
+bpy.ops.object.convert(target='MESH')
 
 # Export to FBX - using relative path to Unity project
 # Get the directory where the script is running
