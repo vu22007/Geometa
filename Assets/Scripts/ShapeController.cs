@@ -114,29 +114,21 @@ public class ShapeController : NetworkBehaviour
             previousButtons = input.buttons;
         }
     }
-    
+
     private void TrianglePerformed()
     {
         // Preview shape only locally 
-        // The line renderer will be disable for all others
-        if (HasInputAuthority)
-        {
-            // Only allow triangle preview if no square preview active
-            if (!squarePreviewActive)
-                PreviewShape(3, false);
-        }
+        // The line renderer will be disabled for all others
+        if (!squarePreviewActive) // Only allow triangle preview if no square preview active
+            PreviewShape(3, false);
     }
 
     private void SquarePerformed()
     {
         // Preview shape only locally 
-        // The line renderer will be disable for all others
-        if (HasInputAuthority)
-        {
-            // Only allow square preview if no triangle preview active
-            if (!trianglePreviewActive)
-                PreviewShape(4, false);
-        }
+        // The line renderer will be disabled for all others
+        if (!trianglePreviewActive) // Only allow square preview if no triangle preview active
+            PreviewShape(4, false);
     }
 
     private void TriangleActivated()
