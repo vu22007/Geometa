@@ -76,7 +76,7 @@ public class Bullet : NetworkBehaviour
         Vector3 position = GetMovePosition(Runner.Tick);
 
         // Lag-compensated hit detection
-        int layerMask = LayerMask.GetMask("Default"); // Only register collisions with colliders and hitboxes on the "Default" layer
+        int layerMask = LayerMask.GetMask("Default", "Map"); // Only register collisions with colliders and hitboxes on the given layers
         HitOptions options = HitOptions.IncludeBox2D | HitOptions.IgnoreInputAuthority;
         List<LagCompensatedHit> hits = new List<LagCompensatedHit>();
         if (Runner.LagCompensation.OverlapBox(position, new Vector3(0.325f, 0.49f, 0), rotation, Object.InputAuthority, hits, layerMask, options) != 0)
