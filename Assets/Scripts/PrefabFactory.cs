@@ -29,9 +29,13 @@ public static class PrefabFactory
         damagePopup.Setup(damage, team);
     }
     
-    public static NetworkObject SpawnCircleCollider(NetworkRunner runner, GameObject prefab)
+    public static NetworkObject SpawnCircleCollider(NetworkRunner runner, PlayerRef playerRef, GameObject prefab, int team)
     {
-        NetworkObject circleCollider = runner.Spawn(prefab, Vector3.zero);
+        NetworkObject circleCollider = runner.Spawn(prefab, Vector3.zero, Quaternion.identity, playerRef, (runner, networkObject) =>
+        {
+            CircleCornerCollider circleCornerCollider = networkObject.GetComponent<CircleCornerCollider>();
+            circleCornerCollider.OnCreated(team, playerRef);
+        });
         return circleCollider;
     }
 

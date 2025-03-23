@@ -14,13 +14,17 @@ public class SquareShape : NetworkBehaviour
         // Only the server can spawn the colliders
         if (HasStateAuthority)
         {
+            Player parentPlayer = GetComponentInParent<Player>();
+            PlayerRef parentPlayerRef = parentPlayer.Object.InputAuthority;
+            int team = parentPlayer.GetTeam();
+
             GameObject circleColliderPrefab = Resources.Load("Prefabs/CircleCornerCollider") as GameObject;
+
             for (int i = 0; i < 4; i++)
             {
-                NetworkObject circleColliderObject = PrefabFactory.SpawnCircleCollider(Runner, circleColliderPrefab);
-                CircleCornerCollider temp = circleColliderObject.GetComponent<CircleCornerCollider>();
-                temp.team = transform.GetComponentInParent<Player>().GetTeam();
-                circleColliders.Add(temp);
+                // Spawn the circle corner collider
+                // Note: The prefab is disabled by default
+                NetworkObject circleColliderObject = PrefabFactory.SpawnCircleCollider(Runner, parentPlayerRef, circleColliderPrefab, team);
             }
         }
     }
@@ -41,5 +45,11 @@ public class SquareShape : NetworkBehaviour
                 circleColliders[i].ActivateCollider(playerPositions[i], score);
             }
         }
+    }
+
+    // For circle corner collider to call when it spawns
+    public void RegisterCircleCornerCollider(CircleCornerCollider circleCornerCollider)
+    {
+        circleColliders.Add(circleCornerCollider);
     }
 }
