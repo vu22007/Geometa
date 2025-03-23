@@ -1,10 +1,8 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Fusion;
 using UnityEngine;
-using UnityEngine.SocialPlatforms.Impl;
 
 public class ShapeController : NetworkBehaviour
 {
@@ -14,7 +12,7 @@ public class ShapeController : NetworkBehaviour
     [Networked, OnChangedRender(nameof(OnSquareActivated))] private int activatedSquare { get; set; }
     [Networked, OnChangedRender(nameof(OnTrianglePreviewActiveChanged))] private bool trianglePreviewActive { get; set; }
     [Networked, OnChangedRender(nameof(OnSquarePreviewActiveChanged))] private bool squarePreviewActive { get; set; }
-    [Networked] private float score { get; set; }
+    [Networked] private float activatedScore { get; set; }
     [Networked, Capacity(4)] private NetworkLinkedList<Vector3> vertices { get; }
     [Networked] private TickTimer triangleCooldownTimer { get; set; }
     [Networked] private TickTimer squareCooldownTimer { get; set; }
@@ -22,6 +20,7 @@ public class ShapeController : NetworkBehaviour
     [Networked, Capacity(50)] private string errorMessage { get; set; }
 
     private List<Vector3> playerPositions;
+    private float score;
     private int triangleCost = 10;
     private int squareCost = 15;
     private float triangleCooldown = 3f;
@@ -80,8 +79,8 @@ public class ShapeController : NetworkBehaviour
         // Draw shape previews locally
         if (HasInputAuthority && (trianglePreviewActive || squarePreviewActive))
         {
-            // Use local playerPositions property since vertices networked property is only set when shape is activated
-            DrawLines(playerPositions, false, score); // Note: Score doesn't matter for preview, so set it to 0
+            // Use local playerPositions and score properties since vertices and activatedScore networked properties are only set when shape is activated
+            DrawLines(playerPositions, false, score);
         }
     }
 
@@ -248,6 +247,7 @@ public class ShapeController : NetworkBehaviour
             SetPreviewActive(nVertices, false);
 
             // Set score and vertices networked properties for everyone (server, input authority and all other clients) to use to draw lines in OnTriangleActivated and OnSquareActivated methods
+            activatedScore = score;
             vertices.Clear();
             foreach (Vector3 position in playerPositions)
             {
@@ -338,7 +338,7 @@ public class ShapeController : NetworkBehaviour
             PlayShapeSound(vertices.ToArray(), 3, "Knight");
 
             // Draw triangle for everyone
-            triangleShape.DrawTriangle(vertices.ToList(), true, score);
+            triangleShape.DrawTriangle(vertices.ToList(), true, activatedScore);
         }
     }
 
@@ -350,7 +350,7 @@ public class ShapeController : NetworkBehaviour
         PlayShapeSound(vertices.ToArray(), 4, "Knight");
 
         // Draw square for everyone
-        DrawLines(vertices.ToList(), true, score);
+        DrawLines(vertices.ToList(), true, activatedScore);
     }
 
     bool IsPreviewActive(int nVertices)
