@@ -15,11 +15,11 @@ public class Map : MonoBehaviour
 
     void Start()
     {
-        // StartCoroutine(LoadMapFromBoundingBox(51.4576, -2.60128, 51.4588, -2.59851));
-        StartCoroutine(LoadMapFromBoundingBox(51.450, -2.603, 51.451, -2.599));
+        // StartCoroutine(LoadMapFromBoundingBox(51.4576, 51.4588, -2.60128, -2.59851));
+        StartCoroutine(LoadMapFromBoundingBox(51.450, 51.451, -2.603, -2.599));
     }
 
-    IEnumerator LoadMapFromBoundingBox(double lowLat, double lowLong, double highLat, double highLong)
+    IEnumerator LoadMapFromBoundingBox(double lowLat, double highLat, double lowLong, double highLong)
     {
         // Construct request body
         // Note: We are fetching buildings (both as ways and as relations), roads, paths, grass and water
