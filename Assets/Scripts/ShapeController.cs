@@ -36,9 +36,9 @@ public class ShapeController : NetworkBehaviour
     private LineRenderer triangleLineRenderer;
     private LineRenderer squareLineRenderer;
 
-    Color lowScoreColor = new Color(0.2f, 0.4f, 0.8f);  // Blue
-    Color medScoreColor = new Color(0.8f, 0.2f, 0.8f);  // Purple
-    Color highScoreColor = new Color(1.0f, 0.2f, 0.2f); // Red
+    Color lowScoreColor = new Color(1.0f, 0.0f, 0.0f);  // Red
+    Color medScoreColor = new Color(1.0f, 1.0f, 0.0f);  // Yellow
+    Color highScoreColor = new Color(0.0f, 1.0f, 0.0f); // Green
 
     private TriangleShape triangleShape;
     private SquareShape squareShape;
