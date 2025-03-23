@@ -14,6 +14,11 @@ public class Bullet : NetworkBehaviour
     [Networked] int team { get; set; }
     [Networked] private PlayerRef playerShooting { get; set; }
 
+    // for SummonAI.cs
+    public float Damage => damage;
+    public int Team => team;
+
+
     GameController gameController;
 
     // Bullet intialisation (called from a player object on server when creating the bullet)

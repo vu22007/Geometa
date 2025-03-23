@@ -1,28 +1,44 @@
 using Fusion;
 using UnityEngine;
 using System.Collections;
+using UnityEngine.UI;
 
 public class SummonAI : NetworkBehaviour
 {
     [Networked] public int team { get; set; }
     [Networked] private PlayerRef summonerRef { get; set; }
-    [Networked] private float speed { get; set; } = 5f;
+    [Networked] private float speed { get; set; } = 3f;
     [Networked] private float lifetime { get; set; } = 10f; 
     [Networked] private float damage { get; set; } = 10f; 
     [Networked] private TickTimer despawnTimer { get; set; }
+
     
+    [Networked, OnChangedRender(nameof(OnHealthChanged))] 
+    private float currentHealth { get; set; }
+
+    [Networked] private float maxHealth { get; set; }
+
+    private SpriteRenderer spriteRenderer;
+    private Rigidbody2D rb;
+    [SerializeField] private Image healthBar;
+
     private Coroutine damageCoroutine;
 
     private Transform target;
 
-    public void OnCreated(int team, PlayerRef summoner)
+    public void OnCreated(int team, PlayerRef summonerRef)
     {
         this.team = team;
-        this.summonerRef = summoner;
+        this.summonerRef = summonerRef;
+        maxHealth = 30f;
+        currentHealth = maxHealth;
     }
 
     public override void Spawned()
     {
+        rb = GetComponent<Rigidbody2D>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        UpdateHealthBar(currentHealth);
         despawnTimer = TickTimer.CreateFromSeconds(Runner, lifetime);
         FindTarget();
     }
@@ -89,6 +105,19 @@ public class SummonAI : NetworkBehaviour
                 damageCoroutine = StartCoroutine(DealContinuousDamage(player));
             }
         }
+        if (!HasStateAuthority) return;
+
+        // Check if it's a bullet
+        if (other.TryGetComponent<Bullet>(out var bullet))
+        {
+            // Make sure it's an enemy bullet
+            if (bullet.Team != team)
+            {
+                TakeDamage(bullet.Damage);
+                Runner.Despawn(other.GetComponent<NetworkObject>());
+            }
+        }
+
     }
 
     private void OnTriggerExit2D(Collider2D other)
@@ -109,7 +138,43 @@ public class SummonAI : NetworkBehaviour
         while (true)
         {
             player.TakeDamage(damage, summonerRef);
+
+            // Knockback
+            float knockbackForce = 10f;
+            Vector2 knockbackDirection = (player.transform.position - transform.position).normalized;
+
+            Rigidbody2D playerRb = player.GetComponent<Rigidbody2D>();
+            if (playerRb != null)
+            {
+                playerRb.AddForce(knockbackDirection * knockbackForce, ForceMode2D.Impulse);
+            }
+
             yield return new WaitForSeconds(1f); // Damage every second
+        }
+    }
+
+    public void TakeDamage(float damage)
+    {
+        if (HasStateAuthority == false) return;
+
+        currentHealth -= damage;
+
+        if (currentHealth <= 0)
+        {
+            Runner.Despawn(GetComponent<NetworkObject>());
+        }
+    }
+
+    void OnHealthChanged()
+    {
+        UpdateHealthBar(currentHealth);
+    }
+
+    void UpdateHealthBar(float health)
+    {
+        if (healthBar != null)
+        {
+            healthBar.fillAmount = health / maxHealth;
         }
     }
 }
