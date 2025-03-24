@@ -5,9 +5,11 @@ import os
 # Export to FBX - using relative path to Unity project
 # Get the directory where the script is running
 script_dir = os.path.dirname(os.path.realpath(__file__))
+
 # Construct relative path to Unity Assets/Resources folder
 output_path = os.path.normpath(os.path.join(script_dir, "..\\Assets\\Resources\\Prefabs\\Map\\Buildify3DBuildings.fbx"))
 
+# Path to buildify file 
 buildifyPath = os.path.normpath(os.path.join(script_dir, "buildify_1.0.blend"))
 
 # Path to your BLOSM add-on file
@@ -21,7 +23,7 @@ if not os.path.exists(osm_cache_dir):
 
 # Install the add-on if not already installed
 def ensure_blosm_installed(addon_path):
-    if "blender-osm" in bpy.context.preferences.addons:
+    if "blosm" in bpy.context.preferences.addons:
         print("BLOSM is already installed and enabled")
         return True
     
@@ -63,7 +65,7 @@ else:
     print(f"All arguments: {script_args}")
 
 blosm_props = bpy.context.scene.blosm
-blosm_props.cacheDir = osm_cache_dir
+bpy.context.preferences.addons["blosm"].preferences.dataDir = osm_cache_dir
 blosm_props.mode = "2D"
 blosm_props.buildings = True   # Import buildings
 blosm_props.water = False      # Skip water
