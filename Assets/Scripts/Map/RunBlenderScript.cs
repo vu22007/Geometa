@@ -16,15 +16,12 @@ public class RunBlenderScript : NetworkBehaviour
 
     override public void Spawned()
     {
-        if (HasStateAuthority)
-        {
-            // RunBlender(51.450, 51.451, -2.603, -2.599);
-            ImportFbxToUnity();
-            // SpawnNetworkedMap();
-        }
+        //RunBlender(51.450, 51.451, -2.603, -2.599);
+        //ImportFbxToUnity();
+        // SpawnNetworkedMap();
     }
 
-    void RunBlender(double minLat, double maxLat, double minLon, double maxLon)
+    public void RunBlender(double minLat, double maxLat, double minLon, double maxLon)
     {
         // For server mode, pass "server" followed by the 4 parameters.
         string extraArgs = $"-- server {minLat} {maxLat} {minLon} {maxLon}";
@@ -61,12 +58,9 @@ public class RunBlenderScript : NetworkBehaviour
         }
     }
 
-    private void ImportFbxToUnity()
+    public void ImportFbxToUnity()
     {
         #if UNITY_EDITOR
-
-        // Copy the FBX file to the Unity project if it's not already there
-        // string fileName = "scriptTest1.fbx";
 
         // Refresh the asset database to see the new file
         UnityEditor.AssetDatabase.Refresh();
@@ -78,7 +72,7 @@ public class RunBlenderScript : NetworkBehaviour
 
         // Import the asset - this ensures Unity processes it properly
         GameObject fbxAsset = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(fbxPath);
-        fbxAsset.AddComponent<NetworkObject>();
+        // fbxAsset.AddComponent<NetworkObject>();
 
         if (fbxAsset != null)
         {

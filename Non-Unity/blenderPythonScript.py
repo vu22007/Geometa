@@ -7,7 +7,7 @@ defaultFilePath = "C:\\Users\\josif\\Downloads\\map.osm"
 # Clear all objects
 for obj in bpy.data.objects:
     bpy.data.objects.remove(obj, do_unlink=True)
-    
+
 argv = sys.argv
 if "--" in argv:
     idx = argv.index("--")
@@ -81,7 +81,7 @@ except Exception as e:
 bpy.ops.object.select_all(action='SELECT')
 bpy.ops.object.duplicates_make_real()
 
-bpy.ops.object.convert(target='MESH')
+# bpy.ops.object.convert(target='MESH')
 
 # Export to FBX - using relative path to Unity project
 # Get the directory where the script is running

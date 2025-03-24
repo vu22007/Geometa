@@ -12,11 +12,21 @@ public class Map : MonoBehaviour
     [SerializeField] GameObject pathPrefab;
     [SerializeField] GameObject grassPrefab;
     [SerializeField] GameObject waterPrefab;
+    RunBlenderScript buildingGenerator;
 
     void Start()
     {
-        // StartCoroutine(LoadMapFromBoundingBox(51.4576, 51.4588, -2.60128, -2.59851));
-        StartCoroutine(LoadMapFromBoundingBox(51.450, 51.451, -2.603, -2.599));
+        GameObject buildingGeneratorPrefab = Resources.Load<GameObject>("Prefabs/Map/BuildingsGenerator");
+        buildingGenerator = Instantiate(buildingGeneratorPrefab).GetComponent<RunBlenderScript>();
+        GenerateMap(51.450, 51.451, -2.603, -2.599);
+    }
+
+    private void GenerateMap(double lowLat, double highLat, double lowLong, double highLong)
+    {
+        StartCoroutine(LoadMapFromBoundingBox(lowLat, highLat, lowLong, highLong));
+
+        buildingGenerator.RunBlender(lowLat, highLat, lowLong, highLong);
+        buildingGenerator.ImportFbxToUnity();
     }
 
     IEnumerator LoadMapFromBoundingBox(double lowLat, double highLat, double lowLong, double highLong)
