@@ -1,22 +1,27 @@
+using Fusion;
 using System.Diagnostics;
+using UnityEditor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
-public class RunBlenderScript : MonoBehaviour
+public class RunBlenderScript : NetworkBehaviour
 {
+    private GameObject mapPrefab;
+
     // Set the path to your Python script that Blender should run.
     string scriptPath = @"Non-Unity\blenderPythonScript.py";
 
     // Path to the Blender executable
     public string blenderExePath = @"C:\Program Files\Blender Foundation\Blender 4.3\blender.exe";
 
-    // Path to load the FBX into Unity after export
-    public string unityImportPath = "Assets/ImportedMaps/";
-
-    void Start()
+    override public void Spawned()
     {
-        RunBlender(51.450, 51.451, -2.603, -2.599);
-        ImportFbxToUnity();
+        if (HasStateAuthority)
+        {
+            // RunBlender(51.450, 51.451, -2.603, -2.599);
+            ImportFbxToUnity();
+            // SpawnNetworkedMap();
+        }
     }
 
     void RunBlender(double minLat, double maxLat, double minLon, double maxLon)
@@ -61,80 +66,59 @@ public class RunBlenderScript : MonoBehaviour
         #if UNITY_EDITOR
 
         // Copy the FBX file to the Unity project if it's not already there
-        string fileName = "scriptTest1.fbx";
+        // string fileName = "scriptTest1.fbx";
 
-        try
+        // Refresh the asset database to see the new file
+        UnityEditor.AssetDatabase.Refresh();
+
+        // Path to the FBX asset in your project
+        string fbxPath = "Assets/Resources/Prefabs/Map/scriptTest1.fbx";
+        // Desired path for the created prefab
+        string prefabPath = "Assets/Resources/Prefabs/Map/scriptTest1.prefab";
+
+        // Import the asset - this ensures Unity processes it properly
+        GameObject fbxAsset = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(fbxPath);
+        fbxAsset.AddComponent<NetworkObject>();
+
+        if (fbxAsset != null)
         {
-            // Refresh the asset database to see the new file
-            UnityEditor.AssetDatabase.Refresh();
+            // Create and save the prefab asset from the FBX asset
+            mapPrefab = PrefabUtility.SaveAsPrefabAsset(fbxAsset, prefabPath);
+            // mapPrefab.AddComponent<NetworkObject>();
 
-            // Get the relative path for Unity's asset database
-            string relativePath = "Assets/Resources/Prefabs/Map/" + fileName;
+                if (mapPrefab != null)
+                {
+                    Debug.Log("Map asset loaded successfully. Ready to use in scene.");
 
-            // Import the asset - this ensures Unity processes it properly
-            UnityEditor.AssetDatabase.ImportAsset(relativePath, UnityEditor.ImportAssetOptions.ForceUpdate);
-
-            // Optionally, load the asset and use it (for example, instantiate it in the scene)
-            GameObject mapPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(relativePath);
-            if (mapPrefab != null)
-            {
-                Debug.Log("Map asset loaded successfully. Ready to use in scene.");
-
-                // Optionally instantiate the map in the scene
-                // Instantiate(mapPrefab, Vector3.zero, Quaternion.identity);
-            }
-            else
-            {
-                Debug.LogWarning("Map asset could not be loaded after import.");
-            }
+                    // Optionally instantiate the map in the scene
+                    GameObject mapInstance = Instantiate(mapPrefab, Vector3.zero, Quaternion.identity);
+                    mapInstance.transform.eulerAngles = new Vector3(90, 180, 0);
+                }
+                else
+                {
+                    Debug.LogWarning("Map asset could not be loaded after import.");
+                }
         }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"Error importing FBX file: {e.Message}");
-        }
-#else
-        Debug.LogWarning("Asset import is only available in the Unity Editor.");
-#endif
+    #else
+            Debug.LogWarning("Asset import is only available in the Unity Editor.");
+    #endif
     }
 
-    void RunBlender(string filePath)
+    private void SpawnNetworkedMap()
     {
-        // Set the path to your Blender executable.
-        // Make sure to use the correct path for your system.
-        string blenderExePath = @"C:\Program Files\Blender Foundation\Blender 4.3\blender.exe";
+        // Load the map prefab from Resources
+       //  GameObject mapAsset = Resources.Load<GameObject>("/Prefabs/Map/scriptTest1.prefab");
 
-        // Build the extra arguments for your Blender Python script.
-        string extraArgs = "";
-        // For file mode, pass "file" and the file path.
-        extraArgs = $"file \"{filePath}\"";
-
-        // Blender command line parameters:
-        // --background : Run Blender in the background (no GUI)
-        // --python : Execute the given Python script.
-        string arguments = $"--background --python \"{scriptPath}\"";
-
-        ProcessStartInfo processInfo = new ProcessStartInfo
+        // Spawn it as a networked object so all clients see it
+        if (mapPrefab != null)
         {
-            FileName = blenderExePath,
-            Arguments = arguments,
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = true
-        };
-
-        Process process = new Process { StartInfo = processInfo };
-
-        process.Start();
-        process.WaitForExit();
-
-        string output = process.StandardOutput.ReadToEnd();
-        string error = process.StandardError.ReadToEnd();
-
-        Debug.Log("Blender output: " + output);
-        if (!string.IsNullOrEmpty(error))
+            GameObject map = Runner.Spawn(mapPrefab, Vector3.zero, Quaternion.identity).gameObject;
+            map.transform.eulerAngles = new Vector3(90, 180, 0);
+            Debug.Log("Map spawned for all players");
+        }
+        else
         {
-            Debug.LogError("Blender error: " + error);
+            Debug.LogError("Failed to load map asset");
         }
     }
 }

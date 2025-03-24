@@ -4,6 +4,10 @@ import os
 
 defaultFilePath = "C:\\Users\\josif\\Downloads\\map.osm"
 
+# Clear all objects
+for obj in bpy.data.objects:
+    bpy.data.objects.remove(obj, do_unlink=True)
+    
 argv = sys.argv
 if "--" in argv:
     idx = argv.index("--")
