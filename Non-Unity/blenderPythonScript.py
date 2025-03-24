@@ -2,8 +2,6 @@ import bpy
 import sys
 import os
 
-# defaultFilePath = "C:\\Users\\josif\\Downloads\\map.osm"
-
 # Export to FBX - using relative path to Unity project
 # Get the directory where the script is running
 script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -11,6 +9,38 @@ script_dir = os.path.dirname(os.path.realpath(__file__))
 output_path = os.path.normpath(os.path.join(script_dir, "..\\Assets\\Resources\\Prefabs\\Map\\Buildify3DBuildings.fbx"))
 
 buildifyPath = os.path.normpath(os.path.join(script_dir, "buildify_1.0.blend"))
+
+# Path to your BLOSM add-on file
+blosm_addon_path = os.path.normpath(os.path.join(script_dir, "blosm_2.7.13.zip"))
+
+# File for storing the osm files
+osm_cache_dir = os.path.join(script_dir, "osm_cache")
+if not os.path.exists(osm_cache_dir):
+    os.makedirs(osm_cache_dir)
+    print(f"Created OSM cache directory: {osm_cache_dir}")
+
+# Install the add-on if not already installed
+def ensure_blosm_installed(addon_path):
+    if "blender-osm" in bpy.context.preferences.addons:
+        print("BLOSM is already installed and enabled")
+        return True
+    
+    print(f"Installing BLOSM add-on from {addon_path}...")
+    try:
+        # Install the add-on
+        bpy.ops.preferences.addon_install(filepath=addon_path)
+        
+        # Enable the add-on
+        bpy.ops.preferences.addon_enable(module="blosm")
+        
+        print("BLOSM add-on installed successfully")
+        return True
+    except Exception as e:
+        print(f"Failed to install BLOSM add-on: {e}")
+        return False
+
+# Call this function before the rest of your script
+ensure_blosm_installed(blosm_addon_path)
 
 # Clear all objects
 for obj in bpy.data.objects:
@@ -33,6 +63,20 @@ else:
     print(f"All arguments: {script_args}")
 
 blosm_props = bpy.context.scene.blosm
+blosm_props.cacheDir = osm_cache_dir
+blosm_props.mode = "2D"
+blosm_props.buildings = True   # Import buildings
+blosm_props.water = False      # Skip water
+blosm_props.forests = False    # Skip forests
+blosm_props.vegetation = False # Skip other vegetation
+blosm_props.highways = False   # Skip roads and paths
+blosm_props.railways = False   # Skip railways
+blosm_props.dataType = "osm"
+
+blosm_props.singleObject = True
+
+blosm_props.gnBlendFile2d = buildifyPath # "C:\\Users\\josif\\Downloads\\buildify_1.0.blend"
+blosm_props.gnSetup2d = 'building'
 
 if source_type == "server":
     # Expect 4 additional parameters: min_lat, max_lat, min_lon, max_lon
@@ -50,33 +94,8 @@ if source_type == "server":
     blosm_props.maxLat = max_lat
     blosm_props.minLon = min_lon
     blosm_props.maxLon = max_lon
-
-# elif source_type == "file":
-#     blosm_props.osmSource = "file"
-#     if len(script_args) > 1:
-#         file_path = script_args[1]
-#         blosm_props.osmFilepath = file_path
-#         print(f"Using file mode with path: {file_path}")
-#     else:
-#         # Fall back to a default file path if none is provided (or raise an error)
-#         blosm_props.osmFilepath = defaultFilePath
-#         print(f"Using file mode with default path: {defaultFilePath}")
 else:
     raise ValueError("Invalid source type. Use 'server' or 'file'.")
-
-blosm_props.mode = "2D"
-blosm_props.buildings = True   # Import buildings
-blosm_props.water = False      # Skip water
-blosm_props.forests = False    # Skip forests
-blosm_props.vegetation = False # Skip other vegetation
-blosm_props.highways = False   # Skip roads and paths
-blosm_props.railways = False   # Skip railways
-blosm_props.dataType = "osm"
-
-blosm_props.singleObject = True
-
-blosm_props.gnBlendFile2d = buildifyPath # "C:\\Users\\josif\\Downloads\\buildify_1.0.blend"
-blosm_props.gnSetup2d = 'building'
 
 try:
     bpy.ops.blosm.import_data()
@@ -88,8 +107,6 @@ except Exception as e:
 
 bpy.ops.object.select_all(action='SELECT')
 bpy.ops.object.duplicates_make_real()
-
-# bpy.ops.object.convert(target='MESH')
 
 try:
     bpy.ops.export_scene.fbx(
