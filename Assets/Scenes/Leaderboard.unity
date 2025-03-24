@@ -176,7 +176,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Total points: 100
+  m_text: 'Total points: 0
 
 '
   m_isRightToLeft: 0
@@ -2556,7 +2556,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Total points: 100
+  m_text: 'Total points: 0
 
 '
   m_isRightToLeft: 0
@@ -2832,7 +2832,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Team 1 wins!
+  m_text: '
 
 '
   m_isRightToLeft: 0

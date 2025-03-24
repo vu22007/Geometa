@@ -9,7 +9,7 @@ public class Leaderboard : NetworkBehaviour
     [Networked, Capacity(6), OnChangedRender(nameof(OnTeam2PlayerStatsChanged))] private NetworkLinkedList<PlayerInfo> team2PlayerStats { get; }
     [Networked, OnChangedRender(nameof(OnTeam1PointsChanged))] float team1Points { get; set; }
     [Networked, OnChangedRender(nameof(OnTeam2PointsChanged))] float team2Points { get; set; }
-    [Networked] int winningTeam { get; set; }
+    [Networked, OnChangedRender(nameof(OnWinningTeamChanged))] int winningTeam { get; set; }
     [Networked] PlayerRef hostPlayerRef { get; set; }
 
     private NetworkManager networkManager;
@@ -68,7 +68,10 @@ public class Leaderboard : NetworkBehaviour
             hostPlayerRef = networkManager.hostPlayerRef;
         }
 
-        ShowTeamPointsAndWinner();
+        // Show points and winning team
+        OnTeam1PointsChanged();
+        OnTeam2PointsChanged();
+        OnWinningTeamChanged();
 
         // Populate team lists
         AddPlayerCardsToTeamList(team1List, team1PlayerStats);
@@ -84,21 +87,18 @@ public class Leaderboard : NetworkBehaviour
     // Called when the team1Points networked property changes
     void OnTeam1PointsChanged()
     {
-        ShowTeamPointsAndWinner();
+        team1PointsText.text = "Total points: " + team1Points;
     }
     
     // Called when the team2Points networked property changes
     void OnTeam2PointsChanged()
     {
-        ShowTeamPointsAndWinner();
+        team2PointsText.text = "Total points: " + team2Points;
     }
 
-    void ShowTeamPointsAndWinner()
+    // Called when the winningTeam networked property changes
+    void OnWinningTeamChanged()
     {
-        // Show points
-        team1PointsText.text = "Total points: " + team1Points;
-        team2PointsText.text = "Total points: " + team2Points;
-
         // Show winner
         if (winningTeam == 1)
         {

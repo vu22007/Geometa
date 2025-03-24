@@ -31,9 +31,6 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     // Initialisation
     public override void Spawned()
     {
-        // TEMP - DELETE THIS!
-        maxTime = 5;
-        
         gameOver = false;
         pointsTopupCooldownMax = 10f;
         pointsTeam1 = 0;
@@ -66,7 +63,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
             team2Flag = flag2Obj.GetComponent<PickupFlag>();
 
             // Spawn NPCs for testing
-            SpawnPlayersForTesting(3, 3, true);
+            //SpawnPlayersForTesting(3, 3, true);
         }
     }
 
