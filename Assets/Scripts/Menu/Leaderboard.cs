@@ -16,6 +16,8 @@ public class Leaderboard : NetworkBehaviour
     private GameObject team2List;
     private TextMeshProUGUI team1Title;
     private TextMeshProUGUI team2Title;
+    private TextMeshProUGUI team1PointsText;
+    private TextMeshProUGUI team2PointsText;
     private TextMeshProUGUI teamWinner;
     private GameObject playerCardPrefab;
 
@@ -26,6 +28,8 @@ public class Leaderboard : NetworkBehaviour
         team2List = GameObject.Find("Team 2 List");
         team1Title = GameObject.Find("Team 1 Title").GetComponent<TextMeshProUGUI>();
         team2Title = GameObject.Find("Team 2 Title").GetComponent<TextMeshProUGUI>();
+        team1PointsText = GameObject.Find("Team 1 Points").GetComponent<TextMeshProUGUI>();
+        team2PointsText = GameObject.Find("Team 2 Points").GetComponent<TextMeshProUGUI>();
         teamWinner = GameObject.Find("Team Winner").GetComponent<TextMeshProUGUI>();
         playerCardPrefab = Resources.Load("Prefabs/Leaderboard/PlayerCard") as GameObject;
 
@@ -82,6 +86,11 @@ public class Leaderboard : NetworkBehaviour
 
     void ShowTeamPointsAndWinner()
     {
+        // Show points
+        team1PointsText.text = "Total points: " + team1Points;
+        team2PointsText.text = "Total points: " + team2Points;
+
+        // Show winner
         if (team1Points > team2Points)
         {
             teamWinner.text = "Team 1 wins!";
@@ -96,9 +105,6 @@ public class Leaderboard : NetworkBehaviour
         {
             teamWinner.text = "Draw!";
         }
-        
-        team1Title.text = $"Team 1 - {team1Points}";
-        team2Title.text = $"Team 2 - {team2Points}";
     }
 
     // Called when the team1PlayerStats networked property changes
