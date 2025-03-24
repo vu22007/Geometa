@@ -48,7 +48,7 @@ public class Player : NetworkBehaviour
     [Networked] float slowedAmount { get; set; }
     [Networked] TickTimer getSlowedTimer { get; set; }
     [Networked] float speedIncrease { get; set; }
-    [Networked] TickTimer speedIncreaseTimer { get; set; }
+    [Networked, OnChangedRender(nameof(OnSpeedIncreaseTimerChanged))] TickTimer speedIncreaseTimer { get; set; }
     [Networked, OnChangedRender(nameof(OnInvinsibleChanged))] bool invinsible { get; set; }
     [Networked] TickTimer invinsibleTimer { get; set; }
     [Networked, OnChangedRender(nameof(OnGamePausedChanged))] private bool gamePaused { get; set; }
@@ -393,8 +393,6 @@ public class Player : NetworkBehaviour
             // Restore speed
             speed -= speedIncrease;
             speedIncrease = 0;
-            speedIcon.enabled = false;
-            speedIconLayer.enabled = false;
 
             // Reset timer
             speedIncreaseTimer = TickTimer.None;
@@ -1098,16 +1096,36 @@ public class Player : NetworkBehaviour
     }
 
     public void IncreaseSpeed(float amount, float time){
-        if(speedIncrease == 0){
+        if (speedIncrease == 0)
+        {
             speed += amount;
             speedIncrease += amount;
         }
-
         speedIncreaseTimer = TickTimer.CreateFromSeconds(Runner, time);
-        speedIcon.enabled = true;
-        speedIconLayer.enabled = true;
-        speedHandler.StartCooldown(time);
     }
+
+    void OnSpeedIncreaseTimerChanged()
+    {
+        if (HasInputAuthority)
+        {
+            // Speed increase has started
+            if (speedIncreaseTimer.IsRunning)
+            {
+                float time = speedIncreaseTimer.RemainingTime(Runner).GetValueOrDefault();
+                speedIcon.enabled = true;
+                speedIconLayer.enabled = true;
+                speedHandler.StartCooldown(time);
+            }
+
+            // Speed increase has finished
+            else
+            {
+                speedIcon.enabled = false;
+                speedIconLayer.enabled = false;
+            }
+        }
+    }
+
     public void GetSlowed(float amount, float time)
     {
         // If not already slowed, slow the player
