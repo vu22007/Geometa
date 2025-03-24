@@ -966,7 +966,7 @@ public class Player : NetworkBehaviour
                 {
                     teamPoints = gameController.CheckForPoints();
                     updateTeamPoints(teamPoints);
-                    totalFlagsCaptured += 1;
+                    if (teamPoints > 0) totalFlagsCaptured += 1;
                 }
                 carriedObject = null;
                 isCarrying = false;
