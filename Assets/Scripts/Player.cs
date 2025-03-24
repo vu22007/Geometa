@@ -471,7 +471,6 @@ public class Player : NetworkBehaviour
                     if (isCarrying)
                     {
                         DropObject();
-                        ShowMessage("drop", 0.3f, Color.green);
                     }
                 }
 
@@ -968,7 +967,6 @@ public class Player : NetworkBehaviour
                     teamPoints = gameController.CheckForPoints();
                     updateTeamPoints(teamPoints);
                     totalFlagsCaptured += 1;
-                    ShowMessage("flag " + totalFlagsCaptured, 0.3f, Color.green);
                 }
                 carriedObject = null;
                 isCarrying = false;
