@@ -16,8 +16,8 @@ public class RunBlenderScript : NetworkBehaviour
 
     override public void Spawned()
     {
-        //RunBlender(51.450, 51.451, -2.603, -2.599);
-        //ImportFbxToUnity();
+        // RunBlender(51.450, 51.451, -2.603, -2.599);
+        // ImportFbxToUnity();
         // SpawnNetworkedMap();
     }
 
@@ -66,9 +66,9 @@ public class RunBlenderScript : NetworkBehaviour
         UnityEditor.AssetDatabase.Refresh();
 
         // Path to the FBX asset in your project
-        string fbxPath = "Assets/Resources/Prefabs/Map/scriptTest1.fbx";
+        string fbxPath = "Assets/Resources/Prefabs/Map/Buildify3DBuildings.fbx";
         // Desired path for the created prefab
-        string prefabPath = "Assets/Resources/Prefabs/Map/scriptTest1.prefab";
+        string prefabPath = "Assets/Resources/Prefabs/Map/Buildify3DBuildings.prefab";
 
         // Import the asset - this ensures Unity processes it properly
         GameObject fbxAsset = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(fbxPath);
