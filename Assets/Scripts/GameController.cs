@@ -249,6 +249,18 @@ public class GameController : NetworkBehaviour, IPlayerLeft
 
         return 0;
     }
+
+    public void addKillPoints(int team)
+    {
+        if (team == 1)
+        {
+            pointsTeam1 += 2;
+        }
+        else if (team == 2)
+        {
+            pointsTeam2 += 2;
+        }
+    }
     public void BroadcastCarryFlag(int playerTeam, int flagTeam)
     {
         if (!HasStateAuthority || gameOver) return;

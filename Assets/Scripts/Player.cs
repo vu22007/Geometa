@@ -64,6 +64,7 @@ public class Player : NetworkBehaviour
     [Networked] int totalDeaths { get; set; }
     [Networked] int totalFlagsCaptured { get; set; }
     [Networked] int teamPoints { get; set; }
+    [Networked] int enemyPoints { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
@@ -109,6 +110,7 @@ public class Player : NetworkBehaviour
     public LineRenderer circleRenderer;
     [SerializeField] Transform pointer;
     public TextMeshProUGUI teamPointsTxt;
+    public TextMeshProUGUI enemyPointsTxt;
 
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(string displayName, string characterName, Vector3 respawnPoint, int team)
@@ -149,6 +151,7 @@ public class Player : NetworkBehaviour
         totalDeaths = 0;
         totalFlagsCaptured = 0;
         teamPoints = 0;
+        enemyPoints = 0;
     }
 
     // Player initialisation (called on each client and server when player is spawned on network)
@@ -267,6 +270,7 @@ public class Player : NetworkBehaviour
         circleRenderer.material.color = Color.red;
 
         updateTeamPoints(teamPoints);
+        updateEnemyPoints(enemyPoints);
     }
 
     // Called on each client and server when player is despawned from network
@@ -409,6 +413,16 @@ public class Player : NetworkBehaviour
 
         teamPoints = gameController.getTeamPoints(team);
         updateTeamPoints(teamPoints);
+
+        if (team == 1)
+        {
+            enemyPoints = gameController.getTeamPoints(2);
+        }
+        else if (team == 2)
+        {
+            enemyPoints = gameController.getTeamPoints(1);
+        }
+        updateEnemyPoints(enemyPoints);
 
         // GetInput will return true on the StateAuthority (the server) and the InputAuthority (the client who controls this player)
         // So the following is ran for just the server and the client who controls this player
@@ -836,6 +850,7 @@ public class Player : NetworkBehaviour
     void IncrementKillCount()
     {
         totalKills++;
+        gameController.addKillPoints(team);
     }
 
     void IncreaseDamageDealtCounter(float damage)
@@ -1005,7 +1020,12 @@ public class Player : NetworkBehaviour
 
     void updateTeamPoints(int teamPoint)
     {
-        teamPointsTxt.text = "POINTS : " + teamPoint;
+        teamPointsTxt.text = "TEAM POINTS : " + teamPoint;
+    }
+
+    void updateEnemyPoints(int enemyPoint)
+    {
+        enemyPointsTxt.text = "ENEMY POINTS : " + enemyPoint;
     }
 
     void DrawCircle(Vector3 center, float radius)
