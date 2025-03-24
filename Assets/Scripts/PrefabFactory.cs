@@ -3,13 +3,14 @@ using UnityEngine;
 
 public static class PrefabFactory
 {
-    public static NetworkObject SpawnPlayer(NetworkRunner runner, PlayerRef playerRef, GameObject prefab, Vector3 spawnPosition, string characterName, int team){
+    public static NetworkObject SpawnPlayer(NetworkRunner runner, PlayerRef playerRef, GameObject prefab, Vector3 spawnPosition, string displayName, string characterName, int team)
+    {
         // Spawn the player network object
         NetworkObject networkPlayerObject = runner.Spawn(prefab, spawnPosition, Quaternion.identity, playerRef, (runner, networkObject) =>
         {
             // Initialise the player (this is called before the player is spawned)
             Player player = networkObject.GetComponent<Player>();
-            player.OnCreated(characterName, spawnPosition, team);
+            player.OnCreated(displayName, characterName, spawnPosition, team);
             runner.SetPlayerObject(playerRef, networkObject);
         });
 
@@ -60,7 +61,7 @@ public static class PrefabFactory
         return networkBulletObject;
     }
 
-    //For type: 0 is health, 1 is points
+    //For type: 0 is health, 1 is points, 2 is speed
     public static NetworkObject SpawnPickup(NetworkRunner runner, GameObject prefab, Vector3 spawnPosition, int type, int amount){
 
         NetworkObject networkPickupObject = runner.Spawn(prefab, spawnPosition, Quaternion.identity, null, (runner, networkObject) =>

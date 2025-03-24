@@ -6,6 +6,7 @@ using Fusion.Addons.Physics;
 
 public class Player : NetworkBehaviour
 {
+    [Networked] string displayName { get; set; }
     [Networked] float speed { get; set; }
     [Networked] float maxHealth { get; set; }
     [Networked] float maxMana { get; set; }
@@ -46,6 +47,10 @@ public class Player : NetworkBehaviour
     [Networked] private TickTimer aoeEnabledTimer { get; set; }
     [Networked] float slowedAmount { get; set; }
     [Networked] TickTimer getSlowedTimer { get; set; }
+    [Networked] float speedIncrease { get; set; }
+    [Networked] TickTimer speedIncreaseTimer { get; set; }
+    [Networked, OnChangedRender(nameof(OnInvinsibleChanged))] bool invinsible { get; set; }
+    [Networked] TickTimer invinsibleTimer { get; set; }
     [Networked, OnChangedRender(nameof(OnGamePausedChanged))] private bool gamePaused { get; set; }
     [Networked, OnChangedRender(nameof(MeleeAttackRender))] private int meleeAttacked { get; set; }
     [Networked, OnChangedRender(nameof(ShootRender))] private int bulletFired { get; set; }
@@ -54,6 +59,10 @@ public class Player : NetworkBehaviour
     [Networked, OnChangedRender(nameof(DashRender))] private int dashPerformed { get; set; }
     [Networked] int circleSegments { get; set; }
     [Networked] float circleRadius { get; set; }
+    [Networked] float totalDamageDealt { get; set; }
+    [Networked] int totalKills { get; set; }
+    [Networked] int totalDeaths { get; set; }
+    [Networked] int totalFlagsCaptured { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
@@ -77,12 +86,12 @@ public class Player : NetworkBehaviour
     [SerializeField] Minimap minimap;
     Image healthBar;
     public TextMeshProUGUI ammoText;
-    public TextMeshProUGUI timeLeftText;
-    [HideInInspector] public Transform holdPosition;
     GameController gameController;
     [SerializeField] GameObject deathOverlay;
     [SerializeField] TextMeshProUGUI respawnTimerTxt;
     [SerializeField] FlagIndicator flagIndicator;
+    [SerializeField] TextMeshProUGUI displayNameText;
+    [SerializeField] GameObject invinsibleImage;
     private AudioClip shootSound;
     private AudioClip dyingSound;
     private AudioClip dashSound;
@@ -95,9 +104,9 @@ public class Player : NetworkBehaviour
     [SerializeField] MeleeHitbox meleeHitbox;
     public LineRenderer circleRenderer;
     [SerializeField] Transform pointer;
-    
+
     // Player intialisation (called from game controller on server when creating the player)
-    public void OnCreated(string characterName, Vector3 respawnPoint, int team)
+    public void OnCreated(string displayName, string characterName, Vector3 respawnPoint, int team)
     {
         Character character = Resources.Load($"ScriptableObjects/Characters/{characterName}") as Character;
         maxHealth = character.MaxHealth;
@@ -110,7 +119,8 @@ public class Player : NetworkBehaviour
         dashDuration = character.DashDuration;
         dashCooldown = character.DashCooldown;
         characterName = character.name;
-        
+
+        this.displayName = displayName;
         this.respawnPoint = respawnPoint;
         this.team = team;
         this.characterName = characterName;
@@ -127,12 +137,17 @@ public class Player : NetworkBehaviour
         isAoEUsed = false;
         normalShoot = true;
         gamePaused = false;
+        invinsible = false;
+
+        totalDamageDealt = 0;
+        totalKills = 0;
+        totalDeaths = 0;
+        totalFlagsCaptured = 0;
     }
 
     // Player initialisation (called on each client and server when player is spawned on network)
     public override void Spawned()
     {
-        uIController = GetComponentInChildren<UIController>();
         uIController.transform.SetParent(null);
 
         // Disable the camera if client does not control this player
@@ -157,7 +172,7 @@ public class Player : NetworkBehaviour
         spriteRenderer.sprite = character.Sprite;
 
         //Set animator controller
-        animator.runtimeAnimatorController = Resources.Load("Animations/"+character.name) as RuntimeAnimatorController;
+        animator.runtimeAnimatorController = Resources.Load("Animations/" + character.name) as RuntimeAnimatorController;
 
         int localPlayerTeam = gameController.playersToTeams[Runner.LocalPlayer];
 
@@ -223,6 +238,13 @@ public class Player : NetworkBehaviour
         // Set the initial flag indicator visibility
         OnCarryingChanged();
 
+        // Set display name text
+        displayNameText.text = displayName;
+
+        // Disable display name text if client controls this player
+        if (HasInputAuthority)
+            displayNameText.gameObject.SetActive(false);
+
         // Disable ammo indicator for knight
         if (characterName == "Knight")
         {
@@ -232,8 +254,8 @@ public class Player : NetworkBehaviour
         circleSegments = 128;
         circleRadius = 8f;
         circleRenderer.positionCount = circleSegments + 1;
-        circleRenderer.loop = true; 
-        circleRenderer.startWidth = 0.3f; 
+        circleRenderer.loop = true;
+        circleRenderer.startWidth = 0.3f;
         circleRenderer.endWidth = 0.3f;
         circleRenderer.material = new Material(Shader.Find("Unlit/Color"));
         circleRenderer.material.color = Color.red;
@@ -245,7 +267,7 @@ public class Player : NetworkBehaviour
         // Remove this player from game controller player list
         gameController.UnregisterPlayer(this);
     }
-    
+
     // Player initialisation when respawning
     public void Respawn()
     {
@@ -264,6 +286,10 @@ public class Player : NetworkBehaviour
 
         // Enable the hitbox
         gameObject.GetComponent<HitboxRoot>().HitboxRootActive = true;
+
+        // Make invinsible (Spawn protection)
+        invinsible = true;
+        invinsibleTimer = TickTimer.CreateFromSeconds(Runner, 4f);
     }
 
     public override void Render()
@@ -349,7 +375,28 @@ public class Player : NetworkBehaviour
             // Reset timer
             getSlowedTimer = TickTimer.None;
         }
-        
+
+        // Increase speed timer
+        if (speedIncreaseTimer.Expired(Runner))
+        {
+            // Restore speed
+            speed -= speedIncrease;
+            speedIncrease = 0;
+
+            // Reset timer
+            speedIncreaseTimer = TickTimer.None;
+        }
+
+        // Spawn protection timer
+        if (invinsibleTimer.Expired(Runner))
+        {
+            //Make damageable
+            invinsible = false;
+
+            //Reset timer
+            speedIncreaseTimer = TickTimer.None;
+        }
+
         // GetInput will return true on the StateAuthority (the server) and the InputAuthority (the client who controls this player)
         // So the following is ran for just the server and the client who controls this player
         if (GetInput(out NetworkInputData input))
@@ -398,9 +445,9 @@ public class Player : NetworkBehaviour
                         isAttacking = false;
                     }
                 }
-                
+
                 // Reloading
-                if (input.buttons.WasPressed(previousButtons, InputButtons.Reload))
+                if (input.buttons.WasPressed(previousButtons, InputButtons.Reload) && characterName != "Knight")
                 {
                     Reload();
                 }
@@ -439,14 +486,14 @@ public class Player : NetworkBehaviour
                 float acceleration = 5f;
                 rb.linearVelocity = Vector2.Lerp(rb.linearVelocity, Vector2.zero, acceleration * Runner.DeltaTime);
             }
-            
+
             //Character rotates to mouse position
             Vector2 lookDirection = input.aimDirection.normalized;
             Quaternion wantedRotation = Quaternion.LookRotation(transform.forward, lookDirection);
             gameObject.transform.rotation = wantedRotation;
 
             cam.gameObject.transform.rotation = Quaternion.identity;
-            
+
             previousButtons = input.buttons;
         }
 
@@ -635,14 +682,28 @@ public class Player : NetworkBehaviour
     //take damage equal to input, includes check for death
     public void TakeDamage(float damage, PlayerRef damageDealer)
     {
-        currentHealth -= damage;
+        if (!invinsible)
+        {
+            currentHealth -= damage;
 
-        if (currentHealth <= 0.0f) {
-            Die(damageDealer);
+            // Add damage to damage dealer's total damage dealt counter
+            if (Runner.TryGetPlayerObject(damageDealer, out NetworkObject networkPlayerObject))
+            {
+                Player player = networkPlayerObject.GetComponent<Player>();
+                if (player.team != team)
+                {
+                    player.IncreaseDamageDealtCounter(damage);
+                }
+            }
+
+            if (currentHealth <= 0.0f)
+            {
+                Die(damageDealer);
+            }
         }
     }
-    
-    void HurtEffects(float damage){
+
+    void HurtEffects(float damage) {
         animator.SetTrigger("Damaged");
         ShowDamagePopup(damage);
     }
@@ -666,7 +727,7 @@ public class Player : NetworkBehaviour
     public void GainMana(int amount)
     {
         mana += amount;
-        if(mana > maxMana){
+        if (mana > maxMana) {
             mana = maxMana;
         }
     }
@@ -684,6 +745,7 @@ public class Player : NetworkBehaviour
         if (!isAlive) return;
 
         isAlive = false;
+        totalDeaths++;
 
         respawnTimer = TickTimer.CreateFromSeconds(Runner, respawnTime);
 
@@ -699,13 +761,14 @@ public class Player : NetworkBehaviour
             DropObject();
         }
 
-        // Award Mana to killer
+        // Award Mana to killer and increment their kill count
         if (Runner.TryGetPlayerObject(killer, out NetworkObject networkPlayerObject))
         {
             Player player = networkPlayerObject.GetComponent<Player>();
             if (player.team != team)
             {
                 player.GainMana(10);
+                player.IncrementKillCount();
             }
         }
     }
@@ -754,9 +817,18 @@ public class Player : NetworkBehaviour
         {
             audioSource.PlayOneShot(dyingSound, 0.7f);
         }
-
     }
-    
+
+    void IncrementKillCount()
+    {
+        totalKills++;
+    }
+
+    void IncreaseDamageDealtCounter(float damage)
+    {
+        totalDamageDealt += damage;
+    }
+
     void OnHealthChanged(NetworkBehaviourBuffer previous)
     {
         float previousHealth = GetPropertyReader<float>(nameof(currentHealth)).Read(previous);
@@ -784,8 +856,8 @@ public class Player : NetworkBehaviour
         UpdateManaBar();
     }
 
-    void UpdateManaBar(){
-        mainManaBar.fillAmount = mana/maxMana;;
+    void UpdateManaBar() {
+        mainManaBar.fillAmount = mana / maxMana; ;
     }
 
     void Reload()
@@ -961,32 +1033,12 @@ public class Player : NetworkBehaviour
         // Shut down the network runner, which will cause the game to return to the main menu
         Runner.Shutdown();
     }
-    
+
     // Only server can call this RPC, and it will run only on the client that controls this player
     [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.InputAuthority)]
     public void RPC_ShowMessage(string message, float speed, Color color)
     {
         ShowMessage(message, speed, color);
-    }
-
-    public bool IsAlive()
-    {
-        return isAlive;
-    }
-
-    public int GetTeam()
-    {
-        return team;
-    }
-
-    public float GetDamage()
-    {
-        return damage;
-    }
-
-    public string GetCharacterName()
-    {
-        return characterName;
     }
 
     public void ActivateTri(bool tri)
@@ -1015,6 +1067,14 @@ public class Player : NetworkBehaviour
         return mana;
     }
 
+    public void IncreaseSpeed(float amount, float time){
+        if(speedIncrease == 0){
+            speed += amount;
+            speedIncrease += amount;
+        }
+
+        speedIncreaseTimer = TickTimer.CreateFromSeconds(Runner, time);
+    }
     public void GetSlowed(float amount, float time)
     {
         // If not already slowed, slow the player
@@ -1058,5 +1118,54 @@ public class Player : NetworkBehaviour
 
     void OnGamePausedChanged() {
         escapeMenu.SetActive(gamePaused);
+    }
+
+    void OnInvinsibleChanged() {
+        invinsibleImage.SetActive(invinsible);
+    }
+
+    public bool IsAlive()
+    {
+        return isAlive;
+    }
+
+    public int GetTeam()
+    {
+        return team;
+    }
+
+    public float GetDamage()
+    {
+        return damage;
+    }
+
+    public string GetDisplayName()
+    {
+        return displayName;
+    }
+
+    public string GetCharacterName()
+    {
+        return characterName;
+    }
+
+    public int GetTotalKills()
+    {
+        return totalKills;
+    }
+
+    public int GetTotalDeaths()
+    {
+        return totalDeaths;
+    }
+
+    public float GetTotalDamageDealt()
+    {
+        return totalDamageDealt;
+    }
+
+    public int GetTotalFlagsCaptured()
+    {
+        return totalFlagsCaptured;
     }
 }

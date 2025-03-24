@@ -128,7 +128,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 53327724}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Buidling7
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -160,7 +160,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 102975927}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Buidling9
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -194,7 +194,7 @@ GameObject:
   - component: {fileID: 149430431}
   - component: {fileID: 149430433}
   - component: {fileID: 149430432}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Square (1)
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -328,7 +328,7 @@ GameObject:
   - component: {fileID: 257598737}
   - component: {fileID: 257598739}
   - component: {fileID: 257598738}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Square
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -462,7 +462,7 @@ GameObject:
   - component: {fileID: 271775517}
   - component: {fileID: 271775519}
   - component: {fileID: 271775518}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Square (2)
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -596,7 +596,7 @@ GameObject:
   - component: {fileID: 281927083}
   - component: {fileID: 281927085}
   - component: {fileID: 281927084}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Square
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -730,7 +730,7 @@ GameObject:
   - component: {fileID: 331861236}
   - component: {fileID: 331861238}
   - component: {fileID: 331861237}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Square
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -862,7 +862,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 342687422}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Building5
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -897,7 +897,7 @@ GameObject:
   - component: {fileID: 344953062}
   - component: {fileID: 344953064}
   - component: {fileID: 344953063}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Square (1)
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -1029,7 +1029,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 483454882}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Building6
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1215,7 +1215,7 @@ GameObject:
   - component: {fileID: 534717408}
   - component: {fileID: 534717410}
   - component: {fileID: 534717409}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Square
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -1349,7 +1349,7 @@ GameObject:
   - component: {fileID: 614399182}
   - component: {fileID: 614399184}
   - component: {fileID: 614399183}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Square
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -1482,7 +1482,7 @@ GameObject:
   m_Component:
   - component: {fileID: 619394802}
   - component: {fileID: 619394801}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Global Light 2D
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1567,7 +1567,7 @@ GameObject:
   - component: {fileID: 620925168}
   - component: {fileID: 620925167}
   - component: {fileID: 620925169}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Square (1)
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -1780,7 +1780,7 @@ GameObject:
   - component: {fileID: 801542430}
   - component: {fileID: 801542432}
   - component: {fileID: 801542431}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Square
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -1914,7 +1914,7 @@ GameObject:
   - component: {fileID: 957288050}
   - component: {fileID: 957288052}
   - component: {fileID: 957288051}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Square
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -2046,7 +2046,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1009691663}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Building3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2079,7 +2079,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1062313611}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Buidling8
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2113,7 +2113,7 @@ GameObject:
   - component: {fileID: 1318418394}
   - component: {fileID: 1318418396}
   - component: {fileID: 1318418395}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Square
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -2245,7 +2245,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1351800120}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: OuterWalls
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2282,7 +2282,7 @@ GameObject:
   - component: {fileID: 1366275074}
   - component: {fileID: 1366275076}
   - component: {fileID: 1366275075}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Square (1)
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -2415,7 +2415,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1377441146}
   - component: {fileID: 1377441145}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: mapforpanel_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2442,7 +2442,7 @@ SpriteRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
-  m_RenderingLayerMask: 1
+  m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
@@ -2513,7 +2513,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1387319215}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: PoolL
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2547,7 +2547,7 @@ GameObject:
   - component: {fileID: 1400360495}
   - component: {fileID: 1400360497}
   - component: {fileID: 1400360498}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Capsule
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -2670,7 +2670,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1522554234}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Building1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2702,7 +2702,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1663524454}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Building4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2789,10 +2789,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e06333a752e842b7b7390cb414ea92b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _playersToTeams:
+    _items: []
   respawnPoint1: {x: -44, y: -82, z: 0}
   respawnPoint2: {x: 20, y: 16, z: 0}
+  pickupLocations:
+  - {x: -18, y: -50, z: 0}
+  - {x: -60, y: -10, z: 0}
+  - {x: -25, y: -25, z: 0}
+  - {x: 30, y: -15, z: 0}
+  - {x: 12, y: -70, z: 0}
+  - {x: 67, y: -39, z: 0}
   maxTime: 480
-  _currentTime: 0
 --- !u!1 &1784948813
 GameObject:
   m_ObjectHideFlags: 0
@@ -2804,7 +2812,7 @@ GameObject:
   - component: {fileID: 1784948816}
   - component: {fileID: 1784948815}
   - component: {fileID: 1784948817}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Square
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -2938,7 +2946,7 @@ GameObject:
   - component: {fileID: 1808327139}
   - component: {fileID: 1808327141}
   - component: {fileID: 1808327140}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Square
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -3070,7 +3078,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1880361926}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: PoolR
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3104,7 +3112,7 @@ GameObject:
   - component: {fileID: 2030980199}
   - component: {fileID: 2030980201}
   - component: {fileID: 2030980200}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Square (3)
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -3238,7 +3246,7 @@ GameObject:
   - component: {fileID: 2060143788}
   - component: {fileID: 2060143790}
   - component: {fileID: 2060143789}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Square
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -3372,7 +3380,7 @@ GameObject:
   - component: {fileID: 2063070784}
   - component: {fileID: 2063070786}
   - component: {fileID: 2063070785}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Square (2)
   m_TagString: Wall
   m_Icon: {fileID: 0}
@@ -3504,7 +3512,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2098418045}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Building2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
