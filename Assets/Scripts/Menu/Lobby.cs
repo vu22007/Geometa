@@ -12,6 +12,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     [Networked, Capacity(6), OnChangedRender(nameof(OnTeam2PlayersChanged))] private NetworkDictionary<PlayerRef, PlayerInfo> team2Players { get; }
     [Networked] PlayerRef hostPlayerRef { get; set; }
 
+    [SerializeField] GameObject buildingsGeneratorPrefab;
     private NetworkManager networkManager;
     private TMP_InputField displayNameInput;
     private Button team1Button;
@@ -29,6 +30,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     private int team = 0;
     private string characterName = "";
     private bool playerIsReady = false;
+    private bool mapGenerated = false;
 
     public override void Spawned()
     {
@@ -158,6 +160,14 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         RPC_PlayerUnready();
     }
 
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void RPC_GenerateMap()
+    {
+        mapGenerated = true;
+        RunBlenderScript buildingsGenerator = Instantiate<GameObject>(buildingsGeneratorPrefab).GetComponent<RunBlenderScript>();
+        buildingsGenerator.RunBlender(51.4585, 51.4590, -2.6026, -2.6000);
+    }
+
     public void StartGame()
     {
         if (HasStateAuthority)
@@ -169,8 +179,15 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             // Prevent new players from joining
             Runner.SessionInfo.IsOpen = false;
 
-            // Switch to map scene to start the game, and the game controller will spawn player objects using the player dicts in the network manager
-            Runner.LoadScene(SceneRef.FromIndex(SceneManager.GetActiveScene().buildIndex + 2));
+            if (mapGenerated)
+            {
+                Runner.LoadScene(SceneRef.FromIndex(5));
+            }
+            else
+            {
+                // Switch to map scene to start the game, and the game controller will spawn player objects using the player dicts in the network manager
+                Runner.LoadScene(SceneRef.FromIndex(3));
+            }
         }
     }
 

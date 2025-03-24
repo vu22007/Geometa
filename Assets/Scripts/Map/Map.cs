@@ -12,22 +12,33 @@ public class Map : MonoBehaviour
     [SerializeField] GameObject pathPrefab;
     [SerializeField] GameObject grassPrefab;
     [SerializeField] GameObject waterPrefab;
-    RunBlenderScript buildingGenerator;
+    // RunBlenderScript buildingGenerator;
 
     void Start()
     {
-        GameObject buildingGeneratorPrefab = Resources.Load<GameObject>("Prefabs/Map/BuildingsGenerator");
-        buildingGenerator = Instantiate(buildingGeneratorPrefab).GetComponent<RunBlenderScript>();
+        // GameObject buildingGeneratorPrefab = Resources.Load<GameObject>("Prefabs/Map/BuildingsGenerator");
+        // buildingGenerator = Instantiate(buildingGeneratorPrefab).GetComponent<RunBlenderScript>();
         // GenerateMap(51.4576, 51.4590, -2.6026, -2.5991); // Default
-        // GenerateMap(51.4585, 51.4590, -2.6026, -2.6000);
+        GenerateMap(51.4585, 51.4590, -2.6026, -2.6000);
     }
 
-    private void GenerateMap(double lowLat, double highLat, double lowLong, double highLong)
+    public void GenerateMap(double lowLat, double highLat, double lowLong, double highLong)
     {
         StartCoroutine(LoadMapFromBoundingBox(lowLat, highLat, lowLong, highLong));
 
-        buildingGenerator.RunBlender(lowLat, highLat, lowLong, highLong);
-        buildingGenerator.ImportFbxToUnity();
+        GameObject buildingsPrefab = Resources.Load<GameObject>("Prefabs/Map/Buildify3DBuildings");
+        if (buildingsPrefab != null)
+        {
+            // Optionally instantiate the map in the scene
+            GameObject buildingsInstance = Instantiate(buildingsPrefab, Vector3.zero, Quaternion.identity);
+            buildingsInstance.transform.eulerAngles = new Vector3(90, 180, 0);
+        }
+        else
+        {
+            Debug.Log("Buildings prefab is null. Most likely buildify didn't generate a 3D buildings prefab asset. ");
+        }
+        //buildingGenerator.RunBlender(lowLat, highLat, lowLong, highLong);
+        //buildingGenerator.ImportFbxToUnity();
     }
 
     IEnumerator LoadMapFromBoundingBox(double lowLat, double highLat, double lowLong, double highLong)

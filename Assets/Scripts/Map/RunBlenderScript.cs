@@ -56,6 +56,8 @@ public class RunBlenderScript : MonoBehaviour
         {
             Debug.LogError("Blender error: " + error);
         }
+
+        ImportFbxToUnity();
     }
 
     public void ImportFbxToUnity()
@@ -84,9 +86,6 @@ public class RunBlenderScript : MonoBehaviour
                 {
                     Debug.Log("Map asset loaded successfully. Ready to use in scene.");
 
-                    // Optionally instantiate the map in the scene
-                    GameObject mapInstance = Instantiate(mapPrefab, Vector3.zero, Quaternion.identity);
-                    mapInstance.transform.eulerAngles = new Vector3(90, 180, 0);
                 }
                 else
                 {
