@@ -57,6 +57,7 @@ public class Player : NetworkBehaviour
     [Networked, OnChangedRender(nameof(DashRender))] private int dashPerformed { get; set; }
     [Networked] int circleSegments { get; set; }
     [Networked] float circleRadius { get; set; }
+    [Networked] int teamPoints { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
@@ -102,6 +103,7 @@ public class Player : NetworkBehaviour
     [SerializeField] MeleeHitbox meleeHitbox;
     public LineRenderer circleRenderer;
     [SerializeField] Transform pointer;
+    public TextMeshProUGUI teamPointsTxt;
     
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(string displayName, string characterName, Vector3 respawnPoint, int team)
@@ -135,6 +137,7 @@ public class Player : NetworkBehaviour
         isAoEUsed = false;
         normalShoot = true;
         gamePaused = false;
+        teamPoints = 0;
     }
 
     // Player initialisation (called on each client and server when player is spawned on network)
@@ -252,6 +255,8 @@ public class Player : NetworkBehaviour
         circleRenderer.endWidth = 0.3f;
         circleRenderer.material = new Material(Shader.Find("Unlit/Color"));
         circleRenderer.material.color = Color.red;
+
+        updateTeamPoints(teamPoints);
     }
 
     // Called on each client and server when player is despawned from network
@@ -377,6 +382,9 @@ public class Player : NetworkBehaviour
             // Reset timer
             speedIncreaseTimer = TickTimer.None;
         }
+
+        teamPoints = gameController.getTeamPoints(team);
+        updateTeamPoints(teamPoints);
         
         // GetInput will return true on the StateAuthority (the server) and the InputAuthority (the client who controls this player)
         // So the following is ran for just the server and the client who controls this player
@@ -736,6 +744,7 @@ public class Player : NetworkBehaviour
                 player.GainMana(10);
             }
         }
+        updateTeamPoints(teamPoints);
     }
 
     void OnIsAliveChanged()
@@ -904,10 +913,15 @@ public class Player : NetworkBehaviour
             if (!flag.IsInsideCollider())
             {
                 flag.Drop();
+                if (flag.team != team)
+                {
+                    teamPoints = gameController.CheckForPoints();
+                    updateTeamPoints(teamPoints);
+                }
                 carriedObject = null;
                 isCarrying = false;
                 speed *= 2;
-                gameController.CheckForWinCondition();
+                // gameController.CheckForWinCondition();
                 gameController.BroadcastDropFlag(team, flag.team);
             }
         }
@@ -937,6 +951,11 @@ public class Player : NetworkBehaviour
                 pointer.gameObject.SetActive(false);
             }
         }
+    }
+
+    void updateTeamPoints(int teamPoint)
+    {
+        teamPointsTxt.text = "POINTS : " + teamPoint;
     }
 
     void DrawCircle(Vector3 center, float radius)

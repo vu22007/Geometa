@@ -9,6 +9,8 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     [Networked] private TickTimer pointsTopupTimer { get; set; }
     [Networked] private TickTimer gameTimer { get; set; }
     [Networked, Capacity(12)] public NetworkDictionary<PlayerRef, int> playersToTeams { get; }
+    [Networked] private int pointsTeam1 { get; set; }
+    [Networked] private int pointsTeam2 { get; set; }
 
     [SerializeField] private Vector3 respawnPoint1;
     [SerializeField] private Vector3 respawnPoint2;
@@ -24,12 +26,14 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     // Flags
     private PickupFlag team1Flag;
     private PickupFlag team2Flag;
-
+    
     // Initialisation
     public override void Spawned()
     {
         gameOver = false;
         pointsTopupCooldownMax = 10f;
+        pointsTeam1 = 0;
+        pointsTeam2 = 0;
         pointsTopupTimer = TickTimer.CreateFromSeconds(Runner, pointsTopupCooldownMax);
         gameTimer = TickTimer.CreateFromSeconds(Runner, maxTime);
 
@@ -207,6 +211,44 @@ public class GameController : NetworkBehaviour, IPlayerLeft
         }
     }
 
+    public int CheckForPoints()
+    {
+        if (!HasStateAuthority) return 0;
+
+        // Max distance for flags to be from a base to count as a win
+        float maxDistance = 8.0f;
+
+        // If team 2's flag is close enough to team 1's base, then team 1 wins
+        if (Vector2.Distance(team2Flag.transform.position, respawnPoint1) <= maxDistance)
+        {
+            pointsTeam1 += 10;
+            team2Flag.transform.position = respawnPoint2;
+            return pointsTeam1;
+        }
+        // If team 1's flag is close enough to team 2's base, then team 2 wins
+        else if (Vector2.Distance(team1Flag.transform.position, respawnPoint2) <= maxDistance)
+        {
+            pointsTeam2 += 10;
+            team1Flag.transform.position = respawnPoint1;
+            return pointsTeam2;
+        }
+
+        return 0;
+    }
+
+    public int getTeamPoints(int team)
+    {
+        if (team == 1)
+        {
+            return pointsTeam1;
+        }
+        else if (team == 2)
+        {
+            return pointsTeam2;
+        }
+
+        return 0;
+    }
     public void BroadcastCarryFlag(int playerTeam, int flagTeam)
     {
         if (!HasStateAuthority || gameOver) return;
