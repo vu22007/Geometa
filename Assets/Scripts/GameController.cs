@@ -190,30 +190,6 @@ public class GameController : NetworkBehaviour, IPlayerLeft
         return alivePlayers;
     }
 
-    // Check if two flags are near each other
-    public void CheckForWinCondition()
-    {
-        if (!HasStateAuthority) return;
-
-        // Max distance for flags to be from a base to count as a win
-        float maxDistance = 8.0f;
-
-        // If team 2's flag is close enough to team 1's base, then team 1 wins
-        if (Vector2.Distance(team2Flag.transform.position, respawnPoint1) <= maxDistance)
-        {
-            gameOver = true;
-            BroadcastMessageToTeam(1, "You win!", 0.1f, Color.green);
-            BroadcastMessageToTeam(2, "You lose!", 0.1f, Color.red);
-        }
-        // If team 1's flag is close enough to team 2's base, then team 2 wins
-        else if (Vector2.Distance(team1Flag.transform.position, respawnPoint2) <= maxDistance)
-        {
-            gameOver = true;
-            BroadcastMessageToTeam(2, "You win!", 0.1f, Color.green);
-            BroadcastMessageToTeam(1, "You lose!", 0.1f, Color.red);
-        }
-    }
-
     public int CheckForPoints()
     {
         if (!HasStateAuthority) return 0;
@@ -239,7 +215,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
         return 0;
     }
 
-    public int getTeamPoints(int team)
+    public int GetTeamPoints(int team)
     {
         if (team == 1)
         {
@@ -252,6 +228,19 @@ public class GameController : NetworkBehaviour, IPlayerLeft
 
         return 0;
     }
+
+    public void AddKillPoints(int team)
+    {
+        if (team == 1)
+        {
+            pointsTeam1 += 2;
+        }
+        else if (team == 2)
+        {
+            pointsTeam2 += 2;
+        }
+    }
+
     public void BroadcastCarryFlag(int playerTeam, int flagTeam)
     {
         if (!HasStateAuthority || gameOver) return;
