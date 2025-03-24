@@ -63,8 +63,6 @@ public class Player : NetworkBehaviour
     [Networked] int totalKills { get; set; }
     [Networked] int totalDeaths { get; set; }
     [Networked] int totalFlagsCaptured { get; set; }
-    [Networked] int teamPoints { get; set; }
-    [Networked] int enemyPoints { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
@@ -150,8 +148,6 @@ public class Player : NetworkBehaviour
         totalKills = 0;
         totalDeaths = 0;
         totalFlagsCaptured = 0;
-        teamPoints = 0;
-        enemyPoints = 0;
     }
 
     // Player initialisation (called on each client and server when player is spawned on network)
@@ -269,8 +265,8 @@ public class Player : NetworkBehaviour
         circleRenderer.material = new Material(Shader.Find("Unlit/Color"));
         circleRenderer.material.color = Color.red;
 
-        updateTeamPoints(teamPoints);
-        updateEnemyPoints(enemyPoints);
+        UpdateTeamPoints();
+        UpdateEnemyPoints();
     }
 
     // Called on each client and server when player is despawned from network
@@ -321,6 +317,9 @@ public class Player : NetworkBehaviour
         {
             UpdatePointer();
         }
+
+        UpdateTeamPoints();
+        UpdateEnemyPoints();
     }
 
     public override void FixedUpdateNetwork()
@@ -410,19 +409,6 @@ public class Player : NetworkBehaviour
             //Reset timer
             speedIncreaseTimer = TickTimer.None;
         }
-
-        teamPoints = gameController.getTeamPoints(team);
-        updateTeamPoints(teamPoints);
-
-        if (team == 1)
-        {
-            enemyPoints = gameController.getTeamPoints(2);
-        }
-        else if (team == 2)
-        {
-            enemyPoints = gameController.getTeamPoints(1);
-        }
-        updateEnemyPoints(enemyPoints);
 
         // GetInput will return true on the StateAuthority (the server) and the InputAuthority (the client who controls this player)
         // So the following is ran for just the server and the client who controls this player
@@ -798,7 +784,6 @@ public class Player : NetworkBehaviour
                 player.IncrementKillCount();
             }
         }
-        updateTeamPoints(teamPoints);
     }
 
     void OnIsAliveChanged()
@@ -850,7 +835,7 @@ public class Player : NetworkBehaviour
     void IncrementKillCount()
     {
         totalKills++;
-        gameController.addKillPoints(team);
+        gameController.AddKillPoints(team);
     }
 
     void IncreaseDamageDealtCounter(float damage)
@@ -979,14 +964,12 @@ public class Player : NetworkBehaviour
                 flag.Drop();
                 if (flag.team != team)
                 {
-                    teamPoints = gameController.CheckForPoints();
-                    updateTeamPoints(teamPoints);
+                    int teamPoints = gameController.CheckForPoints();
                     if (teamPoints > 0) totalFlagsCaptured += 1;
                 }
                 carriedObject = null;
                 isCarrying = false;
                 speed *= 2;
-                // gameController.CheckForWinCondition();
                 gameController.BroadcastDropFlag(team, flag.team);
             }
         }
@@ -1018,14 +1001,16 @@ public class Player : NetworkBehaviour
         }
     }
 
-    void updateTeamPoints(int teamPoint)
+    void UpdateTeamPoints()
     {
-        teamPointsTxt.text = "TEAM POINTS : " + teamPoint;
+        int teamPoints = gameController.GetTeamPoints(team);
+        teamPointsTxt.text = "TEAM POINTS : " + teamPoints;
     }
 
-    void updateEnemyPoints(int enemyPoint)
+    void UpdateEnemyPoints()
     {
-        enemyPointsTxt.text = "ENEMY POINTS : " + enemyPoint;
+        int enemyPoints = gameController.GetTeamPoints(team == 1 ? 2 : 1);
+        enemyPointsTxt.text = "ENEMY POINTS : " + enemyPoints;
     }
 
     void DrawCircle(Vector3 center, float radius)
