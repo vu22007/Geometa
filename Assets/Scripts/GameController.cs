@@ -31,6 +31,9 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     // Initialisation
     public override void Spawned()
     {
+        // TEMP - DELETE THIS!
+        maxTime = 5;
+        
         gameOver = false;
         pointsTopupCooldownMax = 10f;
         pointsTeam1 = 0;
@@ -382,10 +385,12 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     {
         if (!HasStateAuthority) return;
 
-        // Give player stats to network manager for leaderboard to use
+        // Give team and player stats to network manager for leaderboard to use
         NetworkManager networkManager = GameObject.Find("Network Runner").GetComponent<NetworkManager>();
         networkManager.team1PlayerStats = GetPlayerStats(1);
         networkManager.team2PlayerStats = GetPlayerStats(2);
+        networkManager.team1Points = pointsTeam1;
+        networkManager.team2Points = pointsTeam2;
 
         // Switch to leaderboard scene, and the leaderboard will fetch the player stats from the network manager
         Runner.LoadScene(SceneRef.FromIndex(SceneManager.GetActiveScene().buildIndex + 1));
