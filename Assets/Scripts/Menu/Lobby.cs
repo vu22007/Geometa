@@ -6,10 +6,11 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-public class Lobby : NetworkBehaviour, IPlayerLeft
+public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 {
     [Networked, Capacity(6), OnChangedRender(nameof(OnTeam1PlayersChanged))] private NetworkDictionary<PlayerRef, PlayerInfo> team1Players { get; }
     [Networked, Capacity(6), OnChangedRender(nameof(OnTeam2PlayersChanged))] private NetworkDictionary<PlayerRef, PlayerInfo> team2Players { get; }
+    [Networked] PlayerRef hostPlayerRef { get; set; }
 
     private NetworkManager networkManager;
     private TMP_InputField displayNameInput;
@@ -241,11 +242,6 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
         AddPlayerCardsToTeamList(team2List, team2Players);
     }
 
-    void OnPlayersChanged()
-    {
-        Debug.Log("Players changed");
-    }
-
     void UpdatePlayerCounter(int numPlayersInLobby)
     {
         playerCounter.text = "Players in lobby: " + numPlayersInLobby;
@@ -301,8 +297,22 @@ public class Lobby : NetworkBehaviour, IPlayerLeft
             if (characterName == "Knight") wizardImage.SetActive(false);
             else knightImage.SetActive(false);
 
+            // Puts a nice star next to the host
+            GameObject starImage = playerCard.transform.Find("Star Image").gameObject;
+            if (hostPlayerRef.Equals(playerRef)) starImage.SetActive(true);
+
             // Set position for next card
             cardPosition.y -= cardHeight;
+        }
+    }
+
+    public void PlayerJoined(PlayerRef player)
+    {
+        // Store the PlayerRef of the host
+        if (HasStateAuthority && Runner.LocalPlayer.Equals(player))
+        {
+            hostPlayerRef = player;
+            networkManager.hostPlayerRef = player;
         }
     }
 

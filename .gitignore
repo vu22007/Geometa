@@ -76,3 +76,4 @@ crashlytics-build.properties
 .vsconfig
 .vscode/
 Assets/Thaleah_PixelFont/Materials/ThaleahFat_TTF Bitmap.asset
+.idea/

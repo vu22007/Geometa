@@ -12,7 +12,7 @@ public class ShapeController : NetworkBehaviour
     [Networked, OnChangedRender(nameof(OnSquareActivated))] private int activatedSquare { get; set; }
     [Networked, OnChangedRender(nameof(OnTrianglePreviewActiveChanged))] private bool trianglePreviewActive { get; set; }
     [Networked, OnChangedRender(nameof(OnSquarePreviewActiveChanged))] private bool squarePreviewActive { get; set; }
-    [Networked] private float score { get; set; }
+    [Networked] private float activatedScore { get; set; }
     [Networked, Capacity(4)] private NetworkLinkedList<Vector3> vertices { get; }
     [Networked] private TickTimer triangleCooldownTimer { get; set; }
     [Networked] private TickTimer squareCooldownTimer { get; set; }
@@ -20,6 +20,7 @@ public class ShapeController : NetworkBehaviour
     [Networked, Capacity(50)] private string errorMessage { get; set; }
 
     private List<Vector3> playerPositions;
+    private float score;
     private int triangleCost = 10;
     private int squareCost = 15;
     private float triangleCooldown = 3f;
@@ -34,6 +35,10 @@ public class ShapeController : NetworkBehaviour
 
     private LineRenderer triangleLineRenderer;
     private LineRenderer squareLineRenderer;
+
+    Color lowScoreColor = new Color(1.0f, 0.0f, 0.0f);  // Red
+    Color medScoreColor = new Color(1.0f, 1.0f, 0.0f);  // Yellow
+    Color highScoreColor = new Color(0.0f, 1.0f, 0.0f); // Green
 
     private TriangleShape triangleShape;
     private SquareShape squareShape;
@@ -74,14 +79,19 @@ public class ShapeController : NetworkBehaviour
         // Draw shape previews locally
         if (HasInputAuthority && (trianglePreviewActive || squarePreviewActive))
         {
-            // Use local playerPositions property since vertices networked property is only set when shape is activated
-            DrawLines(playerPositions, false, 0); // Note: Score doesn't matter for preview, so set it to 0
+            // Use local playerPositions and score properties since vertices and activatedScore networked properties are only set when shape is activated
+            DrawLines(playerPositions, false, score);
         }
     }
 
     public override void FixedUpdateNetwork()
     {
-        if (!isActive) return;
+        if (!isActive)
+        {
+            trianglePreviewActive = false;
+            squarePreviewActive = false;
+            return;
+        }
 
         // GetInput will return true on the StateAuthority (the server) and the InputAuthority (the client who controls this shape controller)
         // So the following is ran for just the server and the client who controls this shape controller
@@ -103,29 +113,21 @@ public class ShapeController : NetworkBehaviour
             previousButtons = input.buttons;
         }
     }
-    
+
     private void TrianglePerformed()
     {
         // Preview shape only locally 
-        // The line renderer will be disable for all others
-        if (HasInputAuthority)
-        {
-            // Only allow triangle preview if no square preview active
-            if (!squarePreviewActive)
-                PreviewShape(3, false);
-        }
+        // The line renderer will be disabled for all others
+        if (!squarePreviewActive) // Only allow triangle preview if no square preview active
+            PreviewShape(3, false);
     }
 
     private void SquarePerformed()
     {
         // Preview shape only locally 
-        // The line renderer will be disable for all others
-        if (HasInputAuthority)
-        {
-            // Only allow square preview if no triangle preview active
-            if (!trianglePreviewActive)
-                PreviewShape(4, false);
-        }
+        // The line renderer will be disabled for all others
+        if (!trianglePreviewActive) // Only allow square preview if no triangle preview active
+            PreviewShape(4, false);
     }
 
     private void TriangleActivated()
@@ -236,15 +238,16 @@ public class ShapeController : NetworkBehaviour
         List<float> angles = GetAngles(playerPositions);
 
         float score = CalculateScore(angles);
+        this.score = score;
 
         // Give buffs/do damage if the player activates the ability, and make shape visible to everyone
-        if (activate)
+        if (activate && IsPreviewActive(nVertices))
         {
             // Disable the preview
             SetPreviewActive(nVertices, false);
 
             // Set score and vertices networked properties for everyone (server, input authority and all other clients) to use to draw lines in OnTriangleActivated and OnSquareActivated methods
-            this.score = score;
+            activatedScore = score;
             vertices.Clear();
             foreach (Vector3 position in playerPositions)
             {
@@ -335,7 +338,7 @@ public class ShapeController : NetworkBehaviour
             PlayShapeSound(vertices.ToArray(), 3, "Knight");
 
             // Draw triangle for everyone
-            triangleShape.DrawTriangle(vertices.ToList(), true, score);
+            triangleShape.DrawTriangle(vertices.ToList(), true, activatedScore);
         }
     }
 
@@ -347,14 +350,22 @@ public class ShapeController : NetworkBehaviour
         PlayShapeSound(vertices.ToArray(), 4, "Knight");
 
         // Draw square for everyone
-        DrawLines(vertices.ToList(), true, score);
+        DrawLines(vertices.ToList(), true, activatedScore);
+    }
+
+    bool IsPreviewActive(int nVertices)
+    {
+        if (nVertices == 3)
+            return trianglePreviewActive;
+        else
+            return squarePreviewActive;
     }
 
     void SetPreviewActive(int nVertices, bool active)
     {
         if (nVertices == 3)
             trianglePreviewActive = active;
-        else if (nVertices == 4)
+        else
             squarePreviewActive = active;
     }
 
@@ -418,6 +429,12 @@ public class ShapeController : NetworkBehaviour
         LineRenderer lineRenderer = ChooseLineRenderer(nVertices);
         lineRenderer.positionCount = nVertices + 1;
 
+        Color strengthColor;
+        if (score < 0.6f)
+            strengthColor = Color.Lerp(lowScoreColor, medScoreColor, score / 0.6f);
+        else
+            strengthColor = Color.Lerp(medScoreColor, highScoreColor, (score - 0.6f) / 0.4f);
+
         // Lines are drawn between the adjacent vertices. The last vertice is added first so there
         // is a line between 0th and (nVertices - 1)th vertice
         lineRenderer.SetPosition(0, vertices[nVertices - 1]);
@@ -427,23 +444,19 @@ public class ShapeController : NetworkBehaviour
         }
 
         lineRenderer.startWidth = 0.5f;
-        Color startColor = lineRenderer.startColor;
-        Color endColor = lineRenderer.endColor;
 
         if (activate)
         {
-            startColor.a = 1f * score;
-            endColor.a = 1f * score;
+            strengthColor.a = 1f * score;
         }
         // More transparent color for preview
         else
         {
-            startColor.a = 0.3f;
-            endColor.a = 0.3f;
+            strengthColor.a = 0.3f;
         }
 
-        lineRenderer.startColor = startColor;
-        lineRenderer.endColor = endColor;
+        lineRenderer.startColor = strengthColor;
+        lineRenderer.endColor = strengthColor;
         lineRenderer.enabled = true;
 
         if (activate)
