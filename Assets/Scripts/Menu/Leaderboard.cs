@@ -9,6 +9,7 @@ public class Leaderboard : NetworkBehaviour
     [Networked, Capacity(6), OnChangedRender(nameof(OnTeam2PlayerStatsChanged))] private NetworkLinkedList<PlayerInfo> team2PlayerStats { get; }
     [Networked, OnChangedRender(nameof(OnTeam1PointsChanged))] float team1Points { get; set; }
     [Networked, OnChangedRender(nameof(OnTeam2PointsChanged))] float team2Points { get; set; }
+    [Networked] int winningTeam { get; set; }
     [Networked] PlayerRef hostPlayerRef { get; set; }
 
     private NetworkManager networkManager;
@@ -55,6 +56,14 @@ public class Leaderboard : NetworkBehaviour
             team1Points = networkManager.team1Points;
             team2Points = networkManager.team2Points;
 
+            // Set winning team
+            if (team1Points > team2Points)
+                winningTeam = 1;
+            else if (team2Points > team1Points)
+                winningTeam = 2;
+            else
+                winningTeam = 0; // No winner
+
             // Set host player
             hostPlayerRef = networkManager.hostPlayerRef;
         }
@@ -91,12 +100,12 @@ public class Leaderboard : NetworkBehaviour
         team2PointsText.text = "Total points: " + team2Points;
 
         // Show winner
-        if (team1Points > team2Points)
+        if (winningTeam == 1)
         {
             teamWinner.text = "Team 1 wins!";
             team1Title.color = Color.yellow;
         }
-        else if (team2Points > team1Points)
+        else if (winningTeam == 2)
         {
             teamWinner.text = "Team 2 wins!";
             team2Title.color = Color.yellow;
