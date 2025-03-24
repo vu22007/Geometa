@@ -16,10 +16,10 @@ buildifyPath = os.path.normpath(os.path.join(script_dir, "buildify_1.0.blend"))
 blosm_addon_path = os.path.normpath(os.path.join(script_dir, "blosm_2.7.13.zip"))
 
 # File for storing the osm files
-osm_cache_dir = os.path.join(script_dir, "osm_cache")
-if not os.path.exists(osm_cache_dir):
-    os.makedirs(osm_cache_dir)
-    print(f"Created OSM cache directory: {osm_cache_dir}")
+osm_files_dir = os.path.join(script_dir, "osm_files")
+if not os.path.exists(osm_files_dir):
+    os.makedirs(osm_files_dir)
+    print(f"Created OSM cache directory: {osm_files_dir}")
 
 # Install the add-on if not already installed
 def ensure_blosm_installed(addon_path):
@@ -65,7 +65,7 @@ else:
     print(f"All arguments: {script_args}")
 
 blosm_props = bpy.context.scene.blosm
-bpy.context.preferences.addons["blosm"].preferences.dataDir = osm_cache_dir
+bpy.context.preferences.addons["blosm"].preferences.dataDir = osm_files_dir
 blosm_props.mode = "2D"
 blosm_props.buildings = True   # Import buildings
 blosm_props.water = False      # Skip water

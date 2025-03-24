@@ -19,7 +19,7 @@ public class Map : MonoBehaviour
         GameObject buildingGeneratorPrefab = Resources.Load<GameObject>("Prefabs/Map/BuildingsGenerator");
         buildingGenerator = Instantiate(buildingGeneratorPrefab).GetComponent<RunBlenderScript>();
         // GenerateMap(51.4576, 51.4590, -2.6026, -2.5991); // Default
-        GenerateMap(51.4585, 51.4590, -2.6026, -2.6000);
+        // GenerateMap(51.4585, 51.4590, -2.6026, -2.6000);
     }
 
     private void GenerateMap(double lowLat, double highLat, double lowLong, double highLong)

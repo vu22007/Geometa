@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
-public class RunBlenderScript : NetworkBehaviour
+public class RunBlenderScript : MonoBehaviour
 {
     private GameObject mapPrefab;
 
@@ -14,7 +14,7 @@ public class RunBlenderScript : NetworkBehaviour
     // Path to the Blender executable
     public string blenderExePath = @"C:\Program Files\Blender Foundation\Blender 4.3\blender.exe";
 
-    override public void Spawned()
+    public void Start()
     {
         // RunBlender(51.450, 51.451, -2.603, -2.599);
         // ImportFbxToUnity();
@@ -98,21 +98,21 @@ public class RunBlenderScript : NetworkBehaviour
     #endif
     }
 
-    private void SpawnNetworkedMap()
-    {
-        // Load the map prefab from Resources
-       //  GameObject mapAsset = Resources.Load<GameObject>("/Prefabs/Map/scriptTest1.prefab");
+    //private void SpawnNetworkedMap()
+    //{
+    //    // Load the map prefab from Resources
+    //   //  GameObject mapAsset = Resources.Load<GameObject>("/Prefabs/Map/scriptTest1.prefab");
 
-        // Spawn it as a networked object so all clients see it
-        if (mapPrefab != null)
-        {
-            GameObject map = Runner.Spawn(mapPrefab, Vector3.zero, Quaternion.identity).gameObject;
-            map.transform.eulerAngles = new Vector3(90, 180, 0);
-            Debug.Log("Map spawned for all players");
-        }
-        else
-        {
-            Debug.LogError("Failed to load map asset");
-        }
-    }
+    //    // Spawn it as a networked object so all clients see it
+    //    if (mapPrefab != null)
+    //    {
+    //        GameObject map = Runner.Spawn(mapPrefab, Vector3.zero, Quaternion.identity).gameObject;
+    //        map.transform.eulerAngles = new Vector3(90, 180, 0);
+    //        Debug.Log("Map spawned for all players");
+    //    }
+    //    else
+    //    {
+    //        Debug.LogError("Failed to load map asset");
+    //    }
+    //}
 }
