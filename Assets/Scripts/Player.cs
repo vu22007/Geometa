@@ -48,7 +48,7 @@ public class Player : NetworkBehaviour
     [Networked] float slowedAmount { get; set; }
     [Networked] TickTimer getSlowedTimer { get; set; }
     [Networked] float speedIncrease { get; set; }
-    [Networked] TickTimer speedIncreaseTimer { get; set; }
+    [Networked, OnChangedRender(nameof(OnSpeedIncreaseTimerChanged))] TickTimer speedIncreaseTimer { get; set; }
     [Networked, OnChangedRender(nameof(OnInvinsibleChanged))] bool invinsible { get; set; }
     [Networked] TickTimer invinsibleTimer { get; set; }
     [Networked, OnChangedRender(nameof(OnGamePausedChanged))] private bool gamePaused { get; set; }
@@ -78,10 +78,13 @@ public class Player : NetworkBehaviour
     [SerializeField] cooldownHandler reloadHandler;
     [SerializeField] cooldownHandler squareHandler;
     [SerializeField] cooldownHandler triangleHandler;
+    [SerializeField] cooldownHandler speedHandler;
     [SerializeField] Image reloadIcon;
     [SerializeField] Image reloadIconLayer;
     [SerializeField] Image aoeIcon;
     [SerializeField] Image aoeIconLayer;
+    [SerializeField] Image speedIcon;
+    [SerializeField] Image speedIconLayer;
     [SerializeField] GameObject escapeMenu;
     [SerializeField] Minimap minimap;
     Image healthBar;
@@ -104,6 +107,8 @@ public class Player : NetworkBehaviour
     [SerializeField] MeleeHitbox meleeHitbox;
     public LineRenderer circleRenderer;
     [SerializeField] Transform pointer;
+    public TextMeshProUGUI teamPointsTxt;
+    public TextMeshProUGUI enemyPointsTxt;
 
     // Player intialisation (called from game controller on server when creating the player)
     public void OnCreated(string displayName, string characterName, Vector3 respawnPoint, int team)
@@ -259,6 +264,9 @@ public class Player : NetworkBehaviour
         circleRenderer.endWidth = 0.3f;
         circleRenderer.material = new Material(Shader.Find("Unlit/Color"));
         circleRenderer.material.color = Color.red;
+
+        UpdateTeamPoints();
+        UpdateEnemyPoints();
     }
 
     // Called on each client and server when player is despawned from network
@@ -309,6 +317,9 @@ public class Player : NetworkBehaviour
         {
             UpdatePointer();
         }
+
+        UpdateTeamPoints();
+        UpdateEnemyPoints();
     }
 
     public override void FixedUpdateNetwork()
@@ -822,6 +833,7 @@ public class Player : NetworkBehaviour
     void IncrementKillCount()
     {
         totalKills++;
+        gameController.AddKillPoints(team);
     }
 
     void IncreaseDamageDealtCounter(float damage)
@@ -948,10 +960,14 @@ public class Player : NetworkBehaviour
             if (!flag.IsInsideCollider())
             {
                 flag.Drop();
+                if (flag.team != team)
+                {
+                    int teamPoints = gameController.CheckForPoints();
+                    if (teamPoints > 0) totalFlagsCaptured += 1;
+                }
                 carriedObject = null;
                 isCarrying = false;
                 speed *= 2;
-                gameController.CheckForWinCondition();
                 gameController.BroadcastDropFlag(team, flag.team);
             }
         }
@@ -981,6 +997,18 @@ public class Player : NetworkBehaviour
                 pointer.gameObject.SetActive(false);
             }
         }
+    }
+
+    void UpdateTeamPoints()
+    {
+        int teamPoints = gameController.GetTeamPoints(team);
+        teamPointsTxt.text = "TEAM POINTS : " + teamPoints;
+    }
+
+    void UpdateEnemyPoints()
+    {
+        int enemyPoints = gameController.GetTeamPoints(team == 1 ? 2 : 1);
+        enemyPointsTxt.text = "ENEMY POINTS : " + enemyPoints;
     }
 
     void DrawCircle(Vector3 center, float radius)
@@ -1068,13 +1096,36 @@ public class Player : NetworkBehaviour
     }
 
     public void IncreaseSpeed(float amount, float time){
-        if(speedIncrease == 0){
+        if (speedIncrease == 0)
+        {
             speed += amount;
             speedIncrease += amount;
         }
-
         speedIncreaseTimer = TickTimer.CreateFromSeconds(Runner, time);
     }
+
+    void OnSpeedIncreaseTimerChanged()
+    {
+        if (HasInputAuthority)
+        {
+            // Speed increase has started
+            if (speedIncreaseTimer.IsRunning)
+            {
+                float time = speedIncreaseTimer.RemainingTime(Runner).GetValueOrDefault();
+                speedIcon.enabled = true;
+                speedIconLayer.enabled = true;
+                speedHandler.StartCooldown(time);
+            }
+
+            // Speed increase has finished
+            else
+            {
+                speedIcon.enabled = false;
+                speedIconLayer.enabled = false;
+            }
+        }
+    }
+
     public void GetSlowed(float amount, float time)
     {
         // If not already slowed, slow the player

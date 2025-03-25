@@ -10,6 +10,8 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     [Networked] private TickTimer pointsTopupTimer { get; set; }
     [Networked] private TickTimer gameTimer { get; set; }
     [Networked, Capacity(12)] public NetworkDictionary<PlayerRef, int> playersToTeams { get; }
+    [Networked] private int pointsTeam1 { get; set; }
+    [Networked] private int pointsTeam2 { get; set; }
 
     [SerializeField] private Vector3 respawnPoint1;
     [SerializeField] private Vector3 respawnPoint2;
@@ -25,12 +27,14 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     // Flags
     private PickupFlag team1Flag;
     private PickupFlag team2Flag;
-
+    
     // Initialisation
     public override void Spawned()
     {
         gameOver = false;
         pointsTopupCooldownMax = 10f;
+        pointsTeam1 = 0;
+        pointsTeam2 = 0;
         pointsTopupTimer = TickTimer.CreateFromSeconds(Runner, pointsTopupCooldownMax);
         gameTimer = TickTimer.CreateFromSeconds(Runner, maxTime);
 
@@ -183,10 +187,9 @@ public class GameController : NetworkBehaviour, IPlayerLeft
         return alivePlayers;
     }
 
-    // Check if two flags are near each other
-    public void CheckForWinCondition()
+    public int CheckForPoints()
     {
-        if (!HasStateAuthority) return;
+        if (!HasStateAuthority) return 0;
 
         // Max distance for flags to be from a base to count as a win
         float maxDistance = 8.0f;
@@ -194,16 +197,44 @@ public class GameController : NetworkBehaviour, IPlayerLeft
         // If team 2's flag is close enough to team 1's base, then team 1 wins
         if (Vector2.Distance(team2Flag.transform.position, respawnPoint1) <= maxDistance)
         {
-            gameOver = true;
-            BroadcastMessageToTeam(1, "You win!", 0.1f, Color.green);
-            BroadcastMessageToTeam(2, "You lose!", 0.1f, Color.red);
+            pointsTeam1 += 10;
+            team2Flag.transform.position = respawnPoint2;
+            return pointsTeam1;
         }
         // If team 1's flag is close enough to team 2's base, then team 2 wins
         else if (Vector2.Distance(team1Flag.transform.position, respawnPoint2) <= maxDistance)
         {
-            gameOver = true;
-            BroadcastMessageToTeam(2, "You win!", 0.1f, Color.green);
-            BroadcastMessageToTeam(1, "You lose!", 0.1f, Color.red);
+            pointsTeam2 += 10;
+            team1Flag.transform.position = respawnPoint1;
+            return pointsTeam2;
+        }
+
+        return 0;
+    }
+
+    public int GetTeamPoints(int team)
+    {
+        if (team == 1)
+        {
+            return pointsTeam1;
+        }
+        else if (team == 2)
+        {
+            return pointsTeam2;
+        }
+
+        return 0;
+    }
+
+    public void AddKillPoints(int team)
+    {
+        if (team == 1)
+        {
+            pointsTeam1 += 2;
+        }
+        else if (team == 2)
+        {
+            pointsTeam2 += 2;
         }
     }
 
