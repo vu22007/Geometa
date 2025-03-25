@@ -110,6 +110,7 @@ public class Pickup : NetworkBehaviour
             if (Runner.TryGetPlayerObject(playerPickedUp, out NetworkObject networkObject))
             {
                 Player player = networkObject.GetComponent<Player>();
+                player.PlayPickupSound(type);
                 switch (type)
                 {
                     case 0: //Health
