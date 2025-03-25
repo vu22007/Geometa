@@ -7,11 +7,19 @@ public class Leaderboard : NetworkBehaviour
 {
     [Networked, Capacity(6), OnChangedRender(nameof(OnTeam1PlayerStatsChanged))] private NetworkLinkedList<PlayerInfo> team1PlayerStats { get; }
     [Networked, Capacity(6), OnChangedRender(nameof(OnTeam2PlayerStatsChanged))] private NetworkLinkedList<PlayerInfo> team2PlayerStats { get; }
+    [Networked, OnChangedRender(nameof(OnTeam1PointsChanged))] float team1Points { get; set; }
+    [Networked, OnChangedRender(nameof(OnTeam2PointsChanged))] float team2Points { get; set; }
+    [Networked, OnChangedRender(nameof(OnWinningTeamChanged))] int winningTeam { get; set; }
     [Networked] PlayerRef hostPlayerRef { get; set; }
 
     private NetworkManager networkManager;
     private GameObject team1List;
     private GameObject team2List;
+    private TextMeshProUGUI team1Title;
+    private TextMeshProUGUI team2Title;
+    private TextMeshProUGUI team1PointsText;
+    private TextMeshProUGUI team2PointsText;
+    private TextMeshProUGUI teamWinner;
     private GameObject playerCardPrefab;
 
     public override void Spawned()
@@ -19,6 +27,11 @@ public class Leaderboard : NetworkBehaviour
         networkManager = GameObject.Find("Network Runner").GetComponent<NetworkManager>();
         team1List = GameObject.Find("Team 1 List");
         team2List = GameObject.Find("Team 2 List");
+        team1Title = GameObject.Find("Team 1 Title").GetComponent<TextMeshProUGUI>();
+        team2Title = GameObject.Find("Team 2 Title").GetComponent<TextMeshProUGUI>();
+        team1PointsText = GameObject.Find("Team 1 Points").GetComponent<TextMeshProUGUI>();
+        team2PointsText = GameObject.Find("Team 2 Points").GetComponent<TextMeshProUGUI>();
+        teamWinner = GameObject.Find("Team Winner").GetComponent<TextMeshProUGUI>();
         playerCardPrefab = Resources.Load("Prefabs/Leaderboard/PlayerCard") as GameObject;
 
         // If this is the host, get the player stats from the network manager and set the networked
@@ -38,10 +51,27 @@ public class Leaderboard : NetworkBehaviour
             {
                 team2Players.Add(player);
             }
+            
+            // Set points for both teams
+            team1Points = networkManager.team1Points;
+            team2Points = networkManager.team2Points;
+
+            // Set winning team
+            if (team1Points > team2Points)
+                winningTeam = 1;
+            else if (team2Points > team1Points)
+                winningTeam = 2;
+            else
+                winningTeam = 0; // No winner
 
             // Set host player
             hostPlayerRef = networkManager.hostPlayerRef;
         }
+
+        // Show points and winning team
+        OnTeam1PointsChanged();
+        OnTeam2PointsChanged();
+        OnWinningTeamChanged();
 
         // Populate team lists
         AddPlayerCardsToTeamList(team1List, team1PlayerStats);
@@ -52,6 +82,38 @@ public class Leaderboard : NetworkBehaviour
     {
         // Shut down the network runner, which will cause the game to return to the main menu
         Runner.Shutdown();
+    }
+    
+    // Called when the team1Points networked property changes
+    void OnTeam1PointsChanged()
+    {
+        team1PointsText.text = "Total points: " + team1Points;
+    }
+    
+    // Called when the team2Points networked property changes
+    void OnTeam2PointsChanged()
+    {
+        team2PointsText.text = "Total points: " + team2Points;
+    }
+
+    // Called when the winningTeam networked property changes
+    void OnWinningTeamChanged()
+    {
+        // Show winner
+        if (winningTeam == 1)
+        {
+            teamWinner.text = "Team 1 wins!";
+            team1Title.color = Color.yellow;
+        }
+        else if (winningTeam == 2)
+        {
+            teamWinner.text = "Team 2 wins!";
+            team2Title.color = Color.yellow;
+        }
+        else
+        {
+            teamWinner.text = "Draw!";
+        }
     }
 
     // Called when the team1PlayerStats networked property changes
