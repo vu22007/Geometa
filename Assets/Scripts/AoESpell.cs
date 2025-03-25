@@ -18,6 +18,8 @@ public class AoESpell : NetworkBehaviour
     [Networked, OnChangedRender(nameof(OnActivatedChanged))] private bool isActivated { get; set; }
     [SerializeField] private Sprite aoeSmall;
     [SerializeField] private Sprite aoeNormal;
+     AudioSource audioSource;
+    [SerializeField] AudioClip aoeSound;
     private SpriteRenderer spriteRenderer;
     private List<Player> players;
     private float damageCooldownMax = 0.6f;
@@ -40,6 +42,7 @@ public class AoESpell : NetworkBehaviour
     public override void Spawned()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
+        audioSource = GetComponent<AudioSource>();
         OnActivatedChanged();
         players = new List<Player>();
     }
@@ -112,6 +115,7 @@ public class AoESpell : NetworkBehaviour
         if (isActivated && spriteRenderer != null && aoeNormal != null)
         {
             spriteRenderer.sprite = aoeNormal;
+            audioSource.PlayOneShot(aoeSound);
         }
 
         if (!isActivated && spriteRenderer != null && aoeSmall != null)
