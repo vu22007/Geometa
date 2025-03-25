@@ -20,6 +20,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     private Button knightButton;
     private Button wizardButton;
     private Button readyButton;
+    private Button generateMapButton;
     private Button startGameButton;
     private GameObject team1List;
     private GameObject team2List;
@@ -30,10 +31,13 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     private int team = 0;
     private string characterName = "";
     private bool playerIsReady = false;
-    private bool mapGenerated = false;
+    RunBlenderScript buildingsGenerator;
+    [Networked] bool mapGenerated { get; set; } = false;
+    [Networked] int mapGenAcknowledgments { get; set; } = 0;
 
     public override void Spawned()
     {
+        buildingsGenerator = GameObject.Find("BuildingsGenerator").GetComponent<RunBlenderScript>();
         networkManager = GameObject.Find("Network Runner").GetComponent<NetworkManager>();
         displayNameInput = GameObject.Find("Display Name Input").GetComponent<TMP_InputField>();
         team1Button = GameObject.Find("Team 1 Button").GetComponent<Button>();
@@ -45,6 +49,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         readyButton.interactable = false;
         startGameButton = GameObject.Find("Start Game Button").GetComponent<Button>();
         startGameButton.interactable = false;
+        generateMapButton = GameObject.Find("Generate Map Button").GetComponent<Button>();
         team1List = GameObject.Find("Team 1 List");
         team2List = GameObject.Find("Team 2 List");
         playerCounter = GameObject.Find("Player Counter").GetComponent<TextMeshProUGUI>();
@@ -53,7 +58,10 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 
         // Hide start game button if not the host
         if (!HasStateAuthority)
+        {
             startGameButton.gameObject.SetActive(false);
+            generateMapButton.gameObject.SetActive(false);
+        }
 
         // Populate team lists
         AddPlayerCardsToTeamList(team1List, team1Players);
@@ -160,18 +168,21 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         RPC_PlayerUnready();
     }
 
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    [Rpc(RpcSources.All, RpcTargets.All)]
     public void RPC_GenerateMap()
     {
+        Debug.Log("Map Generated");
         mapGenerated = true;
-        RunBlenderScript buildingsGenerator = Instantiate<GameObject>(buildingsGeneratorPrefab).GetComponent<RunBlenderScript>();
         buildingsGenerator.RunBlender(51.4585, 51.4590, -2.6026, -2.6000);
+
+        mapGenAcknowledgments += 1;
     }
 
     public void StartGame()
     {
         if (HasStateAuthority)
         {
+            Debug.Log("Game started");
             // Give the network manager the player dictionaries, but first convert the networked ones to standard ones
             networkManager.team1Players = ConvertFromNetworkDictionary(team1Players);
             networkManager.team2Players = ConvertFromNetworkDictionary(team2Players);

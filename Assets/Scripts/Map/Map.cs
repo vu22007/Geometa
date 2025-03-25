@@ -26,7 +26,7 @@ public class Map : MonoBehaviour
     {
         StartCoroutine(LoadMapFromBoundingBox(lowLat, highLat, lowLong, highLong));
 
-        GameObject buildingsPrefab = Resources.Load<GameObject>("Prefabs/Map/Buildify3DBuildings");
+        GameObject buildingsPrefab = Resources.Load<GameObject>("Prefabs/Map/Buildify3DBuildingsPrefab");
         if (buildingsPrefab != null)
         {
             // Optionally instantiate the map in the scene

@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
-public class RunBlenderScript : MonoBehaviour
+public class RunBlenderScript : NetworkBehaviour
 {
     private GameObject mapPrefab;
 
@@ -14,7 +14,7 @@ public class RunBlenderScript : MonoBehaviour
     // Path to the Blender executable
     public string blenderExePath = @"C:\Program Files\Blender Foundation\Blender 4.3\blender.exe";
 
-    public void Start()
+    public override void Spawned()
     {
         // RunBlender(51.450, 51.451, -2.603, -2.599);
         // ImportFbxToUnity();
@@ -70,7 +70,7 @@ public class RunBlenderScript : MonoBehaviour
         // Path to the FBX asset in your project
         string fbxPath = "Assets/Resources/Prefabs/Map/Buildify3DBuildings.fbx";
         // Desired path for the created prefab
-        string prefabPath = "Assets/Resources/Prefabs/Map/Buildify3DBuildings.prefab";
+        string prefabPath = "Assets/Resources/Prefabs/Map/Buildify3DBuildingsPrefab.prefab";
 
         // Import the asset - this ensures Unity processes it properly
         GameObject fbxAsset = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(fbxPath);
