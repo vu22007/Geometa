@@ -63,6 +63,7 @@ public class Player : NetworkBehaviour
     [Networked] int totalKills { get; set; }
     [Networked] int totalDeaths { get; set; }
     [Networked] int totalFlagsCaptured { get; set; }
+    [Networked] float currentTriangleScore { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
@@ -648,7 +649,7 @@ public class Player : NetworkBehaviour
                 AoESpell aoeSpell = networkObject.GetComponent<AoESpell>();
                 if (aoeSpell != null)
                 {
-                    aoeSpell.OnCreated(aimDirection, 10f, distance, aoeDamage, team, aoeDuration, Object.InputAuthority);
+                    aoeSpell.OnCreated(aimDirection, 10f, distance, aoeDamage, team, aoeDuration, currentTriangleScore, Object.InputAuthority);
                 }
             });
         }
@@ -1041,10 +1042,11 @@ public class Player : NetworkBehaviour
         ShowMessage(message, speed, color);
     }
 
-    public void ActivateTri(bool tri)
+    public void ActivateTri(bool tri, float triangleScore)
     {
         if (tri)
         {
+            currentTriangleScore = triangleScore;
             isAoEEnabled = true; // Enable AoE
             normalShoot = false;
             isAoEUsed = false;

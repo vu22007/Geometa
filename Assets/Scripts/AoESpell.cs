@@ -22,7 +22,7 @@ public class AoESpell : NetworkBehaviour
     private List<Player> players;
     private float damageCooldownMax = 0.6f;
 
-    public void OnCreated(Vector2 direction, float speed, float maxDistance, float damage, int team, float duration, PlayerRef playerCasting)
+    public void OnCreated(Vector2 direction, float speed, float maxDistance, float damage, int team, float duration, float score,PlayerRef playerCasting)
     {
         this.damage = damage;
         this.team = team;
@@ -31,6 +31,7 @@ public class AoESpell : NetworkBehaviour
         this.direction = direction.normalized;
         this.speed = speed;
         this.maxDistance = maxDistance;
+        gameObject.transform.localScale = gameObject.transform.localScale * (0.5f+score);
         distanceTraveled = 0f;
         isActivated = false;
         damageCooldown = TickTimer.CreateFromSeconds(Runner, damageCooldownMax);

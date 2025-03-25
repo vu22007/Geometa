@@ -111,7 +111,7 @@ public class TriangleCollider : NetworkBehaviour
             // because the collider exists for 0.1 seconds and multiple frames
             if (player.GetTeam() != team && !zappedPlayers.Contains(player))
             {
-                player.TakeDamage(10f * score, parentPlayerRef);
+                player.TakeDamage(20f * score, parentPlayerRef);
                 zappedPlayers.Add(player);
             }
         }
