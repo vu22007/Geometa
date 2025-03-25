@@ -23,6 +23,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     private Button readyButton;
     private Button generateMapButton;
     private Button startGameButton;
+    private Button selectAreaButton;
     private GameObject team1List;
     private GameObject team2List;
     private TextMeshProUGUI playerCounter;
@@ -39,6 +40,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     public override void Spawned()
     {
         buildingsGenerator = GameObject.Find("BuildingsGenerator").GetComponent<RunBlenderScript>();
+        selectAreaButton = GameObject.Find("Select Area").GetComponent<Button>();
         networkManager = GameObject.Find("Network Runner").GetComponent<NetworkManager>();
         displayNameInput = GameObject.Find("Display Name Input").GetComponent<TMP_InputField>();
         team1Button = GameObject.Find("Team 1 Button").GetComponent<Button>();
@@ -62,6 +64,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         {
             startGameButton.gameObject.SetActive(false);
             generateMapButton.gameObject.SetActive(false);
+            selectAreaButton.gameObject.SetActive(false);
         }
 
         // Populate team lists
@@ -169,12 +172,26 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         RPC_PlayerUnready();
     }
 
+    public void SelectArea()
+    {
+        // Note: Might need changing for linux
+        string localPathToHtmlFile = "\\Non-Unity\\mapCoordinates.html";
+        string pathToHtmlFile = System.IO.Directory.GetCurrentDirectory() + localPathToHtmlFile;
+        if (HasStateAuthority)
+        {
+            Application.OpenURL(pathToHtmlFile);
+            // Debug.Log("HTML file path: " + pathToHtmlFile);
+            // Debug.Log("Current directory: " + System.IO.Directory.GetCurrentDirectory());
+        }
+    }
+
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void RPC_GenerateMap()
     {
         Debug.Log("Map Generated");
         mapGenerated = true;
-        StartCoroutine(GenerateMapAndAcknowledge());
+        StartCoroutine(buildingsGenerator.RunBlender(51.4585, 51.4590, -2.6026, -2.6000));
+        // StartCoroutine(GenerateMapAndAcknowledge());
     }
 
     private IEnumerator GenerateMapAndAcknowledge()
@@ -200,10 +217,12 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 
             if (mapGenerated)
             {
-                Runner.LoadScene(SceneRef.FromIndex(5));
+                // Play Scene with a pre-generated map
+                Runner.LoadScene(SceneRef.FromIndex(3));
             }
             else
             {
+                // Load Scene that will use the 3D Generated buildings and generate 2D map in scene
                 // Switch to map scene to start the game, and the game controller will spawn player objects using the player dicts in the network manager
                 Runner.LoadScene(SceneRef.FromIndex(5));
             }
