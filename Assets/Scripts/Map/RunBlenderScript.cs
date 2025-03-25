@@ -1,4 +1,5 @@
 using Fusion;
+using System.Collections;
 using System.Diagnostics;
 using UnityEditor;
 using UnityEngine;
@@ -21,7 +22,7 @@ public class RunBlenderScript : NetworkBehaviour
         // SpawnNetworkedMap();
     }
 
-    public void RunBlender(double minLat, double maxLat, double minLon, double maxLon)
+    public IEnumerator RunBlender(double minLat, double maxLat, double minLon, double maxLon)
     {
         // For server mode, pass "server" followed by the 4 parameters.
         string extraArgs = $"-- server {minLat} {maxLat} {minLon} {maxLon}";
@@ -46,7 +47,12 @@ public class RunBlenderScript : NetworkBehaviour
         Process process = new Process { StartInfo = processInfo };
 
         process.Start();
-        process.WaitForExit();
+
+        // Instead of blocking here, poll every frame or so:
+        while (!process.HasExited)
+        {
+            yield return null; // Let Unity run for a frame
+        }
 
         string output = process.StandardOutput.ReadToEnd();
         string error = process.StandardError.ReadToEnd();
@@ -58,6 +64,8 @@ public class RunBlenderScript : NetworkBehaviour
         }
 
         ImportFbxToUnity();
+
+        yield return null;
     }
 
     public void ImportFbxToUnity()
@@ -82,15 +90,16 @@ public class RunBlenderScript : NetworkBehaviour
             mapPrefab = PrefabUtility.SaveAsPrefabAsset(fbxAsset, prefabPath);
             // mapPrefab.AddComponent<NetworkObject>();
 
-                if (mapPrefab != null)
-                {
-                    Debug.Log("Map asset loaded successfully. Ready to use in scene.");
-
-                }
-                else
-                {
-                    Debug.LogWarning("Map asset could not be loaded after import.");
-                }
+            if (mapPrefab != null)
+            {
+                Debug.Log("Map asset loaded successfully. Ready to use in scene.");
+                GameObject buildingsInstance = Instantiate(mapPrefab, Vector3.zero, Quaternion.identity);
+                buildingsInstance.transform.eulerAngles = new Vector3(90, 180, 0);
+            }
+            else
+            {
+                Debug.LogWarning("Map asset could not be loaded after import.");
+            }
         }
     #else
             Debug.LogWarning("Asset import is only available in the Unity Editor.");

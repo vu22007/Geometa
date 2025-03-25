@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Fusion;
@@ -173,9 +174,16 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     {
         Debug.Log("Map Generated");
         mapGenerated = true;
-        buildingsGenerator.RunBlender(51.4585, 51.4590, -2.6026, -2.6000);
+        StartCoroutine(GenerateMapAndAcknowledge());
+    }
 
-        mapGenAcknowledgments += 1;
+    private IEnumerator GenerateMapAndAcknowledge()
+    {
+        // Directly yield on the IEnumerator returned from buildingsGenerator.RunBlender(...)
+        yield return StartCoroutine(buildingsGenerator.RunBlender(51.4585, 51.4590, -2.6026, -2.6000));
+
+        // Once the coroutine completes, increment the counter
+        mapGenAcknowledgments++;
     }
 
     public void StartGame()
@@ -197,7 +205,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             else
             {
                 // Switch to map scene to start the game, and the game controller will spawn player objects using the player dicts in the network manager
-                Runner.LoadScene(SceneRef.FromIndex(3));
+                Runner.LoadScene(SceneRef.FromIndex(5));
             }
         }
     }

@@ -12,12 +12,12 @@ public class Map : MonoBehaviour
     [SerializeField] GameObject pathPrefab;
     [SerializeField] GameObject grassPrefab;
     [SerializeField] GameObject waterPrefab;
-    // RunBlenderScript buildingGenerator;
+    RunBlenderScript buildingsGenerator;
 
     void Start()
     {
         // GameObject buildingGeneratorPrefab = Resources.Load<GameObject>("Prefabs/Map/BuildingsGenerator");
-        // buildingGenerator = Instantiate(buildingGeneratorPrefab).GetComponent<RunBlenderScript>();
+        buildingsGenerator = GameObject.Find("BuildingsGenerator").GetComponent<RunBlenderScript>();
         // GenerateMap(51.4576, 51.4590, -2.6026, -2.5991); // Default
         GenerateMap(51.4585, 51.4590, -2.6026, -2.6000);
     }
@@ -37,8 +37,7 @@ public class Map : MonoBehaviour
         {
             Debug.Log("Buildings prefab is null. Most likely buildify didn't generate a 3D buildings prefab asset. ");
         }
-        //buildingGenerator.RunBlender(lowLat, highLat, lowLong, highLong);
-        //buildingGenerator.ImportFbxToUnity();
+        // StartCoroutine(buildingsGenerator.RunBlender(lowLat, highLat, lowLong, highLong));
     }
 
     IEnumerator LoadMapFromBoundingBox(double lowLat, double highLat, double lowLong, double highLong)
