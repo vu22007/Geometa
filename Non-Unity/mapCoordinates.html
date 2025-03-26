@@ -117,7 +117,7 @@
 
         // Put coords in the text area
         document.getElementById('coords').value =
-          northEast.lat + ', ' + southWest.lat + ', ' + northEast.lng + ', ' + southWest.lng;
+          southWest.lat.toFixed(4) + ', ' + northEast.lat.toFixed(4) + ', ' + southWest.lng.toFixed(4) + ', ' + northEast.lng.toFixed(4);
       }
     });
 

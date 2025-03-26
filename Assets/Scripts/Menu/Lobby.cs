@@ -6,6 +6,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine.Windows;
 
 public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 {
@@ -16,6 +17,8 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     [SerializeField] GameObject buildingsGeneratorPrefab;
     private NetworkManager networkManager;
     private TMP_InputField displayNameInput;
+    private TMP_InputField coordinatesInput;
+    private string coordinates { get; set; }
     private Button team1Button;
     private Button team2Button;
     private Button knightButton;
@@ -43,6 +46,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         selectAreaButton = GameObject.Find("Select Area").GetComponent<Button>();
         networkManager = GameObject.Find("Network Runner").GetComponent<NetworkManager>();
         displayNameInput = GameObject.Find("Display Name Input").GetComponent<TMP_InputField>();
+        coordinatesInput = GameObject.Find("Coordinates Input").GetComponent<TMP_InputField>();
         team1Button = GameObject.Find("Team 1 Button").GetComponent<Button>();
         team2Button = GameObject.Find("Team 2 Button").GetComponent<Button>();
         knightButton = GameObject.Find("Knight Button").GetComponent<Button>();
@@ -102,6 +106,12 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 
         displayName = newDisplayName;
         displayNameInput.text = newDisplayName;
+    }
+
+    public void OnCoordinatesChanged(string coordinates)
+    {
+        this.coordinates = coordinates;
+        coordinatesInput.text = coordinates;
     }
 
     public void SelectTeam1()
@@ -188,9 +198,39 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void RPC_GenerateMap()
     {
+        string[] partsArray = coordinates.Split(',')
+                                 .Select(s => s.Trim())
+                                 .ToArray();
+
+        bool allValid = true;
+        float[] numbers = new float[partsArray.Length];
+
+        for (int i = 0; i < partsArray.Length; i++)
+        {
+            if (float.TryParse(partsArray[i], out float number))
+            {
+                // Round to 4 decimals if needed
+                numbers[i] = (float)System.Math.Round(number, 4);
+            }
+            else
+            {
+                allValid = false;
+                Debug.LogError($"Invalid input in: {partsArray[i]}");
+            }
+        }
+
+        if (allValid)
+        {
+            StartCoroutine(buildingsGenerator.RunBlender(numbers[0], numbers[1], numbers[2], numbers[3]));
+        }
+        else
+        {
+            Debug.LogError($"Invalid input for coordinates: {coordinates}");
+        }
+
         Debug.Log("Map Generated");
         mapGenerated = true;
-        StartCoroutine(buildingsGenerator.RunBlender(51.4585, 51.4590, -2.6026, -2.6000));
+        // StartCoroutine(buildingsGenerator.RunBlender(51.4585, 51.4590, -2.6026, -2.6000));
         // StartCoroutine(GenerateMapAndAcknowledge());
     }
 
@@ -218,13 +258,13 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             if (mapGenerated)
             {
                 // Play Scene with a pre-generated map
-                Runner.LoadScene(SceneRef.FromIndex(3));
+                Runner.LoadScene(SceneRef.FromIndex(5));
             }
             else
             {
                 // Load Scene that will use the 3D Generated buildings and generate 2D map in scene
                 // Switch to map scene to start the game, and the game controller will spawn player objects using the player dicts in the network manager
-                Runner.LoadScene(SceneRef.FromIndex(5));
+                Runner.LoadScene(SceneRef.FromIndex(3));
             }
         }
     }
