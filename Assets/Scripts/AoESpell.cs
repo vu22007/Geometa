@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
@@ -13,18 +12,20 @@ public class AoESpell : NetworkBehaviour
     [Networked] private Vector2 direction { get; set; }
     [Networked] private float speed { get; set; }
     [Networked] private float maxDistance { get; set; }
+    [Networked] private float score { get; set; }
     [Networked] private float distanceTraveled { get; set; }
     [Networked] private TickTimer damageCooldown { get; set; }
     [Networked, OnChangedRender(nameof(OnActivatedChanged))] private bool isActivated { get; set; }
+
     [SerializeField] private Sprite aoeSmall;
     [SerializeField] private Sprite aoeNormal;
-     AudioSource audioSource;
+    AudioSource audioSource;
     [SerializeField] AudioClip aoeSound;
     private SpriteRenderer spriteRenderer;
     private List<Player> players;
     private float damageCooldownMax = 0.6f;
 
-    public void OnCreated(Vector2 direction, float speed, float maxDistance, float damage, int team, float duration, float score,PlayerRef playerCasting)
+    public void OnCreated(Vector2 direction, float speed, float maxDistance, float damage, int team, float duration, float score, PlayerRef playerCasting)
     {
         this.damage = damage;
         this.team = team;
@@ -33,7 +34,7 @@ public class AoESpell : NetworkBehaviour
         this.direction = direction.normalized;
         this.speed = speed;
         this.maxDistance = maxDistance;
-        gameObject.transform.localScale = gameObject.transform.localScale * (0.5f+score);
+        this.score = score;
         distanceTraveled = 0f;
         isActivated = false;
         damageCooldown = TickTimer.CreateFromSeconds(Runner, damageCooldownMax);
@@ -45,6 +46,7 @@ public class AoESpell : NetworkBehaviour
         audioSource = GetComponent<AudioSource>();
         OnActivatedChanged();
         players = new List<Player>();
+        gameObject.transform.localScale = gameObject.transform.localScale * (0.5f + score);
     }
 
     public override void FixedUpdateNetwork()
@@ -106,8 +108,6 @@ public class AoESpell : NetworkBehaviour
             }
         }
     }
-
-
 
     // Called on all clients and host when AoE spell is activated, so that everyone sees the correct sprite
     void OnActivatedChanged()
