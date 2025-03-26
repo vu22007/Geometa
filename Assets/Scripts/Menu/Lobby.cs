@@ -37,11 +37,13 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     private string characterName = "";
     private bool playerIsReady = false;
     RunBlenderScript buildingsGenerator;
+    CoordinatesDataHolder coordinatesDataHolder;
     [Networked] bool mapGenerated { get; set; } = false;
     [Networked] int mapGenAcknowledgments { get; set; } = 0;
 
     public override void Spawned()
     {
+        coordinatesDataHolder = GameObject.Find("CoordinatesDataHolder").GetComponent<CoordinatesDataHolder>();
         buildingsGenerator = GameObject.Find("BuildingsGenerator").GetComponent<RunBlenderScript>();
         selectAreaButton = GameObject.Find("Select Area").GetComponent<Button>();
         networkManager = GameObject.Find("Network Runner").GetComponent<NetworkManager>();
@@ -222,6 +224,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         if (allValid)
         {
             StartCoroutine(buildingsGenerator.RunBlender(numbers[0], numbers[1], numbers[2], numbers[3]));
+            coordinatesDataHolder.SetCoordinates(numbers[0], numbers[1], numbers[2], numbers[3]);
         }
         else
         {
@@ -258,13 +261,16 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             if (mapGenerated)
             {
                 // Play Scene with a pre-generated map
+                DontDestroyOnLoad(coordinatesDataHolder);
                 Runner.LoadScene(SceneRef.FromIndex(5));
             }
             else
             {
                 // Load Scene that will use the 3D Generated buildings and generate 2D map in scene
                 // Switch to map scene to start the game, and the game controller will spawn player objects using the player dicts in the network manager
+                Destroy(coordinatesDataHolder);
                 Runner.LoadScene(SceneRef.FromIndex(3));
+
             }
         }
     }
