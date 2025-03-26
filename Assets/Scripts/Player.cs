@@ -63,6 +63,7 @@ public class Player : NetworkBehaviour
     [Networked] int totalKills { get; set; }
     [Networked] int totalDeaths { get; set; }
     [Networked] int totalFlagsCaptured { get; set; }
+    [Networked] float currentTriangleScore { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
@@ -100,6 +101,9 @@ public class Player : NetworkBehaviour
     private AudioClip dashSound;
     private AudioClip reloadSound;
     private AudioClip knightSwordSound;
+    private AudioClip healthPickupSound;
+    private AudioClip manaPickupSound;
+    private AudioClip speedPickupSound;
     private AudioSource audioSource;
     private AudioSource reloadAudioSource;
     [SerializeField] Image bulletIcon;
@@ -236,6 +240,9 @@ public class Player : NetworkBehaviour
         dashSound = Resources.Load<AudioClip>("Sounds/Dash");
         reloadSound = Resources.Load<AudioClip>("Sounds/WizardReload");
         knightSwordSound = Resources.Load<AudioClip>("Sounds/KnightSword");
+        healthPickupSound = Resources.Load<AudioClip>("Sounds/HealthPickup");
+        manaPickupSound = Resources.Load<AudioClip>("Sounds/ManaPickup");
+        speedPickupSound = Resources.Load<AudioClip>("Sounds/SpeedPickup");
 
         // Create separate audio source just for reload sounds, so the pitch can be changed without affecting other sounds
         reloadAudioSource = gameObject.AddComponent<AudioSource>();
@@ -659,7 +666,7 @@ public class Player : NetworkBehaviour
                 AoESpell aoeSpell = networkObject.GetComponent<AoESpell>();
                 if (aoeSpell != null)
                 {
-                    aoeSpell.OnCreated(aimDirection, 10f, distance, aoeDamage, team, aoeDuration, Object.InputAuthority);
+                    aoeSpell.OnCreated(aimDirection, 10f, distance, aoeDamage, team, aoeDuration, currentTriangleScore, Object.InputAuthority);
                 }
             });
         }
@@ -732,6 +739,28 @@ public class Player : NetworkBehaviour
 
         if (currentHealth >= maxHealth) {
             currentHealth = maxHealth;
+        }
+    }
+
+    public void PlayPickupSound(int type){
+        if(HasInputAuthority){
+            switch (type)
+            {
+                //Health
+                case 0:
+                    audioSource.PlayOneShot(healthPickupSound);
+                    break;
+                //Mana
+                case 1:
+                    audioSource.PlayOneShot(manaPickupSound);
+                    break;
+                //Speed
+                case 2:
+                    audioSource.PlayOneShot(speedPickupSound);
+                    break;
+                default:
+                    break;
+            }
         }
     }
 
@@ -1069,10 +1098,11 @@ public class Player : NetworkBehaviour
         ShowMessage(message, speed, color);
     }
 
-    public void ActivateTri(bool tri)
+    public void ActivateTri(bool tri, float triangleScore)
     {
         if (tri)
         {
+            currentTriangleScore = triangleScore;
             isAoEEnabled = true; // Enable AoE
             normalShoot = false;
             isAoEUsed = false;
