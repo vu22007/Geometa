@@ -24,7 +24,7 @@ public class Map : MonoBehaviour
         if(CoordinatesDataHolder.Instance == null)
         {
             Debug.Log("Using default values for Map");
-            GenerateMap(40.2825, 40.2829, -3.7485, -3.7475);
+            GenerateMap(51.4585, 51.4590, -2.6026, -2.6000);
         }
         else
         {
@@ -166,8 +166,8 @@ public class Map : MonoBehaviour
     double LatToY(double latitude)
     {
         return System.Math.Log(System.Math.Tan(
-            (latitude + 90) / 360 * System.Math.PI
-        )) / System.Math.PI * 180;
+            (latitude + 90d) / 360d * System.Math.PI
+        )) / System.Math.PI * 180d;
     }
 
     Vector2[] GetPointsFromGPSCoords(MapElement.Coords[] geometry, double xShift, double yShift, double scale)

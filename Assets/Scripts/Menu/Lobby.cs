@@ -205,14 +205,14 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
                                  .ToArray();
 
         bool allValid = true;
-        float[] numbers = new float[partsArray.Length];
+        double[] numbers = new double[partsArray.Length];
 
         for (int i = 0; i < partsArray.Length; i++)
         {
-            if (float.TryParse(partsArray[i], out float number))
+            if (double.TryParse(partsArray[i], out double number))
             {
                 // Round to 4 decimals if needed
-                numbers[i] = (float)System.Math.Round(number, 4);
+                numbers[i] = (double)System.Math.Round(number, 4);
             }
             else
             {
@@ -270,7 +270,6 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
                 // Switch to map scene to start the game, and the game controller will spawn player objects using the player dicts in the network manager
                 Destroy(coordinatesDataHolder);
                 Runner.LoadScene(SceneRef.FromIndex(3));
-
             }
         }
     }

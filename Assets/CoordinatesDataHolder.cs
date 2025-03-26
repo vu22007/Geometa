@@ -5,10 +5,10 @@ public class CoordinatesDataHolder : NetworkBehaviour
 {
     public static CoordinatesDataHolder Instance;
 
-    [Networked] public float Float1 { get; set; }
-    [Networked] public float Float2 { get; set; }
-    [Networked] public float Float3 { get; set; }
-    [Networked] public float Float4 { get; set; }
+    [Networked] public double Float1 { get; set; }
+    [Networked] public double Float2 { get; set; }
+    [Networked] public double Float3 { get; set; }
+    [Networked] public double Float4 { get; set; }
 
     public override void Spawned()
     {
@@ -23,7 +23,7 @@ public class CoordinatesDataHolder : NetworkBehaviour
         }
     }
 
-    public void SetCoordinates(float f1, float f2, float f3, float f4)
+    public void SetCoordinates(double f1, double f2, double f3, double f4)
     {
         Float1 = f1;
         Float2 = f2;

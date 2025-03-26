@@ -93,8 +93,8 @@ public class RunBlenderScript : NetworkBehaviour
             if (mapPrefab != null)
             {
                 Debug.Log("Map asset loaded successfully. Ready to use in scene.");
-                GameObject buildingsInstance = Instantiate(mapPrefab, Vector3.zero, Quaternion.identity);
-                buildingsInstance.transform.eulerAngles = new Vector3(90, 180, 0);
+                //GameObject buildingsInstance = Instantiate(mapPrefab, Vector3.zero, Quaternion.identity);
+                //buildingsInstance.transform.eulerAngles = new Vector3(90, 180, 0);
             }
             else
             {
