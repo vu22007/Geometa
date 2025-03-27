@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -84,11 +85,11 @@ public class Map : MonoBehaviour
 
                 // Create and add road to scene
                 else if (IsRoad(element))
-                    AddWayToScene(vertices, roadPrefab, true, 8.0f);
+                    AddWayToScene(vertices, roadPrefab, true, 5.0f);
 
                 // Create and add path to scene
-                //else if (IsPath(element))
-                //    AddWayToScene(vertices, pathPrefab, true, 2.0f);
+                else if (IsPath(element))
+                    AddWayToScene(vertices, pathPrefab, true, 2.0f);
 
                 // Create and add grass to scene
                 else if (IsGrass(element))
@@ -235,8 +236,6 @@ public class Map : MonoBehaviour
         Color[] colours = { Color.red, Color.green, Color.blue, Color.magenta, Color.yellow, Color.black };
         int colourIndex = 0;
 
-        // Add way vertices to sprite shape
-
         spline.Clear();
 
         Vector2 dirToPrev;
@@ -245,6 +244,8 @@ public class Map : MonoBehaviour
         Vector2 offsetFromLine = dirPerpToLine * thickness / 2;
         Vector2 point1 = vertices[0] + offsetFromLine;
         Vector2 point2 = vertices[0] - offsetFromLine;
+
+        // Insert point 1
         spline.InsertPointAt(0, point1);
         spline.SetTangentMode(0, tangentMode);
 
@@ -252,11 +253,12 @@ public class Map : MonoBehaviour
         Vector2 temp1 = point1;
         Vector2 temp2 = point2;
 
-        Debug.Log(vertices[0]);
-        Debug.Log(point1);
-        Debug.Log(point2);
-
         Vector2 prevOffsetFromLine = offsetFromLine;
+
+        Vector2[] otherLine = new Vector2[numVertices];
+
+        // Store point 2
+        otherLine[numVertices - 1] = point2;
 
         for (int i = 1; i < numVertices - 1; i++)
         {
@@ -277,20 +279,17 @@ public class Map : MonoBehaviour
             spline.InsertPointAt(i, point1);
             spline.SetTangentMode(i, tangentMode);
 
-            // Insert point 2
-            //int index = numVertices + (numVertices - i - 2);
-            //Debug.Log("Index: " + index);
-            //spline.InsertPointAt(index, point2);
-            //spline.SetTangentMode(index, tangentMode);
+            // Store point 2
+            int index = numVertices - i - 1;
+            otherLine[index] = point2;
 
+            // TEMP - DELETE THIS!
             Color colour = colours[colourIndex];
             colourIndex++;
             colourIndex %= colours.Length;
-
             Debug.DrawLine(vertices[i - 1], vertices[i], colour, 1000000000, false);
             Debug.DrawLine(temp1, point1, colour, 1000000000, false);
             Debug.DrawLine(temp2, point2, colour, 1000000000, false);
-
             temp1 = point1;
             temp2 = point2;
         }
@@ -306,14 +305,25 @@ public class Map : MonoBehaviour
         point1 = vertices[numVertices - 1] + offsetFromLine;
         point2 = vertices[numVertices - 1] - offsetFromLine;
 
+        // TEMP - DELETE THIS!
         Color colour2 = colours[colourIndex];
         colourIndex++;
         colourIndex %= colours.Length;
-
         Debug.DrawLine(vertices[numVertices - 2], vertices[numVertices - 1], colour2, 1000000000, false);
         Debug.DrawLine(temp1, point1, colour2, 1000000000, false);
         Debug.DrawLine(temp2, point2, colour2, 1000000000, false);
 
-        //spline.InsertPointAt(numVertices - 1, vertices[numVertices - 1]);
+        // Insert point 1
+        spline.InsertPointAt(numVertices - 1, point1);
+
+        // Store point 2
+        otherLine[0] = point2;
+
+        // Insert all points for other line
+        for (int i = 0; i < numVertices; i++)
+        {
+            spline.InsertPointAt(i, otherLine[i]);
+            spline.SetTangentMode(i, tangentMode);
+        }
     }
 }
