@@ -2,31 +2,43 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Fusion;
-using NUnit.Framework.Internal;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class ShapeController : NetworkBehaviour
 {
     [Networked] public bool isActive { get; set; }
     [Networked] NetworkButtons previousButtons { get; set; }
-    [Networked, OnChangedRender(nameof(OnShapeActivationToggleChanged))] private bool shapeActivationToggle { get; set; }
-    [Networked, OnChangedRender(nameof(OnTriangleActivationToggleChanged))] private bool triangleActivationToggle { get; set; }
-    [Networked] private float score { get; set; }
-    [Networked, Capacity(5)] private NetworkLinkedList<Vector3> vertices { get; }
+    [Networked, OnChangedRender(nameof(OnTriangleActivated))] private int activatedTriangle { get; set; }
+    [Networked, OnChangedRender(nameof(OnSquareActivated))] private int activatedSquare { get; set; }
+    [Networked, OnChangedRender(nameof(OnTrianglePreviewActiveChanged))] private bool trianglePreviewActive { get; set; }
+    [Networked, OnChangedRender(nameof(OnSquarePreviewActiveChanged))] private bool squarePreviewActive { get; set; }
+    [Networked] private float activatedScore { get; set; }
+    [Networked, Capacity(4)] private NetworkLinkedList<Vector3> vertices { get; }
+    [Networked] private TickTimer triangleCooldownTimer { get; set; }
+    [Networked] private TickTimer squareCooldownTimer { get; set; }
+    [Networked, OnChangedRender(nameof(OnActivateShapeFailed))] private int activateShapeFailed { get; set; }
+    [Networked, Capacity(50)] private string errorMessage { get; set; }
 
-    private List<Vector3> playerPositions; 
-    private int triangleCost = 3;
-    private int squareCost = 5;
+    private List<Vector3> playerPositions;
+    private float score;
+    private int triangleCost = 10;
+    private int squareCost = 15;
+    private float triangleCooldown = 3f;
+    private float squareCooldown = 5f;
+
+    private bool squareIsActivated = false;
+
     GameController gameController { get; set; }
     Player parentPlayer { get; set; }
 
-    [Networked] private float triangleCooldown { get; set; }
-    [Networked] private float squareCooldown { get; set; }
     private float maxDistance = 30;
 
     private LineRenderer triangleLineRenderer;
     private LineRenderer squareLineRenderer;
+
+    Color lowScoreColor = new Color(1.0f, 0.0f, 0.0f);  // Red
+    Color medScoreColor = new Color(1.0f, 1.0f, 0.0f);  // Yellow
+    Color highScoreColor = new Color(0.0f, 1.0f, 0.0f); // Green
 
     private TriangleShape triangleShape;
     private SquareShape squareShape;
@@ -38,7 +50,6 @@ public class ShapeController : NetworkBehaviour
     private AudioClip squareWizardSound;
 
     // Shape controller intialisation (called on each client and server when shape controller is spawned on network)
-
     public override void Spawned()
     {
         // Get game controller component
@@ -61,36 +72,32 @@ public class ShapeController : NetworkBehaviour
         squareWizardSound = Resources.Load<AudioClip>("Sounds/Shoot");
 
         isActive = true;
-        triangleCooldown = 0;
-        squareCooldown = 0;
-
-        shapeActivationToggle = false;
     }
 
-    void OnTriangleActivationToggleChanged()
+    public override void Render()
     {
-        triangleShape.DrawTriangle(playerPositions, true, score);
-    }
-
-    void OnShapeActivationToggleChanged()
-    {
-        // Draw shape for everyone when shape is activated
-        DrawLines(vertices.ToList(), true, score);
+        // Draw shape previews locally
+        if (HasInputAuthority && (trianglePreviewActive || squarePreviewActive))
+        {
+            // Use local playerPositions and score properties since vertices and activatedScore networked properties are only set when shape is activated
+            DrawLines(playerPositions, false, score);
+        }
     }
 
     public override void FixedUpdateNetwork()
     {
-        if (!isActive) return;
-
-        // TODO: Need cooldown for every shape separately
-        triangleCooldown = (triangleCooldown > 0) ? triangleCooldown - Runner.DeltaTime : 0;
-        squareCooldown = (squareCooldown > 0) ? squareCooldown - Runner.DeltaTime : 0;
+        if (!isActive)
+        {
+            trianglePreviewActive = false;
+            squarePreviewActive = false;
+            return;
+        }
 
         // GetInput will return true on the StateAuthority (the server) and the InputAuthority (the client who controls this shape controller)
         // So the following is ran for just the server and the client who controls this shape controller
         if (GetInput(out NetworkInputData input))
         {
-            // On key down for specific shape (only on moment when key is pressed down)
+            // On key down for specific shape
             if (input.buttons.IsSet(InputButtons.Triangle)) TrianglePerformed();
             if (input.buttons.IsSet(InputButtons.Square)) SquarePerformed();
 
@@ -106,35 +113,33 @@ public class ShapeController : NetworkBehaviour
             previousButtons = input.buttons;
         }
     }
-    
+
     private void TrianglePerformed()
     {
         // Preview shape only locally 
-        // The line renderer will be disable for all others
-        if (HasInputAuthority)
-        {
+        // The line renderer will be disabled for all others
+        if (!squarePreviewActive) // Only allow triangle preview if no square preview active
             PreviewShape(3, false);
-        }
     }
 
     private void SquarePerformed()
     {
         // Preview shape only locally 
-        // The line renderer will be disable for all others
-        if (HasInputAuthority)
-        {
+        // The line renderer will be disabled for all others
+        if (!trianglePreviewActive) // Only allow square preview if no triangle preview active
             PreviewShape(4, false);
-        }
     }
 
     private void TriangleActivated()
     {
-        PreviewShape(3, true);
+        if (!squarePreviewActive) // Helps stop issue when both square and triangle keys are down
+            PreviewShape(3, true);
     }
 
     private void SquareActivated()
     {
-        PreviewShape(4, true);
+        if (!trianglePreviewActive) // Helps stop issue when both square and triangle keys are down
+            PreviewShape(4, true);
     }
 
     void PreviewShape(int nVertices, bool activate)
@@ -142,37 +147,52 @@ public class ShapeController : NetworkBehaviour
         // Stop both shape preview and activation if cooldown or point requirements are not met
         if (nVertices == 3)
         {
-            if (triangleCooldown > 0)
+            if (triangleCooldownTimer.IsRunning && !triangleCooldownTimer.Expired(Runner))
             {
-                Debug.Log("Cooldown on triangle: " + triangleCooldown);
-                if (activate && !Runner.IsResimulation) parentPlayer.ShowMessage("Cooldown on triangle!", 0.2f, Color.white);
+                if (activate)
+                {
+                    errorMessage = "Cooldown on triangle!";
+                    activateShapeFailed++;
+                }
                 return;
             }
 
-            if (parentPlayer.GetPoints() < triangleCost)
+            if (parentPlayer.GetMana() < triangleCost)
             {
-                triangleLineRenderer.enabled = false;
-                Debug.Log("You don't have enough points to activate a triangle");
-                if (activate && !Runner.IsResimulation) parentPlayer.ShowMessage("Not enough points!", 0.2f, Color.white);
+                trianglePreviewActive = false;
+                if (activate)
+                {
+                    errorMessage = "Not enough mana!";
+                    activateShapeFailed++;
+                }
                 return;
             }
         }
         else if (nVertices == 4)
         {
-            if (squareCooldown > 0)
+            if (squareCooldownTimer.IsRunning && !squareCooldownTimer.Expired(Runner))
             {
-                Debug.Log("Cooldown on square: " + squareCooldown);
-                if (activate && !Runner.IsResimulation) parentPlayer.ShowMessage("Cooldown on square!", 0.2f, Color.white);
+                if (activate)
+                {
+                    errorMessage = "Cooldown on square!";
+                    activateShapeFailed++;
+                }
                 return;
             }
 
-            if (parentPlayer.GetPoints() < squareCost)
+            if (parentPlayer.GetMana() < squareCost)
             {
-                squareLineRenderer.enabled = false;
-                Debug.Log("You don't have enough points to activate a square");
-                if (activate && !Runner.IsResimulation) parentPlayer.ShowMessage("Not enough points!", 0.2f, Color.white);
+                squarePreviewActive = false;
+                if (activate)
+                {
+                    errorMessage = "Not enough mana!";
+                    activateShapeFailed++;
+                }
                 return;
             }
+
+            if (!activate)
+                squareIsActivated = false;
         }
 
         List<Player> closestPlayers = GetClosestPlayers(parentPlayer, nVertices - 1);
@@ -188,17 +208,24 @@ public class ShapeController : NetworkBehaviour
         // Checking if there is enough players for each vertice
         if (playerPositions.Count < nVertices)
         {
-            Debug.Log("Not enough players to activate shape");
-            if (activate && !Runner.IsResimulation) parentPlayer.ShowMessage("Not enough players to activate shape!", 0.2f, Color.white);
-            ChooseLineRenderer(nVertices).enabled = false;
+            SetPreviewActive(nVertices, false);
+            if (activate)
+            {
+                errorMessage = "Not enough players to activate shape!";
+                activateShapeFailed++;
+            }
             return;
         }
 
+        // Checking if all players are close enough
         if (Vector3.Distance(parentPlayer.transform.position, playerPositions.Last()) > maxDistance)
         {
-            Debug.Log("Players too far away to activate shape");
-            if (activate && !Runner.IsResimulation) parentPlayer.ShowMessage("Players too far away to activate shape!", 0.2f, Color.white);
-            ChooseLineRenderer(nVertices).enabled = false;
+            SetPreviewActive(nVertices, false);
+            if (activate)
+            {
+                errorMessage = "Players too far away to activate shape!";
+                activateShapeFailed++;
+            }
             return;
         }
 
@@ -211,93 +238,138 @@ public class ShapeController : NetworkBehaviour
         List<float> angles = GetAngles(playerPositions);
 
         float score = CalculateScore(angles);
+        this.score = score;
 
         // Give buffs/do damage if the player activates the ability, and make shape visible to everyone
-        if (activate)
+        if (activate && IsPreviewActive(nVertices))
         {
-            if (HasStateAuthority)
+            // Disable the preview
+            SetPreviewActive(nVertices, false);
+
+            // Set score and vertices networked properties for everyone (server, input authority and all other clients) to use to draw lines in OnTriangleActivated and OnSquareActivated methods
+            activatedScore = score;
+            vertices.Clear();
+            foreach (Vector3 position in playerPositions)
             {
-                // Set score and vertices networked properties for everyone (server, input authority and all other clients) to use to draw lines in OnShapeActivationToggleChanged method
-                this.score = score;
-                vertices.Clear();
-                foreach (Vector3 position in playerPositions)
-                {
-                    vertices.Add(position);
-                }
+                vertices.Add(position);
             }
 
             if (nVertices == 3)
             {
+                // Signal that the triangle was activated for OnTriangleActivated to be called
+                activatedTriangle++;
+
+                triangleCooldownTimer = TickTimer.CreateFromSeconds(Runner, triangleCooldown);
+                parentPlayer.SpendMana(triangleCost);
+
                 if (parentPlayer.GetCharacterName() == "Wizard")
                 {
-                    parentPlayer.ActivateTri(true);
-                    triangleCooldown = 3.0f;
-                    parentPlayer.SpendPoints(triangleCost);
-                    triangleLineRenderer.enabled = false;
+                    parentPlayer.ActivateTri(true, score);
                 }
                 else
                 {
-                    if (HasStateAuthority)
-                    {
-                        triangleLineRenderer.enabled = false;
-                        triangleShape.CastAbility(playerPositions, score);
-                        triangleCooldown = 3.0f;
-                        parentPlayer.SpendPoints(triangleCost);
-
-                        RPC_PlayTriangleSound(playerPositions.ToArray(), 3, "Knight");
-
-                        // Set networked property so everyone can draw lines in OnShapeActivationToggleChanged method
-
-                        triangleActivationToggle = !triangleActivationToggle;
-                        // shapeActivationToggle = !shapeActivationToggle;
-                    }
+                    triangleShape.CastAbility(playerPositions, score);
                 }
-                parentPlayer.activateTriCD(triangleCooldown);
-
             }
             else if (nVertices == 4)
             {
                 // If it's not convex don't activate it
                 if (!IsConvex(angles))
                 {
-                    squareLineRenderer.enabled = false;
-                    Debug.Log("Shape is not convex - can't activate buff!");
-                    if (!Runner.IsResimulation) parentPlayer.ShowMessage("Shape is not convex!", 0.2f, Color.white);
+                    errorMessage = "Shape is not convex!";
+                    activateShapeFailed++;
                     return;
                 }
                 else
                 {
-                    if (HasStateAuthority)
-                    {
-                        squareShape.CastAbility(playerPositions, score);
-                        squareCooldown = 5f;
-                        parentPlayer.SpendPoints(squareCost);
+                    // Signal that the square was activated for OnSquareActivated to be called
+                    activatedSquare++;
 
-                        RPC_PlayTriangleSound(playerPositions.ToArray(), 4, "Knight");
-                        // Set networked property so everyone can draw lines in OnShapeActivationToggleChanged method
-                        shapeActivationToggle = !shapeActivationToggle;
-                    }
-                    parentPlayer.activateSqCD(squareCooldown);
+                    squareCooldownTimer = TickTimer.CreateFromSeconds(Runner, squareCooldown);
+                    parentPlayer.SpendMana(squareCost);
+
+                    squareShape.CastAbility(playerPositions, score);
                 }
             }
         }
 
-        // Draw lines locally when just preview
-        if (HasInputAuthority)
+        // If not activated, draw a preview (this is done only for local player in Render method)
+        if (!activate)
         {
-
-        }
-
-        // Draw lines locally when just preview
-        if (HasInputAuthority && !activate)
-        {
-            DrawLines(playerPositions, false, score);
+            SetPreviewActive(nVertices, true);
         }
     }
 
-    // The parameter character - 0 for knight, 1 for wizard
-    [Rpc(sources: RpcSources.StateAuthority, targets: RpcTargets.All)]
-    public void RPC_PlayTriangleSound(Vector3[] playerPositions, int nVertices, string character)
+    void OnActivateShapeFailed()
+    {
+        if (HasInputAuthority)
+        {
+            parentPlayer.ShowMessage(errorMessage, 0.2f, Color.white);
+        }
+    }
+
+    void OnTrianglePreviewActiveChanged()
+    {
+        // Disable preview lines when preview no longer active
+        if (HasInputAuthority && !trianglePreviewActive)
+        {
+            triangleLineRenderer.enabled = false;
+        }
+    }
+
+    void OnSquarePreviewActiveChanged()
+    {
+        // Disable preview lines when preview no longer active
+        if (HasInputAuthority && !squarePreviewActive)
+        {
+            // Prevent lines from deactivating when square is activated, since activated square uses the lines
+            if (squareIsActivated) return;
+
+            squareLineRenderer.enabled = false;
+        }
+    }
+
+    void OnTriangleActivated()
+    {
+        parentPlayer.ActivateTriCD(triangleCooldown);
+
+        if (parentPlayer.GetCharacterName() == "Knight")
+        {
+            PlayShapeSound(vertices.ToArray(), 3, "Knight");
+
+            // Draw triangle for everyone
+            triangleShape.DrawTriangle(vertices.ToList(), true, activatedScore);
+        }
+    }
+
+    void OnSquareActivated()
+    {
+        squareIsActivated = true;
+
+        parentPlayer.ActivateSqCD(squareCooldown);
+        PlayShapeSound(vertices.ToArray(), 4, "Knight");
+
+        // Draw square for everyone
+        DrawLines(vertices.ToList(), true, activatedScore);
+    }
+
+    bool IsPreviewActive(int nVertices)
+    {
+        if (nVertices == 3)
+            return trianglePreviewActive;
+        else
+            return squarePreviewActive;
+    }
+
+    void SetPreviewActive(int nVertices, bool active)
+    {
+        if (nVertices == 3)
+            trianglePreviewActive = active;
+        else
+            squarePreviewActive = active;
+    }
+
+    public void PlayShapeSound(Vector3[] playerPositions, int nVertices, string character)
     {
         // Play sound locally if the players activating are in view 
         foreach (Vector3 pos in playerPositions) {
@@ -357,6 +429,12 @@ public class ShapeController : NetworkBehaviour
         LineRenderer lineRenderer = ChooseLineRenderer(nVertices);
         lineRenderer.positionCount = nVertices + 1;
 
+        Color strengthColor;
+        if (score < 0.6f)
+            strengthColor = Color.Lerp(lowScoreColor, medScoreColor, score / 0.6f);
+        else
+            strengthColor = Color.Lerp(medScoreColor, highScoreColor, (score - 0.6f) / 0.4f);
+
         // Lines are drawn between the adjacent vertices. The last vertice is added first so there
         // is a line between 0th and (nVertices - 1)th vertice
         lineRenderer.SetPosition(0, vertices[nVertices - 1]);
@@ -366,23 +444,19 @@ public class ShapeController : NetworkBehaviour
         }
 
         lineRenderer.startWidth = 0.5f;
-        Color startColor = lineRenderer.startColor;
-        Color endColor = lineRenderer.endColor;
 
         if (activate)
         {
-            startColor.a = 1f * score;
-            endColor.a = 1f * score;
+            strengthColor.a = 1f * score;
         }
         // More transparent color for preview
         else
         {
-            startColor.a = 0.3f;
-            endColor.a = 0.3f;
+            strengthColor.a = 0.3f;
         }
 
-        lineRenderer.startColor = startColor;
-        lineRenderer.endColor = endColor;   
+        lineRenderer.startColor = strengthColor;
+        lineRenderer.endColor = strengthColor;
         lineRenderer.enabled = true;
 
         if (activate)
@@ -467,7 +541,7 @@ public class ShapeController : NetworkBehaviour
         int count = angles.Count;
         float sum = angles.Sum();
 
-        // sum is a sum of floating points so we put 0.1 as an allowed error margin
+        // sum is a sum of floating Mana so we put 0.1 as an allowed error margin
         if(Mathf.Abs(sum - ((count - 2) * 180f)) > 0.1)
         {
             return false;

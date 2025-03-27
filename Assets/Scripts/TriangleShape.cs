@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class TriangleShape : NetworkBehaviour
 {
+    [Networked] private TickTimer disableTimer { get; set; }
+
     private TriangleCollider triangleCollider;
     private PolygonCollider2D polygonCollider;
 
@@ -13,18 +15,23 @@ public class TriangleShape : NetworkBehaviour
         // Only the server can spawn the collider
         if (HasStateAuthority)
         {
-            // This is the object
+            Player parentPlayer = GetComponentInParent<Player>();
+            PlayerRef parentPlayerRef = parentPlayer.Object.InputAuthority;
+            int team = parentPlayer.GetTeam();
+
+            // Spawn the triangle collider
             GameObject worldColliderPrefab = Resources.Load("Prefabs/TriangleCollider") as GameObject;
-            NetworkObject triangleColliderObject = PrefabFactory.SpawnWorldCollider(Runner, worldColliderPrefab);
+            NetworkObject triangleColliderObject = PrefabFactory.SpawnWorldCollider(Runner, parentPlayerRef, worldColliderPrefab, team);
+        }
+    }
 
-            PlayerRef parentPlayerRef = GetComponentInParent<Player>().Object.InputAuthority;
-
-            // This is the script of the object
-            triangleCollider = triangleColliderObject.GetComponent<TriangleCollider>();
-            triangleCollider.team = transform.GetComponentInParent<Player>().GetTeam();
-            triangleCollider.parentPlayerRef = parentPlayerRef;
-
-            polygonCollider = triangleCollider.GetComponent<PolygonCollider2D>();
+    public override void FixedUpdateNetwork()
+    {
+        if (disableTimer.Expired(Runner))
+        {
+            polygonCollider.enabled = false;
+            triangleCollider.RestartCollider();
+            disableTimer = TickTimer.None;
         }
     }
 
@@ -39,7 +46,7 @@ public class TriangleShape : NetworkBehaviour
         triangleCollider.SetScore(score);
         polygonCollider.points = points.ToArray();
         polygonCollider.enabled = true;
-        StartCoroutine(DelayDisable(0.1f));
+        disableTimer = TickTimer.CreateFromSeconds(Runner, 0.1f);
     }
 
     public void DrawTriangle(List<Vector3> vertices, bool activate, float score)
@@ -47,10 +54,10 @@ public class TriangleShape : NetworkBehaviour
         triangleCollider.DrawTriangle(vertices, activate, score);
     }
 
-    IEnumerator DelayDisable(float delay)
+    // For triangle collider to call when it spawns
+    public void RegisterTriangleCollider(TriangleCollider triangleCollider)
     {
-        yield return new WaitForSeconds(delay);
-        polygonCollider.enabled = false;
-        triangleCollider.RestartCollider();
+        this.triangleCollider = triangleCollider;
+        polygonCollider = triangleCollider.GetComponent<PolygonCollider2D>();
     }
 }

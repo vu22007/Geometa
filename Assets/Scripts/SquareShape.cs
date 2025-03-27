@@ -4,13 +4,11 @@ using UnityEngine;
 
 public class SquareShape : NetworkBehaviour
 {
-    private List<CircleCornerCollider> circleColliders;
+    private List<CircleCornerCollider> circleColliders = new List<CircleCornerCollider>();
     [SerializeField] private GameObject summonPrefab;
 
     public override void Spawned()
     {
-        circleColliders = new List<CircleCornerCollider>();
-
         // Only the server can spawn the colliders
         if (HasStateAuthority)
         {

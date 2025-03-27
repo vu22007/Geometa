@@ -17,9 +17,15 @@ public class TriangleCollider : NetworkBehaviour
     MeshFilter meshFilter;
     Material meshMaterial;
 
-    Color lowScoreColor = new Color(0.2f, 0.4f, 0.8f);  // Blue
-    Color medScoreColor = new Color(0.8f, 0.2f, 0.8f);  // Purple
-    Color highScoreColor = new Color(1.0f, 0.2f, 0.2f); // Red
+    Color lowScoreColor = new Color(1.0f, 0.0f, 0.0f);  // Red
+    Color medScoreColor = new Color(1.0f, 1.0f, 0.0f);  // Yellow
+    Color highScoreColor = new Color(0.0f, 1.0f, 0.0f); // Green
+
+    public void OnCreated(int team, PlayerRef parentPlayerRef)
+    {
+        this.team = team;
+        this.parentPlayerRef = parentPlayerRef;
+    }
 
     // This object is created with no parent because it should be static with a 
     // position in (0, 0, 0). If the object is attached to the ShapeController the
@@ -36,12 +42,19 @@ public class TriangleCollider : NetworkBehaviour
         polygonCollider = GetComponent<PolygonCollider2D>();
         polygonCollider.enabled = false;
         polygonCollider.isTrigger = true;
+
+        // Register with the collider's associated TriangleShape object
+        if (Runner.TryGetPlayerObject(parentPlayerRef, out NetworkObject playerNetworkObject))
+        {
+            Transform shapeController = playerNetworkObject.transform.Find("ShapeController");
+            TriangleShape triangleShape = shapeController.Find("TriangleShape").GetComponent<TriangleShape>();
+            triangleShape.RegisterTriangleCollider(this);
+        }
     }
 
     // Activate is always true when used for now but it should stay
     public void DrawTriangle(List<Vector3> vertices, bool activate, float score)
     {
-
         int nVertices = vertices.Count;
 
         // Choose different lines for different abilities
@@ -98,8 +111,7 @@ public class TriangleCollider : NetworkBehaviour
             // because the collider exists for 0.1 seconds and multiple frames
             if (player.GetTeam() != team && !zappedPlayers.Contains(player))
             {
-                Debug.Log("Collided with enemy");
-                player.TakeDamage(10f * score, parentPlayerRef);
+                player.TakeDamage(20f * score, parentPlayerRef);
                 zappedPlayers.Add(player);
             }
         }

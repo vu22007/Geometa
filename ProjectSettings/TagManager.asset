@@ -16,8 +16,8 @@ TagManager:
   - UI
   - PrivatePreview
   - Minimap
-  - 
-  - 
+  - Map
+  - PlayerWallCollider
   - 
   - 
   - 
