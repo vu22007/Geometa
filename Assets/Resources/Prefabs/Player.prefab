@@ -269,6 +269,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 898618e388711204c802ec28caaf7ae4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  damage: 5
+  player: {fileID: 0}
 --- !u!1 &718205540657660913
 GameObject:
   m_ObjectHideFlags: 0
@@ -2622,12 +2624,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _isCarrying: 0
   _aoeDamage: 20
+  _aoeCooldown: 0
   _aoeDuration: 0
+  _aoeCooldownTimer: 0
   _isAoEEnabled: 0
+  _aoeMaxRad: 0
   cam: {fileID: 3093333144043118080}
   mainHealthBar: {fileID: 8395293536219763284}
   teamHealthBar: {fileID: 8623719664100579951}
-  mainManaBar: {fileID: 1413040121094791050}
+  mainPointsBar: {fileID: 0}
   minimapIndicator: {fileID: 8374197079019752597}
   enemyHealthBar: {fileID: 871756147968111674}
   uIController: {fileID: 2701067427050605302}
@@ -2635,28 +2640,22 @@ MonoBehaviour:
   reloadHandler: {fileID: 4176487474788363455}
   squareHandler: {fileID: 4646447261109076883}
   triangleHandler: {fileID: 7820639923755643309}
-  speedHandler: {fileID: 7551924639747754670}
   reloadIcon: {fileID: 2780115518236511193}
   reloadIconLayer: {fileID: 1080375851561845190}
   aoeIcon: {fileID: 3657592492558244496}
   aoeIconLayer: {fileID: 6684430098283849814}
-  speedIcon: {fileID: 7915014191646491112}
-  speedIconLayer: {fileID: 3722767719449484025}
   escapeMenu: {fileID: 1120290703584790456}
   minimap: {fileID: 3611658082365429512}
   ammoText: {fileID: 9126663489822556632}
+  timeLeftText: {fileID: 0}
+  holdPosition: {fileID: 0}
   deathOverlay: {fileID: 2983073624312878985}
   respawnTimerTxt: {fileID: 6655207839670368177}
   flagIndicator: {fileID: 3617242858135019408}
-  displayNameText: {fileID: 5860526208113428874}
-  invinsibleImage: {fileID: 2273635516286338879}
   bulletIcon: {fileID: 1478925092546808149}
   mainbulletIcon: {fileID: 3391385062733595157}
-  meleeHitbox: {fileID: 2428781577068820673}
-  circleRenderer: {fileID: 6040069453573276617}
-  pointer: {fileID: 4269057021245957892}
-  teamPointsTxt: {fileID: 5508855122675178956}
-  enemyPointsTxt: {fileID: 2459509430308023536}
+  meleePoint: {fileID: 0}
+  meleeHitbox: {fileID: 0}
 --- !u!50 &-5256008576835943960
 Rigidbody2D:
   serializedVersion: 5
@@ -2708,7 +2707,6 @@ MonoBehaviour:
   - {fileID: 6975032210494896427}
   - {fileID: 4562077412377926483}
   - {fileID: -8433905836698240597}
-  - {fileID: 2428781577068820673}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &4562077412377926483
 MonoBehaviour:
@@ -6188,8 +6186,7 @@ MonoBehaviour:
   ObjectInterest: 1
   Flags: 262145
   NestedObjects: []
-  NetworkedBehaviours:
-  - {fileID: 2701067427050605302}
+  NetworkedBehaviours: []
   ForceRemoteRenderTimeframe: 0
 --- !u!1 &8744208852700158081
 GameObject:
