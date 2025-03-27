@@ -48,6 +48,7 @@ public class Map : MonoBehaviour
         {
             // Optionally instantiate the map in the scene
             GameObject buildingsInstance = Instantiate(buildingsPrefab, Vector3.zero, Quaternion.identity);
+            // The building has to be rotated to match the 2D map
             buildingsInstance.transform.eulerAngles = new Vector3(90, 180, 0);
         }
         else

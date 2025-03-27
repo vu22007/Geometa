@@ -20,9 +20,6 @@ public class RunBlenderScript : NetworkBehaviour
     public override void Spawned()
     {
         lobby = GetComponentInParent<Lobby>();
-        // RunBlender(51.450, 51.451, -2.603, -2.599);
-        // ImportFbxToUnity();
-        // SpawnNetworkedMap();
     }
 
     public IEnumerator RunBlender(double minLat, double maxLat, double minLon, double maxLon)
@@ -89,16 +86,13 @@ public class RunBlenderScript : NetworkBehaviour
 
         if (fbxAsset != null)
         {
-            // Create and save the prefab asset from the FBX asset
+            // Create prefab 
             mapPrefab = PrefabUtility.SaveAsPrefabAsset(fbxAsset, prefabPath);
-            // mapPrefab.AddComponent<NetworkObject>();
 
             if (mapPrefab != null)
             {
                 Debug.Log("Map asset loaded successfully. Ready to use in scene.");
                 lobby.mapGenAcknowledgment();
-                //GameObject buildingsInstance = Instantiate(mapPrefab, Vector3.zero, Quaternion.identity);
-                //buildingsInstance.transform.eulerAngles = new Vector3(90, 180, 0);
             }
             else
             {
@@ -109,22 +103,4 @@ public class RunBlenderScript : NetworkBehaviour
             Debug.LogWarning("Asset import is only available in the Unity Editor.");
     #endif
     }
-
-    //private void SpawnNetworkedMap()
-    //{
-    //    // Load the map prefab from Resources
-    //   //  GameObject mapAsset = Resources.Load<GameObject>("/Prefabs/Map/scriptTest1.prefab");
-
-    //    // Spawn it as a networked object so all clients see it
-    //    if (mapPrefab != null)
-    //    {
-    //        GameObject map = Runner.Spawn(mapPrefab, Vector3.zero, Quaternion.identity).gameObject;
-    //        map.transform.eulerAngles = new Vector3(90, 180, 0);
-    //        Debug.Log("Map spawned for all players");
-    //    }
-    //    else
-    //    {
-    //        Debug.LogError("Failed to load map asset");
-    //    }
-    //}
 }
