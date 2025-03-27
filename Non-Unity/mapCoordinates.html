@@ -36,7 +36,7 @@
   </style>
 </head>
 <body>
-  <h1 style="text-align:center;">Click Map to Place Fixed-Size Rectangle</h1>
+  <h1 style="text-align:center;">Click Map to Select Area</h1>
   <div id="map"></div>
   <textarea id="coords" rows="4" placeholder="Coordinates will appear here..."></textarea><br />
   <button id="copyBtn">Copy Coordinates</button>
@@ -58,12 +58,12 @@
 
     // Handle map clicks
     map.on('click', function(e) {
-      var lat = e.latlng.lat;
-      var lng = e.latlng.lng;
+      var lat = e.latlng.lat + 0.0005;
+      var lng = e.latlng.lng - 0.0008;
       
       // Calculate bounds (0.0010° lat height, 0.0015° lng width)
       var southWest = L.latLng(lat, lng);
-      var northEast = L.latLng(lat - 0.0010, lng + 0.0015);
+      var northEast = L.latLng(lat - 0.0010, lng + 0.0016);
       var bounds = L.latLngBounds(southWest, northEast);
 
       // Clear previous rectangle and add new one
@@ -72,7 +72,7 @@
 
       // Update coordinates display
       document.getElementById('coords').value = 
-        `${southWest.lat.toFixed(4)}, ${northEast.lat.toFixed(4)}, ` +
+        `${northEast.lat.toFixed(4)}, ${southWest.lat.toFixed(4)}, ` +
         `${southWest.lng.toFixed(4)}, ${northEast.lng.toFixed(4)}`;
     });
 

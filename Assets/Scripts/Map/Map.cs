@@ -17,14 +17,15 @@ public class Map : MonoBehaviour
     void Start()
     {
         // GameObject buildingGeneratorPrefab = Resources.Load<GameObject>("Prefabs/Map/BuildingsGenerator");
-        buildingsGenerator = GameObject.Find("BuildingsGenerator").GetComponent<RunBlenderScript>();
+        // buildingsGenerator = GameObject.Find("BuildingsGenerator").GetComponent<RunBlenderScript>();
         // GenerateMap(51.4576, 51.4590, -2.6026, -2.5991); // Default
         // GenerateMap(51.4585, 51.4590, -2.6026, -2.6000);
 
         if(CoordinatesDataHolder.Instance == null)
         {
-            Debug.Log("Using default values for Map");
-            GenerateMap(51.4585, 51.4590, -2.6026, -2.6000);
+            Debug.LogError("Coordinates aren't valid");
+            //Debug.Log("Using default values for Map");
+            //GenerateMap(51.4585, 51.4590, -2.6026, -2.6000);
         }
         else
         {
@@ -98,7 +99,9 @@ public class Map : MonoBehaviour
         // Calculate horizontal shift, vertical shift and scale required to convert GPS coords into world space
         double xShift = lowLong + (highLong - lowLong) / 2;
         double yShift = LatToY(lowLat) + (LatToY(highLat) - LatToY(lowLat)) / 2;
-        double scale = 80000;
+        // double scale = 80000;
+        double midLat = (lowLat + highLat) / 2;
+        double scale = Mathf.Cos((float)midLat * Mathf.Deg2Rad) * 111319.488;
 
         // Add background to scene (scaled to cover whole map)
         GameObject background = Instantiate(backgroundPrefab, new Vector3(0, 0, 0), Quaternion.identity, transform);

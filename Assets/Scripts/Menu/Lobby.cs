@@ -231,7 +231,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             Debug.LogError($"Invalid input for coordinates: {coordinates}");
         }
 
-        Debug.Log("Map Generated");
+        // Debug.Log("Map Generated");
         mapGenerated = true;
         // StartCoroutine(buildingsGenerator.RunBlender(51.4585, 51.4590, -2.6026, -2.6000));
         // StartCoroutine(GenerateMapAndAcknowledge());
@@ -269,7 +269,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
                 // Load Scene that will use the 3D Generated buildings and generate 2D map in scene
                 // Switch to map scene to start the game, and the game controller will spawn player objects using the player dicts in the network manager
                 Destroy(coordinatesDataHolder);
-                Runner.LoadScene(SceneRef.FromIndex(3));
+                Runner.LoadScene(SceneRef.FromIndex(2));
             }
         }
     }
