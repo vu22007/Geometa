@@ -1038,7 +1038,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4732988826010690846}
   - component: {fileID: 2870779177265704164}
-  m_Layer: 10
+  m_Layer: 9
   m_Name: WallCollider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2294,8 +2294,6 @@ MonoBehaviour:
   escapeMenu: {fileID: 1120290703584790456}
   minimap: {fileID: 3611658082365429512}
   ammoText: {fileID: 9126663489822556632}
-  timeLeftText: {fileID: 5253126099504964119}
-  holdPosition: {fileID: 0}
   deathOverlay: {fileID: 2983073624312878985}
   respawnTimerTxt: {fileID: 6655207839670368177}
   flagIndicator: {fileID: 3617242858135019408}

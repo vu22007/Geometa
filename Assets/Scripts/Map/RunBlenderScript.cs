@@ -9,6 +9,8 @@ public class RunBlenderScript : NetworkBehaviour
 {
     private GameObject mapPrefab;
 
+    private Lobby lobby;
+
     // Set the path to your Python script that Blender should run.
     string scriptPath = @"Non-Unity\blenderPythonScript.py";
 
@@ -17,6 +19,7 @@ public class RunBlenderScript : NetworkBehaviour
 
     public override void Spawned()
     {
+        lobby = GetComponentInParent<Lobby>();
         // RunBlender(51.450, 51.451, -2.603, -2.599);
         // ImportFbxToUnity();
         // SpawnNetworkedMap();
@@ -93,6 +96,7 @@ public class RunBlenderScript : NetworkBehaviour
             if (mapPrefab != null)
             {
                 Debug.Log("Map asset loaded successfully. Ready to use in scene.");
+                lobby.mapGenAcknowledgment();
                 //GameObject buildingsInstance = Instantiate(mapPrefab, Vector3.zero, Quaternion.identity);
                 //buildingsInstance.transform.eulerAngles = new Vector3(90, 180, 0);
             }

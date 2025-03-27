@@ -260,16 +260,24 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 
             if (mapGenerated)
             {
-                // Play Scene with a pre-generated map
-                DontDestroyOnLoad(coordinatesDataHolder);
-                Runner.LoadScene(SceneRef.FromIndex(5));
+                if (mapGenAcknowledgments == Runner.ActivePlayers.Count())
+                {
+                    mapGenAcknowledgments = 0;
+                    // Play Scene with a pre-generated map
+                    DontDestroyOnLoad(coordinatesDataHolder);
+                    Runner.LoadScene(SceneRef.FromIndex(5));
+                }
+                else
+                {
+                    Debug.LogError("A player hasn't finished generating the map");
+                }
             }
             else
             {
                 // Load Scene that will use the 3D Generated buildings and generate 2D map in scene
                 // Switch to map scene to start the game, and the game controller will spawn player objects using the player dicts in the network manager
                 Destroy(coordinatesDataHolder);
-                Runner.LoadScene(SceneRef.FromIndex(2));
+                Runner.LoadScene(SceneRef.FromIndex(3));
             }
         }
     }
@@ -438,6 +446,11 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             var dict = team2Players;
             dict.Remove(player);
         }
+    }
+
+    public void mapGenAcknowledgment()
+    {
+        mapGenAcknowledgments++;
     }
 
     public struct PlayerInfo : INetworkStruct

@@ -77,3 +77,5 @@ crashlytics-build.properties
 .vscode/
 Assets/Thaleah_PixelFont/Materials/ThaleahFat_TTF Bitmap.asset
 .idea/
+Assets/Resources/Prefabs/Map/Buildify3DBuildingsPrefab.prefab
+Assets/Resources/Prefabs/Map/Buildify3DBuildings.fbx
