@@ -18,7 +18,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     private NetworkManager networkManager;
     private TMP_InputField displayNameInput;
     private TMP_InputField coordinatesInput;
-    private string coordinates { get; set; }
+    [Networked] NetworkString<_64> coordinates { get; set; }
     private Button team1Button;
     private Button team2Button;
     private Button knightButton;
@@ -71,6 +71,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             startGameButton.gameObject.SetActive(false);
             generateMapButton.gameObject.SetActive(false);
             selectAreaButton.gameObject.SetActive(false);
+            coordinatesInput.gameObject.SetActive(false);
         }
 
         // Populate team lists
@@ -200,7 +201,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void RPC_GenerateMap()
     {
-        string[] partsArray = coordinates.Split(',')
+        string[] partsArray = coordinates.ToString().Split(',')
                                  .Select(s => s.Trim())
                                  .ToArray();
 
@@ -231,19 +232,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             Debug.LogError($"Invalid input for coordinates: {coordinates}");
         }
 
-        // Debug.Log("Map Generated");
         mapGenerated = true;
-        // StartCoroutine(buildingsGenerator.RunBlender(51.4585, 51.4590, -2.6026, -2.6000));
-        // StartCoroutine(GenerateMapAndAcknowledge());
-    }
-
-    private IEnumerator GenerateMapAndAcknowledge()
-    {
-        // Directly yield on the IEnumerator returned from buildingsGenerator.RunBlender(...)
-        yield return StartCoroutine(buildingsGenerator.RunBlender(51.4585, 51.4590, -2.6026, -2.6000));
-
-        // Once the coroutine completes, increment the counter
-        mapGenAcknowledgments++;
     }
 
     public void StartGame()
@@ -260,7 +249,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 
             if (mapGenerated)
             {
-                if (mapGenAcknowledgments == Runner.ActivePlayers.Count())
+                if(true) //(mapGenAcknowledgments == Runner.ActivePlayers.Count())
                 {
                     mapGenAcknowledgments = 0;
                     // Play Scene with a pre-generated map
@@ -269,7 +258,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
                 }
                 else
                 {
-                    Debug.LogError("A player hasn't finished generating the map");
+                    Debug.LogError("A player hasn't finished generating the map. Players finished: " + mapGenAcknowledgments + "/" + Runner.ActivePlayers.Count());
                 }
             }
             else
