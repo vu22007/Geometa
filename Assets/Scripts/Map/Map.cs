@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.U2D;
+using static UnityEditor.AnimationUtility;
 
 public class Map : MonoBehaviour
 {
@@ -86,8 +87,8 @@ public class Map : MonoBehaviour
                     AddWayToScene(vertices, roadPrefab, true, 8.0f);
 
                 // Create and add path to scene
-                else if (IsPath(element))
-                    AddWayToScene(vertices, pathPrefab, true, 2.0f);
+                //else if (IsPath(element))
+                //    AddWayToScene(vertices, pathPrefab, true, 2.0f);
 
                 // Create and add grass to scene
                 else if (IsGrass(element))
@@ -191,19 +192,22 @@ public class Map : MonoBehaviour
         // If the way is open-ended (e.g. a road or path) then make it smoother by setting the tangent mode to continuous
         ShapeTangentMode tangentMode = isOpenEnded ? ShapeTangentMode.Continuous : ShapeTangentMode.Linear;
 
-        // Add way vertices to sprite shape
-        spline.Clear();
-        for (int i = 0; i < numVertices; i++)
+        if (!isOpenEnded)
         {
-            // Add point to sprite shape
-            spline.InsertPointAt(i, vertices[i]);
-            spline.SetTangentMode(i, tangentMode);
-
-            // Set thickness of way at this point (if open-ended e.g. for a road or path but not for a building)
-            if (isOpenEnded)
-                spline.SetHeight(i, thickness);
+            // Add way vertices to sprite shape
+            spline.Clear();
+            for (int i = 0; i < numVertices; i++)
+            {
+                // Add point to sprite shape
+                spline.InsertPointAt(i, vertices[i]);
+                spline.SetTangentMode(i, tangentMode);
+            }
         }
-
+        else
+        {
+            // Generate close-ended way from open-ended line and add the way vertices to sprite shape
+            CreateCloseEndedWayFromOpenEndedLine(vertices, spline, tangentMode, thickness);
+        }
 
         // The above code creates sprite shapes that have their origin at the centre of the world, and this causes them to not be loaded
         // until the centre of the world is on-screen, so we need to set the bounding volume of the sprite shape geometry to ensure that
@@ -221,5 +225,95 @@ public class Map : MonoBehaviour
             localBounds.Encapsulate(pos);
         }
         spriteShapeController.spriteShapeRenderer.SetLocalAABB(localBounds);
+    }
+
+    void CreateCloseEndedWayFromOpenEndedLine(Vector2[] vertices, Spline spline, ShapeTangentMode tangentMode, float thickness)
+    {
+        int numVertices = vertices.Length;
+
+        // TEMP - DELETE THIS!
+        Color[] colours = { Color.red, Color.green, Color.blue, Color.magenta, Color.yellow, Color.black };
+        int colourIndex = 0;
+
+        // Add way vertices to sprite shape
+
+        spline.Clear();
+
+        Vector2 dirToPrev;
+        Vector2 dirToNext = (vertices[1] - vertices[0]).normalized;
+        Vector2 dirPerpToLine = Vector2.Perpendicular(dirToNext).normalized;
+        Vector2 offsetFromLine = dirPerpToLine * thickness / 2;
+        Vector2 point1 = vertices[0] + offsetFromLine;
+        Vector2 point2 = vertices[0] - offsetFromLine;
+        spline.InsertPointAt(0, point1);
+        spline.SetTangentMode(0, tangentMode);
+
+        // TEMP - DELETE THIS!
+        Vector2 temp1 = point1;
+        Vector2 temp2 = point2;
+
+        Debug.Log(vertices[0]);
+        Debug.Log(point1);
+        Debug.Log(point2);
+
+        Vector2 prevOffsetFromLine = offsetFromLine;
+
+        for (int i = 1; i < numVertices - 1; i++)
+        {
+            dirToPrev = (vertices[i - 1] - vertices[i]).normalized;
+            dirToNext = (vertices[i + 1] - vertices[i]).normalized;
+            dirPerpToLine = (dirToPrev + dirToNext).normalized;
+            offsetFromLine = dirPerpToLine * thickness / 2;
+
+            // If offset is pointing in opposite direction to previous offset, then flip it to prevent the two lines crossing over
+            float angle = Vector2.SignedAngle(offsetFromLine, prevOffsetFromLine);
+            if (angle < -90 || angle > 90) offsetFromLine = -offsetFromLine;
+            prevOffsetFromLine = offsetFromLine;
+
+            point1 = vertices[i] + offsetFromLine;
+            point2 = vertices[i] - offsetFromLine;
+
+            // Insert point 1
+            spline.InsertPointAt(i, point1);
+            spline.SetTangentMode(i, tangentMode);
+
+            // Insert point 2
+            //int index = numVertices + (numVertices - i - 2);
+            //Debug.Log("Index: " + index);
+            //spline.InsertPointAt(index, point2);
+            //spline.SetTangentMode(index, tangentMode);
+
+            Color colour = colours[colourIndex];
+            colourIndex++;
+            colourIndex %= colours.Length;
+
+            Debug.DrawLine(vertices[i - 1], vertices[i], colour, 1000000000, false);
+            Debug.DrawLine(temp1, point1, colour, 1000000000, false);
+            Debug.DrawLine(temp2, point2, colour, 1000000000, false);
+
+            temp1 = point1;
+            temp2 = point2;
+        }
+
+        dirToPrev = (vertices[numVertices - 1] - vertices[numVertices - 2]).normalized;
+        dirPerpToLine = Vector2.Perpendicular(dirToPrev).normalized;
+        offsetFromLine = dirPerpToLine * thickness / 2;
+
+        // If offset is pointing in opposite direction to previous offset, then flip it to prevent the two lines crossing over
+        float angle2 = Vector2.SignedAngle(offsetFromLine, prevOffsetFromLine);
+        if (angle2 < -90 || angle2 > 90) offsetFromLine = -offsetFromLine;
+
+        point1 = vertices[numVertices - 1] + offsetFromLine;
+        point2 = vertices[numVertices - 1] - offsetFromLine;
+
+        Color colour2 = colours[colourIndex];
+        colourIndex++;
+        colourIndex %= colours.Length;
+
+        Debug.DrawLine(vertices[numVertices - 2], vertices[numVertices - 1], colour2, 1000000000, false);
+        Debug.DrawLine(temp1, point1, colour2, 1000000000, false);
+        Debug.DrawLine(temp2, point2, colour2, 1000000000, false);
+
+        //spline.InsertPointAt(numVertices - 1, vertices[numVertices - 1]);
     }
 }
