@@ -10,7 +10,7 @@ public class SummonAI : NetworkBehaviour
     [Networked] private float speed { get; set; } = 3f;
     [Networked] private float lifetime { get; set; } = 10f; 
     [Networked] private float damage { get; set; } = 10f; 
-    
+
     [Networked, OnChangedRender(nameof(OnDespawnTimerChanged))] 
     private float despawnTimer { get; set; }
     private SpriteRenderer spriteRenderer;
@@ -87,31 +87,18 @@ public class SummonAI : NetworkBehaviour
     }
 
 
-    // private void OnTriggerEnter2D(Collider2D other)
-    // {
-    //     if (other.CompareTag("Player"))
-    //     {
-    //         Player player = other.GetComponentInParent<Player>();
-    //         if (player != null && player.GetTeam() != team)
-    //         {
-    //             // Start dealing continuous damage
-    //             damageCoroutine = StartCoroutine(DealContinuousDamage(player));
-    //         }
-    //     }
-    //     if (!HasStateAuthority) return;
-
-    //     // Check if it's a bullet
-    //     if (other.TryGetComponent<Bullet>(out var bullet))
-    //     {
-    //         // Make sure it's an enemy bullet
-    //         if (bullet.Team != team)
-    //         {
-    //             TakeDamage(bullet.Damage);
-    //             Runner.Despawn(other.GetComponent<NetworkObject>());
-    //         }
-    //     }
-
-    // }
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            Player player = other.GetComponentInParent<Player>();
+            if (player != null && player.GetTeam() != team)
+            {
+                // Start dealing continuous damage
+                damageCoroutine = StartCoroutine(DealContinuousDamage(player));
+            }
+        }
+    }
 
     private void OnTriggerExit2D(Collider2D other)
     {
