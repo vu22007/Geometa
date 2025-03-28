@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.U2D;
@@ -195,6 +197,10 @@ public class Map : MonoBehaviour
 
         if (!isOpenEnded)
         {
+            // Reverse order if anti-clockwise (so that sprite shape is drawn correctly)
+            if (!PolygonIsClockwise(vertices))
+                Array.Reverse(vertices);
+
             // Add way vertices to sprite shape
             spline.Clear();
             for (int i = 0; i < numVertices; i++)
@@ -213,7 +219,7 @@ public class Map : MonoBehaviour
             }
             catch (ArgumentException e)
             {
-                Debug.Log("Error adding point to spline: " + e.Message);
+                Debug.Log("Error adding point to spline for open-ended shape: " + e.Message);
                 spline.Clear(); // Remove any points that were successfully added
                 return;
             }
@@ -337,5 +343,21 @@ public class Map : MonoBehaviour
             spline.InsertPointAt(splineIndex, otherLine[i]);
             spline.SetTangentMode(splineIndex, tangentMode);
         }
+    }
+
+    // This method uses the sign of the signed polygon area to determine if clockwise
+    bool PolygonIsClockwise(Vector2[] vertices)
+    {
+        float sum = 0.0f;
+        Vector2 v1 = vertices[vertices.Length - 1];
+
+        foreach (Vector2 v2 in vertices)
+        {
+            sum += (v1[0] * v2[1]) - (v2[0] * v1[1]);
+            v1 = v2;
+        }
+
+        // Sum is negative if clockwise
+        return sum < 0.0f;
     }
 }
