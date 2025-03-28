@@ -18,9 +18,11 @@ public class NetworkManager : SimulationBehaviour, INetworkRunnerCallbacks
     public Dictionary<PlayerRef, Lobby.PlayerInfo> team1Players;
     public Dictionary<PlayerRef, Lobby.PlayerInfo> team2Players;
 
-    // For the leaderboard to use for showing player stats
+    // For the leaderboard to use for showing team and player stats
     public List<Leaderboard.PlayerInfo> team1PlayerStats;
     public List<Leaderboard.PlayerInfo> team2PlayerStats;
+    public float team1Points;
+    public float team2Points;
 
     // For the leaderboard to use to know who the host is
     public PlayerRef hostPlayerRef;

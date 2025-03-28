@@ -2,8 +2,30 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Click to Place Fixed-Size Rectangle</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <title>Select an Area and Copy Its Coordinates</title>
+  
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+  />
+
+  <!-- Leaflet.draw CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css"
+  />
+
+  <!-- Leaflet JS -->
+  <script
+    src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+  ></script>
+
+  <!-- Leaflet.draw JS -->
+  <script
+    src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"
+  ></script>
+
   <style>
     #map {
       width: 800px;
@@ -15,73 +37,97 @@
       width: 800px;
       display: block;
       margin: 10px auto;
-      padding: 10px;
-      box-sizing: border-box;
+      padding: 10px; /* Add inside margins */
+      box-sizing: border-box; /* Ensures padding doesn't increase total width */
       font-size: 14px;
       resize: none;
     }
+
     #copyBtn {
+      font-weight: bold;
       display: block;
       margin: 10px auto;
-      padding: 10px 20px;
+      padding: 10px 20px; /* Button has a bit of padding */
       background-color: #000;
       color: #fff;
       border: none;
-      border-radius: 5px;
+      border-radius: 5px; /* Slightly rounded corners */
+      font-size: 14px;
       cursor: pointer;
     }
+
     #copyBtn:hover {
-      background-color: #5a5a5a;
+      background-color: rgb(90, 90, 90); /* Darker shade on hover */
     }
   </style>
 </head>
 <body>
-  <h1 style="text-align:center;">Click Map to Select Area</h1>
+  <h1 style="text-align:center;">Select and Area and Copy Its Coordinates</h1>
+
   <div id="map"></div>
+
   <textarea id="coords" rows="4" placeholder="Coordinates will appear here..."></textarea><br />
   <button id="copyBtn">Copy Coordinates</button>
 
-  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
   <script>
-    // Initialize map
-    var map = L.map('map').setView([40, -3], 5);
+    // 1) Initialize the map
+    var map = L.map('map').setView([40, -3], 5); // Center somewhere in Europe, zoom=5
 
-    // Add OSM tile layer
+    // 2) Add an OSM tile layer (you can switch to another provider if you want)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
-      attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
+      attribution:
+        'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
     }).addTo(map);
 
-    // FeatureGroup to store rectangle
+    // 3) Initialize FeatureGroup to store editable layers
     var drawnItems = new L.FeatureGroup();
     map.addLayer(drawnItems);
 
-    // Handle map clicks
-    map.on('click', function(e) {
-      var lat = e.latlng.lat + 0.0005;
-      var lng = e.latlng.lng - 0.0008;
-      
-      // Calculate bounds (0.0010° lat height, 0.0015° lng width)
-      var southWest = L.latLng(lat, lng);
-      var northEast = L.latLng(lat - 0.0010, lng + 0.0016);
-      var bounds = L.latLngBounds(southWest, northEast);
+    // 4) Set up the Leaflet.draw control
+    var drawControl = new L.Control.Draw({
+      edit: {
+        featureGroup: drawnItems,
+        remove: true
+      },
+      draw: {
+        polygon: false,
+        polyline: false,
+        circle: false,
+        marker: false,
+        circlemarker: false,
+        // Allow only rectangle drawing
+        rectangle: true
+      }
+    });
+    map.addControl(drawControl);
 
-      // Clear previous rectangle and add new one
-      drawnItems.clearLayers();
-      L.rectangle(bounds, {color: "blue", weight: 1}).addTo(drawnItems);
+    // 5) Handle the creation of a new rectangle
+    map.on(L.Draw.Event.CREATED, function (event) {
+      var layer = event.layer;
 
-      // Update coordinates display
-      document.getElementById('coords').value = 
-        `${northEast.lat.toFixed(4)}, ${southWest.lat.toFixed(4)}, ` +
-        `${southWest.lng.toFixed(4)}, ${northEast.lng.toFixed(4)}`;
+      // Add the new layer to the FeatureGroup so it appears on the map
+      drawnItems.addLayer(layer);
+
+      // If it's a rectangle, we can get its bounding box
+      if (layer instanceof L.Rectangle) {
+        var bounds = layer.getBounds();
+        var northEast = bounds.getNorthEast();
+        var southWest = bounds.getSouthWest();
+
+        // Put coords in the text area
+        document.getElementById('coords').value =
+          southWest.lat.toFixed(4) + ', ' + northEast.lat.toFixed(4) + ', ' + southWest.lng.toFixed(4) + ', ' + northEast.lng.toFixed(4);
+      }
     });
 
-    // Copy functionality
-    document.getElementById('copyBtn').addEventListener('click', function() {
+    // 6) Copy to clipboard functionality
+    document.getElementById('copyBtn').addEventListener('click', function () {
       var coordsText = document.getElementById('coords');
       coordsText.select();
-      document.execCommand('copy');
-      alert('Coordinates copied!');
+      coordsText.setSelectionRange(0, 99999); // For mobile devices
+      document.execCommand('copy'); // Copies the selected text
+      alert('Coordinates copied to clipboard!');
     });
   </script>
 </body>

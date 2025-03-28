@@ -89,7 +89,8 @@ public class PickupFlag : NetworkBehaviour
     public bool IsInsideCollider()
     {
         Vector2 flagDimensions = spriteRenderer.bounds.size;
-        Collider2D otherCollider = Physics2D.OverlapBox(transform.position, flagDimensions, 0);
+        int layerMask = LayerMask.GetMask("Default", "Map"); // Only check colliders on the given layers
+        Collider2D otherCollider = Physics2D.OverlapBox(transform.position, flagDimensions, 0, layerMask);
         return otherCollider != null;
     }
 }

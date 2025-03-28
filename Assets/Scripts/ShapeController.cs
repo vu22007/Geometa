@@ -264,7 +264,7 @@ public class ShapeController : NetworkBehaviour
 
                 if (parentPlayer.GetCharacterName() == "Wizard")
                 {
-                    parentPlayer.ActivateTri(true);
+                    parentPlayer.ActivateTri(true, score);
                 }
                 else
                 {

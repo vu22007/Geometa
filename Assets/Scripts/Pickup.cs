@@ -106,10 +106,11 @@ public class Pickup : NetworkBehaviour
         {
             DisablePickup();
 
-            // Show message for player who used the pickup
+            // Show message and play sound for player who used the pickup
             if (Runner.TryGetPlayerObject(playerPickedUp, out NetworkObject networkObject))
             {
                 Player player = networkObject.GetComponent<Player>();
+                player.PlayPickupSound(type);
                 switch (type)
                 {
                     case 0: //Health
