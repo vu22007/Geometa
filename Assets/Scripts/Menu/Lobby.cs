@@ -272,7 +272,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
                     }
                 }
 
-                if (allPlayersReady) 
+                if (true) 
                 {
                     playersCompletedMapGen.Clear();
                     // Play Scene with a pre-generated map
