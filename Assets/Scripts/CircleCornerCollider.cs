@@ -96,7 +96,7 @@ public class CircleCornerCollider : NetworkBehaviour
 
             if (player.GetTeam() != team && !slowedPlayers.Contains(player))
             {
-                player.GetSlowed(2f * score, 3f);
+                player.GetStunned(1f + (3 * score));
                 player.TakeDamage(2.5f * score, Object.InputAuthority);
                 slowedPlayers.Add(player);
             }
