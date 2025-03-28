@@ -212,9 +212,14 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void RPC_GenerateMap()
     {
+        GenerateMap();
+    }
+
+    public void GenerateMap()
+    {
         string[] partsArray = coordinates.ToString().Split(',')
-                                 .Select(s => s.Trim())
-                                 .ToArray();
+                         .Select(s => s.Trim())
+                         .ToArray();
 
         bool allValid = true;
         double[] numbers = new double[partsArray.Length];
@@ -268,7 +273,6 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
                     if (!playersCompletedMapGen.Contains(item))
                     {
                         Debug.Log("Hasn't generated map: " + item);
-                        Debug.Log(playersCompletedMapGen[0]);
                     }
                 }
 
@@ -289,7 +293,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
                 // Load Scene that will use the 3D Generated buildings and generate 2D map in scene
                 // Switch to map scene to start the game, and the game controller will spawn player objects using the player dicts in the network manager
                 Destroy(coordinatesDataHolder);
-                Runner.LoadScene(SceneRef.FromIndex(5));
+                Runner.LoadScene(SceneRef.FromIndex(3));
             }
         }
     }
@@ -431,6 +435,10 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         // Store the PlayerRef of the host
         if (HasStateAuthority && Runner.LocalPlayer.Equals(player))
         {
+            if (mapGenerated)
+            {
+                RPC_GenerateMap();
+            }
             hostPlayerRef = player;
             networkManager.hostPlayerRef = player;
         }
