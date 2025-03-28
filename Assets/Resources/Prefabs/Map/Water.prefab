@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 2944051065061783022}
   - component: {fileID: 6014050156912707874}
   - component: {fileID: -2419561911038752215}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Water
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -78,15 +78,23 @@ SpriteShapeRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: -1147340717
   m_SortingLayer: -1
-  m_SortingOrder: 1
+  m_SortingOrder: 2
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_MaskInteraction: 0
   m_ShapeTexture: {fileID: 2800000, guid: 3b63589faf152ad4fb2800782bb3be9b, type: 3}
   m_Sprites:
   - {fileID: 6173851344155280916, guid: f62a43991ad460944b789e75114a72c5, type: 3}
+  - {fileID: 7687101165838662448, guid: f62a43991ad460944b789e75114a72c5, type: 3}
+  - {fileID: -3084822969857752293, guid: f62a43991ad460944b789e75114a72c5, type: 3}
+  - {fileID: 21300000, guid: a30dd50f76121e142ae2708138be07a4, type: 3}
+  - {fileID: 21300000, guid: 608c58417cde8854fb31a1a958999499, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   m_LocalAABB:
-    m_Center: {x: 0.00081062317, y: 0.086500585, z: 0}
-    m_Extent: {x: 2.0839431, y: 0.99349964, z: 0}
+    m_Center: {x: 0.00084638596, y: 0.08649218, z: 0}
+    m_Extent: {x: 2.0841162, y: 0.993508, z: 0}
   m_SpriteSortPoint: 0
 --- !u!114 &6014050156912707874
 MonoBehaviour:
@@ -156,15 +164,11 @@ MonoBehaviour:
   m_Creator: {fileID: 0}
   m_Modifiers: []
   m_ColliderSegment:
-  - {x: -2, y: 1.08}
-  - {x: 1.9999999, y: 1.08}
-  - {x: 2.0800605, y: 0.976942}
-  - {x: 2.084754, y: -0.8259523}
-  - {x: 2.0047708, y: -0.90616035}
-  - {x: -2.0031152, y: -0.906999}
-  - {x: -2.0830927, y: -0.80358434}
-  - {x: -2.08, y: 1.0001369}
-  - {x: -2, y: 1.08}
+  - {x: -2.079863, y: 1.08}
+  - {x: 2.0797904, y: 1.08}
+  - {x: 2.0849626, y: -0.9061437}
+  - {x: -2.0832698, y: -0.9070158}
+  - {x: -2.079863, y: 1.08}
   m_ShadowSegment: []
 --- !u!60 &-2419561911038752215
 PolygonCollider2D:
@@ -212,13 +216,9 @@ PolygonCollider2D:
   m_AutoTiling: 0
   m_Points:
     m_Paths:
-    - - {x: -2, y: 1.08}
-      - {x: 1.9999999, y: 1.08}
-      - {x: 2.0800605, y: 0.976942}
-      - {x: 2.084754, y: -0.8259523}
-      - {x: 2.0047708, y: -0.90616035}
-      - {x: -2.0031152, y: -0.906999}
-      - {x: -2.0830927, y: -0.80358434}
-      - {x: -2.08, y: 1.0001369}
-      - {x: -2, y: 1.08}
+    - - {x: -2.079863, y: 1.08}
+      - {x: 2.0797904, y: 1.08}
+      - {x: 2.0849626, y: -0.9061437}
+      - {x: -2.0832698, y: -0.9070158}
+      - {x: -2.079863, y: 1.08}
   m_UseDelaunayMesh: 0

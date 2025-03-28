@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4373097218521871907}
   - component: {fileID: 2944051065061783022}
   - component: {fileID: 6014050156912707874}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Road
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -82,7 +82,6 @@ SpriteShapeRenderer:
   m_MaskInteraction: 0
   m_ShapeTexture: {fileID: 2800000, guid: d6df2d3fd68c2584cb1ed3846934576c, type: 3}
   m_Sprites:
-  - {fileID: 630583215, guid: 18716dd0ac35f57408a607d5c38c0d2b, type: 3}
   - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
   - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
   - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
@@ -92,8 +91,8 @@ SpriteShapeRenderer:
   - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
   - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
   m_LocalAABB:
-    m_Center: {x: -0.6383276, y: 0.06900835, z: 0}
-    m_Extent: {x: 7.7416725, y: 4.007761, z: 0}
+    m_Center: {x: -0.6385832, y: 0.06867814, z: 0}
+    m_Extent: {x: 7.241988, y: 3.5082476, z: 0}
   m_SpriteSortPoint: 0
 --- !u!114 &6014050156912707874
 MonoBehaviour:

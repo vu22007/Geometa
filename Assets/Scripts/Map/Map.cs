@@ -251,6 +251,7 @@ public class Map : MonoBehaviour
         Vector2 dirToNext = (vertices[1] - vertices[0]).normalized;
         Vector2 dirPerpToLine = Vector2.Perpendicular(dirToNext).normalized;
         Vector2 offsetFromLine = dirPerpToLine * thickness / 2;
+
         Vector2 point1 = vertices[0] + offsetFromLine;
         Vector2 point2 = vertices[0] - offsetFromLine;
 
@@ -324,6 +325,7 @@ public class Map : MonoBehaviour
 
         // Insert point 1
         spline.InsertPointAt(numVertices - 1, point1);
+        spline.SetTangentMode(numVertices - 1, tangentMode);
 
         // Store point 2
         otherLine[0] = point2;
@@ -331,8 +333,9 @@ public class Map : MonoBehaviour
         // Insert all points for other line
         for (int i = 0; i < numVertices; i++)
         {
-            spline.InsertPointAt(i, otherLine[i]);
-            spline.SetTangentMode(i, tangentMode);
+            int splineIndex = numVertices + i;
+            spline.InsertPointAt(splineIndex, otherLine[i]);
+            spline.SetTangentMode(splineIndex, tangentMode);
         }
     }
 }

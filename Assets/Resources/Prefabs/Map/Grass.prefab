@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4373097218521871907}
   - component: {fileID: 2944051065061783022}
   - component: {fileID: 6014050156912707874}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Grass
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -77,15 +77,14 @@ SpriteShapeRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: -1147340717
   m_SortingLayer: -1
-  m_SortingOrder: 2
+  m_SortingOrder: 1
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_MaskInteraction: 0
   m_ShapeTexture: {fileID: 2800000, guid: 99b3df0b16c3f094eb56fcd2e2b8cf5a, type: 3}
-  m_Sprites:
-  - {fileID: -537119129, guid: 24ee070859cd94e46818475ec8381092, type: 3}
+  m_Sprites: []
   m_LocalAABB:
-    m_Center: {x: 0.00081014633, y: 0.086500525, z: 0}
-    m_Extent: {x: 2.503942, y: 1.4134996, z: 0}
+    m_Center: {x: 0.0008108616, y: 0.086500525, z: 0}
+    m_Extent: {x: 2.0039434, y: 0.9134996, z: 0}
   m_SpriteSortPoint: 0
 --- !u!114 &6014050156912707874
 MonoBehaviour:

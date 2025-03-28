@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4373097218521871907}
   - component: {fileID: 2944051065061783022}
   - component: {fileID: 6014050156912707874}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Building Hole
   m_TagString: Untagged
   m_Icon: {fileID: 0}
