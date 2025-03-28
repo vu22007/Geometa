@@ -466,6 +466,7 @@ MonoBehaviour:
   buildingHolePrefab: {fileID: 4365782147537462995, guid: 6c6f4525706f0074d81647b06b2d34dd, type: 3}
   roadPrefab: {fileID: 4365782147537462995, guid: fca87268cbdb08e4ebf8561535dec02a, type: 3}
   pathPrefab: {fileID: 4365782147537462995, guid: 6325f95153ba0fc409cc354a57af0ad8, type: 3}
+  stepsPrefab: {fileID: 4365782147537462995, guid: 1aabea74c596239499d8520a3a0f7196, type: 3}
   grassPrefab: {fileID: 4365782147537462995, guid: d9adde058764589439de03b52781aac7, type: 3}
   waterPrefab: {fileID: 4365782147537462995, guid: a9ee2f6db43a8414da5ece2dfc7ddbd2, type: 3}
 --- !u!4 &1441148450

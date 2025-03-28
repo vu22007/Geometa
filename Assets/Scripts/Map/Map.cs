@@ -1,11 +1,8 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.U2D;
-using static UnityEditor.AnimationUtility;
 
 public class Map : MonoBehaviour
 {
@@ -14,6 +11,7 @@ public class Map : MonoBehaviour
     [SerializeField] GameObject buildingHolePrefab;
     [SerializeField] GameObject roadPrefab;
     [SerializeField] GameObject pathPrefab;
+    [SerializeField] GameObject stepsPrefab;
     [SerializeField] GameObject grassPrefab;
     [SerializeField] GameObject waterPrefab;
 
@@ -83,23 +81,27 @@ public class Map : MonoBehaviour
 
                 // Create and add building to scene (but only if it is a way and not a relation)
                 if (IsBuilding(element))
-                    AddWayToScene(vertices, buildingPrefab, false);
+                    AddWayToScene(vertices, buildingPrefab, false, false);
 
                 // Create and add road to scene
                 else if (IsRoad(element))
-                    AddWayToScene(vertices, roadPrefab, true, 5.0f);
+                    AddWayToScene(vertices, roadPrefab, true, true, 5.0f);
 
                 // Create and add path to scene
                 else if (IsPath(element))
-                    AddWayToScene(vertices, pathPrefab, true, 2.0f);
+                    AddWayToScene(vertices, pathPrefab, true, true, 2.0f);
+
+                // Create and add steps to scene
+                else if (IsSteps(element))
+                    AddWayToScene(vertices, stepsPrefab, true, false, 1.0f);
 
                 // Create and add grass to scene
                 else if (IsGrass(element))
-                    AddWayToScene(vertices, grassPrefab, false);
+                    AddWayToScene(vertices, grassPrefab, false, false);
 
                 // Create and add water to scene
                 else if (IsWater(element))
-                    AddWayToScene(vertices, waterPrefab, false);
+                    AddWayToScene(vertices, waterPrefab, false, false);
             }
 
             // Deal with relations
@@ -117,11 +119,11 @@ public class Map : MonoBehaviour
 
                             // Create and add building to scene
                             if (member.role == "outer")
-                                AddWayToScene(vertices, buildingPrefab, false);
+                                AddWayToScene(vertices, buildingPrefab, false, false);
 
                             // Create and add building hole to scene
                             else if (member.role == "inner")
-                                AddWayToScene(vertices, buildingHolePrefab, false);
+                                AddWayToScene(vertices, buildingHolePrefab, false, false);
                         }
                     }
                 }
@@ -131,9 +133,7 @@ public class Map : MonoBehaviour
 
     double LatToY(double latitude)
     {
-        return System.Math.Log(System.Math.Tan(
-            (latitude + 90) / 360 * System.Math.PI
-        )) / System.Math.PI * 180;
+        return Math.Log(Math.Tan((latitude + 90) / 360 * Math.PI)) / Math.PI * 180;
     }
 
     Vector2[] GetPointsFromGPSCoords(MapElement.Coords[] geometry, double xShift, double yShift, double scale)
@@ -156,14 +156,18 @@ public class Map : MonoBehaviour
 
     bool IsRoad(MapElement element)
     {
-        return element.tags.highway != null && !IsPath(element);
+        return element.tags.highway != null && !IsPath(element) && !IsSteps(element);
     }
 
     bool IsPath(MapElement element)
     {
         return element.tags.highway == "footway" ||
-               element.tags.highway == "pedestrian" ||
-               element.tags.highway == "steps";
+               element.tags.highway == "pedestrian";
+    }
+
+    bool IsSteps(MapElement element)
+    {
+        return element.tags.highway == "steps";
     }
 
     bool IsGrass(MapElement element)
@@ -180,7 +184,7 @@ public class Map : MonoBehaviour
         return element.tags.natural == "water";
     }
 
-    void AddWayToScene(Vector2[] vertices, GameObject prefab, bool isOpenEnded, float thickness = 1.0f)
+    void AddWayToScene(Vector2[] vertices, GameObject prefab, bool isOpenEnded, bool convertToCloseEnded, float thickness = 1.0f)
     {
         // Instantiate way from prefab with the map as the parent
         GameObject way = Instantiate(prefab, new Vector3(0, 0, 0), Quaternion.identity, transform);
@@ -195,7 +199,7 @@ public class Map : MonoBehaviour
         // If the way is open-ended (e.g. a road or path) then make it smoother by setting the tangent mode to continuous
         ShapeTangentMode tangentMode = isOpenEnded ? ShapeTangentMode.Continuous : ShapeTangentMode.Linear;
 
-        if (!isOpenEnded)
+        if (!isOpenEnded) // close-ended
         {
             // Reverse order if anti-clockwise (so that sprite shape is drawn correctly)
             if (!PolygonIsClockwise(vertices))
@@ -210,7 +214,7 @@ public class Map : MonoBehaviour
                 spline.SetTangentMode(i, tangentMode);
             }
         }
-        else
+        else if (convertToCloseEnded) // open-ended but to be converted to close-ended
         {
             try
             {
@@ -219,9 +223,21 @@ public class Map : MonoBehaviour
             }
             catch (ArgumentException e)
             {
-                Debug.Log("Error adding point to spline for open-ended shape: " + e.Message);
+                Debug.Log("Error adding point to spline: " + e.Message);
                 spline.Clear(); // Remove any points that were successfully added
                 return;
+            }
+        }
+        else // open-ended
+        {
+            // Add way vertices to sprite shape
+            spline.Clear();
+            for (int i = 0; i < numVertices; i++)
+            {
+                // Add point to sprite shape
+                spline.InsertPointAt(i, vertices[i]);
+                spline.SetTangentMode(i, tangentMode);
+                spline.SetHeight(i, thickness);
             }
         }
 
