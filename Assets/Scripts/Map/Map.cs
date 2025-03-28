@@ -64,11 +64,12 @@ public class Map : MonoBehaviour
         double yShift = LatToY(lowLat) + (LatToY(highLat) - LatToY(lowLat)) / 2;
         double scale = 80000;
 
-        // Add background to scene (scaled to cover whole map)
-        GameObject background = Instantiate(backgroundPrefab, new Vector3(0, 0, 0), Quaternion.identity, transform);
-        double xScale = (highLong - lowLong) * scale;
-        double yScale = (LatToY(highLat) - LatToY(lowLat)) * scale;
-        background.transform.localScale = new Vector3((float)xScale, (float)yScale, 1);
+        // Add background to scene (covers whole map)
+        // Note: We specify the first map corner twice since AddWayToScene expects the last vertex to be the same as the first
+        float halfMapWidth = (float)((highLong - lowLong) * scale / 2);
+        float halfMapHeight = (float)((LatToY(highLat) - LatToY(lowLat)) * scale / 2);
+        Vector2[] mapCorners = { new Vector2(-halfMapWidth, halfMapHeight), new Vector2(halfMapWidth, halfMapHeight), new Vector2(halfMapWidth, -halfMapHeight), new Vector2(-halfMapWidth, -halfMapHeight), new Vector2(-halfMapWidth, halfMapHeight) };
+        AddWayToScene(mapCorners, backgroundPrefab, false, false);
 
         // Add map elements to scene
         foreach (MapElement element in mapData.elements)

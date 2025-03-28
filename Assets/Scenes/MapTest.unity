@@ -461,7 +461,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f6e223d00c0777045822ce2c304a0d93, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  backgroundPrefab: {fileID: 890032281013021716, guid: 19f592edb32c09b40886bdf169168ec6, type: 3}
+  backgroundPrefab: {fileID: 4365782147537462995, guid: 3b64b5c4a15bc204488b3ed335742fcc, type: 3}
   buildingPrefab: {fileID: 4365782147537462995, guid: 70b868834cfb7744e9d27df37514f730, type: 3}
   buildingHolePrefab: {fileID: 4365782147537462995, guid: 6c6f4525706f0074d81647b06b2d34dd, type: 3}
   roadPrefab: {fileID: 4365782147537462995, guid: fca87268cbdb08e4ebf8561535dec02a, type: 3}
