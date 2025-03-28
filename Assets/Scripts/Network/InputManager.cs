@@ -73,15 +73,32 @@ public class InputManager : SimulationBehaviour, INetworkRunnerCallbacks
             Player localPlayer = networkPlayerObject.GetComponent<Player>();
             Camera cam = localPlayer.cam;
 
-            Vector2 mousePos = Input.mousePosition;
-            Vector3 worldPoint = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
-            Vector3 direction = worldPoint - localPlayer.transform.position;
+            // Create a plane at player's Z position (or ground level)
+            Plane plane = new Plane(Vector3.forward, localPlayer.transform.position.z);
+            
+            // Create ray from camera through mouse position
+            Ray ray = cam.ScreenPointToRay(Input.mousePosition);
+            
+            float distance;
+            if (plane.Raycast(ray, out distance))
+            {
+                Vector3 worldPoint = ray.GetPoint(distance);
+                Vector3 direction = worldPoint - localPlayer.transform.position;
 
-            // Set cursor world point vector
-            data.cursorWorldPoint = new Vector2(worldPoint.x, worldPoint.y);
+                data.cursorWorldPoint = new Vector2(worldPoint.x, worldPoint.y);
+                data.aimDirection = new Vector2(direction.x, direction.y).normalized;
+            }
+            else
+            {
+                // Fallback to old method if raycast fails
+                Vector3 mousePos = Input.mousePosition;
+                mousePos.z = cam.transform.position.z - localPlayer.transform.position.z;
+                Vector3 worldPoint = cam.ScreenToWorldPoint(mousePos);
+                Vector3 direction = worldPoint - localPlayer.transform.position;
 
-            // Set aim direction vector
-            data.aimDirection = new Vector2(direction.x, direction.y);
+                data.cursorWorldPoint = new Vector2(worldPoint.x, worldPoint.y);
+                data.aimDirection = new Vector2(direction.x, direction.y).normalized;
+            }
         }
 
         input.Set(data);

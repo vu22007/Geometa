@@ -645,16 +645,20 @@ public class Player : NetworkBehaviour
     // Shoots a bullet by spawning the prefab on the network
     void ShootAoE(Vector2 aimDirection, Vector2 cursorWorldPoint)
     {
-        float distance = Vector2.Distance(transform.position, cursorWorldPoint);
         if (HasStateAuthority)
         {
+            Vector3 spawnPosition = transform.position;
+            Vector3 targetPosition = new Vector3(cursorWorldPoint.x, cursorWorldPoint.y, spawnPosition.z);
+            Vector3 direction = (targetPosition - spawnPosition).normalized;
+            float distance = Vector3.Distance(spawnPosition, targetPosition);
+
             GameObject aoeSpellPrefab = Resources.Load("Prefabs/AoE1") as GameObject;
             NetworkObject aoeSpellObject = Runner.Spawn(aoeSpellPrefab, transform.position, Quaternion.identity, Object.InputAuthority, (runner, networkObject) =>
             {
                 AoESpell aoeSpell = networkObject.GetComponent<AoESpell>();
                 if (aoeSpell != null)
                 {
-                    aoeSpell.OnCreated(aimDirection, 10f, distance, aoeDamage, team, aoeDuration, Object.InputAuthority);
+                    aoeSpell.OnCreated(new Vector2(direction.x, direction.y), 10f, distance, aoeDamage, team, aoeDuration, Object.InputAuthority);
                 }
             });
         }
