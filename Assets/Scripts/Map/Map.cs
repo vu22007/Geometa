@@ -14,6 +14,7 @@ public class Map : MonoBehaviour
     [SerializeField] GameObject stepsPrefab;
     [SerializeField] GameObject grassPrefab;
     [SerializeField] GameObject waterPrefab;
+    [SerializeField] GameObject wallPrefab;
 
     void Start()
     {
@@ -23,7 +24,7 @@ public class Map : MonoBehaviour
     IEnumerator LoadMapFromBoundingBox(double lowLat, double lowLong, double highLat, double highLong)
     {
         // Construct request body
-        // Note: We are fetching buildings (both as ways and as relations), roads, paths, grass and water
+        // Note: We are fetching buildings (both as ways and as relations), roads, paths, steps, grass, water, walls and fences
         string data = "data=" + UnityWebRequest.EscapeURL("" +
             $"[out:json][timeout:25][bbox:{lowLat},{lowLong},{highLat},{highLong}];" +
             "(" +
@@ -36,6 +37,9 @@ public class Map : MonoBehaviour
             "  way[leisure=garden];" +
             "  way[leisure=nature_reserve];" +
             "  way[natural=water];" +
+            "  way[barrier=wall];" +
+            "  way[barrier=retaining_wall];" +
+            "  way[barrier=fence];" +
             ");" +
             "out geom;");
 
@@ -103,6 +107,10 @@ public class Map : MonoBehaviour
                 // Create and add water to scene
                 else if (IsWater(element))
                     AddWayToScene(vertices, waterPrefab, false, false);
+
+                // Create and add wall to scene
+                else if (IsWall(element))
+                    AddWayToScene(vertices, wallPrefab, true, false, 1.0f);
             }
 
             // Deal with relations
@@ -183,6 +191,13 @@ public class Map : MonoBehaviour
     bool IsWater(MapElement element)
     {
         return element.tags.natural == "water";
+    }
+
+    bool IsWall(MapElement element)
+    {
+        return element.tags.barrier == "wall" ||
+               element.tags.barrier == "retaining_wall" ||
+               element.tags.barrier == "fence";
     }
 
     void AddWayToScene(Vector2[] vertices, GameObject prefab, bool isOpenEnded, bool convertToCloseEnded, float thickness = 1.0f)

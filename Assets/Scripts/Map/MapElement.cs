@@ -33,6 +33,7 @@ public class MapElement
         public string landuse;
         public string natural;
         public string leisure;
+        public string barrier;
     }
 
     [Serializable]
