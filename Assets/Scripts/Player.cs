@@ -676,7 +676,7 @@ public class Player : NetworkBehaviour
                 AoESpell aoeSpell = networkObject.GetComponent<AoESpell>();
                 if (aoeSpell != null)
                 {
-                    aoeSpell.OnCreated(new Vector2(direction.x, direction.y), 10f, distance, aoeDamage, team, aoeDuration, Object.InputAuthority);
+                    aoeSpell.OnCreated(new Vector2(direction.x, direction.y), 10f, distance, aoeDamage, team, aoeDuration, currentTriangleScore, Object.InputAuthority);
                 }
             });
         }
