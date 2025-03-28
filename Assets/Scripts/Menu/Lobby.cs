@@ -39,7 +39,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     RunBlenderScript buildingsGenerator;
     CoordinatesDataHolder coordinatesDataHolder;
     [Networked] bool mapGenerated { get; set; } = false;
-    [Networked] int mapGenAcknowledgments { get; set; } = 0;
+    [Networked, Capacity(16)] private NetworkArray<PlayerRef> playersCompletedMapGen { get; }
 
     public override void Spawned()
     {
@@ -198,6 +198,18 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         }
     }
 
+    // Add this RPC method
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_MapGenComplete(RpcInfo info = default)
+    {
+        var player = info.Source;
+        if (!playersCompletedMapGen.Contains(player))
+        {
+            playersCompletedMapGen.Append(player);
+            Debug.Log($"Player {player} completed map gen. Total: {playersCompletedMapGen.Count()}");
+        }
+    }
+
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void RPC_GenerateMap()
     {
@@ -249,16 +261,27 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 
             if (mapGenerated)
             {
-                if(true) //(mapGenAcknowledgments == Runner.ActivePlayers.Count())
+                // Check if all active players have completed generation
+                bool allPlayersReady = Runner.ActivePlayers.All(p => playersCompletedMapGen.Contains(p));
+
+                foreach (var item in Runner.ActivePlayers)
                 {
-                    mapGenAcknowledgments = 0;
+                    if (!playersCompletedMapGen.Contains(item))
+                    {
+                        Debug.Log("Hasn't generated map: " + item);
+                    }
+                }
+
+                if (allPlayersReady) 
+                {
+                    playersCompletedMapGen.Clear();
                     // Play Scene with a pre-generated map
                     DontDestroyOnLoad(coordinatesDataHolder);
                     Runner.LoadScene(SceneRef.FromIndex(5));
                 }
                 else
                 {
-                    Debug.LogError("A player hasn't finished generating the map. Players finished: " + mapGenAcknowledgments + "/" + Runner.ActivePlayers.Count());
+                    Debug.LogError("A player hasn't finished generating the map. Players finished: " + playersCompletedMapGen.Count() + "/" + Runner.ActivePlayers.Count());
                 }
             }
             else
@@ -266,7 +289,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
                 // Load Scene that will use the 3D Generated buildings and generate 2D map in scene
                 // Switch to map scene to start the game, and the game controller will spawn player objects using the player dicts in the network manager
                 Destroy(coordinatesDataHolder);
-                Runner.LoadScene(SceneRef.FromIndex(3));
+                Runner.LoadScene(SceneRef.FromIndex(5));
             }
         }
     }
@@ -435,11 +458,6 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             var dict = team2Players;
             dict.Remove(player);
         }
-    }
-
-    public void mapGenAcknowledgment()
-    {
-        mapGenAcknowledgments++;
     }
 
     public struct PlayerInfo : INetworkStruct

@@ -63,7 +63,11 @@ public class RunBlenderScript : NetworkBehaviour
             Debug.LogError("Blender error: " + error);
         }
 
-        ImportFbxToUnity();
+        GameObject buildingsPrefab = Resources.Load<GameObject>("Prefabs/Map/Buildify3DBuildings");
+
+        GameObject buildingsInstance = Instantiate(buildingsPrefab, Vector3.zero, Quaternion.identity);
+        // The building has to be rotated to match the 2D map
+        buildingsInstance.transform.eulerAngles = new Vector3(90, 180, 0);
 
         yield return null;
     }
@@ -92,7 +96,7 @@ public class RunBlenderScript : NetworkBehaviour
             if (mapPrefab != null)
             {
                 Debug.Log("Map asset loaded successfully. Ready to use in scene.");
-                lobby.mapGenAcknowledgment();
+                lobby.RPC_MapGenComplete();
             }
             else
             {

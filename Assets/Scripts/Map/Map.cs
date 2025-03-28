@@ -17,7 +17,7 @@ public class Map : MonoBehaviour
     void Start()
     {
         // GameObject buildingGeneratorPrefab = Resources.Load<GameObject>("Prefabs/Map/BuildingsGenerator");
-        // buildingsGenerator = GameObject.Find("BuildingsGenerator").GetComponent<RunBlenderScript>();
+        buildingsGenerator = GameObject.Find("BuildingsGenerator").GetComponent<RunBlenderScript>();
         // GenerateMap(51.4576, 51.4590, -2.6026, -2.5991); // Default
         // GenerateMap(51.4585, 51.4590, -2.6026, -2.6000);
 
@@ -25,7 +25,7 @@ public class Map : MonoBehaviour
         {
             Debug.LogError("Coordinates aren't valid");
             //Debug.Log("Using default values for Map");
-            //GenerateMap(51.4585, 51.4590, -2.6026, -2.6000);
+            GenerateMap(51.4585, 51.4590, -2.6026, -2.6016);
         }
         else
         {
@@ -41,21 +41,10 @@ public class Map : MonoBehaviour
 
     public void GenerateMap(double lowLat, double highLat, double lowLong, double highLong)
     {
+        // Create 2D map
         StartCoroutine(LoadMapFromBoundingBox(lowLat, highLat, lowLong, highLong));
-
-        GameObject buildingsPrefab = Resources.Load<GameObject>("Prefabs/Map/Buildify3DBuildingsPrefab");
-        if (buildingsPrefab != null)
-        {
-            // Optionally instantiate the map in the scene
-            GameObject buildingsInstance = Instantiate(buildingsPrefab, Vector3.zero, Quaternion.identity);
-            // The building has to be rotated to match the 2D map
-            buildingsInstance.transform.eulerAngles = new Vector3(90, 180, 0);
-        }
-        else
-        {
-            Debug.Log("Buildings prefab is null. Most likely buildify didn't generate a 3D buildings prefab asset. ");
-        }
-        // StartCoroutine(buildingsGenerator.RunBlender(lowLat, highLat, lowLong, highLong));
+        // Create 3D buildings
+        StartCoroutine(buildingsGenerator.RunBlender(lowLat, highLat, lowLong, highLong));
     }
 
     IEnumerator LoadMapFromBoundingBox(double lowLat, double highLat, double lowLong, double highLong)
