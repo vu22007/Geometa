@@ -18,7 +18,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     private NetworkManager networkManager;
     private TMP_InputField displayNameInput;
     private TMP_InputField coordinatesInput;
-    private string coordinates { get; set; }
+    [Networked] NetworkString<_64> coordinates { get; set; }
     private Button team1Button;
     private Button team2Button;
     private Button knightButton;
@@ -39,7 +39,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     RunBlenderScript buildingsGenerator;
     CoordinatesDataHolder coordinatesDataHolder;
     [Networked] bool mapGenerated { get; set; } = false;
-    [Networked] int mapGenAcknowledgments { get; set; } = 0;
+    [Networked, Capacity(16)] private NetworkLinkedList<PlayerRef> playersCompletedMapGen { get; }
 
     public override void Spawned()
     {
@@ -71,6 +71,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             startGameButton.gameObject.SetActive(false);
             generateMapButton.gameObject.SetActive(false);
             selectAreaButton.gameObject.SetActive(false);
+            coordinatesInput.gameObject.SetActive(false);
         }
 
         // Populate team lists
@@ -197,12 +198,28 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         }
     }
 
+    // Add this RPC method
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_MapGenComplete(PlayerRef player)
+    {
+        if (!playersCompletedMapGen.Contains(player))
+        {
+            playersCompletedMapGen.Add(player);
+            Debug.Log($"Player {player} completed map gen. Total: {playersCompletedMapGen.Count()}");
+        }
+    }
+
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void RPC_GenerateMap()
     {
-        string[] partsArray = coordinates.Split(',')
-                                 .Select(s => s.Trim())
-                                 .ToArray();
+        GenerateMap();
+    }
+
+    public void GenerateMap()
+    {
+        string[] partsArray = coordinates.ToString().Split(',')
+                         .Select(s => s.Trim())
+                         .ToArray();
 
         bool allValid = true;
         double[] numbers = new double[partsArray.Length];
@@ -231,19 +248,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             Debug.LogError($"Invalid input for coordinates: {coordinates}");
         }
 
-        // Debug.Log("Map Generated");
         mapGenerated = true;
-        // StartCoroutine(buildingsGenerator.RunBlender(51.4585, 51.4590, -2.6026, -2.6000));
-        // StartCoroutine(GenerateMapAndAcknowledge());
-    }
-
-    private IEnumerator GenerateMapAndAcknowledge()
-    {
-        // Directly yield on the IEnumerator returned from buildingsGenerator.RunBlender(...)
-        yield return StartCoroutine(buildingsGenerator.RunBlender(51.4585, 51.4590, -2.6026, -2.6000));
-
-        // Once the coroutine completes, increment the counter
-        mapGenAcknowledgments++;
     }
 
     public void StartGame()
@@ -260,16 +265,27 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 
             if (mapGenerated)
             {
-                if (mapGenAcknowledgments == Runner.ActivePlayers.Count())
+                // Check if all active players have completed generation
+                bool allPlayersReady = Runner.ActivePlayers.All(p => playersCompletedMapGen.Contains(p));
+
+                foreach (var item in Runner.ActivePlayers)
                 {
-                    mapGenAcknowledgments = 0;
+                    if (!playersCompletedMapGen.Contains(item))
+                    {
+                        Debug.Log("Hasn't generated map: " + item);
+                    }
+                }
+
+                if (allPlayersReady) 
+                {
+                    playersCompletedMapGen.Clear();
                     // Play Scene with a pre-generated map
                     DontDestroyOnLoad(coordinatesDataHolder);
                     Runner.LoadScene(SceneRef.FromIndex(5));
                 }
                 else
                 {
-                    Debug.LogError("A player hasn't finished generating the map");
+                    Debug.LogError("A player hasn't finished generating the map. Players finished: " + playersCompletedMapGen.Count() + "/" + Runner.ActivePlayers.Count());
                 }
             }
             else
@@ -419,6 +435,10 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         // Store the PlayerRef of the host
         if (HasStateAuthority && Runner.LocalPlayer.Equals(player))
         {
+            if (mapGenerated)
+            {
+                RPC_GenerateMap();
+            }
             hostPlayerRef = player;
             networkManager.hostPlayerRef = player;
         }
@@ -446,11 +466,6 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             var dict = team2Players;
             dict.Remove(player);
         }
-    }
-
-    public void mapGenAcknowledgment()
-    {
-        mapGenAcknowledgments++;
     }
 
     public struct PlayerInfo : INetworkStruct
