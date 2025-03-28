@@ -63,7 +63,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
             team2Flag = flag2Obj.GetComponent<PickupFlag>();
 
             // Spawn NPCs for testing
-            // SpawnPlayersForTesting(3, 3, true);
+            SpawnPlayersForTesting(3, 3, true);
         }
     }
 
