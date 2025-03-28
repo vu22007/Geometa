@@ -39,7 +39,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     RunBlenderScript buildingsGenerator;
     CoordinatesDataHolder coordinatesDataHolder;
     [Networked] bool mapGenerated { get; set; } = false;
-    [Networked, Capacity(16)] private NetworkArray<PlayerRef> playersCompletedMapGen { get; }
+    [Networked, Capacity(16)] private NetworkLinkedList<PlayerRef> playersCompletedMapGen { get; }
 
     public override void Spawned()
     {
@@ -200,12 +200,11 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 
     // Add this RPC method
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    public void RPC_MapGenComplete(RpcInfo info = default)
+    public void RPC_MapGenComplete(PlayerRef player)
     {
-        var player = info.Source;
         if (!playersCompletedMapGen.Contains(player))
         {
-            playersCompletedMapGen.Append(player);
+            playersCompletedMapGen.Add(player);
             Debug.Log($"Player {player} completed map gen. Total: {playersCompletedMapGen.Count()}");
         }
     }
@@ -269,10 +268,11 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
                     if (!playersCompletedMapGen.Contains(item))
                     {
                         Debug.Log("Hasn't generated map: " + item);
+                        Debug.Log(playersCompletedMapGen[0]);
                     }
                 }
 
-                if (true) 
+                if (allPlayersReady) 
                 {
                     playersCompletedMapGen.Clear();
                     // Play Scene with a pre-generated map

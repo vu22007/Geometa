@@ -63,6 +63,8 @@ public class RunBlenderScript : NetworkBehaviour
             Debug.LogError("Blender error: " + error);
         }
 
+        lobby.RPC_MapGenComplete(Runner.LocalPlayer);
+
         yield return null;
     }
 }
