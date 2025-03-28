@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4373097218521871907}
   - component: {fileID: 2944051065061783022}
   - component: {fileID: 6014050156912707874}
-  - component: {fileID: -2419561911038752215}
+  - component: {fileID: 516624003455814626}
   m_Layer: 8
   m_Name: Wall
   m_TagString: Wall
@@ -81,19 +81,12 @@ SpriteShapeRenderer:
   m_SortingOrder: 0
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_MaskInteraction: 0
-  m_ShapeTexture: {fileID: 2800000, guid: b281b91a70a624a0da1c43adc1c30c7b, type: 3}
+  m_ShapeTexture: {fileID: 0}
   m_Sprites:
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
+  - {fileID: 21300000, guid: 91ecafffe85c33346ad9d73f223dbb48, type: 3}
   m_LocalAABB:
-    m_Center: {x: 0.0008108616, y: 0.086500525, z: 0}
-    m_Extent: {x: 2.0039434, y: 0.9134996, z: 0}
+    m_Center: {x: 2.469339, y: -0.34938574, z: 0}
+    m_Extent: {x: 6.910008, y: 1.8589911, z: 0}
   m_SpriteSortPoint: 0
 --- !u!114 &6014050156912707874
 MonoBehaviour:
@@ -110,7 +103,7 @@ MonoBehaviour:
   m_Spline:
     m_IsOpenEnded: 1
     m_ControlPoints:
-    - position: {x: -2, y: 1, z: 0}
+    - position: {x: -4.4399242, y: 1.0096059, z: 0}
       leftTangent: {x: 0, y: 0, z: 0}
       rightTangent: {x: 0, y: 0, z: 0}
       mode: 0
@@ -126,7 +119,7 @@ MonoBehaviour:
       spriteIndex: 0
       corner: 1
       m_CornerMode: 1
-    - position: {x: 2.004754, y: -0.82616043, z: 0}
+    - position: {x: 4.106035, y: -1.6291407, z: 0}
       leftTangent: {x: 0, y: 0, z: 0}
       rightTangent: {x: 0, y: 0, z: 0}
       mode: 0
@@ -134,7 +127,7 @@ MonoBehaviour:
       spriteIndex: 0
       corner: 1
       m_CornerMode: 1
-    - position: {x: -2.0031326, y: -0.82699907, z: 0}
+    - position: {x: 9.371819, y: -1.7084335, z: 0}
       leftTangent: {x: 0, y: 0, z: 0}
       rightTangent: {x: 0, y: 0, z: 0}
       mode: 0
@@ -151,7 +144,7 @@ MonoBehaviour:
   m_WorldSpaceUV: 0
   m_CornerAngleThreshold: 30
   m_ColliderDetail: 16
-  m_ColliderOffset: 0.5
+  m_ColliderOffset: 0
   m_UpdateCollider: 1
   m_EnableTangents: 0
   m_GeometryCached: 0
@@ -163,14 +156,13 @@ MonoBehaviour:
   m_Creator: {fileID: 0}
   m_Modifiers: []
   m_ColliderSegment:
-  - {x: -2, y: 1}
-  - {x: 2, y: 1}
-  - {x: 2.004754, y: -0.82616043}
-  - {x: -2.0031326, y: -0.82699907}
-  - {x: -2, y: 1}
+  - {x: -4.439926, y: 1.008606}
+  - {x: 1.9992194, y: 0.99937487}
+  - {x: 4.10602, y: -1.6301407}
+  - {x: 9.371803, y: -1.7094334}
   m_ShadowSegment: []
---- !u!60 &-2419561911038752215
-PolygonCollider2D:
+--- !u!68 &516624003455814626
+EdgeCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -204,20 +196,13 @@ PolygonCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_SpriteTilingProperty:
-    border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0, y: 0}
-    oldSize: {x: 0, y: 0}
-    newSize: {x: 0, y: 0}
-    adaptiveTilingThreshold: 0
-    drawMode: 0
-    adaptiveTiling: 0
-  m_AutoTiling: 0
+  m_EdgeRadius: 0
   m_Points:
-    m_Paths:
-    - - {x: -2, y: 1}
-      - {x: 2, y: 1}
-      - {x: 2.004754, y: -0.82616043}
-      - {x: -2.0031326, y: -0.82699907}
-      - {x: -2, y: 1}
-  m_UseDelaunayMesh: 0
+  - {x: -4.439926, y: 1.008606}
+  - {x: 1.9992194, y: 0.99937487}
+  - {x: 4.10602, y: -1.6301407}
+  - {x: 9.371803, y: -1.7094334}
+  m_AdjacentStartPoint: {x: 0, y: 0}
+  m_AdjacentEndPoint: {x: 0, y: 0}
+  m_UseAdjacentStartPoint: 0
+  m_UseAdjacentEndPoint: 0
