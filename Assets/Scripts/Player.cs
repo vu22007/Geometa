@@ -472,6 +472,7 @@ public class Player : NetworkBehaviour
                 {
                     Dash(input.moveDirection);
                 }
+
             }
 
             // Activate Menu
@@ -487,9 +488,14 @@ public class Player : NetworkBehaviour
                 rb.linearVelocity = Vector2.Lerp(rb.linearVelocity, Vector2.zero, acceleration * Runner.DeltaTime);
             }
 
-            //Character rotates to mouse position
+            // //Character rotates to mouse position
+            // Vector2 lookDirection = input.aimDirection.normalized;
+            // Quaternion wantedRotation = Quaternion.LookRotation(transform.forward, lookDirection);
+            // gameObject.transform.rotation = wantedRotation;
+
             Vector2 lookDirection = input.aimDirection.normalized;
-            Quaternion wantedRotation = Quaternion.LookRotation(transform.forward, lookDirection);
+            float angle = Mathf.Atan2(lookDirection.y, lookDirection.x) * Mathf.Rad2Deg - 90f;
+            Quaternion wantedRotation = Quaternion.AngleAxis(angle, Vector3.forward);
             gameObject.transform.rotation = wantedRotation;
 
             cam.gameObject.transform.rotation = Quaternion.identity;
