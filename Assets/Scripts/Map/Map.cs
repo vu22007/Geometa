@@ -206,8 +206,17 @@ public class Map : MonoBehaviour
         }
         else
         {
-            // Generate close-ended way from open-ended line and add the way vertices to sprite shape
-            CreateCloseEndedWayFromOpenEndedLine(vertices, spline, tangentMode, thickness);
+            try
+            {
+                // Generate close-ended way from open-ended line and add the way vertices to sprite shape
+                CreateCloseEndedWayFromOpenEndedLine(vertices, spline, tangentMode, thickness);
+            }
+            catch (ArgumentException e)
+            {
+                Debug.Log("Error adding point to spline: " + e.Message);
+                spline.Clear(); // Remove any points that were successfully added
+                return;
+            }
         }
 
         // The above code creates sprite shapes that have their origin at the centre of the world, and this causes them to not be loaded
