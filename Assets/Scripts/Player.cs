@@ -47,6 +47,8 @@ public class Player : NetworkBehaviour
     [Networked] private TickTimer aoeEnabledTimer { get; set; }
     [Networked] float slowedAmount { get; set; }
     [Networked] TickTimer getSlowedTimer { get; set; }
+    [Networked] TickTimer getStunnedTimer { get; set; }
+    [Networked] bool stunned { get; set; }
     [Networked] float speedIncrease { get; set; }
     [Networked, OnChangedRender(nameof(OnSpeedIncreaseTimerChanged))] TickTimer speedIncreaseTimer { get; set; }
     [Networked, OnChangedRender(nameof(OnInvinsibleChanged))] bool invinsible { get; set; }
@@ -147,6 +149,7 @@ public class Player : NetworkBehaviour
         normalShoot = true;
         gamePaused = false;
         invinsible = false;
+        stunned = false;
 
         totalDamageDealt = 0;
         totalKills = 0;
@@ -291,10 +294,12 @@ public class Player : NetworkBehaviour
 
         // Reset state
         isAlive = true;
+        stunned = false;
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
         respawnTimer = TickTimer.None;
         attackWaitTimer = TickTimer.None;
+        getStunnedTimer = TickTimer.None;
 
         // Activate the shape controller
         gameObject.GetComponentInChildren<ShapeController>().isActive = true;
@@ -394,6 +399,15 @@ public class Player : NetworkBehaviour
             getSlowedTimer = TickTimer.None;
         }
 
+        // Get stunned timer
+        if (getStunnedTimer.Expired(Runner))
+        {
+            stunned = false;
+
+            // Reset timer
+            getStunnedTimer = TickTimer.None;
+        }
+
         // Increase speed timer
         if (speedIncreaseTimer.Expired(Runner))
         {
@@ -420,7 +434,7 @@ public class Player : NetworkBehaviour
         if (GetInput(out NetworkInputData input))
         {
             // If game is not paused
-            if (!gamePaused)
+            if (!gamePaused && !stunned)
             {
                 // WASD movement
                 PlayerMovement(input.moveDirection);
@@ -704,6 +718,9 @@ public class Player : NetworkBehaviour
         {
             currentHealth -= damage;
 
+            //slow on damaged
+            GetSlowed(1.5f, 1f);
+
             // Add damage to damage dealer's total damage dealt counter
             if (Runner.TryGetPlayerObject(damageDealer, out NetworkObject networkPlayerObject))
             {
@@ -975,7 +992,7 @@ public class Player : NetworkBehaviour
         {
             carriedObject = networkObject;
             isCarrying = true;
-            speed /= 2;
+            speed -= 3f;
             PickupFlag flag = carriedObject.GetComponent<PickupFlag>();
             gameController.BroadcastCarryFlag(team, flag.team);
         }
@@ -996,7 +1013,7 @@ public class Player : NetworkBehaviour
                 }
                 carriedObject = null;
                 isCarrying = false;
-                speed *= 2;
+                speed += 3f;
                 gameController.BroadcastDropFlag(team, flag.team);
             }
         }
@@ -1156,7 +1173,7 @@ public class Player : NetworkBehaviour
         }
     }
 
-    public void GetSlowed(float amount, float time)
+    void GetSlowed(float amount, float time)
     {
         // If not already slowed, slow the player
         if (slowedAmount == 0)
@@ -1169,6 +1186,15 @@ public class Player : NetworkBehaviour
         // Note: If they are already slowed, this resets the timer so they have to wait longer, but the above
         // prevents their speed from getting even slower
         getSlowedTimer = TickTimer.CreateFromSeconds(Runner, time);
+    }
+
+    public void GetStunned(float time)
+    {
+        getStunnedTimer = TickTimer.CreateFromSeconds(Runner, time);
+        stunned = true;
+        if(HasStateAuthority){
+            RPC_ShowMessage("Stunned!!", 0.3f, Color.white);
+        }
     }
 
     void OnIsMovingChanged()
