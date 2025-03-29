@@ -5,6 +5,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
+using GLTFast;
 
 public class RunBlenderScript : NetworkBehaviour
 {
@@ -68,7 +69,7 @@ public class RunBlenderScript : NetworkBehaviour
         float timeout = 120f; 
         float timer = 0f;
 
-        string buildingsFilepath = Path.Combine(Application.dataPath, "Resources", "Prefabs", "Map", "Buildify3DBuildings.glb");
+        string buildingsFilepath = Path.Combine(Application.dataPath, "Resources", "Prefabs", "Map", "Buildify3DBuildings.glb"); 
         Debug.Log("Checking if file " + buildingsFilepath + " exists");
 
         while (!fileExists && timer < timeout)
@@ -87,14 +88,32 @@ public class RunBlenderScript : NetworkBehaviour
             yield break;
         }
 
+        // Import the glTF file in unity
+        ImportGLTF(buildingsFilepath);
+
         GameObject buildingsPrefab = Resources.Load<GameObject>("Prefabs/Map/Buildify3DBuildings");
         GameObject buildingsInstance = Instantiate(buildingsPrefab, Vector3.zero, Quaternion.identity);
         // The building has to be rotated to match the 2D map
         buildingsInstance.transform.eulerAngles = new Vector3(90, 180, 0);
 
         // Notify generation of map is ende
-        lobby.RPC_MapGenComplete(Runner.LocalPlayer);
+        // lobby.RPC_MapGenComplete(Runner.LocalPlayer);
 
         yield return null;
+    }
+
+    private async void ImportGLTF(string buildingsFilepath)
+    {
+        // Create an importer instanse
+        GltfImport gltfImport = new GLTFast.GltfImport();
+
+        bool success = await gltfImport.Load(buildingsFilepath);
+        if (!success)
+        {
+            Debug.LogError("Failed to load glTF file from: " + buildingsFilepath);
+            return;
+        }
+
+        Debug.Log("glTF file loaded.");
     }
 }

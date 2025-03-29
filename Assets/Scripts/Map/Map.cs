@@ -23,7 +23,7 @@ public class Map : MonoBehaviour
         {
             Debug.LogError("Coordinates aren't valid");
             //Debug.Log("Using default values for Map");
-            // GenerateMap(51.4585, 51.4590, -2.6026, -2.6016);
+            GenerateMap(51.4585, 51.4590, -2.6026, -2.6016);
         }
         else
         {
@@ -40,14 +40,14 @@ public class Map : MonoBehaviour
     {
         // Create 2D map
         StartCoroutine(LoadMapFromBoundingBox(lowLat, highLat, lowLong, highLong));
-        
-        GameObject buildingsPrefab = Resources.Load<GameObject>("Prefabs/Map/Buildify3DBuildings");
-        GameObject buildingsInstance = Instantiate(buildingsPrefab, Vector3.zero, Quaternion.identity);
-        // The building has to be rotated to match the 2D map
-        buildingsInstance.transform.eulerAngles = new Vector3(90, 180, 0);
+
+        //GameObject buildingsPrefab = Resources.Load<GameObject>("Prefabs/Map/Buildify3DBuildings");
+        //GameObject buildingsInstance = Instantiate(buildingsPrefab, Vector3.zero, Quaternion.identity);
+        //// The building has to be rotated to match the 2D map
+        //buildingsInstance.transform.eulerAngles = new Vector3(90, 180, 0);
 
         // Create 3D buildings
-        // StartCoroutine(buildingsGenerator.RunBlender(lowLat, highLat, lowLong, highLong));
+        StartCoroutine(buildingsGenerator.RunBlender(lowLat, highLat, lowLong, highLong));
     }
 
     IEnumerator LoadMapFromBoundingBox(double lowLat, double highLat, double lowLong, double highLong)

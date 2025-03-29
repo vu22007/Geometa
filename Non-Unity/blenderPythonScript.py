@@ -5,7 +5,7 @@ import os
 # Get the directory where the script is running
 script_dir = os.path.dirname(os.path.realpath(__file__))
 # Filepath where the file will be exported
-output_path = os.path.normpath(os.path.join(script_dir, "..\\Assets\\Resources\\Prefabs\\Map\\Buildify3DBuildings.gbl"))
+output_path = os.path.normpath(os.path.join(script_dir, "..\\Assets\\Resources\\Prefabs\\Map\\Buildify3DBuildings"))
 # Path to buildify file 
 buildifyPath = os.path.normpath(os.path.join(script_dir, "buildify_1.0.blend"))
 # Path to BLOSM 
@@ -43,10 +43,10 @@ for obj in bpy.data.objects:
 
 argv = sys.argv
 if "--" in argv:
-    idx = argv.index("--")
-    script_args = argv[idx+1:]
+    idx= argv.index("--")
+    script_args= argv[idx+1:]
 else:
-    script_args = []
+    script_args= []
 
 # Default to file mode if no arguments are provided
 if not script_args:
@@ -63,9 +63,9 @@ blosm_props.mode = "2D"
 blosm_props.buildings = True   # Import just buildings
 blosm_props.water = False      
 blosm_props.forests = False    
-blosm_props.vegetation = False 
+blosm_props.vegetation =False 
 blosm_props.highways = False  
-blosm_props.railways = False   
+blosm_props.railways= False   
 blosm_props.dataType = "osm"
 
 blosm_props.singleObject = True
@@ -78,17 +78,17 @@ if source_type == "server":
     if len(script_args) < 5:
         raise ValueError("Server mode requires 4 parameters: min_lat, max_lat, min_lon, max_lon")
     
-    min_lat = float(script_args[1])
+    min_lat =float(script_args[1])
     max_lat = float(script_args[2])
-    min_lon = float(script_args[3])
+    min_lon =float(script_args[3])
     max_lon = float(script_args[4])
     
     blosm_props.osmSource = "server"
     # Make sure your addon has properties to store these parameters. For example:
-    blosm_props.minLat = min_lat
-    blosm_props.maxLat = max_lat
-    blosm_props.minLon = min_lon
-    blosm_props.maxLon = max_lon
+    blosm_props.minLat=min_lat
+    blosm_props.maxLat=max_lat
+    blosm_props.minLon=min_lon
+    blosm_props.maxLon=max_lon
 else:
     raise ValueError("Invalid source type. Use 'server'.")
 
@@ -96,7 +96,7 @@ try:
     bpy.ops.blosm.import_data()
     print("BLOSM import succeeded!")
 except Exception as e:
-    print("Warning: Error during BLOSM import:", e)
+    print("Error during BLOSM import: ", e)
     
 # bpy.context.object.location[2] = 100
 
@@ -112,6 +112,6 @@ try:
     )
     print(f"Successfully exported to {output_path}")
 except Exception as e:
-    print(f"Warning: Error during FBX export: {e}")
+    print(f"Error during FBX export: {e}")
 
 print("BLOSM import complete!")
