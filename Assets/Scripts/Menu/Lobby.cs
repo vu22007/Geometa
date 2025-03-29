@@ -228,7 +228,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         {
             if (double.TryParse(partsArray[i], out double number))
             {
-                // Round to 4 decimals if needed
+                // Round to 4 decimals because blosm has that max accuracy
                 numbers[i] = (double)System.Math.Round(number, 4);
             }
             else
