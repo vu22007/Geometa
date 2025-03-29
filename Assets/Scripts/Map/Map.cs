@@ -312,13 +312,9 @@ public class Map : MonoBehaviour
         {
             dirToPrev = (vertices[i - 1] - vertices[i]).normalized;
             dirToNext = (vertices[i + 1] - vertices[i]).normalized;
-            dirPerpToLine = (dirToPrev + dirToNext).normalized;
+            Vector2 dirAtVertex = (dirToNext - dirToPrev).normalized;
+            dirPerpToLine = Vector2.Perpendicular(dirAtVertex).normalized;
             offsetFromLine = dirPerpToLine * thickness / 2;
-
-            // If offset is pointing in opposite direction to previous offset, then flip it to prevent the two lines crossing over
-            float angle = Vector2.SignedAngle(offsetFromLine, prevOffsetFromLine);
-            if (angle < -90 || angle > 90) offsetFromLine = -offsetFromLine;
-            prevOffsetFromLine = offsetFromLine;
 
             point1 = vertices[i] + offsetFromLine;
             point2 = vertices[i] - offsetFromLine;
@@ -345,10 +341,6 @@ public class Map : MonoBehaviour
         dirToPrev = (vertices[numVertices - 1] - vertices[numVertices - 2]).normalized;
         dirPerpToLine = Vector2.Perpendicular(dirToPrev).normalized;
         offsetFromLine = dirPerpToLine * thickness / 2;
-
-        // If offset is pointing in opposite direction to previous offset, then flip it to prevent the two lines crossing over
-        float angle2 = Vector2.SignedAngle(offsetFromLine, prevOffsetFromLine);
-        if (angle2 < -90 || angle2 > 90) offsetFromLine = -offsetFromLine;
 
         point1 = vertices[numVertices - 1] + offsetFromLine;
         point2 = vertices[numVertices - 1] - offsetFromLine;
