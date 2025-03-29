@@ -59,6 +59,8 @@ public class RunBlenderScript : NetworkBehaviour
             Debug.LogError("Blender error: " + error);
         }
 
+        Debug.Log("Ran the python script");
+
         // Wait for the exported file to get created
         bool fileExists = false;
         // I know I am not using a ticker but this is before the game starts :))
