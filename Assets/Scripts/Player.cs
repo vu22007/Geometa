@@ -1192,6 +1192,9 @@ public class Player : NetworkBehaviour
     {
         getStunnedTimer = TickTimer.CreateFromSeconds(Runner, time);
         stunned = true;
+        if(HasStateAuthority){
+            RPC_ShowMessage("Stunned!!", 0.3f, Color.white);
+        }
     }
 
     void OnIsMovingChanged()
