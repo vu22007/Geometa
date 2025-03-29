@@ -5,6 +5,7 @@ using UnityEngine;
 public class SquareShape : NetworkBehaviour
 {
     private List<CircleCornerCollider> circleColliders = new List<CircleCornerCollider>();
+    [SerializeField] private GameObject summonPrefab;
 
     public override void Spawned()
     {
@@ -28,9 +29,19 @@ public class SquareShape : NetworkBehaviour
 
     public void CastAbility(List<Vector3> playerPositions, float score)
     {
-        for (int i = 0; i < 4; i++)
+        Player activatingPlayer = GetComponentInParent<Player>();
+
+        if (HasStateAuthority && activatingPlayer.GetCharacterName() == "Wizard")
         {
-            circleColliders[i].ActivateCollider(playerPositions[i], score);
+            Vector3 spawnPosition = activatingPlayer.transform.position + new Vector3(0, 1, 0);
+            PrefabFactory.SpawnSummon(Runner, summonPrefab, spawnPosition, activatingPlayer.GetTeam(), activatingPlayer.Object.InputAuthority);
+        }
+        else
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                circleColliders[i].ActivateCollider(playerPositions[i], score);
+            }
         }
     }
 
