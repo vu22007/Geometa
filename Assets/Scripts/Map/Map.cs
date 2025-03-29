@@ -46,8 +46,9 @@ public class Map : MonoBehaviour
         //// The building has to be rotated to match the 2D map
         //buildingsInstance.transform.eulerAngles = new Vector3(90, 180, 0);
 
+        buildingsGenerator.ImportGLTF("C:\\Users\\josif\\AppData\\LocalLow\\DefaultCompany\\Geometa\\Buildify3DBuildings.glb");
         // Create 3D buildings
-        StartCoroutine(buildingsGenerator.RunBlender(lowLat, highLat, lowLong, highLong));
+        // StartCoroutine(buildingsGenerator.RunBlender(lowLat, highLat, lowLong, highLong));
     }
 
     IEnumerator LoadMapFromBoundingBox(double lowLat, double highLat, double lowLong, double highLong)

@@ -283,7 +283,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
                     }
                 }
 
-                if (true) 
+                if (allPlayersReady) 
                 {
                     // Prevent new players from joining
                     Runner.SessionInfo.IsOpen = false;

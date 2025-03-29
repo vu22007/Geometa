@@ -5,7 +5,7 @@ import os
 # Get the directory where the script is running
 script_dir = os.path.dirname(os.path.realpath(__file__))
 # Filepath where the file will be exported
-output_path = os.path.normpath(os.path.join(script_dir, "..\\Assets\\Resources\\Prefabs\\Map\\Buildify3DBuildings"))
+output_path = "C:\\Users\\josif\\AppData\\LocalLow\\DefaultCompany\\Geometa\\Buildify3DBuildings" # os.path.normpath(os.path.join(script_dir, "..\\Assets\\Resources\\Prefabs\\Map\\Buildify3DBuildings"))
 # Path to buildify file 
 buildifyPath = os.path.normpath(os.path.join(script_dir, "buildify_1.0.blend"))
 # Path to BLOSM 
