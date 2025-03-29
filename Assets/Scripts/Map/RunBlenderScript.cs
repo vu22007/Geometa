@@ -1,6 +1,8 @@
 using Fusion;
 using System.Collections;
 using System.Diagnostics;
+using System.IO;
+using UnityEngine;
 using Debug = UnityEngine.Debug;
 
 public class RunBlenderScript : NetworkBehaviour
@@ -55,6 +57,31 @@ public class RunBlenderScript : NetworkBehaviour
         {
             // Print if there is an error
             Debug.LogError("Blender error: " + error);
+        }
+
+        // Wait for the exported file to get created
+        bool fileExists = false;
+        // I know I am not using a ticker but this is before the game starts :))
+        float timeout = 120f; 
+        float timer = 0f;
+
+        string buildingsFilepath = Path.Combine(Application.dataPath, "Resources", "Prefabs", "Map", "Buildify3DBuildings.fbx");
+        Debug.Log("Checking if file " + buildingsFilepath + " exists");
+
+        while (!fileExists && timer < timeout)
+        {
+            fileExists = File.Exists(buildingsFilepath);
+            if (!fileExists)
+            {
+                timer += Time.deltaTime;
+                yield return null;
+            }
+        }
+        // If timer expired and file still doesn't exist don't rpc call
+        if (!fileExists)
+        {
+            Debug.LogError("Exported file not found!");
+            yield break;
         }
 
         // Notify generation of map is ende
