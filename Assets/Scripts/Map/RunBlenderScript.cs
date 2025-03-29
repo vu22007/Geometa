@@ -2,6 +2,7 @@ using Fusion;
 using System.Collections;
 using System.Diagnostics;
 using System.IO;
+using UnityEditor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
@@ -27,7 +28,7 @@ public class RunBlenderScript : NetworkBehaviour
         // Blender command line parameters:
         // --background : Run Blender in the background (no GUI)
         // --python : Execute the given Python script.
-        string arguments = $"--background --python \"{scriptPath}\" {extraArgs}";
+        string arguments = $"--background --python \"{scriptPath}\" {extraArgs} ";
 
         Debug.Log($"Running Blender with: {blenderExePath} {arguments}");
 
@@ -36,8 +37,8 @@ public class RunBlenderScript : NetworkBehaviour
             FileName = blenderExePath,
             Arguments = arguments,
             UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
+            RedirectStandardOutput = false,
+            RedirectStandardError = false,
             CreateNoWindow = true
         };
 
@@ -50,24 +51,24 @@ public class RunBlenderScript : NetworkBehaviour
             yield return null; 
         }
 
-        string output = process.StandardOutput.ReadToEnd();
-        string error = process.StandardError.ReadToEnd();
-        Debug.Log("Blender output: " + output);
-        if (!string.IsNullOrEmpty(error))
-        {
-            // Print if there is an error
-            Debug.LogError("Blender error: " + error);
-        }
+        //string output = process.StandardOutput.ReadToEnd();
+        //string error = process.StandardError.ReadToEnd();
+        //Debug.Log("Blender output: " + output);
+        //if (!string.IsNullOrEmpty(error))
+        //{
+        //    // Print if there is an error
+        //    Debug.LogError("Blender error: " + error);
+        //}
 
-        Debug.Log("Ran the python script");
-
+        //Debug.Log("Ran the python script");
+       
         // Wait for the exported file to get created
         bool fileExists = false;
         // I know I am not using a ticker but this is before the game starts :))
         float timeout = 120f; 
         float timer = 0f;
 
-        string buildingsFilepath = Path.Combine(Application.dataPath, "Resources", "Prefabs", "Map", "Buildify3DBuildings.fbx");
+        string buildingsFilepath = Path.Combine(Application.dataPath, "Resources", "Prefabs", "Map", "Buildify3DBuildings.glb");
         Debug.Log("Checking if file " + buildingsFilepath + " exists");
 
         while (!fileExists && timer < timeout)
@@ -85,6 +86,11 @@ public class RunBlenderScript : NetworkBehaviour
             Debug.LogError("Exported file not found!");
             yield break;
         }
+
+        GameObject buildingsPrefab = Resources.Load<GameObject>("Prefabs/Map/Buildify3DBuildings");
+        GameObject buildingsInstance = Instantiate(buildingsPrefab, Vector3.zero, Quaternion.identity);
+        // The building has to be rotated to match the 2D map
+        buildingsInstance.transform.eulerAngles = new Vector3(90, 180, 0);
 
         // Notify generation of map is ende
         lobby.RPC_MapGenComplete(Runner.LocalPlayer);

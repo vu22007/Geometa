@@ -5,7 +5,7 @@ import os
 # Get the directory where the script is running
 script_dir = os.path.dirname(os.path.realpath(__file__))
 # Filepath where the file will be exported
-output_path = os.path.normpath(os.path.join(script_dir, "..\\Assets\\Resources\\Prefabs\\Map\\Buildify3DBuildings.fbx"))
+output_path = os.path.normpath(os.path.join(script_dir, "..\\Assets\\Resources\\Prefabs\\Map\\Buildify3DBuildings.gbl"))
 # Path to buildify file 
 buildifyPath = os.path.normpath(os.path.join(script_dir, "buildify_1.0.blend"))
 # Path to BLOSM 
@@ -106,7 +106,7 @@ bpy.ops.object.duplicates_make_real()
 
 # Export file to the output path
 try:
-    bpy.ops.export_scene.fbx(
+    bpy.ops.export_scene.gltf(
         filepath=output_path,
         use_selection=False,
     )
