@@ -11,8 +11,8 @@ public class FlagIndicator : MonoBehaviour
     void Start()
     {
         image  = GetComponent<Image>();
-        blueFlag = Resources.Load<Sprite>("Sprites/BlueFlag");
-        redFlag = Resources.Load<Sprite>("Sprites/RedFlag");
+        blueFlag = Resources.Load<Sprite>("Sprites/CrystalBlue");
+        redFlag = Resources.Load<Sprite>("Sprites/CrystalRed");
     }
 
     public void SetLocalPlayerTeam(int localPlayerTeam)
