@@ -27,6 +27,7 @@ public class Map : MonoBehaviour
             Debug.LogError("Coordinates aren't valid");
             //Debug.Log("Using default values for Map");
             // GenerateMap(51.4585, 51.4590, -2.6026, -2.6016);
+            GenerateMap(51.4581, 51.4593, -2.6026, -2.5999);
         }
         else
         {
