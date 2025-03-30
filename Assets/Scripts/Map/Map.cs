@@ -76,6 +76,9 @@ public class Map : MonoBehaviour
         Vector2[] mapCorners = { new Vector2(-halfMapWidth, halfMapHeight), new Vector2(halfMapWidth, halfMapHeight), new Vector2(halfMapWidth, -halfMapHeight), new Vector2(-halfMapWidth, -halfMapHeight), new Vector2(-halfMapWidth, halfMapHeight) };
         AddWayToScene(mapCorners, backgroundPrefab, false, false);
 
+        // Add map border to scene
+        AddWayToScene(mapCorners, mapBorderPrefab, false, false);
+
         // Add map elements to scene
         foreach (MapElement element in mapData.elements)
         {
