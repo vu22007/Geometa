@@ -12,7 +12,7 @@ public class RunBlenderScript : NetworkBehaviour
 {
     private Lobby lobby;
     // Path to Python script that runs blender
-    string scriptPath = @"Non-Unity\blenderPythonScript.py";
+    string scriptPath = Path.Combine("Non-Unity", "blenderPythonScript.py");
     // Path to the Blender exe
     public string blenderExePath = @"C:\Program Files\Blender Foundation\Blender 4.3\blender.exe";
 
@@ -64,32 +64,32 @@ public class RunBlenderScript : NetworkBehaviour
 
         //Debug.Log("Ran the python script");
        
-        // Wait for the exported file to get created
-        bool fileExists = false;
-        // I know I am not using a ticker but this is before the game starts :))
-        float timeout = 120f; 
-        float timer = 0f;
+        //// Wait for the exported file to get created
+        //bool fileExists = false;
+        //// I know I am not using a ticker but this is before the game starts :))
+        //float timeout = 120f; 
+        //float timer = 0f;
 
         Debug.Log(Application.persistentDataPath);
 
-        string buildingsFilepath = "C:\\Users\\josif\\AppData\\LocalLow\\DefaultCompany\\Geometa\\Buildify3DBuildings.glb"; // Path.Combine(Application.dataPath, "Resources", "Prefabs", "Map", "Buildify3DBuildings.glb"); 
-        Debug.Log("Checking if file " + buildingsFilepath + " exists");
+        // string buildingsFilepath = "C:\\Users\\josif\\AppData\\LocalLow\\DefaultCompany\\Geometa\\Buildify3DBuildings.glb"; // Path.Combine(Application.dataPath, "Resources", "Prefabs", "Map", "Buildify3DBuildings.glb"); 
+        //Debug.Log("Checking if file " + buildingsFilepath + " exists");
 
-        while (!fileExists && timer < timeout)
-        {
-            fileExists = File.Exists(buildingsFilepath);
-            if (!fileExists)
-            {
-                timer += Time.deltaTime;
-                yield return null;
-            }
-        }
-        // If timer expired and file still doesn't exist don't rpc call
-        if (!fileExists)
-        {
-            Debug.LogError("Exported file not found!");
-            yield break;
-        }
+        //while (!fileExists && timer < timeout)
+        //{
+        //    fileExists = File.Exists(buildingsFilepath);
+        //    if (!fileExists)
+        //    {
+        //        timer += Time.deltaTime;
+        //        yield return null;
+        //    }
+        //}
+        //// If timer expired and file still doesn't exist don't rpc call
+        //if (!fileExists)
+        //{
+        //    Debug.LogError("Exported file not found!");
+        //    yield break;
+        //}
 
         // Import the glTF file in unity
         // ImportGLTF(buildingsFilepath);

@@ -1,6 +1,7 @@
 import bpy
 import sys
 import os
+import tempfile
 
 # Get the directory where the script is running
 script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -10,12 +11,6 @@ output_path = "C:\\Users\\josif\\AppData\\LocalLow\\DefaultCompany\\Geometa\\Bui
 buildifyPath = os.path.normpath(os.path.join(script_dir, "buildify_1.0.blend"))
 # Path to BLOSM 
 blosm_addon_path = os.path.normpath(os.path.join(script_dir, "blosm_2.7.13.zip"))
-
-# File for storing the osm files
-osm_files_dir = os.path.join(script_dir, "osm_files")
-if not os.path.exists(osm_files_dir):
-    os.makedirs(osm_files_dir)
-    print(f"Created OSM files directory: {osm_files_dir}")
 
 # Install the add on if not already installed
 def ensure_blosm_installed(addon_path):
@@ -58,6 +53,7 @@ else:
     print(f"All arguments: {script_args}")
 
 blosm_props = bpy.context.scene.blosm
+osm_files_dir = tempfile.mkdtemp()
 bpy.context.preferences.addons["blosm"].preferences.dataDir = osm_files_dir
 blosm_props.mode = "2D"
 blosm_props.buildings = True   # Import just buildings
@@ -113,5 +109,15 @@ try:
     print(f"Successfully exported to {output_path}")
 except Exception as e:
     print(f"Error during FBX export: {e}")
+
+# Delete the osm files created 
+# try:
+#     for file in Path(osm_files_dir).glob("*"):
+#         if file.is_file():
+#             os.remove(file)
+#             print(f"File deleted: " {file})
+#     print(f"Deleted OSM files in directory: {osm_files_dir}")
+# except Exception as e:
+#     print(f"Failed to delete OSM files: {e}")
 
 print("BLOSM import complete!")
