@@ -7,6 +7,7 @@ using UnityEngine.U2D;
 public class Map : MonoBehaviour
 {
     [SerializeField] GameObject backgroundPrefab;
+    [SerializeField] GameObject mapBorderPrefab;
     [SerializeField] GameObject buildingPrefab;
     [SerializeField] GameObject buildingHolePrefab;
     [SerializeField] GameObject roadPrefab;
