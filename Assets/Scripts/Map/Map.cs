@@ -290,23 +290,21 @@ public class Map : MonoBehaviour
         Vector2 dirPerpToLine = Vector2.Perpendicular(dirToNext).normalized;
         Vector2 offsetFromLine = dirPerpToLine * thickness / 2;
 
-        Vector2 point1 = vertices[0] + offsetFromLine;
-        Vector2 point2 = vertices[0] - offsetFromLine;
+        Vector2 initialPoint1 = vertices[0] + offsetFromLine;
+        Vector2 initialPoint2 = vertices[0] - offsetFromLine;
 
         // Insert point 1
-        spline.InsertPointAt(0, point1);
+        spline.InsertPointAt(0, initialPoint1);
         spline.SetTangentMode(0, tangentMode);
 
         // TEMP - DELETE THIS!
-        Vector2 temp1 = point1;
-        Vector2 temp2 = point2;
-
-        Vector2 prevOffsetFromLine = offsetFromLine;
+        Vector2 temp1 = initialPoint1;
+        Vector2 temp2 = initialPoint2;
 
         Vector2[] otherLine = new Vector2[numVertices];
 
         // Store point 2
-        otherLine[numVertices - 1] = point2;
+        otherLine[numVertices - 1] = initialPoint2;
 
         for (int i = 1; i < numVertices - 1; i++)
         {
@@ -316,8 +314,8 @@ public class Map : MonoBehaviour
             dirPerpToLine = Vector2.Perpendicular(dirAtVertex).normalized;
             offsetFromLine = dirPerpToLine * thickness / 2;
 
-            point1 = vertices[i] + offsetFromLine;
-            point2 = vertices[i] - offsetFromLine;
+            Vector2 point1 = vertices[i] + offsetFromLine;
+            Vector2 point2 = vertices[i] - offsetFromLine;
 
             // Insert point 1
             spline.InsertPointAt(i, point1);
@@ -338,27 +336,36 @@ public class Map : MonoBehaviour
             temp2 = point2;
         }
 
-        dirToPrev = (vertices[numVertices - 1] - vertices[numVertices - 2]).normalized;
-        dirPerpToLine = Vector2.Perpendicular(dirToPrev).normalized;
+        // If end is too close to start, move the end back a bit so they don't overlap and cause issues
+        float threshold = 1f;
+        float offsetAmount = 1f;
+        if (Vector2.Distance(vertices[numVertices - 1], vertices[0]) < threshold)
+        {
+            Vector2 offset = (vertices[numVertices - 2] - vertices[numVertices - 1]).normalized * offsetAmount;
+            vertices[numVertices - 1] += offset;
+        }
+
+        dirToPrev = (vertices[numVertices - 2] - vertices[numVertices - 1]).normalized;
+        dirPerpToLine = Vector2.Perpendicular(-dirToPrev).normalized;
         offsetFromLine = dirPerpToLine * thickness / 2;
 
-        point1 = vertices[numVertices - 1] + offsetFromLine;
-        point2 = vertices[numVertices - 1] - offsetFromLine;
+        Vector2 finalPoint1 = vertices[numVertices - 1] + offsetFromLine;
+        Vector2 finalPoint2 = vertices[numVertices - 1] - offsetFromLine;
 
         // TEMP - DELETE THIS!
         Color colour2 = colours[colourIndex];
         colourIndex++;
         colourIndex %= colours.Length;
         Debug.DrawLine(vertices[numVertices - 2], vertices[numVertices - 1], colour2, 1000000000, false);
-        Debug.DrawLine(temp1, point1, colour2, 1000000000, false);
-        Debug.DrawLine(temp2, point2, colour2, 1000000000, false);
+        Debug.DrawLine(temp1, finalPoint1, colour2, 1000000000, false);
+        Debug.DrawLine(temp2, finalPoint2, colour2, 1000000000, false);
 
         // Insert point 1
-        spline.InsertPointAt(numVertices - 1, point1);
+        spline.InsertPointAt(numVertices - 1, finalPoint1);
         spline.SetTangentMode(numVertices - 1, tangentMode);
 
         // Store point 2
-        otherLine[0] = point2;
+        otherLine[0] = finalPoint2;
 
         // Insert all points for other line
         for (int i = 0; i < numVertices; i++)
