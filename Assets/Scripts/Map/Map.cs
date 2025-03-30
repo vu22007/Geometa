@@ -46,10 +46,10 @@ public class Map : MonoBehaviour
         // Create 2D map
         StartCoroutine(LoadMapFromBoundingBox(lowLat, highLat, lowLong, highLong));
         
-        GameObject buildingsPrefab = Resources.Load<GameObject>("Prefabs/Map/Buildify3DBuildings");
-        GameObject buildingsInstance = Instantiate(buildingsPrefab, Vector3.zero, Quaternion.identity);
-        // The building has to be rotated to match the 2D map
-        buildingsInstance.transform.eulerAngles = new Vector3(90, 180, 0);
+        //GameObject buildingsPrefab = Resources.Load<GameObject>("Prefabs/Map/Buildify3DBuildings");
+        //GameObject buildingsInstance = Instantiate(buildingsPrefab, Vector3.zero, Quaternion.identity);
+        //// The building has to be rotated to match the 2D map
+        //buildingsInstance.transform.eulerAngles = new Vector3(90, 180, 0);
 
         // Create 3D buildings
         // StartCoroutine(buildingsGenerator.RunBlender(lowLat, highLat, lowLong, highLong));
