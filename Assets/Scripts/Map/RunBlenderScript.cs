@@ -1,24 +1,21 @@
 using Fusion;
 using System.Collections;
 using System.Diagnostics;
-using UnityEditor;
+using System.IO;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
 public class RunBlenderScript : NetworkBehaviour
 {
-    private GameObject mapPrefab;
-
     private Lobby lobby;
-
-    // Set the path to your Python script that Blender should run.
+    // Path to Python script that runs blender
     string scriptPath = @"Non-Unity\blenderPythonScript.py";
-
-    // Path to the Blender executable
+    // Path to the Blender exe
     public string blenderExePath = @"C:\Program Files\Blender Foundation\Blender 4.3\blender.exe";
 
     public override void Spawned()
     {
+        // The lobby is informed when generation of buildings finishes
         lobby = GetComponentInParent<Lobby>();
     }
 
@@ -32,7 +29,7 @@ public class RunBlenderScript : NetworkBehaviour
         // --python : Execute the given Python script.
         string arguments = $"--background --python \"{scriptPath}\" {extraArgs}";
 
-        Debug.Log($"Running Blender with command: {blenderExePath} {arguments}");
+        Debug.Log($"Running Blender with: {blenderExePath} {arguments}");
 
         ProcessStartInfo processInfo = new ProcessStartInfo
         {
@@ -45,24 +42,51 @@ public class RunBlenderScript : NetworkBehaviour
         };
 
         Process process = new Process { StartInfo = processInfo };
-
         process.Start();
 
-        // Instead of blocking here, poll every frame or so:
+        // Waiting untill process is over
         while (!process.HasExited)
         {
-            yield return null; // Let Unity run for a frame
+            yield return null; 
         }
 
         string output = process.StandardOutput.ReadToEnd();
         string error = process.StandardError.ReadToEnd();
-
         Debug.Log("Blender output: " + output);
         if (!string.IsNullOrEmpty(error))
         {
+            // Print if there is an error
             Debug.LogError("Blender error: " + error);
         }
 
+        Debug.Log("Ran the python script");
+
+        // Wait for the exported file to get created
+        bool fileExists = false;
+        // I know I am not using a ticker but this is before the game starts :))
+        float timeout = 120f; 
+        float timer = 0f;
+
+        string buildingsFilepath = Path.Combine(Application.dataPath, "Resources", "Prefabs", "Map", "Buildify3DBuildings.fbx");
+        Debug.Log("Checking if file " + buildingsFilepath + " exists");
+
+        while (!fileExists && timer < timeout)
+        {
+            fileExists = File.Exists(buildingsFilepath);
+            if (!fileExists)
+            {
+                timer += Time.deltaTime;
+                yield return null;
+            }
+        }
+        // If timer expired and file still doesn't exist don't rpc call
+        if (!fileExists)
+        {
+            Debug.LogError("Exported file not found!");
+            yield break;
+        }
+
+        // Notify generation of map is ende
         lobby.RPC_MapGenComplete(Runner.LocalPlayer);
 
         yield return null;

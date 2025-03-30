@@ -19,6 +19,8 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     private TMP_InputField displayNameInput;
     private TMP_InputField coordinatesInput;
     [Networked] NetworkString<_64> coordinates { get; set; }
+    // Corrdinates used for generating the map, so players joined after can generate it as well
+    [Networked] NetworkString<_64> mapGenerationCoordinates { get; set; }
     private Button team1Button;
     private Button team2Button;
     private Button knightButton;
@@ -72,6 +74,12 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             generateMapButton.gameObject.SetActive(false);
             selectAreaButton.gameObject.SetActive(false);
             coordinatesInput.gameObject.SetActive(false);
+        }
+
+        if (mapGenerated & Runner.IsClient)
+        {
+            Debug.Log("Started Generating Map");
+            GenerateMap();
         }
 
         // Populate team lists
@@ -212,12 +220,13 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void RPC_GenerateMap()
     {
+        mapGenerationCoordinates = coordinates;
         GenerateMap();
     }
 
     public void GenerateMap()
     {
-        string[] partsArray = coordinates.ToString().Split(',')
+        string[] partsArray = mapGenerationCoordinates.ToString().Split(',')
                          .Select(s => s.Trim())
                          .ToArray();
 
@@ -228,7 +237,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         {
             if (double.TryParse(partsArray[i], out double number))
             {
-                // Round to 4 decimals if needed
+                // Round to 4 decimals because blosm has that max accuracy
                 numbers[i] = (double)System.Math.Round(number, 4);
             }
             else
@@ -238,6 +247,9 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             }
         }
 
+        Debug.Log("Map generation function inside");
+        mapGenerated = true;
+
         if (allValid)
         {
             StartCoroutine(buildingsGenerator.RunBlender(numbers[0], numbers[1], numbers[2], numbers[3]));
@@ -245,10 +257,8 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         }
         else
         {
-            Debug.LogError($"Invalid input for coordinates: {coordinates}");
+            Debug.LogError($"Invalid input for coordinates: {mapGenerationCoordinates}");
         }
-
-        mapGenerated = true;
     }
 
     public void StartGame()
@@ -259,9 +269,6 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             // Give the network manager the player dictionaries, but first convert the networked ones to standard ones
             networkManager.team1Players = ConvertFromNetworkDictionary(team1Players);
             networkManager.team2Players = ConvertFromNetworkDictionary(team2Players);
-
-            // Prevent new players from joining
-            Runner.SessionInfo.IsOpen = false;
 
             if (mapGenerated)
             {
@@ -278,6 +285,8 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 
                 if (allPlayersReady) 
                 {
+                    // Prevent new players from joining
+                    Runner.SessionInfo.IsOpen = false;
                     playersCompletedMapGen.Clear();
                     // Play Scene with a pre-generated map
                     DontDestroyOnLoad(coordinatesDataHolder);
@@ -290,6 +299,8 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             }
             else
             {
+                // Prevent new players from joining
+                Runner.SessionInfo.IsOpen = false;
                 // Load Scene that will use the 3D Generated buildings and generate 2D map in scene
                 // Switch to map scene to start the game, and the game controller will spawn player objects using the player dicts in the network manager
                 Destroy(coordinatesDataHolder);
@@ -435,10 +446,6 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         // Store the PlayerRef of the host
         if (HasStateAuthority && Runner.LocalPlayer.Equals(player))
         {
-            if (mapGenerated)
-            {
-                RPC_GenerateMap();
-            }
             hostPlayerRef = player;
             networkManager.hostPlayerRef = player;
         }
