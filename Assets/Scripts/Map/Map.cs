@@ -74,7 +74,9 @@ public class Map : MonoBehaviour
         float halfMapWidth = (float)((highLong - lowLong) * scale / 2);
         float halfMapHeight = (float)((LatToY(highLat) - LatToY(lowLat)) * scale / 2);
         Vector2[] mapCorners = { new Vector2(-halfMapWidth, halfMapHeight), new Vector2(halfMapWidth, halfMapHeight), new Vector2(halfMapWidth, -halfMapHeight), new Vector2(-halfMapWidth, -halfMapHeight), new Vector2(-halfMapWidth, halfMapHeight) };
-        AddWayToScene(mapCorners, backgroundPrefab, false, false);
+        float backgroundMargin = 100f;
+        Vector2[] backgroundVertices = { mapCorners[0] + new Vector2(-backgroundMargin, backgroundMargin), mapCorners[1] + new Vector2(backgroundMargin, backgroundMargin), mapCorners[2] + new Vector2(backgroundMargin, -backgroundMargin), mapCorners[3] + new Vector2(-backgroundMargin, -backgroundMargin), mapCorners[4] + new Vector2(-backgroundMargin, backgroundMargin) };
+        AddWayToScene(backgroundVertices, backgroundPrefab, false, false);
 
         // Add map border to scene
         AddWayToScene(mapCorners, mapBorderPrefab, false, false);
