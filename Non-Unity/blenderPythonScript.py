@@ -6,7 +6,7 @@ import tempfile
 # Get the directory where the script is running
 script_dir = os.path.dirname(os.path.realpath(__file__))
 # Filepath where the file will be exported
-output_path = "C:\\Users\\josif\\AppData\\LocalLow\\DefaultCompany\\Geometa\\Buildify3DBuildings" # os.path.normpath(os.path.join(script_dir, "..\\Assets\\Resources\\Prefabs\\Map\\Buildify3DBuildings"))
+# output_path = "C:\\Users\\josif\\AppData\\LocalLow\\DefaultCompany\\Geometa\\Buildify3DBuildings" # os.path.normpath(os.path.join(script_dir, "..\\Assets\\Resources\\Prefabs\\Map\\Buildify3DBuildings"))
 # Path to buildify file 
 buildifyPath = os.path.normpath(os.path.join(script_dir, "buildify_1.0.blend"))
 # Path to BLOSM 
@@ -78,7 +78,9 @@ if source_type == "server":
     max_lat = float(script_args[2])
     min_lon =float(script_args[3])
     max_lon = float(script_args[4])
-    
+    output_path = script_args[5]
+    print(output_path)
+
     blosm_props.osmSource = "server"
     # Make sure your addon has properties to store these parameters. For example:
     blosm_props.minLat=min_lat
@@ -96,7 +98,7 @@ except Exception as e:
     
 # bpy.context.object.location[2] = 100
 
-# Select all object and create the mesh 
+# Select all objects and create the mesh 
 bpy.ops.object.select_all(action='SELECT')
 bpy.ops.object.duplicates_make_real()
 
@@ -108,16 +110,6 @@ try:
     )
     print(f"Successfully exported to {output_path}")
 except Exception as e:
-    print(f"Error during FBX export: {e}")
-
-# Delete the osm files created 
-# try:
-#     for file in Path(osm_files_dir).glob("*"):
-#         if file.is_file():
-#             os.remove(file)
-#             print(f"File deleted: " {file})
-#     print(f"Deleted OSM files in directory: {osm_files_dir}")
-# except Exception as e:
-#     print(f"Failed to delete OSM files: {e}")
+    print(f"Error during glTF export: {e}")
 
 print("BLOSM import complete!")

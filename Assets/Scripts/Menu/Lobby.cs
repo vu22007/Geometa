@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Fusion;
 using TMPro;
@@ -195,14 +196,11 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 
     public void SelectArea()
     {
-        // Note: Might need changing for linux
-        string localPathToHtmlFile = "\\Non-Unity\\mapCoordinates.html";
-        string pathToHtmlFile = System.IO.Directory.GetCurrentDirectory() + localPathToHtmlFile;
+        string pathToHtmlFile = Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Non-Unity", "mapCoordinates.html");
+        Debug.Log(pathToHtmlFile);
         if (HasStateAuthority)
         {
             Application.OpenURL(pathToHtmlFile);
-            // Debug.Log("HTML file path: " + pathToHtmlFile);
-            // Debug.Log("Current directory: " + System.IO.Directory.GetCurrentDirectory());
         }
     }
 
@@ -220,6 +218,9 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void RPC_GenerateMap()
     {
+        // MapGenerationCoordinates are updates when the RPC call is called. So when a player joins, just 
+        // GenerateMap() is called and that uses the coordinates that were last used, i.e MapGenerationCoordinates
+        // This makes sure all of the players have the same map even though some might join late
         mapGenerationCoordinates = coordinates;
         GenerateMap();
     }
@@ -247,7 +248,6 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             }
         }
 
-        Debug.Log("Map generation function inside");
         mapGenerated = true;
 
         if (allValid)
@@ -279,7 +279,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
                 {
                     if (!playersCompletedMapGen.Contains(item))
                     {
-                        Debug.Log("Hasn't generated map: " + item);
+                        Debug.Log(item + " hasn't generated map");
                     }
                 }
 
@@ -304,7 +304,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
                 // Load Scene that will use the 3D Generated buildings and generate 2D map in scene
                 // Switch to map scene to start the game, and the game controller will spawn player objects using the player dicts in the network manager
                 Destroy(coordinatesDataHolder);
-                Runner.LoadScene(SceneRef.FromIndex(5));
+                Runner.LoadScene(SceneRef.FromIndex(3));
             }
         }
     }

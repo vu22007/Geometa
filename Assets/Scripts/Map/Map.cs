@@ -1,4 +1,6 @@
+using GLTFast;
 using System.Collections;
+using System.IO;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.U2D;
@@ -13,13 +15,14 @@ public class Map : MonoBehaviour
     [SerializeField] GameObject grassPrefab;
     [SerializeField] GameObject waterPrefab;
     RunBlenderScript buildingsGenerator;
+    private string outputFilePath;
 
     void Start()
     {
-        // GameObject buildingGeneratorPrefab = Resources.Load<GameObject>("Prefabs/Map/BuildingsGenerator");
-        buildingsGenerator = GameObject.Find("BuildingsGenerator").GetComponent<RunBlenderScript>();
+        // Filepath where the glb file got outputed
+        outputFilePath = Path.Combine(Application.persistentDataPath, "Buildify3DBuildings.glb");
 
-        if(CoordinatesDataHolder.Instance == null)
+        if (CoordinatesDataHolder.Instance == null)
         {
             Debug.LogError("Coordinates aren't valid");
             //Debug.Log("Using default values for Map");
@@ -33,22 +36,36 @@ public class Map : MonoBehaviour
             double highLong = CoordinatesDataHolder.Instance.Float4;
             Debug.Log("Generating map for: " + lowLat + ", " + highLat + ", " + lowLong + ", " + highLong);
             GenerateMap(lowLat, highLat, lowLong, highLong);
-        } 
+        }
     }
 
     public void GenerateMap(double lowLat, double highLat, double lowLong, double highLong)
     {
         // Create 2D map
         StartCoroutine(LoadMapFromBoundingBox(lowLat, highLat, lowLong, highLong));
-
-        //GameObject buildingsPrefab = Resources.Load<GameObject>("Prefabs/Map/Buildify3DBuildings");
-        //GameObject buildingsInstance = Instantiate(buildingsPrefab, Vector3.zero, Quaternion.identity);
-        //// The building has to be rotated to match the 2D map
-        //buildingsInstance.transform.eulerAngles = new Vector3(90, 180, 0);
-
-        buildingsGenerator.ImportGLTF("C:\\Users\\josif\\AppData\\LocalLow\\DefaultCompany\\Geometa\\Buildify3DBuildings.glb");
+        // Instantiate the 3D buildings
+        ImportGLTF(outputFilePath);
         // Create 3D buildings
         // StartCoroutine(buildingsGenerator.RunBlender(lowLat, highLat, lowLong, highLong));
+    }
+
+    public async void ImportGLTF(string outputFilePath)
+    {
+        // Create an importer instanse
+        GltfImport gltfImport = new GLTFast.GltfImport();
+
+        bool success = await gltfImport.Load(outputFilePath);
+        if (!success)
+        {
+            Debug.LogError("Failed to load glTF file from: " + outputFilePath);
+            return;
+        }
+
+        GameObject gltfInstance = new GameObject("glTF instance");
+        await gltfImport.InstantiateSceneAsync(gltfInstance.transform);
+        gltfInstance.transform.eulerAngles = new Vector3(90, 180, 0);
+
+        Debug.Log("glTF file loaded.");
     }
 
     IEnumerator LoadMapFromBoundingBox(double lowLat, double highLat, double lowLong, double highLong)
