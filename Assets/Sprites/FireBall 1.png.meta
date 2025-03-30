@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 797312d0b4f40c148857bff08e4ccdfd
+guid: 814b16be796c10b4b8f9b3b882a8fcb8
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 3898078358876748712
-    second: aoeSmall1_0
+      213: 4797229610980651798
+    second: FireBall 1_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,7 +100,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: aoeSmall1_0
+      name: FireBall 1_0
       rect:
         serializedVersion: 2
         x: 0
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 8ab7c7f4d91c81630800000000000000
-      internalID: 3898078358876748712
+      spriteID: 613bc741aee239240800000000000000
+      internalID: 4797229610980651798
       vertices: []
       indices: 
       edges: []
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      aoeSmall1_0: 3898078358876748712
+      FireBall 1_0: 4797229610980651798
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

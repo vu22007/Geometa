@@ -36,7 +36,7 @@ public class PickupFlag : NetworkBehaviour
             int playerTeam = localPlayer.GetTeam();
 
             // Blue for local player's team flag, red for enemy's flag
-            string spritePath = playerTeam == team ? "Sprites/BlueFlag" : "Sprites/RedFlag";
+            string spritePath = playerTeam == team ? "Sprites/CrystalBlue" : "Sprites/CrystalRed";
 
             spriteRenderer.sprite = Resources.Load<Sprite>(spritePath);
             spriteIndicator.sprite = Resources.Load<Sprite>(spritePath);

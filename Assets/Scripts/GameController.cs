@@ -297,7 +297,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     void SpawnPlayersForTesting(int allies, int enemies, bool testing)
     {
         GameObject playerPrefab = Resources.Load("Prefabs/Player") as GameObject;
-        string characterName = "Wizard";
+        string characterName = "Knight";
 
         for (int i = 0; i < allies; i++)
         {
