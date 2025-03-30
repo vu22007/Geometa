@@ -31,13 +31,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1995609758509745817}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 5.5, y: 5.5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 90}
 --- !u!212 &8186048401428761858
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -82,15 +82,15 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 4797229610980651798, guid: 814b16be796c10b4b8f9b3b882a8fcb8, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 1.95, y: 1.95}
+  m_Size: {x: 2, y: 2}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 0
+  m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!114 &4256351161494273197
@@ -181,8 +181,6 @@ MonoBehaviour:
   _damage: 0
   _team: 0
   _duration: 0
-  aoeSmall: {fileID: 0}
-  aoeNormal: {fileID: 0}
   aoeSound: {fileID: 8300000, guid: 6d7b8f65168ee4888a54ef2fa2a47ea3, type: 3}
 --- !u!82 &-6966508924340876950
 AudioSource:
@@ -291,7 +289,7 @@ Animator:
   m_GameObject: {fileID: 1995609758509745817}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 37c5f4e14a9962c4dbbd339d9320043e, type: 2}
+  m_Controller: {fileID: 9100000, guid: 35b20f42af54b474f976953232d6db6a, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
