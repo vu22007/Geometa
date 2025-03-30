@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -10,9 +11,11 @@ public class Map : MonoBehaviour
     [SerializeField] GameObject buildingHolePrefab;
     [SerializeField] GameObject roadPrefab;
     [SerializeField] GameObject pathPrefab;
+    [SerializeField] GameObject stepsPrefab;
     [SerializeField] GameObject grassPrefab;
     [SerializeField] GameObject waterPrefab;
     RunBlenderScript buildingsGenerator;
+    [SerializeField] GameObject wallPrefab;
 
     void Start()
     {
@@ -53,7 +56,7 @@ public class Map : MonoBehaviour
     IEnumerator LoadMapFromBoundingBox(double lowLat, double highLat, double lowLong, double highLong)
     {
         // Construct request body
-        // Note: We are fetching buildings (both as ways and as relations), roads, paths, grass and water
+        // Note: We are fetching buildings (both as ways and as relations), roads, paths, steps, grass, water, walls and fences
         string data = "data=" + UnityWebRequest.EscapeURL("" +
             $"[out:json][timeout:25][bbox:{lowLat},{lowLong},{highLat},{highLong}];" +
             "(" +
@@ -66,6 +69,9 @@ public class Map : MonoBehaviour
             "  way[leisure=garden];" +
             "  way[leisure=nature_reserve];" +
             "  way[natural=water];" +
+            "  way[barrier=wall];" +
+            "  way[barrier=retaining_wall];" +
+            "  way[barrier=fence];" +
             ");" +
             "out geom;");
 
@@ -96,11 +102,12 @@ public class Map : MonoBehaviour
         double midLat = (lowLat + highLat) / 2;
         double scale = Mathf.Cos((float)midLat * Mathf.Deg2Rad) * 111319.488;
 
-        // Add background to scene (scaled to cover whole map)
-        GameObject background = Instantiate(backgroundPrefab, new Vector3(0, 0, 0), Quaternion.identity, transform);
-        double xScale = (highLong - lowLong) * scale;
-        double yScale = (LatToY(highLat) - LatToY(lowLat)) * scale;
-        background.transform.localScale = new Vector3((float)xScale, (float)yScale, 1);
+        // Add background to scene (covers whole map)
+        // Note: We specify the first map corner twice since AddWayToScene expects the last vertex to be the same as the first
+        float halfMapWidth = (float)((highLong - lowLong) * scale / 2);
+        float halfMapHeight = (float)((LatToY(highLat) - LatToY(lowLat)) * scale / 2);
+        Vector2[] mapCorners = { new Vector2(-halfMapWidth, halfMapHeight), new Vector2(halfMapWidth, halfMapHeight), new Vector2(halfMapWidth, -halfMapHeight), new Vector2(-halfMapWidth, -halfMapHeight), new Vector2(-halfMapWidth, halfMapHeight) };
+        AddWayToScene(mapCorners, backgroundPrefab, false, false);
 
         // Add map elements to scene
         foreach (MapElement element in mapData.elements)
@@ -113,23 +120,31 @@ public class Map : MonoBehaviour
 
                 // Create and add building to scene (but only if it is a way and not a relation)
                 if (IsBuilding(element))
-                    AddWayToScene(vertices, buildingPrefab, false);
+                    AddWayToScene(vertices, buildingPrefab, false, false);
 
                 // Create and add road to scene
                 else if (IsRoad(element))
-                    AddWayToScene(vertices, roadPrefab, true, 4.0f);
+                    AddWayToScene(vertices, roadPrefab, true, true, 5.0f);
 
                 // Create and add path to scene
                 else if (IsPath(element))
-                    AddWayToScene(vertices, pathPrefab, true, 2.0f);
+                    AddWayToScene(vertices, pathPrefab, true, true, 2.0f);
+
+                // Create and add steps to scene
+                else if (IsSteps(element))
+                    AddWayToScene(vertices, stepsPrefab, true, false, 1.0f);
 
                 // Create and add grass to scene
                 else if (IsGrass(element))
-                    AddWayToScene(vertices, grassPrefab, false);
+                    AddWayToScene(vertices, grassPrefab, false, false);
 
                 // Create and add water to scene
                 else if (IsWater(element))
-                    AddWayToScene(vertices, waterPrefab, false);
+                    AddWayToScene(vertices, waterPrefab, false, false);
+
+                // Create and add wall to scene
+                else if (IsWall(element))
+                    AddWayToScene(vertices, wallPrefab, true, false, 1.0f);
             }
 
             // Deal with relations
@@ -147,11 +162,11 @@ public class Map : MonoBehaviour
 
                             // Create and add building to scene
                             if (member.role == "outer")
-                                AddWayToScene(vertices, buildingPrefab, false);
+                                AddWayToScene(vertices, buildingPrefab, false, false);
 
                             // Create and add building hole to scene
                             else if (member.role == "inner")
-                                AddWayToScene(vertices, buildingHolePrefab, false);
+                                AddWayToScene(vertices, buildingHolePrefab, false, false);
                         }
                     }
                 }
@@ -161,9 +176,7 @@ public class Map : MonoBehaviour
 
     double LatToY(double latitude)
     {
-        return System.Math.Log(System.Math.Tan(
-            (latitude + 90d) / 360d * System.Math.PI
-        )) / System.Math.PI * 180d;
+        return Math.Log(Math.Tan((latitude + 90) / 360 * Math.PI)) / Math.PI * 180;
     }
 
     Vector2[] GetPointsFromGPSCoords(MapElement.Coords[] geometry, double xShift, double yShift, double scale)
@@ -186,14 +199,18 @@ public class Map : MonoBehaviour
 
     bool IsRoad(MapElement element)
     {
-        return element.tags.highway != null && !IsPath(element);
+        return element.tags.highway != null && !IsPath(element) && !IsSteps(element);
     }
 
     bool IsPath(MapElement element)
     {
         return element.tags.highway == "footway" ||
-               element.tags.highway == "pedestrian" ||
-               element.tags.highway == "steps";
+               element.tags.highway == "pedestrian";
+    }
+
+    bool IsSteps(MapElement element)
+    {
+        return element.tags.highway == "steps";
     }
 
     bool IsGrass(MapElement element)
@@ -210,7 +227,14 @@ public class Map : MonoBehaviour
         return element.tags.natural == "water";
     }
 
-    void AddWayToScene(Vector2[] vertices, GameObject prefab, bool isOpenEnded, float thickness = 1.0f)
+    bool IsWall(MapElement element)
+    {
+        return element.tags.barrier == "wall" ||
+               element.tags.barrier == "retaining_wall" ||
+               element.tags.barrier == "fence";
+    }
+
+    void AddWayToScene(Vector2[] vertices, GameObject prefab, bool isOpenEnded, bool convertToCloseEnded, float thickness = 1.0f)
     {
         // Instantiate way from prefab with the map as the parent
         GameObject way = Instantiate(prefab, new Vector3(0, 0, 0), Quaternion.identity, transform);
@@ -225,17 +249,46 @@ public class Map : MonoBehaviour
         // If the way is open-ended (e.g. a road or path) then make it smoother by setting the tangent mode to continuous
         ShapeTangentMode tangentMode = isOpenEnded ? ShapeTangentMode.Continuous : ShapeTangentMode.Linear;
 
-        // Add way vertices to sprite shape
-        spline.Clear();
-        for (int i = 0; i < numVertices; i++)
+        if (!isOpenEnded) // close-ended
         {
-            // Add point to sprite shape
-            spline.InsertPointAt(i, vertices[i]);
-            spline.SetTangentMode(i, tangentMode);
+            // Reverse order if anti-clockwise (so that sprite shape is drawn correctly)
+            if (!PolygonIsClockwise(vertices))
+                Array.Reverse(vertices);
 
-            // Set thickness of way at this point (if open-ended e.g. for a road or path but not for a building)
-            if (isOpenEnded)
+            // Add way vertices to sprite shape
+            spline.Clear();
+            for (int i = 0; i < numVertices; i++)
+            {
+                // Add point to sprite shape
+                spline.InsertPointAt(i, vertices[i]);
+                spline.SetTangentMode(i, tangentMode);
+            }
+        }
+        else if (convertToCloseEnded) // open-ended but to be converted to close-ended
+        {
+            try
+            {
+                // Generate close-ended way from open-ended line and add the way vertices to sprite shape
+                CreateCloseEndedWayFromOpenEndedLine(vertices, spline, tangentMode, thickness);
+            }
+            catch (ArgumentException e)
+            {
+                Debug.Log("Error adding point to spline: " + e.Message);
+                spline.Clear(); // Remove any points that were successfully added
+                return;
+            }
+        }
+        else // open-ended
+        {
+            // Add way vertices to sprite shape
+            spline.Clear();
+            for (int i = 0; i < numVertices; i++)
+            {
+                // Add point to sprite shape
+                spline.InsertPointAt(i, vertices[i]);
+                spline.SetTangentMode(i, tangentMode);
                 spline.SetHeight(i, thickness);
+            }
         }
 
         // The above code creates sprite shapes that have their origin at the centre of the world, and this causes them to not be loaded
@@ -254,5 +307,122 @@ public class Map : MonoBehaviour
             localBounds.Encapsulate(pos);
         }
         spriteShapeController.spriteShapeRenderer.SetLocalAABB(localBounds);
+    }
+
+    void CreateCloseEndedWayFromOpenEndedLine(Vector2[] vertices, Spline spline, ShapeTangentMode tangentMode, float thickness)
+    {
+        int numVertices = vertices.Length;
+
+        // TEMP - DELETE THIS!
+        Color[] colours = { Color.red, Color.green, Color.blue, Color.magenta, Color.yellow, Color.black };
+        int colourIndex = 0;
+
+        spline.Clear();
+
+        Vector2 dirToPrev;
+        Vector2 dirToNext = (vertices[1] - vertices[0]).normalized;
+        Vector2 dirPerpToLine = Vector2.Perpendicular(dirToNext).normalized;
+        Vector2 offsetFromLine = dirPerpToLine * thickness / 2;
+
+        Vector2 initialPoint1 = vertices[0] + offsetFromLine;
+        Vector2 initialPoint2 = vertices[0] - offsetFromLine;
+
+        // Insert point 1
+        spline.InsertPointAt(0, initialPoint1);
+        spline.SetTangentMode(0, tangentMode);
+
+        // TEMP - DELETE THIS!
+        Vector2 temp1 = initialPoint1;
+        Vector2 temp2 = initialPoint2;
+
+        Vector2[] otherLine = new Vector2[numVertices];
+
+        // Store point 2
+        otherLine[numVertices - 1] = initialPoint2;
+
+        for (int i = 1; i < numVertices - 1; i++)
+        {
+            dirToPrev = (vertices[i - 1] - vertices[i]).normalized;
+            dirToNext = (vertices[i + 1] - vertices[i]).normalized;
+            Vector2 dirAtVertex = (dirToNext - dirToPrev).normalized;
+            dirPerpToLine = Vector2.Perpendicular(dirAtVertex).normalized;
+            offsetFromLine = dirPerpToLine * thickness / 2;
+
+            Vector2 point1 = vertices[i] + offsetFromLine;
+            Vector2 point2 = vertices[i] - offsetFromLine;
+
+            // Insert point 1
+            spline.InsertPointAt(i, point1);
+            spline.SetTangentMode(i, tangentMode);
+
+            // Store point 2
+            int index = numVertices - i - 1;
+            otherLine[index] = point2;
+
+            // TEMP - DELETE THIS!
+            Color colour = colours[colourIndex];
+            colourIndex++;
+            colourIndex %= colours.Length;
+            Debug.DrawLine(vertices[i - 1], vertices[i], colour, 1000000000, false);
+            Debug.DrawLine(temp1, point1, colour, 1000000000, false);
+            Debug.DrawLine(temp2, point2, colour, 1000000000, false);
+            temp1 = point1;
+            temp2 = point2;
+        }
+
+        // If end is too close to start, move the end back a bit so they don't overlap and cause issues
+        float threshold = 1f;
+        float offsetAmount = 1f;
+        if (Vector2.Distance(vertices[numVertices - 1], vertices[0]) < threshold)
+        {
+            Vector2 offset = (vertices[numVertices - 2] - vertices[numVertices - 1]).normalized * offsetAmount;
+            vertices[numVertices - 1] += offset;
+        }
+
+        dirToPrev = (vertices[numVertices - 2] - vertices[numVertices - 1]).normalized;
+        dirPerpToLine = Vector2.Perpendicular(-dirToPrev).normalized;
+        offsetFromLine = dirPerpToLine * thickness / 2;
+
+        Vector2 finalPoint1 = vertices[numVertices - 1] + offsetFromLine;
+        Vector2 finalPoint2 = vertices[numVertices - 1] - offsetFromLine;
+
+        // TEMP - DELETE THIS!
+        Color colour2 = colours[colourIndex];
+        colourIndex++;
+        colourIndex %= colours.Length;
+        Debug.DrawLine(vertices[numVertices - 2], vertices[numVertices - 1], colour2, 1000000000, false);
+        Debug.DrawLine(temp1, finalPoint1, colour2, 1000000000, false);
+        Debug.DrawLine(temp2, finalPoint2, colour2, 1000000000, false);
+
+        // Insert point 1
+        spline.InsertPointAt(numVertices - 1, finalPoint1);
+        spline.SetTangentMode(numVertices - 1, tangentMode);
+
+        // Store point 2
+        otherLine[0] = finalPoint2;
+
+        // Insert all points for other line
+        for (int i = 0; i < numVertices; i++)
+        {
+            int splineIndex = numVertices + i;
+            spline.InsertPointAt(splineIndex, otherLine[i]);
+            spline.SetTangentMode(splineIndex, tangentMode);
+        }
+    }
+
+    // This method uses the sign of the signed polygon area to determine if clockwise
+    bool PolygonIsClockwise(Vector2[] vertices)
+    {
+        float sum = 0.0f;
+        Vector2 v1 = vertices[vertices.Length - 1];
+
+        foreach (Vector2 v2 in vertices)
+        {
+            sum += (v1[0] * v2[1]) - (v2[0] * v1[1]);
+            v1 = v2;
+        }
+
+        // Sum is negative if clockwise
+        return sum < 0.0f;
     }
 }
