@@ -78,9 +78,9 @@ SpriteShapeRenderer:
   m_SortingLayerID: -1147340717
   m_SortingLayer: -1
   m_SortingOrder: 0
-  m_Color: {r: 0.899371, g: 0.899371, b: 0.899371, a: 1}
+  m_Color: {r: 0.8679245, g: 0.8679245, b: 0.8679245, a: 1}
   m_MaskInteraction: 0
-  m_ShapeTexture: {fileID: 2800000, guid: 99b3df0b16c3f094eb56fcd2e2b8cf5a, type: 3}
+  m_ShapeTexture: {fileID: 2800000, guid: b281b91a70a624a0da1c43adc1c30c7b, type: 3}
   m_Sprites: []
   m_LocalAABB:
     m_Center: {x: 0.0008108616, y: 0.086500525, z: 0}
