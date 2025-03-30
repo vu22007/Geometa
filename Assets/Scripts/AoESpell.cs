@@ -17,11 +17,9 @@ public class AoESpell : NetworkBehaviour
     [Networked] private TickTimer damageCooldown { get; set; }
     [Networked, OnChangedRender(nameof(OnActivatedChanged))] private bool isActivated { get; set; }
 
-    [SerializeField] private Sprite aoeSmall;
-    [SerializeField] private Sprite aoeNormal;
     AudioSource audioSource;
     [SerializeField] AudioClip aoeSound;
-    private SpriteRenderer spriteRenderer;
+    private Animator animator;
     private List<Player> players;
     private float damageCooldownMax = 0.6f;
 
@@ -42,11 +40,15 @@ public class AoESpell : NetworkBehaviour
 
     public override void Spawned()
     {
-        spriteRenderer = GetComponent<SpriteRenderer>();
+        animator = GetComponent<Animator>();
         audioSource = GetComponent<AudioSource>();
         OnActivatedChanged();
         players = new List<Player>();
         gameObject.transform.localScale = gameObject.transform.localScale * (0.5f + score);
+        
+        // Rotation fix
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        transform.rotation = Quaternion.Euler(0f, 0f, angle+90);
     }
 
     public override void FixedUpdateNetwork()
@@ -112,15 +114,14 @@ public class AoESpell : NetworkBehaviour
     // Called on all clients and host when AoE spell is activated, so that everyone sees the correct sprite
     void OnActivatedChanged()
     {
-        if (isActivated && spriteRenderer != null && aoeNormal != null)
+        if (animator != null)
         {
-            spriteRenderer.sprite = aoeNormal;
-            audioSource.PlayOneShot(aoeSound);
+            animator.SetBool("isActivated", isActivated);
         }
 
-        if (!isActivated && spriteRenderer != null && aoeSmall != null)
+        if (isActivated && audioSource != null && aoeSound != null)
         {
-            spriteRenderer.sprite = aoeSmall;
+            audioSource.PlayOneShot(aoeSound);
         }
     }
 }

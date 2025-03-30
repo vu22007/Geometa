@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 5835406024386990842}
   - component: {fileID: -3115397237573406950}
   - component: {fileID: -6966508924340876950}
+  - component: {fileID: 4086703572771807847}
   m_Layer: 0
   m_Name: AoE1
   m_TagString: Untagged
@@ -30,13 +31,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1995609758509745817}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2.6, y: 2.6, z: 1}
+  m_LocalScale: {x: 5.5, y: 5.5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 90}
 --- !u!212 &8186048401428761858
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -81,12 +82,12 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 1224305071567388437, guid: 7722a591a539f874dba6f9db948387e9, type: 3}
+  m_Sprite: {fileID: 4797229610980651798, guid: 814b16be796c10b4b8f9b3b882a8fcb8, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 1.95, y: 1.95}
+  m_Size: {x: 2, y: 2}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -164,7 +165,7 @@ CircleCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_Radius: 1
+  m_Radius: 0.45454547
 --- !u!114 &-3115397237573406950
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -180,8 +181,6 @@ MonoBehaviour:
   _damage: 0
   _team: 0
   _duration: 0
-  aoeSmall: {fileID: 21300000, guid: 797312d0b4f40c148857bff08e4ccdfd, type: 3}
-  aoeNormal: {fileID: 1224305071567388437, guid: 7722a591a539f874dba6f9db948387e9, type: 3}
   aoeSound: {fileID: 8300000, guid: 6d7b8f65168ee4888a54ef2fa2a47ea3, type: 3}
 --- !u!82 &-6966508924340876950
 AudioSource:
@@ -280,3 +279,25 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!95 &4086703572771807847
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1995609758509745817}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 35b20f42af54b474f976953232d6db6a, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
