@@ -107,7 +107,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Spline:
-    m_IsOpenEnded: 0
+    m_IsOpenEnded: 1
     m_ControlPoints:
     - position: {x: -6.2856236, y: 2.0702035, z: 0}
       leftTangent: {x: -0.9636858, y: 0.45031226, z: -0}

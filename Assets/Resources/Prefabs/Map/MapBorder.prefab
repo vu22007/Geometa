@@ -11,9 +11,10 @@ GameObject:
   - component: {fileID: 4373097218521871907}
   - component: {fileID: 2944051065061783022}
   - component: {fileID: 6014050156912707874}
+  - component: {fileID: 516624003455814626}
   m_Layer: 8
-  m_Name: Background
-  m_TagString: Untagged
+  m_Name: MapBorder
+  m_TagString: Wall
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -77,14 +78,15 @@ SpriteShapeRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: -1147340717
   m_SortingLayer: -1
-  m_SortingOrder: 0
-  m_Color: {r: 0.8679245, g: 0.8679245, b: 0.8679245, a: 1}
+  m_SortingOrder: 6
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_MaskInteraction: 0
-  m_ShapeTexture: {fileID: 2800000, guid: b281b91a70a624a0da1c43adc1c30c7b, type: 3}
-  m_Sprites: []
+  m_ShapeTexture: {fileID: 0}
+  m_Sprites:
+  - {fileID: 21300000, guid: 749608ceaa65960429c6e0a7c87c20a5, type: 3}
   m_LocalAABB:
-    m_Center: {x: 0.0008108616, y: 0.086500525, z: 0}
-    m_Extent: {x: 2.0039434, y: 0.9134996, z: 0}
+    m_Center: {x: 4.2248607, y: -2.0958123, z: 0}
+    m_Extent: {x: 7.4989786, y: 4.131513, z: 0}
   m_SpriteSortPoint: 0
 --- !u!114 &6014050156912707874
 MonoBehaviour:
@@ -101,7 +103,7 @@ MonoBehaviour:
   m_Spline:
     m_IsOpenEnded: 0
     m_ControlPoints:
-    - position: {x: -2, y: 1, z: 0}
+    - position: {x: -2.2741823, y: -5.180741, z: 0}
       leftTangent: {x: 0, y: 0, z: 0}
       rightTangent: {x: 0, y: 0, z: 0}
       mode: 0
@@ -109,7 +111,7 @@ MonoBehaviour:
       spriteIndex: 0
       corner: 1
       m_CornerMode: 1
-    - position: {x: 2, y: 1, z: 0}
+    - position: {x: -2.2039146, y: 1.0082994, z: 0}
       leftTangent: {x: 0, y: 0, z: 0}
       rightTangent: {x: 0, y: 0, z: 0}
       mode: 0
@@ -117,7 +119,7 @@ MonoBehaviour:
       spriteIndex: 0
       corner: 1
       m_CornerMode: 1
-    - position: {x: 2.004754, y: -0.82616043, z: 0}
+    - position: {x: 10.723846, y: 1.035703, z: 0}
       leftTangent: {x: 0, y: 0, z: 0}
       rightTangent: {x: 0, y: 0, z: 0}
       mode: 0
@@ -125,7 +127,7 @@ MonoBehaviour:
       spriteIndex: 0
       corner: 1
       m_CornerMode: 1
-    - position: {x: -2.0031326, y: -0.82699907, z: 0}
+    - position: {x: 10.700157, y: -5.2273316, z: 0}
       leftTangent: {x: 0, y: 0, z: 0}
       rightTangent: {x: 0, y: 0, z: 0}
       mode: 0
@@ -133,7 +135,7 @@ MonoBehaviour:
       spriteIndex: 0
       corner: 1
       m_CornerMode: 1
-  m_SpriteShape: {fileID: 11400000, guid: 388615cc3e5e6364d8677ceae44d6406, type: 2}
+  m_SpriteShape: {fileID: 11400000, guid: 1d4b60c2b6b3eb246ac62120bbbc8ab5, type: 2}
   m_FillPixelPerUnit: 16
   m_StretchTiling: 1
   m_SplineDetail: 16
@@ -142,7 +144,7 @@ MonoBehaviour:
   m_WorldSpaceUV: 0
   m_CornerAngleThreshold: 30
   m_ColliderDetail: 16
-  m_ColliderOffset: 0.5
+  m_ColliderOffset: -0.5
   m_UpdateCollider: 1
   m_EnableTangents: 0
   m_GeometryCached: 0
@@ -154,9 +156,55 @@ MonoBehaviour:
   m_Creator: {fileID: 0}
   m_Modifiers: []
   m_ColliderSegment:
-  - {x: -2, y: 1}
-  - {x: 2, y: 1}
-  - {x: 2.004754, y: -0.82616043}
-  - {x: -2.0031326, y: -0.82699907}
-  - {x: -2, y: 1}
+  - {x: -1.2628055, y: -4.184366}
+  - {x: -1.21518, y: 0.010393143}
+  - {x: 9.72005, y: 0.033572886}
+  - {x: 9.703946, y: -4.223748}
+  - {x: -1.2628055, y: -4.184366}
   m_ShadowSegment: []
+--- !u!68 &516624003455814626
+EdgeCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4365782147537462995}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_EdgeRadius: 0
+  m_Points:
+  - {x: -1.2628055, y: -4.184366}
+  - {x: -1.21518, y: 0.010393143}
+  - {x: 9.72005, y: 0.033572886}
+  - {x: 9.703946, y: -4.223748}
+  - {x: -1.2628055, y: -4.184366}
+  m_AdjacentStartPoint: {x: 0, y: 0}
+  m_AdjacentEndPoint: {x: 0, y: 0}
+  m_UseAdjacentStartPoint: 0
+  m_UseAdjacentEndPoint: 0

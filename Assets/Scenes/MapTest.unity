@@ -279,7 +279,7 @@ GameObject:
   m_Component:
   - component: {fileID: 619394802}
   - component: {fileID: 619394801}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Global Light 2D
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5646,6 +5646,49 @@ Transform:
 --- !u!1001 &1981457094
 PrefabInstance:
   m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1441148450}
+  - component: {fileID: 1441148449}
+  m_Layer: 8
+  m_Name: Map
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1441148449
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1441148448}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6e223d00c0777045822ce2c304a0d93, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  backgroundPrefab: {fileID: 4365782147537462995, guid: 3b64b5c4a15bc204488b3ed335742fcc, type: 3}
+  mapBorderPrefab: {fileID: 4365782147537462995, guid: bce3dfe8960daf946bf23f8560194132, type: 3}
+  buildingPrefab: {fileID: 4365782147537462995, guid: 70b868834cfb7744e9d27df37514f730, type: 3}
+  buildingHolePrefab: {fileID: 4365782147537462995, guid: 6c6f4525706f0074d81647b06b2d34dd, type: 3}
+  roadPrefab: {fileID: 4365782147537462995, guid: fca87268cbdb08e4ebf8561535dec02a, type: 3}
+  pathPrefab: {fileID: 4365782147537462995, guid: 6325f95153ba0fc409cc354a57af0ad8, type: 3}
+  stepsPrefab: {fileID: 4365782147537462995, guid: 1aabea74c596239499d8520a3a0f7196, type: 3}
+  grassPrefab: {fileID: 4365782147537462995, guid: d9adde058764589439de03b52781aac7, type: 3}
+  waterPrefab: {fileID: 4365782147537462995, guid: a9ee2f6db43a8414da5ece2dfc7ddbd2, type: 3}
+  wallPrefab: {fileID: 4365782147537462995, guid: cfec327dd8643924bb63a35093509f33, type: 3}
+--- !u!4 &1441148450
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1441148448}
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3

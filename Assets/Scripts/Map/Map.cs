@@ -7,6 +7,7 @@ using UnityEngine.U2D;
 public class Map : MonoBehaviour
 {
     [SerializeField] GameObject backgroundPrefab;
+    [SerializeField] GameObject mapBorderPrefab;
     [SerializeField] GameObject buildingPrefab;
     [SerializeField] GameObject buildingHolePrefab;
     [SerializeField] GameObject roadPrefab;
@@ -125,7 +126,7 @@ public class Map : MonoBehaviour
 
                 // Create and add road to scene
                 else if (IsRoad(element))
-                    AddWayToScene(vertices, roadPrefab, true, true, 5.0f);
+                    AddWayToScene(vertices, roadPrefab, true, false, 5.0f);
 
                 // Create and add path to scene
                 else if (IsPath(element))
