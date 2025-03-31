@@ -15643,18 +15643,10 @@ SpriteShapeRenderer:
   m_Color: {r: 0.9490197, g: 0.93725497, b: 0.91372555, a: 1}
   m_MaskInteraction: 0
   m_ShapeTexture: {fileID: 2800000, guid: b281b91a70a624a0da1c43adc1c30c7b, type: 3}
-  m_Sprites:
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
+  m_Sprites: []
   m_LocalAABB:
-    m_Center: {x: 0.0008108616, y: 0.086500525, z: 0}
-    m_Extent: {x: 2.0039434, y: 0.9134996, z: 0}
+    m_Center: {x: 95.22554, y: -102.24073, z: 0}
+    m_Extent: {x: 14.20512, y: 7.08535, z: 0}
   m_SpriteSortPoint: 0
 --- !u!114 &1385495553968282574
 MonoBehaviour:
@@ -17010,8 +17002,8 @@ Transform:
   m_GameObject: {fileID: 4008729644769273947}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: -1.2043, y: -6.7916, z: 0}
+  m_LocalScale: {x: 1.7322358, y: 1.7273914, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 8946362252178124711}
@@ -26894,18 +26886,10 @@ SpriteShapeRenderer:
   m_Color: {r: 0.7686275, g: 0.7686275, b: 0.7686275, a: 0}
   m_MaskInteraction: 0
   m_ShapeTexture: {fileID: 2800000, guid: b281b91a70a624a0da1c43adc1c30c7b, type: 3}
-  m_Sprites:
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
+  m_Sprites: []
   m_LocalAABB:
-    m_Center: {x: 0.0008108616, y: 0.086500525, z: 0}
-    m_Extent: {x: 2.0039434, y: 0.9134996, z: 0}
+    m_Center: {x: 77.56279, y: 62.372334, z: 0}
+    m_Extent: {x: 6.7661514, y: 8.883404, z: 0}
   m_SpriteSortPoint: 0
 --- !u!114 &1316298202757550684
 MonoBehaviour:
@@ -27031,11 +27015,18 @@ MonoBehaviour:
   m_Creator: {fileID: 0}
   m_Modifiers: []
   m_ColliderSegment:
-  - {x: -2, y: 1}
-  - {x: 2, y: 1}
-  - {x: 2.004754, y: -0.82616043}
-  - {x: -2.0031326, y: -0.82699907}
-  - {x: -2, y: 1}
+  - {x: 70.79664, y: 57.89723}
+  - {x: 81.49209, y: 71.25574}
+  - {x: 84.32894, y: 68.82894}
+  - {x: 80.74299, y: 64.342705}
+  - {x: 82.68509, y: 62.628365}
+  - {x: 77.455284, y: 55.537228}
+  - {x: 75.70739, y: 53.48893}
+  - {x: 74.257744, y: 54.702324}
+  - {x: 72.30177, y: 54.457417}
+  - {x: 71.0394, y: 55.637417}
+  - {x: 71.122635, y: 57.64119}
+  - {x: 70.79664, y: 57.89723}
   m_ShadowSegment: []
 --- !u!60 &8552600909365793813
 PolygonCollider2D:
@@ -27083,11 +27074,18 @@ PolygonCollider2D:
   m_AutoTiling: 0
   m_Points:
     m_Paths:
-    - - {x: -2, y: 1}
-      - {x: 2, y: 1}
-      - {x: 2.004754, y: -0.82616043}
-      - {x: -2.0031326, y: -0.82699907}
-      - {x: -2, y: 1}
+    - - {x: 70.79664, y: 57.89723}
+      - {x: 81.49209, y: 71.25574}
+      - {x: 84.32894, y: 68.82894}
+      - {x: 80.74299, y: 64.342705}
+      - {x: 82.68509, y: 62.628365}
+      - {x: 77.455284, y: 55.537228}
+      - {x: 75.70739, y: 53.48893}
+      - {x: 74.257744, y: 54.702324}
+      - {x: 72.30177, y: 54.457417}
+      - {x: 71.0394, y: 55.637417}
+      - {x: 71.122635, y: 57.64119}
+      - {x: 70.79664, y: 57.89723}
   m_UseDelaunayMesh: 0
 --- !u!1 &5173237806334801448
 GameObject:
@@ -32272,8 +32270,8 @@ SpriteShapeRenderer:
   m_Sprites:
   - {fileID: 21300000, guid: 91ecafffe85c33346ad9d73f223dbb48, type: 3}
   m_LocalAABB:
-    m_Center: {x: 2.469339, y: -0.34938574, z: 0}
-    m_Extent: {x: 6.910008, y: 1.8589911, z: 0}
+    m_Center: {x: 86.33411, y: 16.254501, z: 0}
+    m_Extent: {x: 13.218773, y: 15.4880705, z: 0}
   m_SpriteSortPoint: 0
 --- !u!114 &2229040702351287294
 MonoBehaviour:
@@ -32335,10 +32333,9 @@ MonoBehaviour:
   m_Creator: {fileID: 0}
   m_Modifiers: []
   m_ColliderSegment:
-  - {x: -4.439926, y: 1.008606}
-  - {x: 1.9992194, y: 0.99937487}
-  - {x: 4.10602, y: -1.6301407}
-  - {x: 9.371803, y: -1.7094334}
+  - {x: 73.50094, y: 31.424587}
+  - {x: 77.78052, y: 26.214798}
+  - {x: 99.17141, y: 1.089914}
   m_ShadowSegment: []
 --- !u!68 &1640401038463526302
 EdgeCollider2D:
@@ -32377,10 +32374,9 @@ EdgeCollider2D:
   m_Offset: {x: 0, y: 0}
   m_EdgeRadius: 0
   m_Points:
-  - {x: -4.439926, y: 1.008606}
-  - {x: 1.9992194, y: 0.99937487}
-  - {x: 4.10602, y: -1.6301407}
-  - {x: 9.371803, y: -1.7094334}
+  - {x: 73.50094, y: 31.424587}
+  - {x: 77.78052, y: 26.214798}
+  - {x: 99.17141, y: 1.089914}
   m_AdjacentStartPoint: {x: 0, y: 0}
   m_AdjacentEndPoint: {x: 0, y: 0}
   m_UseAdjacentStartPoint: 0
@@ -35476,18 +35472,10 @@ SpriteShapeRenderer:
   m_Color: {r: 0.9490197, g: 0.93725497, b: 0.91372555, a: 1}
   m_MaskInteraction: 0
   m_ShapeTexture: {fileID: 2800000, guid: b281b91a70a624a0da1c43adc1c30c7b, type: 3}
-  m_Sprites:
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
+  m_Sprites: []
   m_LocalAABB:
-    m_Center: {x: 0.0008108616, y: 0.086500525, z: 0}
-    m_Extent: {x: 2.0039434, y: 0.9134996, z: 0}
+    m_Center: {x: 96.269424, y: -135.569, z: 0}
+    m_Extent: {x: 15.21431, y: 7.0073853, z: 0}
   m_SpriteSortPoint: 0
 --- !u!114 &7628245451122152126
 MonoBehaviour:
@@ -37694,18 +37682,10 @@ SpriteShapeRenderer:
   m_Color: {r: 0.7686275, g: 0.7686275, b: 0.7686275, a: 0}
   m_MaskInteraction: 0
   m_ShapeTexture: {fileID: 2800000, guid: b281b91a70a624a0da1c43adc1c30c7b, type: 3}
-  m_Sprites:
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
+  m_Sprites: []
   m_LocalAABB:
-    m_Center: {x: 0.0008108616, y: 0.086500525, z: 0}
-    m_Extent: {x: 2.0039434, y: 0.9134996, z: 0}
+    m_Center: {x: 73.17572, y: 66.14054, z: 0}
+    m_Extent: {x: 8.316372, y: 8.243315, z: 0}
   m_SpriteSortPoint: 0
 --- !u!114 &2421714979770003570
 MonoBehaviour:
@@ -37831,11 +37811,18 @@ MonoBehaviour:
   m_Creator: {fileID: 0}
   m_Modifiers: []
   m_ColliderSegment:
-  - {x: -2, y: 1}
-  - {x: 2, y: 1}
-  - {x: 2.004754, y: -0.82616043}
-  - {x: -2.0031326, y: -0.82699907}
-  - {x: -2, y: 1}
+  - {x: 70.907616, y: 69.64159}
+  - {x: 72.385, y: 68.51724}
+  - {x: 75.36058, y: 72.16857}
+  - {x: 75.97096, y: 71.72329}
+  - {x: 78.01017, y: 74.38386}
+  - {x: 81.49209, y: 71.25574}
+  - {x: 70.79664, y: 57.89723}
+  - {x: 70.29724, y: 58.620815}
+  - {x: 69.78397, y: 58.1644}
+  - {x: 64.859344, y: 62.817608}
+  - {x: 65.92933, y: 63.981598}
+  - {x: 70.907616, y: 69.64159}
   m_ShadowSegment: []
 --- !u!60 &7429379520604665044
 PolygonCollider2D:
@@ -37883,11 +37870,18 @@ PolygonCollider2D:
   m_AutoTiling: 0
   m_Points:
     m_Paths:
-    - - {x: -2, y: 1}
-      - {x: 2, y: 1}
-      - {x: 2.004754, y: -0.82616043}
-      - {x: -2.0031326, y: -0.82699907}
-      - {x: -2, y: 1}
+    - - {x: 70.907616, y: 69.64159}
+      - {x: 72.385, y: 68.51724}
+      - {x: 75.36058, y: 72.16857}
+      - {x: 75.97096, y: 71.72329}
+      - {x: 78.01017, y: 74.38386}
+      - {x: 81.49209, y: 71.25574}
+      - {x: 70.79664, y: 57.89723}
+      - {x: 70.29724, y: 58.620815}
+      - {x: 69.78397, y: 58.1644}
+      - {x: 64.859344, y: 62.817608}
+      - {x: 65.92933, y: 63.981598}
+      - {x: 70.907616, y: 69.64159}
   m_UseDelaunayMesh: 0
 --- !u!1 &7638119770846420500
 GameObject:
@@ -47290,19 +47284,12 @@ SpriteShapeRenderer:
   m_SortingOrder: 5
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_MaskInteraction: 0
-  m_ShapeTexture: {fileID: 2800000, guid: d6df2d3fd68c2584cb1ed3846934576c, type: 3}
+  m_ShapeTexture: {fileID: 0}
   m_Sprites:
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
-  - {fileID: 21300000, guid: 608e61deb05c54660bebf5a4dd2ee02d, type: 3}
+  - {fileID: 21300000, guid: 6d0d9455b12ac72ed8ebf23728d17bd3, type: 3}
   m_LocalAABB:
-    m_Center: {x: -0.6385832, y: 0.06867814, z: 0}
-    m_Extent: {x: 7.241988, y: 3.5082476, z: 0}
+    m_Center: {x: 100.07696, y: 77.164276, z: 0}
+    m_Extent: {x: 30.409279, y: 36.859688, z: 0}
   m_SpriteSortPoint: 0
 --- !u!114 &1452781539536218136
 MonoBehaviour:
