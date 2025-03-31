@@ -504,11 +504,14 @@ public class Map : MonoBehaviour
                     // Make a split at closest point
                     Vector2[] wall1;
                     Vector2[] wall2;
-                    SplitWall(vertices, closestPoint, 1f, out wall1, out wall2);
+                    float gapWidth = 4f;
+                    SplitWall(vertices, closestPoint, gapWidth, out wall1, out wall2);
 
                     // Add both walls to scene
-                    AddWayToScene(wall1, wallPrefab, true, false, 1.0f);
-                    AddWayToScene(wall2, wallPrefab, true, false, 1.0f);
+                    if (wall1 != null)
+                        AddWayToScene(wall1, wallPrefab, true, false, 1.0f);
+                    if (wall2 != null)
+                        AddWayToScene(wall2, wallPrefab, true, false, 1.0f);
 
                     gateFound = true;
                     break;
@@ -528,6 +531,13 @@ public class Map : MonoBehaviour
         List<Vector2> verticesList = vertices.ToList();
         verticesList.RemoveAll(v => Vector2.Distance(v, splitPoint) <= gapWidth);
 
+        if (verticesList.Count <= 1)
+        {
+            wall1 = null;
+            wall2 = null;
+            return;
+        }
+
         // Get index of vertex with smallest distance to split point
         int index = 0;
         float smallestDistance = float.PositiveInfinity;
@@ -535,7 +545,6 @@ public class Map : MonoBehaviour
         {
             Vector2 vertex = verticesList[i];
             float distance = Vector2.Distance(vertex, splitPoint);
-            Debug.Log("Distance: " + distance);
             if (distance < smallestDistance)
             {
                 smallestDistance = distance;
@@ -548,9 +557,52 @@ public class Map : MonoBehaviour
         float rightDist = (index < verticesList.Count - 1) ? Vector2.Distance(verticesList[index + 1], splitPoint) : float.PositiveInfinity;
         int adjIndex = (leftDist < rightDist) ? index - 1 : index + 1;
 
-        // Use adjacent index if it is less than index
+        // Use adjacent index if it comes before index
         if (adjIndex < index)
             index = adjIndex;
+
+        // Check if split point is before or after whole line (i.e. the points at index and index+1 are both on the same side of the split point)
+        // If so then add one point to end of line up to half gap width away from split point, then return
+        float angle = Vector2.SignedAngle(splitPoint - verticesList[index], splitPoint - verticesList[index + 1]);
+        if (angle > -90 && angle < 90)
+        {
+            int i = (index == 0) ? 0 : verticesList.Count - 1;
+
+            float distToSplitPoint = Vector2.Distance(verticesList[i], splitPoint);
+            Vector2 dirToSplitPoint = (splitPoint - verticesList[i]).normalized;
+            float remainingDist = (distToSplitPoint - gapWidth / 2);
+            Vector2 newVertex = verticesList[i] + dirToSplitPoint * remainingDist;
+
+            // Insert new vertex at either at beginning or at end of line
+            if (index == 0) verticesList.Insert(0, newVertex);
+            else verticesList.Insert(verticesList.Count, newVertex);
+
+            // We only have one wall so set only the first output and return
+            wall1 = verticesList.ToArray();
+            wall2 = null;
+            return;
+        }
+
+        // Add new vertex to one side of gap to make it match gap width
+        float dist = Vector2.Distance(verticesList[index], splitPoint);
+        if (dist > gapWidth / 2)
+        {
+            Vector2 dirToSplitPoint = (splitPoint - verticesList[index]).normalized;
+            float remainingDist = (dist - gapWidth / 2);
+            Vector2 newVertex = verticesList[index] + dirToSplitPoint * remainingDist;
+            verticesList.Insert(index + 1, newVertex);
+            index++; // Make index point to new vertex
+        }
+
+        // Add new vertex to other side of gap to make it match gap width
+        dist = Vector2.Distance(verticesList[index + 1], splitPoint);
+        if (dist > gapWidth / 2)
+        {
+            Vector2 dirToSplitPoint = (splitPoint - verticesList[index + 1]).normalized;
+            float remainingDist = (dist - gapWidth / 2);
+            Vector2 newVertex = verticesList[index + 1] + dirToSplitPoint * remainingDist;
+            verticesList.Insert(index + 1, newVertex);
+        }
 
         wall1 = verticesList.Take(index + 1).ToArray();
         wall2 = verticesList.Skip(index + 1).ToArray();
