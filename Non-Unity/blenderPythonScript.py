@@ -98,6 +98,29 @@ except Exception as e:
     
 # bpy.context.object.location[2] = 100
 
+# for area in bpy.context.screen.areas:
+#     if area.type == 'PROPERTIES':
+#         bpy.context.area = area
+#         break
+
+obj_name = "map.osm_buildings"
+obj = bpy.data.objects.get(obj_name)
+
+# Select and activate the object
+bpy.ops.object.select_all(action='DESELECT')
+obj.select_set(True)
+bpy.context.view_layer.objects.active = obj
+
+collection_name = "map.osm"
+
+# Link object to the collection
+target_collection = bpy.data.collections[collection_name]
+if obj.name not in target_collection.objects:
+    target_collection.objects.link(obj)
+
+obj.hide_set(False)  # Make visible in the viewport
+obj.hide_render = False  # Include in renders/exports
+
 # Select all objects and create the mesh 
 bpy.ops.object.select_all(action='SELECT')
 bpy.ops.object.duplicates_make_real()
@@ -107,6 +130,8 @@ try:
     bpy.ops.export_scene.gltf(
         filepath=output_path,
         use_selection=False,
+        export_apply=True,
+        # export_gn_mesh = True
     )
     print(f"Successfully exported to {output_path}")
 except Exception as e:
