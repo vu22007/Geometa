@@ -16,14 +16,21 @@ public class RunBlenderScript : NetworkBehaviour
     public override void Spawned()
     {
         // The lobby is informed when generation of buildings finishes
-        lobby = GetComponentInParent<Lobby>();    
+        lobby = GetComponentInParent<Lobby>();
         // Path where the glTfF will be outputted
         outputFilePath = Path.Combine(Application.persistentDataPath, "Buildify3DBuildings.glb");
+        // outputFilePath = Path.Combine("/", "home", "qc22435", "Documents", "Buildify3DBuildings.glb");
         // Path to Python script that runs blender
-        scriptPath = Path.Combine("Non-Unity", "blenderPythonScript.py");
+        scriptPath = Path.Combine(Application.streamingAssetsPath, "Non-Unity", "blenderPythonScript.py");
+
+        Debug.Log("Data path: " + Application.dataPath);
+        Debug.Log("Persistent pat: " + Application.persistentDataPath);
+        Debug.Log("Streaming assets: " + Application.streamingAssetsPath);
         
         // Path to the Blender exe - DEPENDENT ON OS
-        blenderExePath = Path.Combine("C:\\", "Program Files", "Blender Foundation", "Blender 4.3", "blender.exe");
+        // blenderExePath = Path.Combine("/", "opt", "blender", "4.1.1", "blender-uob-launcher");
+        Debug.Log(blenderExePath);
+        blenderExePath =  Path.Combine("C:\\", "Program Files", "Blender Foundation", "Blender 4.3", "blender.exe");
     }
 
     public IEnumerator RunBlender(double minLat, double maxLat, double minLon, double maxLon)
@@ -66,7 +73,7 @@ public class RunBlenderScript : NetworkBehaviour
         //    Debug.LogError("Blender error: " + error);
         //}
 
-        // Notify generation of map is ende
+        // Notify generation of map is ended
         lobby.RPC_MapGenComplete(Runner.LocalPlayer);
 
         yield return null;

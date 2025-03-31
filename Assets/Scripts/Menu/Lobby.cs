@@ -196,7 +196,8 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 
     public void SelectArea()
     {
-        string pathToHtmlFile = Path.Combine(System.IO.Directory.GetCurrentDirectory(), "Non-Unity", "mapCoordinates.html");
+        string pathToHtmlFile = Path.Combine(Application.streamingAssetsPath, "Non-Unity", "mapCoordinates.html");
+            
         Debug.Log(pathToHtmlFile);
         if (HasStateAuthority)
         {

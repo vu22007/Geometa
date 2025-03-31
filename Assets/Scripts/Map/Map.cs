@@ -20,6 +20,7 @@ public class Map : MonoBehaviour
     void Start()
     {
         // Filepath where the glb file got outputed
+        // outputFilePath = Path.Combine("/", "home", "qc22435", "Documents", "Buildify3DBuildings.glb");
         outputFilePath = Path.Combine(Application.persistentDataPath, "Buildify3DBuildings.glb");
 
         if (CoordinatesDataHolder.Instance == null)
