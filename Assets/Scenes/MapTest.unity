@@ -919,8 +919,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _playersToTeams:
     _items: []
-  respawnPoint1: {x: -44, y: -82, z: 0}
-  respawnPoint2: {x: 20, y: 16, z: 0}
+  respawnPoint1: {x: -35.5, y: 2.7, z: 0}
+  respawnPoint2: {x: -25.1, y: -24.6, z: 0}
   pickupLocations: []
   maxTime: 480
 --- !u!4 &1313831518
