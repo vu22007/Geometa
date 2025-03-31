@@ -162,10 +162,11 @@ public class Player : NetworkBehaviour
     {
         uIController.transform.SetParent(null);
 
-        // Disable the camera if client does not control this player
+        // Disable the camera and UI if client does not control this player
         if (!HasInputAuthority)
         {
             cam.gameObject.SetActive(false);
+            uIController.gameObject.SetActive(false);
         }
 
         // Get game controller component
