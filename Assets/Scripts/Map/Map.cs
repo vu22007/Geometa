@@ -1,9 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.U2D;
+using static MapElement;
+using static UnityEditor.Searcher.SearcherWindow.Alignment;
 
 public class Map : MonoBehaviour
 {
@@ -42,6 +45,7 @@ public class Map : MonoBehaviour
             "  way[barrier=wall];" +
             "  way[barrier=retaining_wall];" +
             "  way[barrier=fence];" +
+            "  node[barrier=gate];" +
             ");" +
             "out geom;");
 
@@ -83,10 +87,22 @@ public class Map : MonoBehaviour
         AddWayToScene(mapCorners, mapBorderPrefab, false, false);
 
         List<GameObject> roads = new List<GameObject>();
+        List<Vector2> gates = new List<Vector2>();
 
         // Add map elements to scene
         foreach (MapElement element in mapData.elements)
         {
+            // Deal with nodes
+            if (element.type == "node")
+            {
+                if (IsGate(element))
+                {
+                    float xPos = (float)((element.lon - xShift) * scale);
+                    float yPos = (float)((LatToY(element.lat) - yShift) * scale);
+                    gates.Add(new Vector2(xPos, yPos));
+                }
+            }
+
             // Deal with ways
             if (element.type == "way")
             {
@@ -123,7 +139,9 @@ public class Map : MonoBehaviour
 
                 // Create and add wall to scene
                 else if (IsWall(element))
-                    AddWayToScene(vertices, wallPrefab, true, false, 1.0f);
+                {
+                    AddWallToScene(vertices, gates);
+                }
             }
 
             // Deal with relations
@@ -211,6 +229,11 @@ public class Map : MonoBehaviour
         return element.tags.barrier == "wall" ||
                element.tags.barrier == "retaining_wall" ||
                element.tags.barrier == "fence";
+    }
+
+    bool IsGate(MapElement element)
+    {
+        return element.tags.barrier == "gate";
     }
 
     GameObject AddWayToScene(Vector2[] vertices, GameObject prefab, bool isOpenEnded, bool convertToCloseEnded, float thickness = 1.0f)
@@ -461,5 +484,75 @@ public class Map : MonoBehaviour
         if (distance < 0) return a;
         if (distance > 1) return b;
         return a + ab * distance;
+    }
+
+    void AddWallToScene(Vector2[] vertices, List<Vector2> gates)
+    {
+        bool gateFound = false;
+
+        // Split wall if there is a gate on it
+        for (int i = 0; i < vertices.Length - 1; i++)
+        {
+            Vector2 v1 = vertices[i];
+            Vector2 v2 = vertices[i + 1];
+
+            foreach (Vector2 gate in gates)
+            {
+                Vector2 closestPoint = FindClosestPointOnSegment(gate, v1, v2);
+                if (Vector2.Distance(closestPoint, gate) < float.Epsilon)
+                {
+                    // Make a split at closest point
+                    Vector2[] wall1;
+                    Vector2[] wall2;
+                    SplitWall(vertices, closestPoint, 1f, out wall1, out wall2);
+
+                    // Add both walls to scene
+                    AddWayToScene(wall1, wallPrefab, true, false, 1.0f);
+                    AddWayToScene(wall2, wallPrefab, true, false, 1.0f);
+
+                    gateFound = true;
+                    break;
+                }
+            }
+
+            if (gateFound) break;
+        }
+
+        // Add the whole wall as one object if no gate sits on wall
+        if (!gateFound)
+            AddWayToScene(vertices, wallPrefab, true, false, 1.0f);
+    }
+
+    void SplitWall(Vector2[] vertices, Vector2 splitPoint, float gapWidth, out Vector2[] wall1, out Vector2[] wall2)
+    {
+        List<Vector2> verticesList = vertices.ToList();
+        verticesList.RemoveAll(v => Vector2.Distance(v, splitPoint) <= gapWidth);
+
+        // Get index of vertex with smallest distance to split point
+        int index = 0;
+        float smallestDistance = float.PositiveInfinity;
+        for (int i = 0; i < verticesList.Count; i ++)
+        {
+            Vector2 vertex = verticesList[i];
+            float distance = Vector2.Distance(vertex, splitPoint);
+            Debug.Log("Distance: " + distance);
+            if (distance < smallestDistance)
+            {
+                smallestDistance = distance;
+                index = i;
+            }
+        }
+
+        // Get index of adjacent vertex that has smallest distance to split point
+        float leftDist = (index > 0) ? Vector2.Distance(verticesList[index - 1], splitPoint) : float.PositiveInfinity;
+        float rightDist = (index < verticesList.Count - 1) ? Vector2.Distance(verticesList[index + 1], splitPoint) : float.PositiveInfinity;
+        int adjIndex = (leftDist < rightDist) ? index - 1 : index + 1;
+
+        // Use adjacent index if it is less than index
+        if (adjIndex < index)
+            index = adjIndex;
+
+        wall1 = verticesList.Take(index + 1).ToArray();
+        wall2 = verticesList.Skip(index + 1).ToArray();
     }
 }
