@@ -18,7 +18,7 @@ public class RunBlenderScript : NetworkBehaviour
         // The lobby is informed when generation of buildings finishes
         lobby = GetComponentInParent<Lobby>();
         // Path where the glTfF will be outputted
-        outputFilePath = Path.Combine(Application.persistentDataPath, "Buildify3DBuildings.glb");
+        outputFilePath = Path.Combine(Application.streamingAssetsPath, "Buildify3DBuildings.glb");
         // outputFilePath = Path.Combine("/", "home", "qc22435", "Documents", "Buildify3DBuildings.glb");
         // Path to Python script that runs blender
         scriptPath = Path.Combine(Application.streamingAssetsPath, "Non-Unity", "blenderPythonScript.py");
