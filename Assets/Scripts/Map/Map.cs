@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.U2D;
@@ -81,6 +82,8 @@ public class Map : MonoBehaviour
         // Add map border to scene
         AddWayToScene(mapCorners, mapBorderPrefab, false, false);
 
+        List<GameObject> roads = new List<GameObject>();
+
         // Add map elements to scene
         foreach (MapElement element in mapData.elements)
         {
@@ -96,7 +99,11 @@ public class Map : MonoBehaviour
 
                 // Create and add road to scene
                 else if (IsRoad(element))
-                    AddWayToScene(vertices, roadPrefab, true, false, 5.0f);
+                {
+                    GameObject road = AddWayToScene(vertices, roadPrefab, true, false, 5.0f);
+                    CheckForRoadOverlaps(road, roads);
+                    roads.Add(road);
+                }
 
                 // Create and add path to scene
                 else if (IsPath(element))
@@ -206,7 +213,7 @@ public class Map : MonoBehaviour
                element.tags.barrier == "fence";
     }
 
-    void AddWayToScene(Vector2[] vertices, GameObject prefab, bool isOpenEnded, bool convertToCloseEnded, float thickness = 1.0f)
+    GameObject AddWayToScene(Vector2[] vertices, GameObject prefab, bool isOpenEnded, bool convertToCloseEnded, float thickness = 1.0f)
     {
         // Instantiate way from prefab with the map as the parent
         GameObject way = Instantiate(prefab, new Vector3(0, 0, 0), Quaternion.identity, transform);
@@ -247,7 +254,7 @@ public class Map : MonoBehaviour
             {
                 Debug.Log("Error adding point to spline: " + e.Message);
                 spline.Clear(); // Remove any points that were successfully added
-                return;
+                return null;
             }
         }
         else // open-ended
@@ -267,6 +274,8 @@ public class Map : MonoBehaviour
         // until the centre of the world is on-screen, so we need to set the bounding volume of the sprite shape geometry to ensure that
         // the sprite shape is visible at all times
         SetSpriteShapeBoundingVolume(spriteShapeController);
+
+        return way;
     }
 
     void SetSpriteShapeBoundingVolume(SpriteShapeController spriteShapeController)
@@ -396,5 +405,61 @@ public class Map : MonoBehaviour
 
         // Sum is negative if clockwise
         return sum < 0.0f;
+    }
+
+    void CheckForRoadOverlaps(GameObject road, List<GameObject> roads)
+    {
+        Spline spline = road.GetComponent<SpriteShapeController>().spline;
+
+        int pointCount = spline.GetPointCount();
+        Vector2 startPoint = spline.GetPosition(0);
+        Vector2 endPoint = spline.GetPosition(pointCount - 1);
+
+        Vector2 startOffsetDir = ((Vector2)spline.GetPosition(1) - startPoint).normalized;
+        Vector2 endOffsetDir = ((Vector2)spline.GetPosition(pointCount - 2) - endPoint).normalized;
+
+        foreach (GameObject otherRoad in roads)
+        {
+            Spline otherSpline = otherRoad.GetComponent<SpriteShapeController>().spline;
+            int otherPointCount = otherSpline.GetPointCount();
+            float halfThickness = otherSpline.GetHeight(0) / 2; // All points have same thickness so just get first one
+
+            for (int i = 1; i < otherPointCount - 2; i++) // ignore first and last vertex of other road since we allow end of roads to overlap
+            {
+                Vector2 p1 = otherSpline.GetPosition(i);
+                Vector2 p2 = otherSpline.GetPosition(i + 1);
+
+                // Check start point
+                Vector2 closestPoint = FindClosestPointOnSegment(startPoint, p1, p2);
+                float distance = Vector2.Distance(startPoint, closestPoint);
+
+                if (distance < halfThickness)
+                {
+                    Vector2 offset = (halfThickness - distance) * startOffsetDir;
+                    spline.SetPosition(0, startPoint + offset);
+                }
+
+                // Check end point
+                closestPoint = FindClosestPointOnSegment(endPoint, p1, p2);
+                distance = Vector2.Distance(endPoint, closestPoint);
+
+                if (distance < halfThickness)
+                {
+                    Vector2 offset = (halfThickness - distance) * endOffsetDir;
+                    spline.SetPosition(pointCount - 1, endPoint + offset);
+                }
+            }
+        }
+    }
+
+    Vector2 FindClosestPointOnSegment(Vector2 p, Vector2 a, Vector2 b)
+    {
+        Vector2 ap = p - a;
+        Vector2 ab = b - a;
+        float distance = Vector2.Dot(ap, ab) / ab.sqrMagnitude;
+
+        if (distance < 0) return a;
+        if (distance > 1) return b;
+        return a + ab * distance;
     }
 }
