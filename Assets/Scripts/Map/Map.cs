@@ -1,8 +1,12 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.U2D;
+using static MapElement;
+using static UnityEditor.Searcher.SearcherWindow.Alignment;
 
 public class Map : MonoBehaviour
 {
@@ -74,6 +78,7 @@ public class Map : MonoBehaviour
             "  way[barrier=wall];" +
             "  way[barrier=retaining_wall];" +
             "  way[barrier=fence];" +
+            "  node[barrier=gate];" +
             ");" +
             "out geom;");
 
@@ -109,11 +114,29 @@ public class Map : MonoBehaviour
         float halfMapWidth = (float)((highLong - lowLong) * scale / 2);
         float halfMapHeight = (float)((LatToY(highLat) - LatToY(lowLat)) * scale / 2);
         Vector2[] mapCorners = { new Vector2(-halfMapWidth, halfMapHeight), new Vector2(halfMapWidth, halfMapHeight), new Vector2(halfMapWidth, -halfMapHeight), new Vector2(-halfMapWidth, -halfMapHeight), new Vector2(-halfMapWidth, halfMapHeight) };
-        AddWayToScene(mapCorners, backgroundPrefab, false, false);
+        float backgroundMargin = 100f;
+        Vector2[] backgroundVertices = { mapCorners[0] + new Vector2(-backgroundMargin, backgroundMargin), mapCorners[1] + new Vector2(backgroundMargin, backgroundMargin), mapCorners[2] + new Vector2(backgroundMargin, -backgroundMargin), mapCorners[3] + new Vector2(-backgroundMargin, -backgroundMargin), mapCorners[4] + new Vector2(-backgroundMargin, backgroundMargin) };
+        AddWayToScene(backgroundVertices, backgroundPrefab, false, false);
+
+        // Add map border to scene
+        AddWayToScene(mapCorners, mapBorderPrefab, false, false);
+
+        List<Vector2> gates = new List<Vector2>();
 
         // Add map elements to scene
         foreach (MapElement element in mapData.elements)
         {
+            // Deal with nodes
+            if (element.type == "node")
+            {
+                if (IsGate(element))
+                {
+                    float xPos = (float)((element.lon - xShift) * scale);
+                    float yPos = (float)((LatToY(element.lat) - yShift) * scale);
+                    gates.Add(new Vector2(xPos, yPos));
+                }
+            }
+
             // Deal with ways
             if (element.type == "way")
             {
@@ -126,7 +149,9 @@ public class Map : MonoBehaviour
 
                 // Create and add road to scene
                 else if (IsRoad(element))
+                {
                     AddWayToScene(vertices, roadPrefab, true, false, 5.0f);
+                }
 
                 // Create and add path to scene
                 else if (IsPath(element))
@@ -146,7 +171,9 @@ public class Map : MonoBehaviour
 
                 // Create and add wall to scene
                 else if (IsWall(element))
-                    AddWayToScene(vertices, wallPrefab, true, false, 1.0f);
+                {
+                    AddWallToScene(vertices, gates);
+                }
             }
 
             // Deal with relations
@@ -234,6 +261,11 @@ public class Map : MonoBehaviour
         return element.tags.barrier == "wall" ||
                element.tags.barrier == "retaining_wall" ||
                element.tags.barrier == "fence";
+    }
+
+    bool IsGate(MapElement element)
+    {
+        return element.tags.barrier == "gate";
     }
 
     void AddWayToScene(Vector2[] vertices, GameObject prefab, bool isOpenEnded, bool convertToCloseEnded, float thickness = 1.0f)
@@ -426,5 +458,138 @@ public class Map : MonoBehaviour
 
         // Sum is negative if clockwise
         return sum < 0.0f;
+    }
+
+    Vector2 FindClosestPointOnLine(Vector2 p, Vector2 a, Vector2 b)
+    {
+        Vector2 ap = p - a;
+        Vector2 ab = b - a;
+        float distance = Vector2.Dot(ap, ab) / ab.sqrMagnitude;
+
+        if (distance < 0) return a;
+        if (distance > 1) return b;
+        return a + ab * distance;
+    }
+
+    void AddWallToScene(Vector2[] vertices, List<Vector2> gates)
+    {
+        bool gateFound = false;
+
+        // Split wall if there is a gate on it
+        for (int i = 0; i < vertices.Length - 1; i++)
+        {
+            Vector2 v1 = vertices[i];
+            Vector2 v2 = vertices[i + 1];
+
+            foreach (Vector2 gate in gates)
+            {
+                Vector2 closestPoint = FindClosestPointOnLine(gate, v1, v2);
+                if (Vector2.Distance(closestPoint, gate) < float.Epsilon)
+                {
+                    // Make a split at closest point
+                    Vector2[] wall1;
+                    Vector2[] wall2;
+                    float gapWidth = 4f;
+                    SplitWall(vertices, closestPoint, gapWidth, out wall1, out wall2);
+
+                    // Add both walls to scene
+                    if (wall1 != null)
+                        AddWayToScene(wall1, wallPrefab, true, false, 1.0f);
+                    if (wall2 != null)
+                        AddWayToScene(wall2, wallPrefab, true, false, 1.0f);
+
+                    gateFound = true;
+                    break;
+                }
+            }
+
+            if (gateFound) break;
+        }
+
+        // Add the whole wall as one object if no gate sits on wall
+        if (!gateFound)
+            AddWayToScene(vertices, wallPrefab, true, false, 1.0f);
+    }
+
+    void SplitWall(Vector2[] vertices, Vector2 splitPoint, float gapWidth, out Vector2[] wall1, out Vector2[] wall2)
+    {
+        List<Vector2> verticesList = vertices.ToList();
+        verticesList.RemoveAll(v => Vector2.Distance(v, splitPoint) <= gapWidth);
+
+        if (verticesList.Count <= 1)
+        {
+            wall1 = null;
+            wall2 = null;
+            return;
+        }
+
+        // Get index of vertex with smallest distance to split point
+        int index = 0;
+        float smallestDistance = float.PositiveInfinity;
+        for (int i = 0; i < verticesList.Count; i ++)
+        {
+            Vector2 vertex = verticesList[i];
+            float distance = Vector2.Distance(vertex, splitPoint);
+            if (distance < smallestDistance)
+            {
+                smallestDistance = distance;
+                index = i;
+            }
+        }
+
+        // Get index of adjacent vertex that has smallest distance to split point
+        float leftDist = (index > 0) ? Vector2.Distance(verticesList[index - 1], splitPoint) : float.PositiveInfinity;
+        float rightDist = (index < verticesList.Count - 1) ? Vector2.Distance(verticesList[index + 1], splitPoint) : float.PositiveInfinity;
+        int adjIndex = (leftDist < rightDist) ? index - 1 : index + 1;
+
+        // Use adjacent index if it comes before index
+        if (adjIndex < index)
+            index = adjIndex;
+
+        // Check if split point is before or after whole line (i.e. the points at index and index+1 are both on the same side of the split point)
+        // If so then add one point to end of line up to half gap width away from split point, then return
+        float angle = Vector2.SignedAngle(splitPoint - verticesList[index], splitPoint - verticesList[index + 1]);
+        if (angle > -90 && angle < 90)
+        {
+            int i = (index == 0) ? 0 : verticesList.Count - 1;
+
+            float distToSplitPoint = Vector2.Distance(verticesList[i], splitPoint);
+            Vector2 dirToSplitPoint = (splitPoint - verticesList[i]).normalized;
+            float remainingDist = (distToSplitPoint - gapWidth / 2);
+            Vector2 newVertex = verticesList[i] + dirToSplitPoint * remainingDist;
+
+            // Insert new vertex at either at beginning or at end of line
+            if (index == 0) verticesList.Insert(0, newVertex);
+            else verticesList.Insert(verticesList.Count, newVertex);
+
+            // We only have one wall so set only the first output and return
+            wall1 = verticesList.ToArray();
+            wall2 = null;
+            return;
+        }
+
+        // Add new vertex to one side of gap to make it match gap width
+        float dist = Vector2.Distance(verticesList[index], splitPoint);
+        if (dist > gapWidth / 2)
+        {
+            Vector2 dirToSplitPoint = (splitPoint - verticesList[index]).normalized;
+            float remainingDist = (dist - gapWidth / 2);
+            Vector2 newVertex = verticesList[index] + dirToSplitPoint * remainingDist;
+            verticesList.Insert(index + 1, newVertex);
+            index++; // Make index point to new vertex
+        }
+
+        // Add new vertex to other side of gap to make it match gap width
+        dist = Vector2.Distance(verticesList[index + 1], splitPoint);
+        if (dist > gapWidth / 2)
+        {
+            Vector2 dirToSplitPoint = (splitPoint - verticesList[index + 1]).normalized;
+            float remainingDist = (dist - gapWidth / 2);
+            Vector2 newVertex = verticesList[index + 1] + dirToSplitPoint * remainingDist;
+            verticesList.Insert(index + 1, newVertex);
+        }
+
+        wall1 = verticesList.Take(index + 1).ToArray();
+        wall2 = verticesList.Skip(index + 1).ToArray();
     }
 }
