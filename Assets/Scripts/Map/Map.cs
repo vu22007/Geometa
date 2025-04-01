@@ -132,7 +132,10 @@ public class Map : MonoBehaviour
 
                 // Create and add water to scene
                 else if (IsWater(element))
+                {
+                    Debug.Log("Water count: " + vertices.Length);
                     AddWayToScene(vertices, waterPrefab, false, false);
+                }
 
                 // Create and add wall to scene
                 else if (IsWall(element))
@@ -454,7 +457,7 @@ public class Map : MonoBehaviour
                     // Make a split at closest point
                     Vector2[] wall1;
                     Vector2[] wall2;
-                    float gapWidth = 4f;
+                    float gapWidth = 3f;
                     SplitWall(vertices, closestPoint, gapWidth, out wall1, out wall2);
 
                     // Add both walls to scene
