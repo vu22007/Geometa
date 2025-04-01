@@ -86,7 +86,6 @@ public class Map : MonoBehaviour
         // Add map border to scene
         AddWayToScene(mapCorners, mapBorderPrefab, false, false);
 
-        List<GameObject> roads = new List<GameObject>();
         List<Vector2> gates = new List<Vector2>();
 
         // Add map elements to scene
@@ -116,9 +115,7 @@ public class Map : MonoBehaviour
                 // Create and add road to scene
                 else if (IsRoad(element))
                 {
-                    GameObject road = AddWayToScene(vertices, roadPrefab, true, false, 5.0f);
-                    CheckForRoadOverlaps(road, roads);
-                    roads.Add(road);
+                    AddWayToScene(vertices, roadPrefab, true, false, 5.0f);
                 }
 
                 // Create and add path to scene
@@ -236,7 +233,7 @@ public class Map : MonoBehaviour
         return element.tags.barrier == "gate";
     }
 
-    GameObject AddWayToScene(Vector2[] vertices, GameObject prefab, bool isOpenEnded, bool convertToCloseEnded, float thickness = 1.0f)
+    void AddWayToScene(Vector2[] vertices, GameObject prefab, bool isOpenEnded, bool convertToCloseEnded, float thickness = 1.0f)
     {
         // Instantiate way from prefab with the map as the parent
         GameObject way = Instantiate(prefab, new Vector3(0, 0, 0), Quaternion.identity, transform);
@@ -277,7 +274,7 @@ public class Map : MonoBehaviour
             {
                 Debug.Log("Error adding point to spline: " + e.Message);
                 spline.Clear(); // Remove any points that were successfully added
-                return null;
+                return;
             }
         }
         else // open-ended
@@ -297,8 +294,6 @@ public class Map : MonoBehaviour
         // until the centre of the world is on-screen, so we need to set the bounding volume of the sprite shape geometry to ensure that
         // the sprite shape is visible at all times
         SetSpriteShapeBoundingVolume(spriteShapeController);
-
-        return way;
     }
 
     void SetSpriteShapeBoundingVolume(SpriteShapeController spriteShapeController)
@@ -428,102 +423,6 @@ public class Map : MonoBehaviour
 
         // Sum is negative if clockwise
         return sum < 0.0f;
-    }
-
-    void CheckForRoadOverlaps(GameObject road, List<GameObject> roads)
-    {
-        Spline spline = road.GetComponent<SpriteShapeController>().spline;
-
-        int pointCount = spline.GetPointCount();
-        Vector2 startPoint = spline.GetPosition(0);
-        Vector2 endPoint = spline.GetPosition(pointCount - 1);
-        Vector2 startOffsetDir = ((Vector2)spline.GetPosition(1) - startPoint).normalized;
-        Vector2 endOffsetDir = ((Vector2)spline.GetPosition(pointCount - 2) - endPoint).normalized;
-
-        foreach (GameObject otherRoad in roads)
-        {
-            Spline otherSpline = otherRoad.GetComponent<SpriteShapeController>().spline;
-            int otherPointCount = otherSpline.GetPointCount();
-            float halfThickness = otherSpline.GetHeight(0) / 2; // All points have same thickness so just get first one
-
-            // First check if road's ends overlap any point along otherRoad
-            for (int i = 0; i < otherPointCount - 1; i++)
-            {
-                Vector2 p1 = otherSpline.GetPosition(i);
-                Vector2 p2 = otherSpline.GetPosition(i + 1);
-
-                // Check start point
-                Vector2 closestPoint = FindClosestPointOnLine(startPoint, p1, p2);
-                float distance = Vector2.Distance(startPoint, closestPoint);
-
-                // Ignore when ends of roads overlap
-                if (i == 0 && closestPoint == p1) continue;
-                if (i == otherPointCount - 2 && closestPoint == p2) continue;
-
-                if (distance < halfThickness)
-                {
-                    Vector2 offset = (halfThickness - distance) * startOffsetDir;
-                    spline.SetPosition(0, startPoint + offset);
-                }
-
-                // Check end point
-                closestPoint = FindClosestPointOnLine(endPoint, p1, p2);
-                distance = Vector2.Distance(endPoint, closestPoint);
-
-                // Ignore when ends of roads overlap
-                if (i == 0 && closestPoint == p1) continue;
-                if (i == otherPointCount - 2 && closestPoint == p2) continue;
-
-                if (distance < halfThickness)
-                {
-                    Vector2 offset = (halfThickness - distance) * endOffsetDir;
-                    spline.SetPosition(pointCount - 1, endPoint + offset);
-                }
-            }
-
-            Vector2 otherStartPoint = otherSpline.GetPosition(0);
-            Vector2 otherEndPoint = otherSpline.GetPosition(otherPointCount - 1);
-            Vector2 otherStartOffsetDir = ((Vector2)otherSpline.GetPosition(1) - otherStartPoint).normalized;
-            Vector2 otherEndOffsetDir = ((Vector2)otherSpline.GetPosition(otherPointCount - 2) - otherEndPoint).normalized;
-            halfThickness = spline.GetHeight(0) / 2; // All points have same thickness so just get first one
-
-            // Also check if otherRoad's ends overlap any point along road
-            for (int i = 0; i < pointCount - 1; i++)
-            {
-                Vector2 p1 = spline.GetPosition(i);
-                Vector2 p2 = spline.GetPosition(i + 1);
-
-                // Check start point
-                Vector2 closestPoint = FindClosestPointOnLine(otherStartPoint, p1, p2);
-                float distance = Vector2.Distance(otherStartPoint, closestPoint);
-
-                // Ignore when ends of roads overlap
-                if (i == 0 && closestPoint == p1) continue;
-                if (i == pointCount - 2 && closestPoint == p2) continue;
-
-                if (distance < halfThickness)
-                {
-                    Vector2 offset = (halfThickness - distance) * otherStartOffsetDir;
-                    otherSpline.SetPosition(0, otherStartPoint + offset);
-                }
-
-                // Check end point
-                closestPoint = FindClosestPointOnLine(otherEndPoint, p1, p2);
-                distance = Vector2.Distance(otherEndPoint, closestPoint);
-
-                // Ignore when ends of roads overlap
-                if (i == 0 && closestPoint == p1) continue;
-                if (i == pointCount - 2 && closestPoint == p2) continue;
-
-                if (distance < halfThickness)
-                {
-                    Vector2 offset = (halfThickness - distance) * otherEndOffsetDir;
-                    otherSpline.SetPosition(otherPointCount - 1, otherEndPoint + offset);
-                }
-            }
-
-            // TODO: Fix some roads not moving back when joining with second vertex from end of another road
-        }
     }
 
     Vector2 FindClosestPointOnLine(Vector2 p, Vector2 a, Vector2 b)
