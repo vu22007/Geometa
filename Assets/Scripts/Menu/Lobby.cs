@@ -270,7 +270,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         }
     }
 
-    [Rpc(RpcSources.All, RpcTargets.All)]
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     public void RPC_GenerateMap()
     {
         // MapGenerationCoordinates are updates when the RPC call is called. So when a player joins, just 

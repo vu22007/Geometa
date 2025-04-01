@@ -11,12 +11,10 @@ public class RunBlenderScript : NetworkBehaviour
     private string outputFilePath; 
     private Lobby lobby;
     string scriptPath; 
-    public string blenderExePath; 
+    private string blenderExePath; 
 
-    public override void Spawned()
+    public void Start()
     {
-        // The lobby is informed when generation of buildings finishes
-        lobby = GetComponentInParent<Lobby>();
         // Path where the glTfF will be outputted
         outputFilePath = Path.Combine(Application.streamingAssetsPath, "Buildify3DBuildings.glb");
         // outputFilePath = Path.Combine("/", "home", "qc22435", "Documents", "Buildify3DBuildings.glb");
@@ -28,9 +26,16 @@ public class RunBlenderScript : NetworkBehaviour
         Debug.Log("Streaming assets: " + Application.streamingAssetsPath);
         
         // Path to the Blender exe - DEPENDENT ON OS
-        // blenderExePath = Path.Combine("/", "opt", "blender", "4.1.1", "blender-uob-launcher");
+        blenderExePath = Path.Combine("/", "opt", "blender", "4.1.1", "blender-uob-launcher");
         Debug.Log(blenderExePath);
-        blenderExePath =  Path.Combine("C:\\", "Program Files", "Blender Foundation", "Blender 4.3", "blender.exe");
+        // blenderExePath =  Path.Combine("C:\\", "Program Files", "Blender Foundation", "Blender 4.3", "blender.exe");
+    }
+
+    public override void Spawned()
+    {
+        // The lobby is informed when generation of buildings finishes
+        lobby = GetComponentInParent<Lobby>();
+        Debug.Log(lobby);
     }
 
     public IEnumerator RunBlender(double minLat, double maxLat, double minLon, double maxLon)

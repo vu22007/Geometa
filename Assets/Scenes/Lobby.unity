@@ -934,10 +934,10 @@ MonoBehaviour:
   SortKey: 2039921358
   ObjectInterest: 1
   Flags: 262145
-  NestedObjects:
-  - {fileID: 591987960}
+  NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 266661889}
+  - {fileID: 591987960}
   ForceRemoteRenderTimeframe: 0
 --- !u!1 &267643647
 GameObject:
@@ -2010,20 +2010,21 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 4657151812718614416, guid: ccbda52e42a94c5498c23960a74a8583, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ccbda52e42a94c5498c23960a74a8583, type: 3}
 --- !u!114 &591987960 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 4657151812718614416, guid: ccbda52e42a94c5498c23960a74a8583, type: 3}
+  m_CorrespondingSourceObject: {fileID: 4287568106796302798, guid: ccbda52e42a94c5498c23960a74a8583, type: 3}
   m_PrefabInstance: {fileID: 591987959}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Script: {fileID: 11500000, guid: a6eaa993361caf34a8d4edd169037ab4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!4 &591987961 stripped
