@@ -437,7 +437,6 @@ public class Map : MonoBehaviour
         int pointCount = spline.GetPointCount();
         Vector2 startPoint = spline.GetPosition(0);
         Vector2 endPoint = spline.GetPosition(pointCount - 1);
-
         Vector2 startOffsetDir = ((Vector2)spline.GetPosition(1) - startPoint).normalized;
         Vector2 endOffsetDir = ((Vector2)spline.GetPosition(pointCount - 2) - endPoint).normalized;
 
@@ -447,14 +446,19 @@ public class Map : MonoBehaviour
             int otherPointCount = otherSpline.GetPointCount();
             float halfThickness = otherSpline.GetHeight(0) / 2; // All points have same thickness so just get first one
 
-            for (int i = 1; i < otherPointCount - 2; i++) // ignore first and last vertex of other road since we allow end of roads to overlap
+            // First check if road's ends overlap any point along otherRoad
+            for (int i = 0; i < otherPointCount - 1; i++)
             {
                 Vector2 p1 = otherSpline.GetPosition(i);
                 Vector2 p2 = otherSpline.GetPosition(i + 1);
 
                 // Check start point
-                Vector2 closestPoint = FindClosestPointOnSegment(startPoint, p1, p2);
+                Vector2 closestPoint = FindClosestPointOnLine(startPoint, p1, p2);
                 float distance = Vector2.Distance(startPoint, closestPoint);
+
+                // Ignore when ends of roads overlap
+                if (i == 0 && closestPoint == p1) continue;
+                if (i == otherPointCount - 2 && closestPoint == p2) continue;
 
                 if (distance < halfThickness)
                 {
@@ -463,8 +467,12 @@ public class Map : MonoBehaviour
                 }
 
                 // Check end point
-                closestPoint = FindClosestPointOnSegment(endPoint, p1, p2);
+                closestPoint = FindClosestPointOnLine(endPoint, p1, p2);
                 distance = Vector2.Distance(endPoint, closestPoint);
+
+                // Ignore when ends of roads overlap
+                if (i == 0 && closestPoint == p1) continue;
+                if (i == otherPointCount - 2 && closestPoint == p2) continue;
 
                 if (distance < halfThickness)
                 {
@@ -472,10 +480,53 @@ public class Map : MonoBehaviour
                     spline.SetPosition(pointCount - 1, endPoint + offset);
                 }
             }
+
+            Vector2 otherStartPoint = otherSpline.GetPosition(0);
+            Vector2 otherEndPoint = otherSpline.GetPosition(otherPointCount - 1);
+            Vector2 otherStartOffsetDir = ((Vector2)otherSpline.GetPosition(1) - otherStartPoint).normalized;
+            Vector2 otherEndOffsetDir = ((Vector2)otherSpline.GetPosition(otherPointCount - 2) - otherEndPoint).normalized;
+            halfThickness = spline.GetHeight(0) / 2; // All points have same thickness so just get first one
+
+            // Also check if otherRoad's ends overlap any point along road
+            for (int i = 0; i < pointCount - 1; i++)
+            {
+                Vector2 p1 = spline.GetPosition(i);
+                Vector2 p2 = spline.GetPosition(i + 1);
+
+                // Check start point
+                Vector2 closestPoint = FindClosestPointOnLine(otherStartPoint, p1, p2);
+                float distance = Vector2.Distance(otherStartPoint, closestPoint);
+
+                // Ignore when ends of roads overlap
+                if (i == 0 && closestPoint == p1) continue;
+                if (i == pointCount - 2 && closestPoint == p2) continue;
+
+                if (distance < halfThickness)
+                {
+                    Vector2 offset = (halfThickness - distance) * otherStartOffsetDir;
+                    otherSpline.SetPosition(0, otherStartPoint + offset);
+                }
+
+                // Check end point
+                closestPoint = FindClosestPointOnLine(otherEndPoint, p1, p2);
+                distance = Vector2.Distance(otherEndPoint, closestPoint);
+
+                // Ignore when ends of roads overlap
+                if (i == 0 && closestPoint == p1) continue;
+                if (i == pointCount - 2 && closestPoint == p2) continue;
+
+                if (distance < halfThickness)
+                {
+                    Vector2 offset = (halfThickness - distance) * otherEndOffsetDir;
+                    otherSpline.SetPosition(otherPointCount - 1, otherEndPoint + offset);
+                }
+            }
+
+            // TODO: Fix some roads not moving back when joining with second vertex from end of another road
         }
     }
 
-    Vector2 FindClosestPointOnSegment(Vector2 p, Vector2 a, Vector2 b)
+    Vector2 FindClosestPointOnLine(Vector2 p, Vector2 a, Vector2 b)
     {
         Vector2 ap = p - a;
         Vector2 ab = b - a;
@@ -498,7 +549,7 @@ public class Map : MonoBehaviour
 
             foreach (Vector2 gate in gates)
             {
-                Vector2 closestPoint = FindClosestPointOnSegment(gate, v1, v2);
+                Vector2 closestPoint = FindClosestPointOnLine(gate, v1, v2);
                 if (Vector2.Distance(closestPoint, gate) < float.Epsilon)
                 {
                     // Make a split at closest point
