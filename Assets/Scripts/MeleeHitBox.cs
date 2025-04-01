@@ -20,7 +20,7 @@ public class MeleeHitbox : NetworkBehaviour
         int layerMask = LayerMask.GetMask("Default"); // Only register collisions with colliders and hitboxes on the "Default" layer
         HitOptions options = HitOptions.IgnoreInputAuthority;
         List<LagCompensatedHit> hits = new List<LagCompensatedHit>();
-        if (Runner.LagCompensation.OverlapSphere(transform.position, 0.3f, Object.InputAuthority, hits, layerMask, options) != 0)
+        if (Runner.LagCompensation.OverlapBox(transform.position, new Vector3(0.7f, 0.5f, 0f), transform.rotation, Object.InputAuthority, hits, layerMask, options) != 0)
         {
             // Resolve collision
             OnCollisionHitbox(hits[0].Hitbox);
@@ -38,11 +38,5 @@ public class MeleeHitbox : NetworkBehaviour
                 hitPlayer.TakeDamage(damage, player.Object.InputAuthority);
             }
         }
-    }
-
-    private void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, 0.3f);
     }
 }
