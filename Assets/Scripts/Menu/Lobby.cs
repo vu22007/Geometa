@@ -30,6 +30,9 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     private Button generateMapButton;
     private Button startGameButton;
     private Button selectAreaButton;
+    private Button mapTypeButton;
+    private TextMeshProUGUI mapTypeText;
+    private TextMeshProUGUI generatedMapCounter;
     private GameObject team1List;
     private GameObject team2List;
     private TextMeshProUGUI playerCounter;
@@ -41,6 +44,9 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     private bool playerIsReady = false;
     RunBlenderScript buildingsGenerator;
     CoordinatesDataHolder coordinatesDataHolder;
+    // This one is the player chose the generation type with the button
+    [Networked] bool generateMap { get; set; } = false;
+    // This is for when the player actually generates the map
     [Networked] bool mapGenerated { get; set; } = false;
     [Networked, Capacity(16)] private NetworkLinkedList<PlayerRef> playersCompletedMapGen { get; }
 
@@ -62,6 +68,12 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         startGameButton = GameObject.Find("Start Game Button").GetComponent<Button>();
         startGameButton.interactable = false;
         generateMapButton = GameObject.Find("Generate Map Button").GetComponent<Button>();
+        mapTypeButton = GameObject.Find("Map Type Button").GetComponent<Button>();
+        mapTypeButton.image.color = new Color(127f / 255f, 213f / 255f, 135f / 255f, 1f);
+        mapTypeText = mapTypeButton.gameObject.GetComponentInChildren<TextMeshProUGUI>();
+        mapTypeText.text = "Default";
+        generatedMapCounter = GameObject.Find("Generated Map Counter").GetComponent<TextMeshProUGUI>();
+        generatedMapCounter.color = Color.red;
         team1List = GameObject.Find("Team 1 List");
         team2List = GameObject.Find("Team 2 List");
         playerCounter = GameObject.Find("Player Counter").GetComponent<TextMeshProUGUI>();
@@ -72,10 +84,13 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         if (!HasStateAuthority)
         {
             startGameButton.gameObject.SetActive(false);
-            generateMapButton.gameObject.SetActive(false);
-            selectAreaButton.gameObject.SetActive(false);
-            coordinatesInput.gameObject.SetActive(false);
+            mapTypeButton.gameObject.SetActive(false);
         }
+
+        generateMapButton.gameObject.SetActive(false); 
+        selectAreaButton.gameObject.SetActive(false);
+        coordinatesInput.gameObject.SetActive(false);
+        generatedMapCounter.gameObject.SetActive(false);
 
         if (mapGenerated & Runner.IsClient)
         {
@@ -103,6 +118,10 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             // Update player and ready counters
             UpdatePlayerCounter(numPlayersInLobby);
             UpdateReadyCounter(numPlayersReady);
+            if (generateMap & mapGenerated)
+            {
+                UpdateGeneratedMapCounter();
+            }
 
             // Enable start game button if all players in lobby are ready, else disable it
             bool allPlayersAreReady = numPlayersReady == numPlayersInLobby;
@@ -194,6 +213,41 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         RPC_PlayerUnready();
     }
 
+    public void SelectMapType()
+    {
+        if (generateMap)
+        {
+            generateMap = false;
+            if (HasStateAuthority)
+            {
+                generateMapButton.gameObject.SetActive(false);
+                selectAreaButton.gameObject.SetActive(false);
+                coordinatesInput.gameObject.SetActive(false);
+                mapTypeButton.image.color = new Color(127f / 255f, 213f / 255f, 135f / 255f, 1f);
+                mapTypeText.text = "Default";
+                generatedMapCounter.gameObject.SetActive(false);
+            }
+        }
+        else
+        {
+            generateMap = true;
+            if (HasStateAuthority)
+            {
+                generateMapButton.gameObject.SetActive(true);
+                selectAreaButton.gameObject.SetActive(true);
+                coordinatesInput.gameObject.SetActive(true);
+                mapTypeButton.image.color = new Color(182f / 255f, 61f / 255f, 63f / 255f, 1f);
+                mapTypeText.text = "Generated";
+                // If the host clicked to generate the map show how many players are done generaing
+                if (mapGenerated)
+                {
+                    UpdateGeneratedMapCounter();
+                    generatedMapCounter.gameObject.SetActive(true);
+                }
+            }
+        }
+    }
+
     public void SelectArea()
     {
         string pathToHtmlFile = Path.Combine(Application.streamingAssetsPath, "Non-Unity", "mapCoordinates.html");
@@ -249,16 +303,19 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             }
         }
 
-        mapGenerated = true;
-
         if (allValid)
         {
             StartCoroutine(buildingsGenerator.RunBlender(numbers[0], numbers[1], numbers[2], numbers[3]));
             coordinatesDataHolder.SetCoordinates(numbers[0], numbers[1], numbers[2], numbers[3]);
+            mapGenerated = true;
+            UpdateGeneratedMapCounter();
+            generatedMapCounter.gameObject.SetActive(true);
         }
         else
         {
             Debug.LogError($"Invalid input for coordinates: {mapGenerationCoordinates}");
+            generatedMapCounter.text = "Invalid input";
+            generatedMapCounter.gameObject.SetActive(true);
         }
     }
 
@@ -271,7 +328,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             networkManager.team1Players = ConvertFromNetworkDictionary(team1Players);
             networkManager.team2Players = ConvertFromNetworkDictionary(team2Players);
 
-            if (mapGenerated)
+            if (mapGenerated & generateMap)
             {
                 // Check if all active players have completed generation
                 bool allPlayersReady = Runner.ActivePlayers.All(p => playersCompletedMapGen.Contains(p));
@@ -386,6 +443,32 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     void UpdateReadyCounter(int numPlayersReady)
     {
         readyCounter.text = "Players ready: " + numPlayersReady;
+    }
+
+    void UpdateGeneratedMapCounter()
+    {
+        int readyPlayers = 0;
+        int allPlayers = Runner.ActivePlayers.Count();
+        foreach (var item in Runner.ActivePlayers)
+        {
+            if (playersCompletedMapGen.Contains(item))
+            {
+                readyPlayers += 1;
+            } else
+            {
+                // Debug.Log(item + " hasn't generated map");
+            }
+            
+        }
+        if(readyPlayers < allPlayers)
+        {
+            generatedMapCounter.color = Color.white;
+        }
+        else
+        {
+            generatedMapCounter.color = Color.green;
+        }
+            generatedMapCounter.text = "Generated map: " + readyPlayers + "/" + allPlayers;
     }
 
     void ClearPlayerCardsFromTeamList(GameObject teamList)
