@@ -73,7 +73,6 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         mapTypeText = mapTypeButton.gameObject.GetComponentInChildren<TextMeshProUGUI>();
         mapTypeText.text = "Default";
         generatedMapCounter = GameObject.Find("Generated Map Counter").GetComponent<TextMeshProUGUI>();
-        generatedMapCounter.color = Color.red;
         team1List = GameObject.Find("Team 1 List");
         team2List = GameObject.Find("Team 2 List");
         playerCounter = GameObject.Find("Player Counter").GetComponent<TextMeshProUGUI>();
@@ -124,8 +123,20 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             }
 
             // Enable start game button if all players in lobby are ready, else disable it
+            bool canStart;
             bool allPlayersAreReady = numPlayersReady == numPlayersInLobby;
-            startGameButton.interactable = allPlayersAreReady;
+            if (mapGenerated & generateMap)
+            {
+                // If the generate map button is clicked and the type is set to generate map, all players need to have generated the map
+                bool allPlayersGeneratedMap = playersCompletedMapGen.Count() == numPlayersInLobby;
+                canStart = allPlayersAreReady & allPlayersGeneratedMap;
+            }
+            else
+            {
+                // if it's the default map it can start once the players are ready
+                canStart = allPlayersAreReady;
+            }
+            startGameButton.interactable = canStart;
         }
     }
 
@@ -309,13 +320,19 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             coordinatesDataHolder.SetCoordinates(numbers[0], numbers[1], numbers[2], numbers[3]);
             mapGenerated = true;
             UpdateGeneratedMapCounter();
-            generatedMapCounter.gameObject.SetActive(true);
+            if (HasStateAuthority)
+            {
+                generatedMapCounter.gameObject.SetActive(true);
+            }
         }
         else
         {
             Debug.LogError($"Invalid input for coordinates: {mapGenerationCoordinates}");
             generatedMapCounter.text = "Invalid input";
-            generatedMapCounter.gameObject.SetActive(true);
+            if (HasStateAuthority)
+            {
+                generatedMapCounter.gameObject.SetActive(true);
+            }
         }
     }
 
@@ -330,38 +347,20 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 
             if (mapGenerated & generateMap)
             {
-                // Check if all active players have completed generation
-                bool allPlayersReady = Runner.ActivePlayers.All(p => playersCompletedMapGen.Contains(p));
+                // Prevent new players from joining
+                Runner.SessionInfo.IsOpen = false;
+                playersCompletedMapGen.Clear();
+                // Play Scene with a pre-generated map
+                DontDestroyOnLoad(coordinatesDataHolder);
+                Runner.LoadScene(SceneRef.FromIndex(5));
 
-                foreach (var item in Runner.ActivePlayers)
-                {
-                    if (!playersCompletedMapGen.Contains(item))
-                    {
-                        Debug.Log(item + " hasn't generated map");
-                    }
-                }
-
-                if (allPlayersReady) 
-                {
-                    // Prevent new players from joining
-                    Runner.SessionInfo.IsOpen = false;
-                    playersCompletedMapGen.Clear();
-                    // Play Scene with a pre-generated map
-                    DontDestroyOnLoad(coordinatesDataHolder);
-                    Runner.LoadScene(SceneRef.FromIndex(5));
-                }
-                else
-                {
-                    Debug.LogError("A player hasn't finished generating the map. Players finished: " + playersCompletedMapGen.Count() + "/" + Runner.ActivePlayers.Count());
-                }
             }
             else
             {
                 // Prevent new players from joining
                 Runner.SessionInfo.IsOpen = false;
-                // Load Scene that will use the 3D Generated buildings and generate 2D map in scene
+                // Load Scene that will use the 3D Generated buildings and 2D map in scene
                 // Switch to map scene to start the game, and the game controller will spawn player objects using the player dicts in the network manager
-                Destroy(coordinatesDataHolder);
                 Runner.LoadScene(SceneRef.FromIndex(3));
             }
         }
@@ -447,19 +446,9 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 
     void UpdateGeneratedMapCounter()
     {
-        int readyPlayers = 0;
+        int readyPlayers = playersCompletedMapGen.Count();
         int allPlayers = Runner.ActivePlayers.Count();
-        foreach (var item in Runner.ActivePlayers)
-        {
-            if (playersCompletedMapGen.Contains(item))
-            {
-                readyPlayers += 1;
-            } else
-            {
-                // Debug.Log(item + " hasn't generated map");
-            }
-            
-        }
+
         if(readyPlayers < allPlayers)
         {
             generatedMapCounter.color = Color.white;

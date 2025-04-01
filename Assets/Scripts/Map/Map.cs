@@ -14,13 +14,11 @@ public class Map : MonoBehaviour
     [SerializeField] GameObject pathPrefab;
     [SerializeField] GameObject grassPrefab;
     [SerializeField] GameObject waterPrefab;
-    RunBlenderScript buildingsGenerator;
     private string outputFilePath;
 
     void Start()
     {
         // Filepath where the glb file got outputed
-        // outputFilePath = Path.Combine("/", "home", "qc22435", "Documents", "Buildify3DBuildings.glb");
         outputFilePath = Path.Combine(Application.streamingAssetsPath, "Buildify3DBuildings.glb");
 
         if (CoordinatesDataHolder.Instance == null)
@@ -46,8 +44,6 @@ public class Map : MonoBehaviour
         StartCoroutine(LoadMapFromBoundingBox(lowLat, highLat, lowLong, highLong));
         // Instantiate the 3D buildings
         ImportGLTF(outputFilePath);
-        // Create 3D buildings
-        // StartCoroutine(buildingsGenerator.RunBlender(lowLat, highLat, lowLong, highLong));
     }
 
     public async void ImportGLTF(string outputFilePath)

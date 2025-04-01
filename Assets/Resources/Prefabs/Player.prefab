@@ -1095,7 +1095,7 @@ CircleCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: -0.19}
-  m_Radius: 1.1
+  m_Radius: 1.2
 --- !u!1 &2190977393500566860
 GameObject:
   m_ObjectHideFlags: 0
@@ -3092,7 +3092,7 @@ Transform:
   m_GameObject: {fileID: 4590873436755935670}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.16703689, y: -1.8522006, z: -50}
+  m_LocalPosition: {x: 0.16703689, y: -1.8522006, z: -40}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3131,7 +3131,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 120.5
+  field of view: 115
   orthographic: 0
   orthographic size: 12
   m_Depth: 0
