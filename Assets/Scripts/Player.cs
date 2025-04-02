@@ -547,7 +547,9 @@ public class Player : NetworkBehaviour
     void PlayerMovement(Vector2 moveDirection)
     {
         // Calculate target velocity
-        float targetSpeed = isDashing ? speed * dashSpeed : speed;
+        float targetSpeed = speed;
+        if(isDashing){targetSpeed = targetSpeed * dashSpeed;}
+        if(isCarrying){targetSpeed = targetSpeed / 1.5f;}
         Vector2 targetVelocity = moveDirection.normalized * targetSpeed;
 
         // Current velocity
@@ -1003,7 +1005,6 @@ public class Player : NetworkBehaviour
         {
             carriedObject = networkObject;
             isCarrying = true;
-            speed -= 3f;
             PickupFlag flag = carriedObject.GetComponent<PickupFlag>();
             gameController.BroadcastCarryFlag(team, flag.team);
         }
@@ -1024,7 +1025,6 @@ public class Player : NetworkBehaviour
                 }
                 carriedObject = null;
                 isCarrying = false;
-                speed += 3f;
                 gameController.BroadcastDropFlag(team, flag.team);
             }
         }
