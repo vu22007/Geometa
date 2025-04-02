@@ -268,17 +268,17 @@ public class Map : MonoBehaviour
         }
         else if (convertToCloseEnded) // open-ended but to be converted to close-ended
         {
-            try
-            {
+            //try
+            //{
                 // Generate close-ended way from open-ended line and add the way vertices to sprite shape
                 CreateCloseEndedWayFromOpenEndedLine(vertices, spline, tangentMode, thickness);
-            }
-            catch (ArgumentException e)
-            {
-                Debug.Log("Error adding point to spline: " + e.Message);
-                spline.Clear(); // Remove any points that were successfully added
-                return;
-            }
+            //}
+            //catch (ArgumentException e)
+            //{
+            //    Debug.LogError("Error adding point to spline: " + e.Message);
+            //    spline.Clear(); // Remove any points that were successfully added
+            //    return;
+            //}
         }
         else // open-ended
         {
@@ -313,6 +313,8 @@ public class Map : MonoBehaviour
 
     void CreateCloseEndedWayFromOpenEndedLine(Vector2[] vertices, Spline spline, ShapeTangentMode tangentMode, float thickness)
     {
+        float minDist = 0.5f;
+
         int numVertices = vertices.Length;
 
         // TEMP - DELETE THIS!
@@ -337,10 +339,10 @@ public class Map : MonoBehaviour
         Vector2 temp1 = initialPoint1;
         Vector2 temp2 = initialPoint2;
 
-        Vector2[] otherLine = new Vector2[numVertices];
+        List<Vector2> otherLine = new List<Vector2>();
 
         // Store point 2
-        otherLine[numVertices - 1] = initialPoint2;
+        otherLine.Add(initialPoint2);
 
         for (int i = 1; i < numVertices - 1; i++)
         {
@@ -353,13 +355,16 @@ public class Map : MonoBehaviour
             Vector2 point1 = vertices[i] + offsetFromLine;
             Vector2 point2 = vertices[i] - offsetFromLine;
 
-            // Insert point 1
-            spline.InsertPointAt(i, point1);
-            spline.SetTangentMode(i, tangentMode);
+            // Skip point if too close to previous point
+            if (Vector2.Distance(spline.GetPosition(spline.GetPointCount() - 1), point1) >= minDist)
+            {
+                // Insert point 1
+                spline.InsertPointAt(spline.GetPointCount(), point1);
+                spline.SetTangentMode(spline.GetPointCount() - 1, tangentMode);
+            }
 
             // Store point 2
-            int index = numVertices - i - 1;
-            otherLine[index] = point2;
+            otherLine.Add(point2);
 
             // TEMP - DELETE THIS!
             Color colour = colours[colourIndex];
@@ -388,27 +393,37 @@ public class Map : MonoBehaviour
         Vector2 finalPoint1 = vertices[numVertices - 1] + offsetFromLine;
         Vector2 finalPoint2 = vertices[numVertices - 1] - offsetFromLine;
 
-        // TEMP - DELETE THIS!
-        Color colour2 = colours[colourIndex];
-        colourIndex++;
-        colourIndex %= colours.Length;
-        Debug.DrawLine(vertices[numVertices - 2], vertices[numVertices - 1], colour2, 1000000000, false);
-        Debug.DrawLine(temp1, finalPoint1, colour2, 1000000000, false);
-        Debug.DrawLine(temp2, finalPoint2, colour2, 1000000000, false);
+        // Skip point if too close to previous point
+        if (Vector2.Distance(spline.GetPosition(spline.GetPointCount() - 1), finalPoint1) >= minDist)
+        {
+            // TEMP - DELETE THIS!
+            Color colour2 = colours[colourIndex];
+            colourIndex++;
+            colourIndex %= colours.Length;
+            Debug.DrawLine(vertices[numVertices - 2], vertices[numVertices - 1], colour2, 1000000000, false);
+            Debug.DrawLine(temp1, finalPoint1, colour2, 1000000000, false);
+            Debug.DrawLine(temp2, finalPoint2, colour2, 1000000000, false);
 
-        // Insert point 1
-        spline.InsertPointAt(numVertices - 1, finalPoint1);
-        spline.SetTangentMode(numVertices - 1, tangentMode);
+            // Insert point 1
+            spline.InsertPointAt(spline.GetPointCount(), finalPoint1);
+            spline.SetTangentMode(spline.GetPointCount() - 1, tangentMode);
 
-        // Store point 2
-        otherLine[0] = finalPoint2;
+            // Store point 2
+            otherLine.Add(finalPoint2);
+        }
+
+        // Reverse order of other line
+        otherLine.Reverse();
 
         // Insert all points for other line
-        for (int i = 0; i < numVertices; i++)
+        for (int i = 0; i < otherLine.Count; i++)
         {
-            int splineIndex = numVertices + i;
-            spline.InsertPointAt(splineIndex, otherLine[i]);
-            spline.SetTangentMode(splineIndex, tangentMode);
+            // Skip point if too close to previous point
+            if (Vector2.Distance(spline.GetPosition(spline.GetPointCount() - 1), otherLine[i]) < minDist)
+                continue;
+
+            spline.InsertPointAt(spline.GetPointCount(), otherLine[i]);
+            spline.SetTangentMode(spline.GetPointCount() - 1, tangentMode);
         }
     }
 
