@@ -429,7 +429,7 @@ public class Player : NetworkBehaviour
             invinsible = false;
 
             //Reset timer
-            speedIncreaseTimer = TickTimer.None;
+            invinsibleTimer = TickTimer.None;
         }
 
         // GetInput will return true on the StateAuthority (the server) and the InputAuthority (the client who controls this player)
