@@ -258,52 +258,51 @@ public class Map : MonoBehaviour
         // If the way is open-ended (e.g. a road or path) then make it smoother by setting the tangent mode to continuous
         ShapeTangentMode tangentMode = isOpenEnded ? ShapeTangentMode.Continuous : ShapeTangentMode.Linear;
 
-        if (!isOpenEnded) // close-ended
+        try
         {
-            // Reverse order if anti-clockwise (so that sprite shape is drawn correctly)
-            if (!PolygonIsClockwise(vertices))
-                Array.Reverse(vertices);
-
-            // Add way vertices to sprite shape
-            spline.Clear();
-            for (int i = 0; i < numVertices; i++)
+            if (!isOpenEnded) // close-ended
             {
-                // Add point to sprite shape
-                spline.InsertPointAt(i, vertices[i]);
-                spline.SetTangentMode(i, tangentMode);
+                // Reverse order if anti-clockwise (so that sprite shape is drawn correctly)
+                if (!PolygonIsClockwise(vertices))
+                    Array.Reverse(vertices);
+
+                // Add way vertices to sprite shape
+                spline.Clear();
+                for (int i = 0; i < numVertices; i++)
+                {
+                    // Add point to sprite shape
+                    spline.InsertPointAt(i, vertices[i]);
+                    spline.SetTangentMode(i, tangentMode);
+                }
             }
-        }
-        else if (convertToCloseEnded) // open-ended but to be converted to close-ended
-        {
-            //try
-            //{
+            else if (convertToCloseEnded) // open-ended but to be converted to close-ended
+            {
                 // Generate close-ended way from open-ended line and add the way vertices to sprite shape
                 CreateCloseEndedWayFromOpenEndedLine(vertices, spline, tangentMode, thickness);
-            //}
-            //catch (ArgumentException e)
-            //{
-            //    Debug.LogError("Error adding point to spline: " + e.Message);
-            //    spline.Clear(); // Remove any points that were successfully added
-            //    return;
-            //}
-        }
-        else // open-ended
-        {
-            // Add way vertices to sprite shape
-            spline.Clear();
-            for (int i = 0; i < numVertices; i++)
-            {
-                // Add point to sprite shape
-                spline.InsertPointAt(i, vertices[i]);
-                spline.SetTangentMode(i, tangentMode);
-                spline.SetHeight(i, thickness);
             }
-        }
+            else // open-ended
+            {
+                // Add way vertices to sprite shape
+                spline.Clear();
+                for (int i = 0; i < numVertices; i++)
+                {
+                    // Add point to sprite shape
+                    spline.InsertPointAt(i, vertices[i]);
+                    spline.SetTangentMode(i, tangentMode);
+                    spline.SetHeight(i, thickness);
+                }
+            }
 
-        // The above code creates sprite shapes that have their origin at the centre of the world, and this causes them to not be loaded
-        // until the centre of the world is on-screen, so we need to set the bounding volume of the sprite shape geometry to ensure that
-        // the sprite shape is visible at all times
-        SetSpriteShapeBoundingVolume(spriteShapeController);
+            // The above code creates sprite shapes that have their origin at the centre of the world, and this causes them to not be loaded
+            // until the centre of the world is on-screen, so we need to set the bounding volume of the sprite shape geometry to ensure that
+            // the sprite shape is visible at all times
+            SetSpriteShapeBoundingVolume(spriteShapeController);
+        }
+        catch (Exception ex)
+        {
+            // Catch any exception so that the code calling this method can continue adding other ways to scene, but still print the exception for debugging purposes
+            Debug.LogException(ex);
+        }
     }
 
     void SetSpriteShapeBoundingVolume(SpriteShapeController spriteShapeController)
