@@ -13,7 +13,6 @@ public class Map : MonoBehaviour
     [SerializeField] GameObject backgroundPrefab;
     [SerializeField] GameObject mapBorderPrefab;
     [SerializeField] GameObject buildingPrefab;
-    [SerializeField] GameObject buildingHolePrefab;
     [SerializeField] GameObject roadPrefab;
     [SerializeField] GameObject pathPrefab;
     [SerializeField] GameObject stepsPrefab;
@@ -160,10 +159,6 @@ public class Map : MonoBehaviour
                             // Create and add building to scene
                             if (member.role == "outer")
                                 AddWayToScene(vertices, buildingPrefab, false, false);
-
-                            // Create and add building hole to scene
-                            else if (member.role == "inner")
-                                AddWayToScene(vertices, buildingHolePrefab, false, false);
                         }
                     }
                 }
@@ -313,13 +308,9 @@ public class Map : MonoBehaviour
 
     void CreateCloseEndedWayFromOpenEndedLine(Vector2[] vertices, Spline spline, ShapeTangentMode tangentMode, float thickness)
     {
-        float minDist = 0.5f;
+        float minDist = 0.3f;
 
         int numVertices = vertices.Length;
-
-        // TEMP - DELETE THIS!
-        Color[] colours = { Color.red, Color.green, Color.blue, Color.magenta, Color.yellow, Color.black };
-        int colourIndex = 0;
 
         spline.Clear();
 
@@ -334,10 +325,6 @@ public class Map : MonoBehaviour
         // Insert point 1
         spline.InsertPointAt(0, initialPoint1);
         spline.SetTangentMode(0, tangentMode);
-
-        // TEMP - DELETE THIS!
-        Vector2 temp1 = initialPoint1;
-        Vector2 temp2 = initialPoint2;
 
         List<Vector2> otherLine = new List<Vector2>();
 
@@ -365,16 +352,6 @@ public class Map : MonoBehaviour
 
             // Store point 2
             otherLine.Add(point2);
-
-            // TEMP - DELETE THIS!
-            Color colour = colours[colourIndex];
-            colourIndex++;
-            colourIndex %= colours.Length;
-            Debug.DrawLine(vertices[i - 1], vertices[i], colour, 1000000000, false);
-            Debug.DrawLine(temp1, point1, colour, 1000000000, false);
-            Debug.DrawLine(temp2, point2, colour, 1000000000, false);
-            temp1 = point1;
-            temp2 = point2;
         }
 
         // If end is too close to start, move the end back a bit so they don't overlap and cause issues
@@ -396,14 +373,6 @@ public class Map : MonoBehaviour
         // Skip point if too close to previous point
         if (Vector2.Distance(spline.GetPosition(spline.GetPointCount() - 1), finalPoint1) >= minDist)
         {
-            // TEMP - DELETE THIS!
-            Color colour2 = colours[colourIndex];
-            colourIndex++;
-            colourIndex %= colours.Length;
-            Debug.DrawLine(vertices[numVertices - 2], vertices[numVertices - 1], colour2, 1000000000, false);
-            Debug.DrawLine(temp1, finalPoint1, colour2, 1000000000, false);
-            Debug.DrawLine(temp2, finalPoint2, colour2, 1000000000, false);
-
             // Insert point 1
             spline.InsertPointAt(spline.GetPointCount(), finalPoint1);
             spline.SetTangentMode(spline.GetPointCount() - 1, tangentMode);
