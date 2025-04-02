@@ -13,7 +13,6 @@ public class Map : MonoBehaviour
     [SerializeField] GameObject backgroundPrefab;
     [SerializeField] GameObject mapBorderPrefab;
     [SerializeField] GameObject buildingPrefab;
-    [SerializeField] GameObject buildingHolePrefab;
     [SerializeField] GameObject roadPrefab;
     [SerializeField] GameObject pathPrefab;
     [SerializeField] GameObject stepsPrefab;
@@ -155,15 +154,16 @@ public class Map : MonoBehaviour
                 // Get way vertices in world space from GPS coords
                 Vector2[] vertices = GetPointsFromGPSCoords(element.geometry, xShift, yShift, scale);
 
+                // Skip ways that are too large
+                if (vertices.Length > 500) continue;
+
                 // Create and add building to scene (but only if it is a way and not a relation)
                 if (IsBuilding(element))
-                    AddWayToScene(vertices, buildingPrefab, false, false);
+                    AddBuildingToScene(vertices);
 
                 // Create and add road to scene
                 else if (IsRoad(element))
-                {
                     AddWayToScene(vertices, roadPrefab, true, false, 5.0f);
-                }
 
                 // Create and add path to scene
                 else if (IsPath(element))
@@ -183,9 +183,7 @@ public class Map : MonoBehaviour
 
                 // Create and add wall to scene
                 else if (IsWall(element))
-                {
                     AddWallToScene(vertices, gates);
-                }
             }
 
             // Deal with relations
@@ -203,11 +201,7 @@ public class Map : MonoBehaviour
 
                             // Create and add building to scene
                             if (member.role == "outer")
-                                AddWayToScene(vertices, buildingPrefab, false, false);
-
-                            // Create and add building hole to scene
-                            else if (member.role == "inner")
-                                AddWayToScene(vertices, buildingHolePrefab, false, false);
+                                AddBuildingToScene(vertices);
                         }
                     }
                 }
@@ -280,6 +274,18 @@ public class Map : MonoBehaviour
         return element.tags.barrier == "gate";
     }
 
+    void AddBuildingToScene(Vector2[] vertices)
+    {
+        // Instantiate buiilding from prefab with the map as the parent
+        GameObject building = Instantiate(buildingPrefab, new Vector3(0, 0, 0), Quaternion.identity, transform);
+
+        // Get collider
+        PolygonCollider2D collider = building.GetComponent<PolygonCollider2D>();
+
+        // Set collider points
+        collider.SetPath(0, vertices);
+    }
+
     void AddWayToScene(Vector2[] vertices, GameObject prefab, bool isOpenEnded, bool convertToCloseEnded, float thickness = 1.0f)
     {
         // Instantiate way from prefab with the map as the parent
@@ -295,52 +301,51 @@ public class Map : MonoBehaviour
         // If the way is open-ended (e.g. a road or path) then make it smoother by setting the tangent mode to continuous
         ShapeTangentMode tangentMode = isOpenEnded ? ShapeTangentMode.Continuous : ShapeTangentMode.Linear;
 
-        if (!isOpenEnded) // close-ended
+        try
         {
-            // Reverse order if anti-clockwise (so that sprite shape is drawn correctly)
-            if (!PolygonIsClockwise(vertices))
-                Array.Reverse(vertices);
-
-            // Add way vertices to sprite shape
-            spline.Clear();
-            for (int i = 0; i < numVertices; i++)
+            if (!isOpenEnded) // close-ended
             {
-                // Add point to sprite shape
-                spline.InsertPointAt(i, vertices[i]);
-                spline.SetTangentMode(i, tangentMode);
+                // Reverse order if anti-clockwise (so that sprite shape is drawn correctly)
+                if (!PolygonIsClockwise(vertices))
+                    Array.Reverse(vertices);
+
+                // Add way vertices to sprite shape
+                spline.Clear();
+                for (int i = 0; i < numVertices; i++)
+                {
+                    // Add point to sprite shape
+                    spline.InsertPointAt(i, vertices[i]);
+                    spline.SetTangentMode(i, tangentMode);
+                }
             }
-        }
-        else if (convertToCloseEnded) // open-ended but to be converted to close-ended
-        {
-            try
+            else if (convertToCloseEnded) // open-ended but to be converted to close-ended
             {
                 // Generate close-ended way from open-ended line and add the way vertices to sprite shape
                 CreateCloseEndedWayFromOpenEndedLine(vertices, spline, tangentMode, thickness);
             }
-            catch (ArgumentException e)
+            else // open-ended
             {
-                Debug.Log("Error adding point to spline: " + e.Message);
-                spline.Clear(); // Remove any points that were successfully added
-                return;
+                // Add way vertices to sprite shape
+                spline.Clear();
+                for (int i = 0; i < numVertices; i++)
+                {
+                    // Add point to sprite shape
+                    spline.InsertPointAt(i, vertices[i]);
+                    spline.SetTangentMode(i, tangentMode);
+                    spline.SetHeight(i, thickness);
+                }
             }
-        }
-        else // open-ended
-        {
-            // Add way vertices to sprite shape
-            spline.Clear();
-            for (int i = 0; i < numVertices; i++)
-            {
-                // Add point to sprite shape
-                spline.InsertPointAt(i, vertices[i]);
-                spline.SetTangentMode(i, tangentMode);
-                spline.SetHeight(i, thickness);
-            }
-        }
 
-        // The above code creates sprite shapes that have their origin at the centre of the world, and this causes them to not be loaded
-        // until the centre of the world is on-screen, so we need to set the bounding volume of the sprite shape geometry to ensure that
-        // the sprite shape is visible at all times
-        SetSpriteShapeBoundingVolume(spriteShapeController);
+            // The above code creates sprite shapes that have their origin at the centre of the world, and this causes them to not be loaded
+            // until the centre of the world is on-screen, so we need to set the bounding volume of the sprite shape geometry to ensure that
+            // the sprite shape is visible at all times
+            SetSpriteShapeBoundingVolume(spriteShapeController);
+        }
+        catch (Exception ex)
+        {
+            // Catch any exception so that the code calling this method can continue adding other ways to scene, but still log the exception for debugging purposes
+            Debug.LogException(ex);
+        }
     }
 
     void SetSpriteShapeBoundingVolume(SpriteShapeController spriteShapeController)
@@ -357,11 +362,9 @@ public class Map : MonoBehaviour
 
     void CreateCloseEndedWayFromOpenEndedLine(Vector2[] vertices, Spline spline, ShapeTangentMode tangentMode, float thickness)
     {
-        int numVertices = vertices.Length;
+        float minDist = 0.3f;
 
-        // TEMP - DELETE THIS!
-        Color[] colours = { Color.red, Color.green, Color.blue, Color.magenta, Color.yellow, Color.black };
-        int colourIndex = 0;
+        int numVertices = vertices.Length;
 
         spline.Clear();
 
@@ -377,14 +380,10 @@ public class Map : MonoBehaviour
         spline.InsertPointAt(0, initialPoint1);
         spline.SetTangentMode(0, tangentMode);
 
-        // TEMP - DELETE THIS!
-        Vector2 temp1 = initialPoint1;
-        Vector2 temp2 = initialPoint2;
-
-        Vector2[] otherLine = new Vector2[numVertices];
+        List<Vector2> otherLine = new List<Vector2>();
 
         // Store point 2
-        otherLine[numVertices - 1] = initialPoint2;
+        otherLine.Add(initialPoint2);
 
         for (int i = 1; i < numVertices - 1; i++)
         {
@@ -397,23 +396,16 @@ public class Map : MonoBehaviour
             Vector2 point1 = vertices[i] + offsetFromLine;
             Vector2 point2 = vertices[i] - offsetFromLine;
 
-            // Insert point 1
-            spline.InsertPointAt(i, point1);
-            spline.SetTangentMode(i, tangentMode);
+            // Skip point if too close to previous point
+            if (Vector2.Distance(spline.GetPosition(spline.GetPointCount() - 1), point1) >= minDist)
+            {
+                // Insert point 1
+                spline.InsertPointAt(spline.GetPointCount(), point1);
+                spline.SetTangentMode(spline.GetPointCount() - 1, tangentMode);
+            }
 
             // Store point 2
-            int index = numVertices - i - 1;
-            otherLine[index] = point2;
-
-            // TEMP - DELETE THIS!
-            Color colour = colours[colourIndex];
-            colourIndex++;
-            colourIndex %= colours.Length;
-            Debug.DrawLine(vertices[i - 1], vertices[i], colour, 1000000000, false);
-            Debug.DrawLine(temp1, point1, colour, 1000000000, false);
-            Debug.DrawLine(temp2, point2, colour, 1000000000, false);
-            temp1 = point1;
-            temp2 = point2;
+            otherLine.Add(point2);
         }
 
         // If end is too close to start, move the end back a bit so they don't overlap and cause issues
@@ -432,27 +424,29 @@ public class Map : MonoBehaviour
         Vector2 finalPoint1 = vertices[numVertices - 1] + offsetFromLine;
         Vector2 finalPoint2 = vertices[numVertices - 1] - offsetFromLine;
 
-        // TEMP - DELETE THIS!
-        Color colour2 = colours[colourIndex];
-        colourIndex++;
-        colourIndex %= colours.Length;
-        Debug.DrawLine(vertices[numVertices - 2], vertices[numVertices - 1], colour2, 1000000000, false);
-        Debug.DrawLine(temp1, finalPoint1, colour2, 1000000000, false);
-        Debug.DrawLine(temp2, finalPoint2, colour2, 1000000000, false);
+        // Skip point if too close to previous point
+        if (Vector2.Distance(spline.GetPosition(spline.GetPointCount() - 1), finalPoint1) >= minDist)
+        {
+            // Insert point 1
+            spline.InsertPointAt(spline.GetPointCount(), finalPoint1);
+            spline.SetTangentMode(spline.GetPointCount() - 1, tangentMode);
 
-        // Insert point 1
-        spline.InsertPointAt(numVertices - 1, finalPoint1);
-        spline.SetTangentMode(numVertices - 1, tangentMode);
+            // Store point 2
+            otherLine.Add(finalPoint2);
+        }
 
-        // Store point 2
-        otherLine[0] = finalPoint2;
+        // Reverse order of other line
+        otherLine.Reverse();
 
         // Insert all points for other line
-        for (int i = 0; i < numVertices; i++)
+        for (int i = 0; i < otherLine.Count; i++)
         {
-            int splineIndex = numVertices + i;
-            spline.InsertPointAt(splineIndex, otherLine[i]);
-            spline.SetTangentMode(splineIndex, tangentMode);
+            // Skip point if too close to previous point
+            if (Vector2.Distance(spline.GetPosition(spline.GetPointCount() - 1), otherLine[i]) < minDist)
+                continue;
+
+            spline.InsertPointAt(spline.GetPointCount(), otherLine[i]);
+            spline.SetTangentMode(spline.GetPointCount() - 1, tangentMode);
         }
     }
 
@@ -501,7 +495,7 @@ public class Map : MonoBehaviour
                     // Make a split at closest point
                     Vector2[] wall1;
                     Vector2[] wall2;
-                    float gapWidth = 4f;
+                    float gapWidth = 3f;
                     SplitWall(vertices, closestPoint, gapWidth, out wall1, out wall2);
 
                     // Add both walls to scene

@@ -93,8 +93,8 @@ SpriteShapeRenderer:
   - {fileID: 0}
   - {fileID: 0}
   m_LocalAABB:
-    m_Center: {x: 0.00084638596, y: 0.08649218, z: 0}
-    m_Extent: {x: 2.0841162, y: 0.993508, z: 0}
+    m_Center: {x: 0.0010325909, y: 0.08644819, z: 0}
+    m_Extent: {x: 2.5050244, y: 1.413552, z: 0}
   m_SpriteSortPoint: 0
 --- !u!114 &6014050156912707874
 MonoBehaviour:
@@ -164,11 +164,11 @@ MonoBehaviour:
   m_Creator: {fileID: 0}
   m_Modifiers: []
   m_ColliderSegment:
-  - {x: -2.079863, y: 1.08}
-  - {x: 2.0797904, y: 1.08}
-  - {x: 2.0849626, y: -0.9061437}
-  - {x: -2.0832698, y: -0.9070158}
-  - {x: -2.079863, y: 1.08}
+  - {x: -2.4991434, y: 1.5}
+  - {x: 2.4987, y: 1.5}
+  - {x: 2.5060573, y: -1.3260555}
+  - {x: -2.5039918, y: -1.3271039}
+  - {x: -2.4991434, y: 1.5}
   m_ShadowSegment: []
 --- !u!60 &-2419561911038752215
 PolygonCollider2D:
@@ -186,7 +186,7 @@ PolygonCollider2D:
     m_Bits: 0
   m_ExcludeLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 512
   m_LayerOverridePriority: 0
   m_ForceSendLayers:
     serializedVersion: 2
@@ -216,9 +216,9 @@ PolygonCollider2D:
   m_AutoTiling: 0
   m_Points:
     m_Paths:
-    - - {x: -2.079863, y: 1.08}
-      - {x: 2.0797904, y: 1.08}
-      - {x: 2.0849626, y: -0.9061437}
-      - {x: -2.0832698, y: -0.9070158}
-      - {x: -2.079863, y: 1.08}
+    - - {x: -2.4991434, y: 1.5}
+      - {x: 2.4987, y: 1.5}
+      - {x: 2.5060573, y: -1.3260555}
+      - {x: -2.5039918, y: -1.3271039}
+      - {x: -2.4991434, y: 1.5}
   m_UseDelaunayMesh: 0
