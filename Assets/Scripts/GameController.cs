@@ -71,6 +71,8 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     {
         if (gameOver) return;
 
+        float timeLeft = gameTimer.RemainingTime(Runner).GetValueOrDefault();
+
         // End game if game timer has finished
         if (gameTimer.Expired(Runner))
         {
@@ -86,6 +88,16 @@ public class GameController : NetworkBehaviour, IPlayerLeft
                 player.GainMana(1);
             }
             pointsTopupTimer = TickTimer.CreateFromSeconds(Runner, pointsTopupCooldownMax);
+        }
+
+        if (timeLeft <= 120.5f && timeLeft >= 119.5f)
+        {
+            BroadcastMessageToAll("2 Minutes left!!!", 0.3f, Color.red);
+        }
+
+        if (timeLeft <= 30.5f && timeLeft >= 29.5f)
+        {
+            BroadcastMessageToAll("30 Seconds left!!!", 0.3f, Color.red);
         }
     }
 
@@ -194,18 +206,21 @@ public class GameController : NetworkBehaviour, IPlayerLeft
         // Max distance for flags to be from a base to count as a win
         float maxDistance = 8.0f;
 
+        Vector3 flag1RespawnPoint = respawnPoint1 + new Vector3(0, 3, 0);
+        Vector3 flag2RespawnPoint = respawnPoint2 + new Vector3(0, 3, 0);
+
         // If team 2's flag is close enough to team 1's base, then team 1 wins
         if (Vector2.Distance(team2Flag.transform.position, respawnPoint1) <= maxDistance)
         {
             pointsTeam1 += 10;
-            team2Flag.transform.position = respawnPoint2;
+            team2Flag.transform.position = flag2RespawnPoint;
             return pointsTeam1;
         }
         // If team 1's flag is close enough to team 2's base, then team 2 wins
         else if (Vector2.Distance(team1Flag.transform.position, respawnPoint2) <= maxDistance)
         {
             pointsTeam2 += 10;
-            team1Flag.transform.position = respawnPoint1;
+            team1Flag.transform.position = flag1RespawnPoint;
             return pointsTeam2;
         }
 

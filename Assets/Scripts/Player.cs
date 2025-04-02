@@ -436,6 +436,11 @@ public class Player : NetworkBehaviour
             invinsibleTimer = TickTimer.None;
         }
 
+        if (isCarrying && carriedObject != null)
+        {
+            CheckForDrop();
+        }
+
         // GetInput will return true on the StateAuthority (the server) and the InputAuthority (the client who controls this player)
         // So the following is ran for just the server and the client who controls this player
         if (GetInput(out NetworkInputData input))
@@ -1010,6 +1015,19 @@ public class Player : NetworkBehaviour
         }
     }
 
+    private void CheckForDrop()
+    {
+        if (!isCarrying || carriedObject == null) return;
+
+        float respawnDistance = 6.0f;
+        float distanceToRespawn = Vector2.Distance(transform.position, respawnPoint);
+
+        if (distanceToRespawn <= respawnDistance)
+        {
+            DropObject();
+        }
+    }
+
     public void CarryObject(NetworkObject networkObject)
     {
         if (carriedObject == null)
@@ -1023,7 +1041,7 @@ public class Player : NetworkBehaviour
 
     void DropObject()
     {
-        if (carriedObject != null)
+        if (carriedObject != null && isCarrying)
         {
             PickupFlag flag = carriedObject.GetComponent<PickupFlag>();
             if (!flag.IsInsideCollider())

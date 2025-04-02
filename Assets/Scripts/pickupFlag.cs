@@ -67,7 +67,9 @@ public class PickupFlag : NetworkBehaviour
 
     public void Drop()
     {
-        if (isPickedUp) // Only allow drop if the object is picked up
+        if (!HasStateAuthority) return;
+
+        if (isPickedUp && picker != null && picker.isCarrying) // Only allow drop if the object is picked up
         {
             isPickedUp = false;
             picker = null;
