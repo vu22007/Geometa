@@ -5,8 +5,6 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.U2D;
-using static MapElement;
-using static UnityEditor.Searcher.SearcherWindow.Alignment;
 
 public class Map : MonoBehaviour
 {
@@ -300,7 +298,7 @@ public class Map : MonoBehaviour
         }
         catch (Exception ex)
         {
-            // Catch any exception so that the code calling this method can continue adding other ways to scene, but still print the exception for debugging purposes
+            // Catch any exception so that the code calling this method can continue adding other ways to scene, but still log the exception for debugging purposes
             Debug.LogException(ex);
         }
     }
