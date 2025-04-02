@@ -296,9 +296,12 @@ public class Player : NetworkBehaviour
         // Reset state
         isAlive = true;
         stunned = false;
+        slowed = false;
         speedIncrease = false;
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
+        speedIncreaseTimer = TickTimer.None;
+        getSlowedTimer = TickTimer.None;
         respawnTimer = TickTimer.None;
         attackWaitTimer = TickTimer.None;
         getStunnedTimer = TickTimer.None;
