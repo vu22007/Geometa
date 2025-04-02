@@ -49,7 +49,7 @@ public class Player : NetworkBehaviour
     [Networked] TickTimer getSlowedTimer { get; set; }
     [Networked] TickTimer getStunnedTimer { get; set; }
     [Networked] bool stunned { get; set; }
-    [Networked] float speedIncrease { get; set; }
+    [Networked] bool speedIncrease { get; set; }
     [Networked, OnChangedRender(nameof(OnSpeedIncreaseTimerChanged))] TickTimer speedIncreaseTimer { get; set; }
     [Networked, OnChangedRender(nameof(OnInvinsibleChanged))] bool invinsible { get; set; }
     [Networked] TickTimer invinsibleTimer { get; set; }
@@ -296,6 +296,7 @@ public class Player : NetworkBehaviour
         // Reset state
         isAlive = true;
         stunned = false;
+        speedIncrease = false;
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
         respawnTimer = TickTimer.None;
@@ -413,8 +414,7 @@ public class Player : NetworkBehaviour
         if (speedIncreaseTimer.Expired(Runner))
         {
             // Restore speed
-            speed -= speedIncrease;
-            speedIncrease = 0;
+            speedIncrease = false;
 
             // Reset timer
             speedIncreaseTimer = TickTimer.None;
@@ -550,6 +550,7 @@ public class Player : NetworkBehaviour
         float targetSpeed = speed;
         if(isDashing){targetSpeed = targetSpeed * dashSpeed;}
         if(isCarrying){targetSpeed = targetSpeed / 1.5f;}
+        if(speedIncrease){targetSpeed = targetSpeed * 1.5f;}
         Vector2 targetVelocity = moveDirection.normalized * targetSpeed;
 
         // Current velocity
@@ -1153,12 +1154,9 @@ public class Player : NetworkBehaviour
         return mana;
     }
 
-    public void IncreaseSpeed(float amount, float time){
-        if (speedIncrease == 0)
-        {
-            speed += amount;
-            speedIncrease += amount;
-        }
+    public void IncreaseSpeed(float time)
+    {
+        speedIncrease = true;
         speedIncreaseTimer = TickTimer.CreateFromSeconds(Runner, time);
     }
 

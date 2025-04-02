@@ -60,7 +60,7 @@ public class Pickup : NetworkBehaviour
                         player.GainMana(amount);
                         break;
                     case 2: //Speed
-                        player.IncreaseSpeed(amount, 5f);
+                        player.IncreaseSpeed(5f);
                         break;
                     default:
                         Debug.Log("Unknown type of pickup");
