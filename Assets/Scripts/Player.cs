@@ -45,11 +45,11 @@ public class Player : NetworkBehaviour
     [Networked] private bool isAoEUsed { get; set; }
     [Networked] private bool normalShoot { get; set; }
     [Networked] private TickTimer aoeEnabledTimer { get; set; }
-    [Networked] float slowedAmount { get; set; }
     [Networked] TickTimer getSlowedTimer { get; set; }
     [Networked] TickTimer getStunnedTimer { get; set; }
     [Networked] bool stunned { get; set; }
-    [Networked] float speedIncrease { get; set; }
+    [Networked] bool speedIncrease { get; set; }
+    [Networked] bool slowed { get; set; }
     [Networked, OnChangedRender(nameof(OnSpeedIncreaseTimerChanged))] TickTimer speedIncreaseTimer { get; set; }
     [Networked, OnChangedRender(nameof(OnInvinsibleChanged))] bool invinsible { get; set; }
     [Networked] TickTimer invinsibleTimer { get; set; }
@@ -296,8 +296,12 @@ public class Player : NetworkBehaviour
         // Reset state
         isAlive = true;
         stunned = false;
+        slowed = false;
+        speedIncrease = false;
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
+        speedIncreaseTimer = TickTimer.None;
+        getSlowedTimer = TickTimer.None;
         respawnTimer = TickTimer.None;
         attackWaitTimer = TickTimer.None;
         getStunnedTimer = TickTimer.None;
@@ -393,8 +397,7 @@ public class Player : NetworkBehaviour
         if (getSlowedTimer.Expired(Runner))
         {
             // Restore speed
-            speed += slowedAmount;
-            slowedAmount = 0;
+            slowed = false;
 
             // Reset timer
             getSlowedTimer = TickTimer.None;
@@ -413,8 +416,7 @@ public class Player : NetworkBehaviour
         if (speedIncreaseTimer.Expired(Runner))
         {
             // Restore speed
-            speed -= speedIncrease;
-            speedIncrease = 0;
+            speedIncrease = false;
 
             // Reset timer
             speedIncreaseTimer = TickTimer.None;
@@ -547,7 +549,11 @@ public class Player : NetworkBehaviour
     void PlayerMovement(Vector2 moveDirection)
     {
         // Calculate target velocity
-        float targetSpeed = isDashing ? speed * dashSpeed : speed;
+        float targetSpeed = speed;
+        if(isDashing){targetSpeed = targetSpeed * dashSpeed;}
+        if(isCarrying){targetSpeed = targetSpeed / 1.5f;}
+        if(speedIncrease){targetSpeed = targetSpeed * 1.5f;}
+        if(slowed){targetSpeed = targetSpeed / 1.2f;}
         Vector2 targetVelocity = moveDirection.normalized * targetSpeed;
 
         // Current velocity
@@ -730,7 +736,7 @@ public class Player : NetworkBehaviour
             currentHealth -= damage;
 
             //slow on damaged
-            GetSlowed(1.5f, 1f);
+            GetSlowed(1f);
 
             // Add damage to damage dealer's total damage dealt counter
             if (Runner.TryGetPlayerObject(damageDealer, out NetworkObject networkPlayerObject))
@@ -1003,7 +1009,6 @@ public class Player : NetworkBehaviour
         {
             carriedObject = networkObject;
             isCarrying = true;
-            speed -= 3f;
             PickupFlag flag = carriedObject.GetComponent<PickupFlag>();
             gameController.BroadcastCarryFlag(team, flag.team);
         }
@@ -1024,7 +1029,6 @@ public class Player : NetworkBehaviour
                 }
                 carriedObject = null;
                 isCarrying = false;
-                speed += 3f;
                 gameController.BroadcastDropFlag(team, flag.team);
             }
         }
@@ -1153,12 +1157,9 @@ public class Player : NetworkBehaviour
         return mana;
     }
 
-    public void IncreaseSpeed(float amount, float time){
-        if (speedIncrease == 0)
-        {
-            speed += amount;
-            speedIncrease += amount;
-        }
+    public void IncreaseSpeed(float time)
+    {
+        speedIncrease = true;
         speedIncreaseTimer = TickTimer.CreateFromSeconds(Runner, time);
     }
 
@@ -1184,14 +1185,10 @@ public class Player : NetworkBehaviour
         }
     }
 
-    void GetSlowed(float amount, float time)
+    void GetSlowed(float time)
     {
         // If not already slowed, slow the player
-        if (slowedAmount == 0)
-        {
-            speed -= amount;
-            slowedAmount = amount;
-        }
+        slowed = true;
 
         // Set timer until the player's speed returns to normal
         // Note: If they are already slowed, this resets the timer so they have to wait longer, but the above
