@@ -109,7 +109,7 @@ public class Map : MonoBehaviour
 
                 // Create and add building to scene (but only if it is a way and not a relation)
                 if (IsBuilding(element))
-                    AddWayToScene(vertices, buildingPrefab, false, false);
+                    AddBuildingToScene(vertices);
 
                 // Create and add road to scene
                 else if (IsRoad(element))
@@ -158,7 +158,7 @@ public class Map : MonoBehaviour
 
                             // Create and add building to scene
                             if (member.role == "outer")
-                                AddWayToScene(vertices, buildingPrefab, false, false);
+                                AddBuildingToScene(vertices);
                         }
                     }
                 }
@@ -229,6 +229,18 @@ public class Map : MonoBehaviour
     bool IsGate(MapElement element)
     {
         return element.tags.barrier == "gate";
+    }
+
+    void AddBuildingToScene(Vector2[] vertices)
+    {
+        // Instantiate buiilding from prefab with the map as the parent
+        GameObject building = Instantiate(buildingPrefab, new Vector3(0, 0, 0), Quaternion.identity, transform);
+
+        // Get collider
+        PolygonCollider2D collider = building.GetComponent<PolygonCollider2D>();
+
+        // Set collider points
+        collider.SetPath(0, vertices);
     }
 
     void AddWayToScene(Vector2[] vertices, GameObject prefab, bool isOpenEnded, bool convertToCloseEnded, float thickness = 1.0f)
