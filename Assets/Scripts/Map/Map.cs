@@ -105,6 +105,9 @@ public class Map : MonoBehaviour
                 // Get way vertices in world space from GPS coords
                 Vector2[] vertices = GetPointsFromGPSCoords(element.geometry, xShift, yShift, scale);
 
+                // Skip ways that are too large
+                if (vertices.Length > 500) continue;
+
                 // Create and add building to scene (but only if it is a way and not a relation)
                 if (IsBuilding(element))
                     AddBuildingToScene(vertices);
