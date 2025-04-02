@@ -59,6 +59,7 @@ public class Player : NetworkBehaviour
     [Networked, OnChangedRender(nameof(ShootAoERender))] private int aoeFired { get; set; }
     [Networked, OnChangedRender(nameof(ReloadRender))] private int reloadPerformed { get; set; }
     [Networked, OnChangedRender(nameof(DashRender))] private int dashPerformed { get; set; }
+    [Networked, OnChangedRender(nameof(TakeDamageRender))] private int damageTaken { get; set; }
     [Networked] int circleSegments { get; set; }
     [Networked] float circleRadius { get; set; }
     [Networked] float totalDamageDealt { get; set; }
@@ -747,12 +748,24 @@ public class Player : NetworkBehaviour
                     player.IncreaseDamageDealtCounter(damage);
                 }
             }
+            
+            // Signal that damage was taken for TakeDamageRender to be called
+            damageTaken++;
 
             if (currentHealth <= 0.0f)
             {
                 Die(damageDealer);
             }
         }
+    }
+
+    void TakeDamageRender(NetworkBehaviourBuffer previous)
+    {
+        float previousHealth = GetPropertyReader<float>(nameof(currentHealth)).Read(previous);
+        
+        // Player took damage so show hurt effects
+        float damage = previousHealth - currentHealth;
+        HurtEffects(damage);
     }
 
     void HurtEffects(float damage) {
@@ -904,18 +917,9 @@ public class Player : NetworkBehaviour
         totalDamageDealt += damage;
     }
 
-    void OnHealthChanged(NetworkBehaviourBuffer previous)
+    void OnHealthChanged()
     {
-        float previousHealth = GetPropertyReader<float>(nameof(currentHealth)).Read(previous);
-
         UpdateHealthBar();
-
-        if (currentHealth < previousHealth)
-        {
-            // Player took damage so show hurt effects
-            float damage = previousHealth - currentHealth;
-            HurtEffects(damage);
-        }
     }
 
     void UpdateHealthBar()
