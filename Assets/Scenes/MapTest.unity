@@ -657,7 +657,8 @@ PrefabInstance:
       propertyPath: m_LocalAABB.m_Extent.y
       value: 0.995574
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 5269767091265852549, guid: a54f21a4cee34dd4da55c28ad947e0f8, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
