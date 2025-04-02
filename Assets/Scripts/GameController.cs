@@ -379,7 +379,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
         networkManager.team2Points = pointsTeam2;
 
         // Switch to leaderboard scene, and the leaderboard will fetch the player stats from the network manager
-        Runner.LoadScene(SceneRef.FromIndex(SceneManager.GetActiveScene().buildIndex + 1));
+        Runner.LoadScene(SceneRef.FromIndex(4));
     }
 
     List<Leaderboard.PlayerInfo> GetPlayerStats(int team)

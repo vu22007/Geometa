@@ -158,6 +158,12 @@ public class Player : NetworkBehaviour
         totalFlagsCaptured = 0;
     }
 
+    public void Awake()
+    {
+        // Get game controller component
+        gameController = GameObject.Find("Game Controller").GetComponent<GameController>();
+    }
+
     // Player initialisation (called on each client and server when player is spawned on network)
     public override void Spawned()
     {
@@ -169,9 +175,6 @@ public class Player : NetworkBehaviour
             cam.gameObject.SetActive(false);
             uIController.gameObject.SetActive(false);
         }
-
-        // Get game controller component
-        gameController = GameObject.Find("Game Controller").GetComponent<GameController>();
 
         // Add this player to game controller player list
         gameController.RegisterPlayer(this);
