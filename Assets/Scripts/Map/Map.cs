@@ -114,9 +114,7 @@ public class Map : MonoBehaviour
 
                 // Create and add road to scene
                 else if (IsRoad(element))
-                {
                     AddWayToScene(vertices, roadPrefab, true, false, 5.0f);
-                }
 
                 // Create and add path to scene
                 else if (IsPath(element))
@@ -132,16 +130,11 @@ public class Map : MonoBehaviour
 
                 // Create and add water to scene
                 else if (IsWater(element))
-                {
-                    Debug.Log("Water count: " + vertices.Length);
                     AddWayToScene(vertices, waterPrefab, false, false);
-                }
 
                 // Create and add wall to scene
                 else if (IsWall(element))
-                {
                     AddWallToScene(vertices, gates);
-                }
             }
 
             // Deal with relations
