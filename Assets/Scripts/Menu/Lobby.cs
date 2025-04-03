@@ -1,13 +1,10 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Fusion;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using UnityEngine.Windows;
 
 public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 {
@@ -19,9 +16,9 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     private NetworkManager networkManager;
     private TMP_InputField displayNameInput;
     private TMP_InputField coordinatesInput;
-    [Networked] NetworkString<_64> coordinates { get; set; }
+    [Networked] NetworkString<_128> coordinates { get; set; }
     // Corrdinates used for generating the map, so players joined after can generate it as well
-    [Networked] NetworkString<_64> mapGenerationCoordinates { get; set; }
+    [Networked] NetworkString<_128> mapGenerationCoordinates { get; set; }
     private Button team1Button;
     private Button team2Button;
     private Button knightButton;
@@ -43,17 +40,20 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     private string characterName = "";
     private bool playerIsReady = false;
     RunBlenderScript buildingsGenerator;
+    Map map;
     CoordinatesDataHolder coordinatesDataHolder;
     // This one is the player chose the generation type with the button
     [Networked] bool generateMap { get; set; } = false;
     // This is for when the player actually generates the map
     [Networked] bool mapGenerated { get; set; } = false;
-    [Networked, Capacity(16)] private NetworkLinkedList<PlayerRef> playersCompletedMapGen { get; }
+    [Networked, Capacity(16)] private NetworkLinkedList<PlayerRef> playersCompleted3DMapGen { get; }
+    [Networked, Capacity(16)] private NetworkLinkedList<PlayerRef> playersCompleted2DMapGen { get; }
 
     public override void Spawned()
     {
         coordinatesDataHolder = GameObject.Find("CoordinatesDataHolder").GetComponent<CoordinatesDataHolder>();
         buildingsGenerator = GameObject.Find("BuildingsGenerator").GetComponent<RunBlenderScript>();
+        map = GameObject.Find("Map").GetComponent<Map>();
         selectAreaButton = GameObject.Find("Select Area").GetComponent<Button>();
         networkManager = GameObject.Find("Network Runner").GetComponent<NetworkManager>();
         displayNameInput = GameObject.Find("Display Name Input").GetComponent<TMP_InputField>();
@@ -128,7 +128,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             if (mapGenerated & generateMap)
             {
                 // If the generate map button is clicked and the type is set to generate map, all players need to have generated the map
-                bool allPlayersGeneratedMap = playersCompletedMapGen.Count() == numPlayersInLobby;
+                bool allPlayersGeneratedMap = GetNumPlayersReady() == numPlayersInLobby;
                 canStart = allPlayersAreReady & allPlayersGeneratedMap;
             }
             else
@@ -263,21 +263,29 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     {
         string pathToHtmlFile = Path.Combine(Application.streamingAssetsPath, "Non-Unity", "mapCoordinates.html");
             
-        Debug.Log(pathToHtmlFile);
         if (HasStateAuthority)
         {
             Application.OpenURL(pathToHtmlFile);
         }
     }
 
-    // Add this RPC method
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    public void RPC_MapGenComplete(PlayerRef player)
+    public void RPC_3DMapGenComplete(PlayerRef player)
     {
-        if (!playersCompletedMapGen.Contains(player))
+        if (!playersCompleted3DMapGen.Contains(player))
         {
-            playersCompletedMapGen.Add(player);
-            Debug.Log($"Player {player} completed map gen. Total: {playersCompletedMapGen.Count()}");
+            playersCompleted3DMapGen.Add(player);
+            Debug.Log($"Player {player} completed map gen. Total: {playersCompleted3DMapGen.Count()}");
+        }
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_2DMapGenComplete(PlayerRef player)
+    {
+        if (!playersCompleted2DMapGen.Contains(player))
+        {
+            playersCompleted2DMapGen.Add(player);
+            Debug.Log($"Player {player} completed map gen. Total: {playersCompleted2DMapGen.Count()}");
         }
     }
 
@@ -305,7 +313,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             if (double.TryParse(partsArray[i], out double number))
             {
                 // Round to 4 decimals because blosm has that max accuracy
-                numbers[i] = (double)System.Math.Round(number, 4);
+                numbers[i] = (double)System.Math.Round(number, 5);
             }
             else
             {
@@ -314,10 +322,21 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             }
         }
 
-        if (allValid)
+        if (allValid & partsArray.Length >= 4)
         {
             StartCoroutine(buildingsGenerator.RunBlender(numbers[0], numbers[1], numbers[2], numbers[3]));
+            StartCoroutine(map.LoadMapFromBoundingBox(numbers[0], numbers[1], numbers[2], numbers[3]));
+
             coordinatesDataHolder.SetCoordinates(numbers[0], numbers[1], numbers[2], numbers[3]);
+            if (partsArray.Length >= 6)
+            {
+                coordinatesDataHolder.SetRespawnPoint1(numbers[4], numbers[5]);
+            }
+            if (partsArray.Length >= 8)
+            {
+                coordinatesDataHolder.SetRespawnPoint2(numbers[6], numbers[7]);
+            }
+
             mapGenerated = true;
             UpdateGeneratedMapCounter();
             if (HasStateAuthority)
@@ -349,7 +368,8 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             {
                 // Prevent new players from joining
                 Runner.SessionInfo.IsOpen = false;
-                playersCompletedMapGen.Clear();
+                playersCompleted3DMapGen.Clear();
+                playersCompleted2DMapGen.Clear();
                 // Play Scene with a pre-generated map
                 DontDestroyOnLoad(coordinatesDataHolder);
                 Runner.LoadScene(SceneRef.FromIndex(5));
@@ -446,10 +466,10 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 
     void UpdateGeneratedMapCounter()
     {
-        int readyPlayers = playersCompletedMapGen.Count();
+        int readyPlayers = GetNumPlayersReady();
         int allPlayers = Runner.ActivePlayers.Count();
 
-        if(readyPlayers < allPlayers)
+        if (readyPlayers < allPlayers)
         {
             generatedMapCounter.color = Color.white;
         }
@@ -458,6 +478,19 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             generatedMapCounter.color = Color.green;
         }
             generatedMapCounter.text = "Generated map: " + readyPlayers + "/" + allPlayers;
+    }
+
+    // Get number of players who have finished generating both 3D and 2D maps
+    int GetNumPlayersReady()
+    {
+        // Only players who have generated both 3D and 2D are ready
+        int readyPlayers = 0;
+        foreach (PlayerRef player in playersCompleted3DMapGen)
+        {
+            if (playersCompleted2DMapGen.Contains(player))
+                readyPlayers++;
+        }
+        return readyPlayers;
     }
 
     void ClearPlayerCardsFromTeamList(GameObject teamList)

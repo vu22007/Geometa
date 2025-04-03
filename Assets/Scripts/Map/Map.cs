@@ -7,9 +7,13 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.U2D;
+using UnityEngine.SceneManagement;
+using Fusion;
 
-public class Map : MonoBehaviour
+public class Map : NetworkBehaviour
 {
+    public static Map instance;
+
     [SerializeField] GameObject backgroundPrefab;
     [SerializeField] GameObject mapBorderPrefab;
     [SerializeField] GameObject buildingPrefab;
@@ -19,36 +23,53 @@ public class Map : MonoBehaviour
     [SerializeField] GameObject grassPrefab;
     [SerializeField] GameObject waterPrefab;
     [SerializeField] GameObject wallPrefab;
+
     private string outputFilePath;
+    private Lobby lobby;
 
-    void Start()
+    private void Awake()
     {
-        // Filepath where the glb file got outputed
-        outputFilePath = Path.Combine(Application.streamingAssetsPath, "Buildify3DBuildings.glb");
-
-        if (CoordinatesDataHolder.Instance == null)
+        if (instance != null && instance != this)
         {
-            Debug.LogError("Coordinates aren't valid");
-            //Debug.Log("Using default values for Map");
-            GenerateMap(51.4585, 51.4590, -2.6026, -2.6016);
+            Destroy(gameObject);
         }
         else
         {
-            double lowLat = CoordinatesDataHolder.Instance.Float1;
-            double highLat = CoordinatesDataHolder.Instance.Float2;
-            double lowLong = CoordinatesDataHolder.Instance.Float3;
-            double highLong = CoordinatesDataHolder.Instance.Float4;
-            Debug.Log("Generating map for: " + lowLat + ", " + highLat + ", " + lowLong + ", " + highLong);
-            GenerateMap(lowLat, highLat, lowLong, highLong);
+            instance = this;
+            SceneManager.sceneLoaded += OnSceneLoaded; // Subscribe to scene change
         }
     }
 
-    public void GenerateMap(double lowLat, double highLat, double lowLong, double highLong)
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // Create 2D map
-        StartCoroutine(LoadMapFromBoundingBox(lowLat, highLat, lowLong, highLong));
-        // Instantiate the 3D buildings
-        ImportGLTF(outputFilePath);
+        // Make sure map is destroyed when player leaves or game ends
+        if (scene.name == "MainMenu" || scene.name == "Leaderboard")
+        {
+            Destroy(gameObject);
+            SceneManager.sceneLoaded -= OnSceneLoaded; // Unsubscribe to scene change
+        }
+
+        // Import 3D buildings into the scene if we are starting the GenerateMap scene
+        if (scene.name == "GenerateMap")
+        {
+            ImportGLTF(outputFilePath);
+        }
+    }
+
+    void Start()
+    {
+        // Filepath where the glb file gets outputted
+        outputFilePath = Path.Combine(Application.streamingAssetsPath, "Buildify3DBuildings.glb");
+
+        // The lobby is informed when generation of buildings finishes
+        lobby = GameObject.Find("Lobby").GetComponent<Lobby>();
+        Debug.Log(lobby);
+    }
+
+    public override void Spawned()
+    {
+        // Make map persist into game scene
+        DontDestroyOnLoad(gameObject);
     }
 
     public async void ImportGLTF(string outputFilePath)
@@ -70,8 +91,11 @@ public class Map : MonoBehaviour
         Debug.Log("glTF file loaded.");
     }
 
-    IEnumerator LoadMapFromBoundingBox(double lowLat, double highLat, double lowLong, double highLong)
+    public IEnumerator LoadMapFromBoundingBox(double lowLat, double highLat, double lowLong, double highLong)
     {
+        float retryDelay = 2f;
+        bool success = false;
+
         // Construct request body
         // Note: We are fetching buildings (both as ways and as relations), roads, paths, steps, grass, water, walls and fences
         string data = "data=" + UnityWebRequest.EscapeURL("" +
@@ -93,19 +117,30 @@ public class Map : MonoBehaviour
             ");" +
             "out geom;");
 
-        // Send API request
-        UnityWebRequest webRequest = UnityWebRequest.Post("https://overpass-api.de/api/interpreter", data, "application/json");
-        yield return webRequest.SendWebRequest();
+        string jsonResponse = "";
 
-        // Check for unsuccessful response
-        if (webRequest.result != UnityWebRequest.Result.Success)
+        while (!success)
         {
-            Debug.LogError(webRequest.error);
-            yield break;
-        }
+            // Send API request
+            UnityWebRequest webRequest = UnityWebRequest.Post("https://overpass-api.de/api/interpreter", data, "application/json");
+            yield return webRequest.SendWebRequest();
 
-        // Get JSON response
-        string jsonResponse = webRequest.downloadHandler.text;
+            // Check for successful response
+            if (webRequest.result == UnityWebRequest.Result.Success)
+            {
+                Debug.Log("Map API request successful");
+                success = true;
+
+                // Get JSON response
+                jsonResponse = webRequest.downloadHandler.text;
+            }
+            else
+            {
+                // Wait for delay duration then try API fetch again
+                Debug.LogError($"Map API request failed: {webRequest.error}. Retrying in {retryDelay} seconds...");
+                yield return new WaitForSeconds(retryDelay);
+            }
+        }
 
         // Remove colons from required tags
         jsonResponse = jsonResponse.Replace("building:levels", "buildingLevels");
@@ -207,6 +242,9 @@ public class Map : MonoBehaviour
                 }
             }
         }
+
+        // Notify generation of map is ended
+        lobby.RPC_2DMapGenComplete(Runner.LocalPlayer);
     }
 
     double LatToY(double latitude)
