@@ -378,6 +378,9 @@ public class Map : NetworkBehaviour
             // until the centre of the world is on-screen, so we need to set the bounding volume of the sprite shape geometry to ensure that
             // the sprite shape is visible at all times
             SetSpriteShapeBoundingVolume(spriteShapeController);
+            
+            spriteShapeController.BakeCollider();
+            spriteShapeController.BakeMesh();
         }
         catch (Exception ex)
         {
