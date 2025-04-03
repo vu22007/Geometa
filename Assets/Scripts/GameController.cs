@@ -95,7 +95,7 @@ public class GameController : NetworkBehaviour, IPlayerLeft
         {
             foreach (Player player in players)
             {
-                player.GainMana(1);
+                player.GainMana(4);
             }
             pointsTopupTimer = TickTimer.CreateFromSeconds(Runner, pointsTopupCooldownMax);
         }
