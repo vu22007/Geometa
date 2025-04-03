@@ -304,7 +304,7 @@ GameObject:
   - component: {fileID: 219218601}
   - component: {fileID: 219218600}
   m_Layer: 0
-  m_Name: Flags
+  m_Name: Points
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -349,7 +349,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Flags
+  m_text: 'Points
 
 '
   m_isRightToLeft: 0
@@ -1782,7 +1782,7 @@ GameObject:
   - component: {fileID: 1278644046}
   - component: {fileID: 1278644045}
   m_Layer: 0
-  m_Name: Flags
+  m_Name: Points
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1827,9 +1827,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Flags
-
-'
+  m_text: Points
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d6c64988eb57e495ebc19ded5bd42455, type: 2}
   m_sharedMaterial: {fileID: -3448430924341693857, guid: d6c64988eb57e495ebc19ded5bd42455, type: 2}
