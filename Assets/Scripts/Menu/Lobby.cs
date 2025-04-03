@@ -19,9 +19,9 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     private NetworkManager networkManager;
     private TMP_InputField displayNameInput;
     private TMP_InputField coordinatesInput;
-    [Networked] NetworkString<_64> coordinates { get; set; }
+    [Networked] NetworkString<_128> coordinates { get; set; }
     // Corrdinates used for generating the map, so players joined after can generate it as well
-    [Networked] NetworkString<_64> mapGenerationCoordinates { get; set; }
+    [Networked] NetworkString<_128> mapGenerationCoordinates { get; set; }
     private Button team1Button;
     private Button team2Button;
     private Button knightButton;
@@ -263,7 +263,6 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     {
         string pathToHtmlFile = Path.Combine(Application.streamingAssetsPath, "Non-Unity", "mapCoordinates.html");
             
-        Debug.Log(pathToHtmlFile);
         if (HasStateAuthority)
         {
             Application.OpenURL(pathToHtmlFile);
@@ -305,7 +304,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             if (double.TryParse(partsArray[i], out double number))
             {
                 // Round to 4 decimals because blosm has that max accuracy
-                numbers[i] = (double)System.Math.Round(number, 4);
+                numbers[i] = (double)System.Math.Round(number, 5);
             }
             else
             {
@@ -314,10 +313,17 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             }
         }
 
-        if (allValid)
+        if (allValid & partsArray.Length >= 4)
         {
             StartCoroutine(buildingsGenerator.RunBlender(numbers[0], numbers[1], numbers[2], numbers[3]));
             coordinatesDataHolder.SetCoordinates(numbers[0], numbers[1], numbers[2], numbers[3]);
+            if (partsArray.Length >= 6) {
+                coordinatesDataHolder.SetRespawnPoint1(numbers[4], numbers[5]);
+            }
+            if(partsArray.Length >= 8)
+            {
+                coordinatesDataHolder.SetRespawnPoint2(numbers[6], numbers[7]);
+            }
             mapGenerated = true;
             UpdateGeneratedMapCounter();
             if (HasStateAuthority)
