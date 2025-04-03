@@ -76,7 +76,7 @@
   </style>
 </head>
 <body>
-  <h1 style="text-align:center;">Select and Area and Copy Its Coordinates</h1>
+  <h1 style="text-align:center;">Select and Area and Respawn Points</h1>
   <div id="map"></div>
   <textarea id="coords" rows="4" placeholder="Coordinates will appear here..."></textarea><br />
   <button id="coppyButton">Copy Coordinates</button>
@@ -163,10 +163,10 @@
       
       var rectText=  areaBounds.getSouthWest().lat.toFixed(4)+ ', ' + areaBounds.getNorthEast().lat.toFixed(4) + ', ' + 
       areaBounds.getSouthWest().lng.toFixed(4) + ', ' +areaBounds.getNorthEast().lng.toFixed(4);
-      var p1= respawnPoints[0] ? respawnPoints[0].lat.toFixed(5) +', ' + respawnPoints[0].lng.toFixed(5) : '';
-      var p2= respawnPoints[1] ? respawnPoints[1].lat.toFixed(5) + ', ' + respawnPoints[1].lng.toFixed(5): '';
+      var p1= respawnPoints[0] ? ', ' + respawnPoints[0].lat.toFixed(5) +', ' + respawnPoints[0].lng.toFixed(5) : '';
+      var p2= respawnPoints[1] ? ', ' + respawnPoints[1].lat.toFixed(5) + ', ' + respawnPoints[1].lng.toFixed(5): '';
 
-      textArea.value = rectText + ', '+ p1 + ', ' + p2;
+      textArea.value = rectText + p1 + p2;
     }
 
     document.getElementById('coppyButton').addEventListener('click', function () {

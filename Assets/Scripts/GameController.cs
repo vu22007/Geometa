@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class GameController : NetworkBehaviour, IPlayerLeft
 {
@@ -41,11 +42,11 @@ public class GameController : NetworkBehaviour, IPlayerLeft
         min2Message = false;
         sec30Message = false;
 
-        //if (CoordinatesDataHolder.Instance != null)
-        //{
-        //    respawnPoint1 = new Vector3(CoordinatesDataHolder.Instance.respawnP1lat, CoordinatesDataHolder.Instance.respawnP1lon, 0f);
-        //    respawnPoint2 = new Vector3(CoordinatesDataHolder.Instance.respawnP2lat, CoordinatesDataHolder.Instance.respawnP2lon, 0f);
-        //}
+        if (CoordinatesDataHolder.Instance != null)
+        {
+            respawnPoint1 = new Vector3(CoordinatesDataHolder.Instance.respawnP1lat, CoordinatesDataHolder.Instance.respawnP1lon, 0f);
+            respawnPoint2 = new Vector3(CoordinatesDataHolder.Instance.respawnP2lat, CoordinatesDataHolder.Instance.respawnP2lon, 0f);
+        }
 
         if (HasStateAuthority)
         {

@@ -63,7 +63,6 @@ public class Map : NetworkBehaviour
 
         // The lobby is informed when generation of buildings finishes
         lobby = GameObject.Find("Lobby").GetComponent<Lobby>();
-        Debug.Log(lobby);
     }
 
     public override void Spawned()
