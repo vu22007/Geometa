@@ -15,7 +15,10 @@ public class SummonAI : NetworkBehaviour
     private float despawnTimer { get; set; }
     private SpriteRenderer spriteRenderer;
     private Rigidbody2D rb;
-    [SerializeField] private Image healthBar;
+    [SerializeField] private Image teamHealthBar;
+    [SerializeField] private Image enemyHealthBar;
+    private Image healthBar;
+    private GameController gameController;
 
     private Coroutine damageCoroutine;
 
@@ -27,11 +30,33 @@ public class SummonAI : NetworkBehaviour
         this.team = team;
         this.summonerRef = summonerRef;
     }
+    
+    public void Awake()
+    {
+        // Get game controller component
+        gameController = GameObject.Find("Game Controller").GetComponent<GameController>();
+    }
 
     public override void Spawned()
     {
         rb = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
+        
+        int localPlayerTeam = gameController.playersToTeams[Runner.LocalPlayer];
+
+        if (localPlayerTeam == team)
+        {
+            healthBar = teamHealthBar;
+            teamHealthBar.transform.parent.gameObject.SetActive(true);
+            enemyHealthBar.transform.parent.gameObject.SetActive(false);
+        }
+        else
+        {
+            healthBar = enemyHealthBar;
+            teamHealthBar.transform.parent.gameObject.SetActive(false);
+            enemyHealthBar.transform.parent.gameObject.SetActive(true);
+        }
+        
         UpdateHealthBar();
         despawnTimer = lifetime;
         FindTarget();
