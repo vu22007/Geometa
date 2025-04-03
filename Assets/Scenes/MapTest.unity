@@ -671,6 +671,22 @@ PrefabInstance:
       propertyPath: m_Creator
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 1044506467560881023, guid: a54f21a4cee34dd4da55c28ad947e0f8, type: 3}
+      propertyPath: m_LocalAABB.m_Center.x
+      value: -93.39732
+      objectReference: {fileID: 0}
+    - target: {fileID: 1044506467560881023, guid: a54f21a4cee34dd4da55c28ad947e0f8, type: 3}
+      propertyPath: m_LocalAABB.m_Center.y
+      value: 14.234556
+      objectReference: {fileID: 0}
+    - target: {fileID: 1044506467560881023, guid: a54f21a4cee34dd4da55c28ad947e0f8, type: 3}
+      propertyPath: m_LocalAABB.m_Extent.x
+      value: 0.6540184
+      objectReference: {fileID: 0}
+    - target: {fileID: 1044506467560881023, guid: a54f21a4cee34dd4da55c28ad947e0f8, type: 3}
+      propertyPath: m_LocalAABB.m_Extent.y
+      value: 0.9955745
+      objectReference: {fileID: 0}
     - target: {fileID: 1142886759626782023, guid: a54f21a4cee34dd4da55c28ad947e0f8, type: 3}
       propertyPath: m_Creator
       value: 
@@ -1446,14 +1462,15 @@ MonoBehaviour:
   respawnPoint1: {x: -80.4, y: -73.1, z: 0}
   respawnPoint2: {x: 39.3, y: 24.3, z: 0}
   pickupLocations:
-  - {x: 44.2, y: 51, z: 0}
-  - {x: 2.9, y: 39.4, z: 0}
-  - {x: 14.5, y: 4.2, z: 0}
-  - {x: 26.1, y: -27, z: 0}
-  - {x: 67.8, y: -38.6, z: 0}
-  - {x: -5, y: -44.8, z: 0}
-  - {x: -29.3, y: 0.9, z: 0}
-  - {x: 44.3, y: 11.8, z: 0}
+  - {x: 15.5, y: -2.1, z: 0}
+  - {x: -24.9, y: -39.4, z: 0}
+  - {x: -5.1, y: -18.7, z: 0}
+  - {x: 18.1, y: -52.1, z: 0}
+  - {x: -49.3, y: 27.2, z: 0}
+  - {x: -36.4, y: -8.8, z: 0}
+  - {x: -16.1, y: 6.3, z: 0}
+  - {x: 7.5, y: 19.8, z: 0}
+  - {x: -12.7, y: 45.5, z: 0}
   maxTime: 480
 --- !u!4 &1313831518
 Transform:
