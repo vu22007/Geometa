@@ -37,11 +37,11 @@ public class GameController : NetworkBehaviour, IPlayerLeft
         pointsTopupTimer = TickTimer.CreateFromSeconds(Runner, pointsTopupCooldownMax);
         gameTimer = TickTimer.CreateFromSeconds(Runner, maxTime);
 
-        if (CoordinatesDataHolder.Instance != null)
-        {
-            respawnPoint1 = new Vector3(CoordinatesDataHolder.Instance.respawnP1lat, CoordinatesDataHolder.Instance.respawnP1lon, 0f);
-            respawnPoint2 = new Vector3(CoordinatesDataHolder.Instance.respawnP2lat, CoordinatesDataHolder.Instance.respawnP2lon, 0f);
-        }
+        //if (CoordinatesDataHolder.Instance != null)
+        //{
+        //    respawnPoint1 = new Vector3(CoordinatesDataHolder.Instance.respawnP1lat, CoordinatesDataHolder.Instance.respawnP1lon, 0f);
+        //    respawnPoint2 = new Vector3(CoordinatesDataHolder.Instance.respawnP2lat, CoordinatesDataHolder.Instance.respawnP2lon, 0f);
+        //}
 
         if (HasStateAuthority)
         {
