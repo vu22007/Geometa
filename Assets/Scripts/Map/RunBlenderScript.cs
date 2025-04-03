@@ -20,9 +20,9 @@ public class RunBlenderScript : NetworkBehaviour
         scriptPath = Path.Combine(Application.streamingAssetsPath, "Non-Unity", "blenderPythonScript.py");
         
         // Path to the Blender exe - DEPENDENT ON OS
-        blenderExePath = Path.Combine("/", "opt", "blender", "4.1.1", "blender-uob-launcher");
+        // blenderExePath = Path.Combine("/", "opt", "blender", "4.1.1", "blender-uob-launcher");
         Debug.Log(blenderExePath);
-        // blenderExePath =  Path.Combine("C:\\", "Program Files", "Blender Foundation", "Blender 4.3", "blender.exe");
+        blenderExePath =  Path.Combine("C:\\", "Program Files", "Blender Foundation", "Blender 4.3", "blender.exe");
     }
 
     public override void Spawned()
