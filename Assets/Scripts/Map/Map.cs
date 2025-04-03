@@ -36,7 +36,6 @@ public class Map : NetworkBehaviour
         else
         {
             instance = this;
-            DontDestroyOnLoad(gameObject);
             SceneManager.sceneLoaded += OnSceneLoaded; // Subscribe to scene change
         }
     }
@@ -61,13 +60,16 @@ public class Map : NetworkBehaviour
     {
         // Filepath where the glb file gets outputted
         outputFilePath = Path.Combine(Application.streamingAssetsPath, "Buildify3DBuildings.glb");
+
+        // The lobby is informed when generation of buildings finishes
+        lobby = GameObject.Find("Lobby").GetComponent<Lobby>();
+        Debug.Log(lobby);
     }
 
     public override void Spawned()
     {
-        // The lobby is informed when generation of buildings finishes
-        lobby = GameObject.Find("Lobby").GetComponent<Lobby>();
-        Debug.Log(lobby);
+        // Make map persist into game scene
+        DontDestroyOnLoad(gameObject);
     }
 
     public async void ImportGLTF(string outputFilePath)
