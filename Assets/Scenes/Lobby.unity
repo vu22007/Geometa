@@ -703,7 +703,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Generata Map
+  m_text: 'Generate Map
 
 '
   m_isRightToLeft: 0
