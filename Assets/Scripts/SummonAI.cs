@@ -68,7 +68,7 @@ public class SummonAI : NetworkBehaviour
 
     private void FindTarget()
     {
-        Player[] players = FindObjectsOfType<Player>();
+        Player[] players = FindObjectsByType<Player>(FindObjectsSortMode.None);
         float closestDistance = Mathf.Infinity;
         Transform closestPlayerTransform = null;
         Player closestPlayer = null;
