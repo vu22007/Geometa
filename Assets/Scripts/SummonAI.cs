@@ -7,9 +7,9 @@ public class SummonAI : NetworkBehaviour
 {
     [Networked] public int team { get; set; }
     [Networked] private PlayerRef summonerRef { get; set; }
-    [Networked] private float speed { get; set; } = 3f;
-    [Networked] private float lifetime { get; set; } = 10f; 
-    [Networked] private float damage { get; set; } = 10f; 
+    [Networked] private float speed { get; set; } = 4f;
+     [Networked] private float lifetime { get; set; } = 10f; 
+     [Networked] private float damage { get; set; } = 10f;
 
     [Networked, OnChangedRender(nameof(OnDespawnTimerChanged))] 
     private float despawnTimer { get; set; }
@@ -20,6 +20,7 @@ public class SummonAI : NetworkBehaviour
     private Coroutine damageCoroutine;
 
     private Transform target;
+    private Player targetPlayer;
 
     public void OnCreated(int team, PlayerRef summonerRef)
     {
@@ -38,6 +39,13 @@ public class SummonAI : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
+        if (targetPlayer != null && !targetPlayer.IsAlive())
+        {
+            //Debug.Log("Target died, finding new one...");
+            FindTarget();
+            return;
+        }
+
         // Make sure there's a target
         if (target != null)
         {
@@ -47,6 +55,7 @@ public class SummonAI : NetworkBehaviour
             // Rotate sprite to face movement direction
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
             transform.rotation = Quaternion.Euler(0, 0, angle);
+            transform.position += direction * speed * Runner.DeltaTime;
         }
 
         despawnTimer -= Runner.DeltaTime;
@@ -55,35 +64,31 @@ public class SummonAI : NetworkBehaviour
             Runner.Despawn(Object);
             return;
         }
-
-        if (target != null)
-        {
-            FindTarget();
-            Vector3 direction = (target.position - transform.position).normalized;
-            transform.position += direction * speed * Runner.DeltaTime;
-        }
     }
 
     private void FindTarget()
     {
         Player[] players = FindObjectsOfType<Player>();
         float closestDistance = Mathf.Infinity;
-        Transform closestPlayer = null;
+        Transform closestPlayerTransform = null;
+        Player closestPlayer = null;
 
         foreach (Player player in players)
         {
-            if (player.GetTeam() != team) // Find enemy
+            if (player.GetTeam() != team && player.IsAlive())
             {
                 float distance = Vector3.Distance(transform.position, player.transform.position);
                 if (distance < closestDistance)
                 {
                     closestDistance = distance;
-                    closestPlayer = player.transform;
+                    closestPlayerTransform = player.transform;
+                    closestPlayer = player;
                 }
             }
         }
 
-        target = closestPlayer;
+        target = closestPlayerTransform;
+        targetPlayer = closestPlayer;
     }
 
 
