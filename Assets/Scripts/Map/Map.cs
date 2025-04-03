@@ -72,6 +72,9 @@ public class Map : MonoBehaviour
 
     IEnumerator LoadMapFromBoundingBox(double lowLat, double highLat, double lowLong, double highLong)
     {
+        float retryDelay = 2f;
+        bool success = false;
+
         // Construct request body
         // Note: We are fetching buildings (both as ways and as relations), roads, paths, steps, grass, water, walls and fences
         string data = "data=" + UnityWebRequest.EscapeURL("" +
@@ -93,19 +96,30 @@ public class Map : MonoBehaviour
             ");" +
             "out geom;");
 
-        // Send API request
-        UnityWebRequest webRequest = UnityWebRequest.Post("https://overpass-api.de/api/interpreter", data, "application/json");
-        yield return webRequest.SendWebRequest();
+        string jsonResponse = "";
 
-        // Check for unsuccessful response
-        if (webRequest.result != UnityWebRequest.Result.Success)
+        while (!success)
         {
-            Debug.LogError(webRequest.error);
-            yield break;
-        }
+            // Send API request
+            UnityWebRequest webRequest = UnityWebRequest.Post("https://overpass-api.de/api/interpreter", data, "application/json");
+            yield return webRequest.SendWebRequest();
 
-        // Get JSON response
-        string jsonResponse = webRequest.downloadHandler.text;
+            // Check for successful response
+            if (webRequest.result == UnityWebRequest.Result.Success)
+            {
+                Debug.Log("Map API request successful");
+                success = true;
+
+                // Get JSON response
+                jsonResponse = webRequest.downloadHandler.text;
+            }
+            else
+            {
+                // Wait for delay duration then try API fetch again
+                Debug.LogError($"Map API request failed: {webRequest.error}. Retrying in {retryDelay} seconds...");
+                yield return new WaitForSeconds(retryDelay);
+            }
+        }
 
         // Remove colons from required tags
         jsonResponse = jsonResponse.Replace("building:levels", "buildingLevels");
