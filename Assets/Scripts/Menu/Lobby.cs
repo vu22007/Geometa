@@ -35,6 +35,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     private TextMeshProUGUI playerCounter;
     private TextMeshProUGUI readyCounter;
     private GameObject playerCardPrefab;
+    private GameObject mapGeneratedLabel;
     private string displayName = "";
     private int team = 0;
     private string characterName = "";
@@ -52,6 +53,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     public override void Spawned()
     {
         coordinatesDataHolder = GameObject.Find("CoordinatesDataHolder").GetComponent<CoordinatesDataHolder>();
+        mapGeneratedLabel = GameObject.Find("Map Generated Label");
         buildingsGenerator = GameObject.Find("BuildingsGenerator").GetComponent<RunBlenderScript>();
         map = GameObject.Find("Map").GetComponent<Map>();
         selectAreaButton = GameObject.Find("Select Area").GetComponent<Button>();
@@ -90,6 +92,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         selectAreaButton.gameObject.SetActive(false);
         coordinatesInput.gameObject.SetActive(false);
         generatedMapCounter.gameObject.SetActive(false);
+        mapGeneratedLabel.SetActive(false);
 
         if (mapGenerated & Runner.IsClient)
         {
@@ -279,6 +282,11 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         }
     }
 
+    public void ActivateMapGeneratedLabel()
+    {
+        mapGeneratedLabel.SetActive(true);
+    }
+
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void RPC_2DMapGenComplete(PlayerRef player)
     {
@@ -339,6 +347,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 
             mapGenerated = true;
             UpdateGeneratedMapCounter();
+            generateMapButton.interactable = false;
             if (HasStateAuthority)
             {
                 generatedMapCounter.gameObject.SetActive(true);
@@ -563,6 +572,14 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         // update on each client to no longer show the player
         if (HasStateAuthority)
         {
+            if (playersCompleted2DMapGen.Contains(player))
+            {
+                playersCompleted2DMapGen.Remove(player);
+            }
+            if (playersCompleted3DMapGen.Contains(player))
+            {
+                playersCompleted3DMapGen.Remove(player);
+            }
             RemovePlayerSelection(player);
         }
     }

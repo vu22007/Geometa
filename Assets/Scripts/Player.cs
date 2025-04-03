@@ -67,6 +67,7 @@ public class Player : NetworkBehaviour
     [Networked] int totalDeaths { get; set; }
     [Networked] int totalFlagsCaptured { get; set; }
     [Networked] float currentTriangleScore { get; set; }
+    [Networked] int totalPersonalPoints { get; set; }
 
     public Camera cam;
     Rigidbody2D rb;
@@ -156,6 +157,7 @@ public class Player : NetworkBehaviour
         totalKills = 0;
         totalDeaths = 0;
         totalFlagsCaptured = 0;
+        totalPersonalPoints = 0;
     }
 
     public void Awake()
@@ -868,6 +870,7 @@ public class Player : NetworkBehaviour
             {
                 player.GainMana(10);
                 player.IncrementKillCount();
+                player.IncrementPersonalPoints();
             }
         }
     }
@@ -927,6 +930,11 @@ public class Player : NetworkBehaviour
     void IncreaseDamageDealtCounter(float damage)
     {
         totalDamageDealt += damage;
+    }
+
+    void IncrementPersonalPoints()
+    {
+        totalPersonalPoints = (totalKills * 2) + (totalFlagsCaptured*10);
     }
 
     void OnHealthChanged()
@@ -1055,6 +1063,7 @@ public class Player : NetworkBehaviour
                 {
                     int teamPoints = gameController.CheckForPoints();
                     if (teamPoints > 0) totalFlagsCaptured += 1;
+                    IncrementPersonalPoints();
                 }
                 carriedObject = null;
                 isCarrying = false;
@@ -1311,5 +1320,10 @@ public class Player : NetworkBehaviour
     public int GetTotalFlagsCaptured()
     {
         return totalFlagsCaptured;
+    }
+
+    public int GetTotalPersonalPoints()
+    {
+        return totalPersonalPoints;
     }
 }
