@@ -7,9 +7,12 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.U2D;
+using UnityEngine.SceneManagement;
 
 public class Map : MonoBehaviour
 {
+    public static Map instance;
+
     [SerializeField] GameObject backgroundPrefab;
     [SerializeField] GameObject mapBorderPrefab;
     [SerializeField] GameObject buildingPrefab;
@@ -19,36 +22,43 @@ public class Map : MonoBehaviour
     [SerializeField] GameObject grassPrefab;
     [SerializeField] GameObject waterPrefab;
     [SerializeField] GameObject wallPrefab;
+
     private string outputFilePath;
 
-    void Start()
+    private void Awake()
     {
-        // Filepath where the glb file got outputed
-        outputFilePath = Path.Combine(Application.streamingAssetsPath, "Buildify3DBuildings.glb");
-
-        if (CoordinatesDataHolder.Instance == null)
+        if (instance != null && instance != this)
         {
-            Debug.LogError("Coordinates aren't valid");
-            //Debug.Log("Using default values for Map");
-            GenerateMap(51.4585, 51.4590, -2.6026, -2.6016);
+            Destroy(gameObject);
         }
         else
         {
-            double lowLat = CoordinatesDataHolder.Instance.Float1;
-            double highLat = CoordinatesDataHolder.Instance.Float2;
-            double lowLong = CoordinatesDataHolder.Instance.Float3;
-            double highLong = CoordinatesDataHolder.Instance.Float4;
-            Debug.Log("Generating map for: " + lowLat + ", " + highLat + ", " + lowLong + ", " + highLong);
-            GenerateMap(lowLat, highLat, lowLong, highLong);
+            instance = this;
+            DontDestroyOnLoad(gameObject);
+            SceneManager.sceneLoaded += OnSceneLoaded; // Subscribe to scene change
         }
     }
 
-    public void GenerateMap(double lowLat, double highLat, double lowLong, double highLong)
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // Create 2D map
-        StartCoroutine(LoadMapFromBoundingBox(lowLat, highLat, lowLong, highLong));
-        // Instantiate the 3D buildings
-        ImportGLTF(outputFilePath);
+        // Make sure map is destroyed when player leaves or game ends
+        if (scene.name == "MainMenu" || scene.name == "Leaderboard")
+        {
+            Destroy(gameObject);
+            SceneManager.sceneLoaded -= OnSceneLoaded; // Unsubscribe to scene change
+        }
+
+        // Import 3D buildings into the scene if we are starting the GenerateMap scene
+        if (scene.name == "GenerateMap")
+        {
+            ImportGLTF(outputFilePath);
+        }
+    }
+
+    void Start()
+    {
+        // Filepath where the glb file gets outputted
+        outputFilePath = Path.Combine(Application.streamingAssetsPath, "Buildify3DBuildings.glb");
     }
 
     public async void ImportGLTF(string outputFilePath)
@@ -70,7 +80,7 @@ public class Map : MonoBehaviour
         Debug.Log("glTF file loaded.");
     }
 
-    IEnumerator LoadMapFromBoundingBox(double lowLat, double highLat, double lowLong, double highLong)
+    public IEnumerator LoadMapFromBoundingBox(double lowLat, double highLat, double lowLong, double highLong)
     {
         float retryDelay = 2f;
         bool success = false;

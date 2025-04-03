@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Fusion;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class GameController : NetworkBehaviour, IPlayerLeft
 {

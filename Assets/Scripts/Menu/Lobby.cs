@@ -1,13 +1,10 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Fusion;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using UnityEngine.Windows;
 
 public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 {
@@ -43,6 +40,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     private string characterName = "";
     private bool playerIsReady = false;
     RunBlenderScript buildingsGenerator;
+    Map map;
     CoordinatesDataHolder coordinatesDataHolder;
     // This one is the player chose the generation type with the button
     [Networked] bool generateMap { get; set; } = false;
@@ -54,6 +52,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     {
         coordinatesDataHolder = GameObject.Find("CoordinatesDataHolder").GetComponent<CoordinatesDataHolder>();
         buildingsGenerator = GameObject.Find("BuildingsGenerator").GetComponent<RunBlenderScript>();
+        map = GameObject.Find("Map").GetComponent<Map>();
         selectAreaButton = GameObject.Find("Select Area").GetComponent<Button>();
         networkManager = GameObject.Find("Network Runner").GetComponent<NetworkManager>();
         displayNameInput = GameObject.Find("Display Name Input").GetComponent<TMP_InputField>();
@@ -316,14 +315,18 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         if (allValid & partsArray.Length >= 4)
         {
             StartCoroutine(buildingsGenerator.RunBlender(numbers[0], numbers[1], numbers[2], numbers[3]));
+            StartCoroutine(map.LoadMapFromBoundingBox(numbers[0], numbers[1], numbers[2], numbers[3]));
+
             coordinatesDataHolder.SetCoordinates(numbers[0], numbers[1], numbers[2], numbers[3]);
-            if (partsArray.Length >= 6) {
+            if (partsArray.Length >= 6)
+            {
                 coordinatesDataHolder.SetRespawnPoint1(numbers[4], numbers[5]);
             }
-            if(partsArray.Length >= 8)
+            if (partsArray.Length >= 8)
             {
                 coordinatesDataHolder.SetRespawnPoint2(numbers[6], numbers[7]);
             }
+
             mapGenerated = true;
             UpdateGeneratedMapCounter();
             if (HasStateAuthority)
