@@ -162,6 +162,9 @@ public class Leaderboard : NetworkBehaviour
         List<PlayerInfo> sortedPlayers = new List<PlayerInfo>(players);
         sortedPlayers.Sort((a, b) => b.totalPersonalPoints.CompareTo(a.totalPersonalPoints));
 
+        // Determine the top scorer (can be null if list is empty)
+        PlayerRef? topScorer = sortedPlayers.Count > 0 ? sortedPlayers[0].playerRef : (PlayerRef?)null;
+
         // Add each player to team list
         foreach (PlayerInfo playerInfo in sortedPlayers)
         {
@@ -192,8 +195,8 @@ public class Leaderboard : NetworkBehaviour
 
             // Puts a nice star next to the host
             GameObject starImage = playerCard.transform.Find("Star Image").gameObject;
-            if (hostPlayerRef.Equals(playerRef)) starImage.SetActive(true);
-
+            starImage.SetActive(topScorer.HasValue && topScorer.Value.Equals(playerRef));
+            
             // Get stat text components
             TextMeshProUGUI killsText = playerCard.transform.Find("Kills").GetComponent<TextMeshProUGUI>();
             TextMeshProUGUI deathsText = playerCard.transform.Find("Deaths").GetComponent<TextMeshProUGUI>();
