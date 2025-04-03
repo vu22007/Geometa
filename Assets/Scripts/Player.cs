@@ -306,6 +306,7 @@ public class Player : NetworkBehaviour
         speedIncrease = false;
         currentAmmo = maxAmmo;
         currentHealth = maxHealth;
+        mana = maxMana;
         speedIncreaseTimer = TickTimer.None;
         getSlowedTimer = TickTimer.None;
         respawnTimer = TickTimer.None;
