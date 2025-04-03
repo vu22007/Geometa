@@ -11,6 +11,8 @@ public class GameController : NetworkBehaviour, IPlayerLeft
     [Networked, Capacity(12)] public NetworkDictionary<PlayerRef, int> playersToTeams { get; }
     [Networked] private int pointsTeam1 { get; set; }
     [Networked] private int pointsTeam2 { get; set; }
+    [Networked] private bool min2Message { get; set; }
+    [Networked] private bool sec30Message { get; set; }
 
     [SerializeField] private Vector3 respawnPoint1;
     [SerializeField] private Vector3 respawnPoint2;
@@ -36,6 +38,8 @@ public class GameController : NetworkBehaviour, IPlayerLeft
         pointsTeam2 = 0;
         pointsTopupTimer = TickTimer.CreateFromSeconds(Runner, pointsTopupCooldownMax);
         gameTimer = TickTimer.CreateFromSeconds(Runner, maxTime);
+        min2Message = false;
+        sec30Message = false;
 
         //if (CoordinatesDataHolder.Instance != null)
         //{
@@ -95,14 +99,16 @@ public class GameController : NetworkBehaviour, IPlayerLeft
             pointsTopupTimer = TickTimer.CreateFromSeconds(Runner, pointsTopupCooldownMax);
         }
 
-        if (timeLeft <= 120.5f && timeLeft >= 119.5f)
+        if (timeLeft <= 120.5f && timeLeft >= 119.5f && !min2Message)
         {
             BroadcastMessageToAll("2 Minutes left!!!", 0.3f, Color.red);
+            min2Message = true;
         }
 
-        if (timeLeft <= 30.5f && timeLeft >= 29.5f)
+        if (timeLeft <= 30.5f && timeLeft >= 29.5f && !sec30Message)
         {
             BroadcastMessageToAll("30 Seconds left!!!", 0.3f, Color.red);
+            sec30Message = true;
         }
     }
 
