@@ -74,6 +74,7 @@ public class RunBlenderScript : NetworkBehaviour
 
         // Notify generation of map is ended
         lobby.RPC_3DMapGenComplete(Runner.LocalPlayer);
+        lobby.ActivateMapGeneratedLabel();
 
         yield return null;
     }
