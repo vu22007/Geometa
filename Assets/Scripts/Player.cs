@@ -438,7 +438,11 @@ public class Player : NetworkBehaviour
 
         if (isCarrying && carriedObject != null)
         {
-            CheckForDrop();
+            PickupFlag carriedFlag = carriedObject.GetComponent<PickupFlag>();
+            if (carriedFlag.team != team)
+            {
+                CheckForDrop();
+            }
         }
 
         // GetInput will return true on the StateAuthority (the server) and the InputAuthority (the client who controls this player)
