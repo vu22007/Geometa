@@ -86,6 +86,12 @@ public class Map : NetworkBehaviour
         GameObject gltfInstance = new GameObject("glTF instance");
         await gltfImport.InstantiateSceneAsync(gltfInstance.transform);
         gltfInstance.transform.eulerAngles = new Vector3(90, 180, 0);
+        gltfInstance.layer = 8;
+
+        foreach (Transform child in gltfInstance.GetComponentsInChildren<Transform>(true))
+        {
+            child.gameObject.layer = 8;
+        }
 
         Debug.Log("glTF file loaded.");
     }
