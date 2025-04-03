@@ -1,6 +1,7 @@
 using Fusion;
 using TMPro;
 using UnityEngine;
+using System.Collections.Generic;
 
 public class Leaderboard : NetworkBehaviour
 {
@@ -157,8 +158,12 @@ public class Leaderboard : NetworkBehaviour
         float cardY = listHeight / 2 - cardHeight / 2;
         Vector3 cardPosition = new Vector3(cardX, cardY, 0);
 
+        // Copy players into a regular list and sort by personal points (descending)
+        List<PlayerInfo> sortedPlayers = new List<PlayerInfo>(players);
+        sortedPlayers.Sort((a, b) => b.totalPersonalPoints.CompareTo(a.totalPersonalPoints));
+
         // Add each player to team list
-        foreach (PlayerInfo playerInfo in players)
+        foreach (PlayerInfo playerInfo in sortedPlayers)
         {
             PlayerRef playerRef = playerInfo.playerRef;
             string displayname = (string)playerInfo.displayName;
@@ -168,6 +173,7 @@ public class Leaderboard : NetworkBehaviour
             float killDeathRatio = (float)kills / deaths;
             float damage = playerInfo.totalDamageDealt;
             int flags = playerInfo.totalFlagsCaptured;
+            int personalPoints = playerInfo.totalPersonalPoints;
 
             // Create and position the player card relative to the list
             GameObject playerCard = Instantiate(playerCardPrefab, new Vector3(0, 0, 0), Quaternion.identity, teamList.transform);
@@ -193,23 +199,26 @@ public class Leaderboard : NetworkBehaviour
             TextMeshProUGUI deathsText = playerCard.transform.Find("Deaths").GetComponent<TextMeshProUGUI>();
             TextMeshProUGUI killDeathRatioText = playerCard.transform.Find("KD").GetComponent<TextMeshProUGUI>();
             TextMeshProUGUI damageText = playerCard.transform.Find("Damage").GetComponent<TextMeshProUGUI>();
-            TextMeshProUGUI flagsText = playerCard.transform.Find("Flags").GetComponent<TextMeshProUGUI>();
+            TextMeshProUGUI personalPointsText = playerCard.transform.Find("Points").GetComponent<TextMeshProUGUI>();
+
 
             // Set player stats
+            personalPointsText.text = personalPoints.ToString();
             killsText.text = kills.ToString();
             deathsText.text = deaths.ToString();
             killDeathRatioText.text = (deaths == 0) ? "-" : killDeathRatio.ToString("0.00");
             damageText.text = Mathf.RoundToInt(damage).ToString();
-            flagsText.text = flags.ToString();
+            //flagsText.text = flags.ToString();
 
             // Make stats green colour if player is the client's own player
             if (Runner.LocalPlayer.Equals(playerRef))
             {
+                personalPointsText.color = Color.green;
                 killsText.color = Color.green;
                 deathsText.color = Color.green;
                 killDeathRatioText.color = Color.green;
                 damageText.color = Color.green;
-                flagsText.color = Color.green;
+                //flagsText.color = Color.green;
             }
 
             // Set position for next card
@@ -227,6 +236,7 @@ public class Leaderboard : NetworkBehaviour
         public int totalDeaths;
         public float totalDamageDealt;
         public int totalFlagsCaptured;
+        public int totalPersonalPoints;
 
         public PlayerInfo(Player player)
         {
@@ -238,6 +248,7 @@ public class Leaderboard : NetworkBehaviour
             totalDeaths = player.GetTotalDeaths();
             totalDamageDealt = player.GetTotalDamageDealt();
             totalFlagsCaptured = player.GetTotalFlagsCaptured();
+            totalPersonalPoints = player.GetTotalPersonalPoints();
         }
     }
 }
