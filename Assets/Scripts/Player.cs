@@ -609,7 +609,7 @@ public class Player : NetworkBehaviour
     void DashRender() {
         if (alreadyDashing)
         {
-            ShowMessage("Dash in cooldown", 0.2f, Color.white);
+            ShowMessage("Dash on cooldown", 0.2f, Color.white);
         }
     }
 
