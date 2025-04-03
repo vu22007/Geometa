@@ -46,7 +46,8 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     [Networked] bool generateMap { get; set; } = false;
     // This is for when the player actually generates the map
     [Networked] bool mapGenerated { get; set; } = false;
-    [Networked, Capacity(16)] private NetworkLinkedList<PlayerRef> playersCompletedMapGen { get; }
+    [Networked, Capacity(16)] private NetworkLinkedList<PlayerRef> playersCompleted3DMapGen { get; }
+    [Networked, Capacity(16)] private NetworkLinkedList<PlayerRef> playersCompleted2DMapGen { get; }
 
     public override void Spawned()
     {
@@ -127,7 +128,7 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             if (mapGenerated & generateMap)
             {
                 // If the generate map button is clicked and the type is set to generate map, all players need to have generated the map
-                bool allPlayersGeneratedMap = playersCompletedMapGen.Count() == numPlayersInLobby;
+                bool allPlayersGeneratedMap = GetNumPlayersReady() == numPlayersInLobby;
                 canStart = allPlayersAreReady & allPlayersGeneratedMap;
             }
             else
@@ -268,14 +269,23 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         }
     }
 
-    // Add this RPC method
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    public void RPC_MapGenComplete(PlayerRef player)
+    public void RPC_3DMapGenComplete(PlayerRef player)
     {
-        if (!playersCompletedMapGen.Contains(player))
+        if (!playersCompleted3DMapGen.Contains(player))
         {
-            playersCompletedMapGen.Add(player);
-            Debug.Log($"Player {player} completed map gen. Total: {playersCompletedMapGen.Count()}");
+            playersCompleted3DMapGen.Add(player);
+            Debug.Log($"Player {player} completed map gen. Total: {playersCompleted3DMapGen.Count()}");
+        }
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_2DMapGenComplete(PlayerRef player)
+    {
+        if (!playersCompleted2DMapGen.Contains(player))
+        {
+            playersCompleted2DMapGen.Add(player);
+            Debug.Log($"Player {player} completed map gen. Total: {playersCompleted2DMapGen.Count()}");
         }
     }
 
@@ -358,7 +368,8 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             {
                 // Prevent new players from joining
                 Runner.SessionInfo.IsOpen = false;
-                playersCompletedMapGen.Clear();
+                playersCompleted3DMapGen.Clear();
+                playersCompleted2DMapGen.Clear();
                 // Play Scene with a pre-generated map
                 DontDestroyOnLoad(coordinatesDataHolder);
                 Runner.LoadScene(SceneRef.FromIndex(5));
@@ -455,10 +466,10 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 
     void UpdateGeneratedMapCounter()
     {
-        int readyPlayers = playersCompletedMapGen.Count();
+        int readyPlayers = GetNumPlayersReady();
         int allPlayers = Runner.ActivePlayers.Count();
 
-        if(readyPlayers < allPlayers)
+        if (readyPlayers < allPlayers)
         {
             generatedMapCounter.color = Color.white;
         }
@@ -467,6 +478,19 @@ public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             generatedMapCounter.color = Color.green;
         }
             generatedMapCounter.text = "Generated map: " + readyPlayers + "/" + allPlayers;
+    }
+
+    // Get number of players who have finished generating both 3D and 2D maps
+    int GetNumPlayersReady()
+    {
+        // Only players who have generated both 3D and 2D are ready
+        int readyPlayers = 0;
+        foreach (PlayerRef player in playersCompleted3DMapGen)
+        {
+            if (playersCompleted2DMapGen.Contains(player))
+                readyPlayers++;
+        }
+        return readyPlayers;
     }
 
     void ClearPlayerCardsFromTeamList(GameObject teamList)

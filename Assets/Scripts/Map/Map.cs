@@ -8,8 +8,9 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.U2D;
 using UnityEngine.SceneManagement;
+using Fusion;
 
-public class Map : MonoBehaviour
+public class Map : NetworkBehaviour
 {
     public static Map instance;
 
@@ -24,6 +25,7 @@ public class Map : MonoBehaviour
     [SerializeField] GameObject wallPrefab;
 
     private string outputFilePath;
+    private Lobby lobby;
 
     private void Awake()
     {
@@ -59,6 +61,13 @@ public class Map : MonoBehaviour
     {
         // Filepath where the glb file gets outputted
         outputFilePath = Path.Combine(Application.streamingAssetsPath, "Buildify3DBuildings.glb");
+    }
+
+    public override void Spawned()
+    {
+        // The lobby is informed when generation of buildings finishes
+        lobby = GameObject.Find("Lobby").GetComponent<Lobby>();
+        Debug.Log(lobby);
     }
 
     public async void ImportGLTF(string outputFilePath)
@@ -231,6 +240,9 @@ public class Map : MonoBehaviour
                 }
             }
         }
+
+        // Notify generation of map is ended
+        lobby.RPC_2DMapGenComplete(Runner.LocalPlayer);
     }
 
     double LatToY(double latitude)

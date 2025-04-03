@@ -73,7 +73,7 @@ public class RunBlenderScript : NetworkBehaviour
         //}
 
         // Notify generation of map is ended
-        lobby.RPC_MapGenComplete(Runner.LocalPlayer);
+        lobby.RPC_3DMapGenComplete(Runner.LocalPlayer);
 
         yield return null;
     }
