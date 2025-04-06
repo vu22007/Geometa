@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Select an Area and Respawn Points</title>
+  
+  <link rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
+  <link 
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css"
+  />
+
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+
+  <style>
+    .respawn-marker-1 .dot {
+      background-color: #ff4444;
+    }
+
+    .respawn-marker-2 .dot {
+      background-color: #4444ff; 
+    }
+
+    .marker-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid white;
+      margin-bottom: 4px;
+    }
+
+    .label {
+      font-weight: bold;
+      color: white;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+      font-size: 14px;
+    }
+    #map {
+      width: 800px;
+      height: 600px;
+      margin: 0 auto;
+      display: block;
+    }
+    #coords {
+      width: 800px;
+      display: block;
+      margin: 10px auto;
+      padding: 10px; 
+      box-sizing: border-box; 
+      font-size: 14px;
+      resize: none;
+    }
+    #coppyButton {
+      font-weight: bold;
+      display: block;
+      margin: 10px auto;
+      padding: 10px 20px; 
+      background-color: #000;
+      color: #fff;
+      border: none;
+      border-radius: 5px; 
+      font-size: 14px;
+      cursor: pointer;
+    }
+    #coppyButton:hover {
+      background-color: rgb(90, 90, 90); 
+    }
+  </style>
+</head>
+<body>
+  <h1 style="text-align:center;">Select an Area and Respawn Points</h1>
+  <div id="map"></div>
+  <textarea id="coords" rows="4" placeholder="Coordinates will appear here..."></textarea><br />
+  <button id="coppyButton">Copy Coordinates</button>
+
+  <script>
+    // Initialize the map
+    var map = L.map('map').setView([51.45, -2.58], 6);
+    var drawnItems = new L.FeatureGroup();
+    var areaBounds = null;
+    var respawnPoints = [null, null];
+    var markers = [];
+    var currentPointIndex = 0;
+
+    // Add OSM layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19,
+      attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
+    }).addTo(map);
+    map.addLayer(drawnItems);
+
+    // Configure draw controls
+    var drawControl = new L.Control.Draw({
+      edit: { featureGroup: drawnItems, remove: false },
+      draw: {
+        polygon: false,
+        polyline: false,
+        circle: false,
+        marker: false,
+        circlemarker: false,
+        rectangle: true
+      }
+    });
+    map.addControl(drawControl);
+
+    // Handle rectangle creation
+    map.on(L.Draw.Event.CREATED, function (event) {
+      // Clear previous selection
+      drawnItems.clearLayers();
+      markers.forEach(m => map.removeLayer(m));
+      markers = [];
+      respawnPoints = [null, null];
+      currentPointIndex = 0;
+      
+      var layer = event.layer;
+      drawnItems.addLayer(layer);
+      
+      areaBounds = layer.getBounds();
+      updateCoordinateDisplay()
+
+      // Enable point selection
+      map.on('click', addRespawnPoint);
+    });
+
+    // Handle map clicks for respawn points
+    function addRespawnPoint(e) {
+      if (!areaBounds.contains(e.latlng)) {
+        alert('Pick a respawn point in the selected area!');
+        return;
+      }
+
+      if (markers[currentPointIndex]) map.removeLayer(markers[currentPointIndex]);
+
+      // Create new marker
+      var marker = L.marker(e.latlng, {
+        icon: L.divIcon({
+          className: 'respawn-marker-' + (currentPointIndex+ 1),
+          html:`<div class="marker-container">
+            <div class="dot"></div>
+            <div class="label">RP${currentPointIndex+ 1}</div>
+          </div>`,
+          iconSize: [40,40]
+        })
+      }).addTo(map);
+
+      // Change the coordinates of the respawn points
+      markers[currentPointIndex] = marker;
+      respawnPoints[currentPointIndex] =e.latlng;
+      // Update text
+      updateCoordinateDisplay()
+      currentPointIndex = (currentPointIndex+1) % 2;
+    }
+
+    function updateCoordinateDisplay() {
+      var textArea = document.getElementById('coords');
+      
+      var rectText=  areaBounds.getSouthWest().lat.toFixed(4)+ ', ' + areaBounds.getNorthEast().lat.toFixed(4) + ', ' + 
+      areaBounds.getSouthWest().lng.toFixed(4) + ', ' +areaBounds.getNorthEast().lng.toFixed(4);
+      var p1= respawnPoints[0] ? ', ' + respawnPoints[0].lat.toFixed(5) +', ' + respawnPoints[0].lng.toFixed(5) : '';
+      var p2= respawnPoints[1] ? ', ' + respawnPoints[1].lat.toFixed(5) + ', ' + respawnPoints[1].lng.toFixed(5): '';
+
+      textArea.value = rectText + p1 + p2;
+    }
+
+    document.getElementById('coppyButton').addEventListener('click', function () {
+      var coordsText = document.getElementById('coords');
+      coordsText.select();
+      coordsText.setSelectionRange(0, 99999); 
+      document.execCommand('copy'); 
+      alert('Coordinates copied to clipboard!');
+    });
+  </script>
+</body>
+</html>

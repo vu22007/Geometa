@@ -1,0 +1,637 @@
+fileFormatVersion: 2
+guid: 217b087a6dfcb9a41b129cd3ec2ae5f2
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -8505896129071323256
+    second: Handgun_Move_0
+  - first:
+      213: -2265241566463976867
+    second: Handgun_Move_1
+  - first:
+      213: -6068848368745351068
+    second: Handgun_Move_2
+  - first:
+      213: -1125525572414463898
+    second: Handgun_Move_3
+  - first:
+      213: 8519169702172107044
+    second: Handgun_Move_4
+  - first:
+      213: -2482199706663811051
+    second: Handgun_Move_5
+  - first:
+      213: -3608034308896918775
+    second: Handgun_Move_6
+  - first:
+      213: 1929816769839129559
+    second: Handgun_Move_7
+  - first:
+      213: -7281536360651063979
+    second: Handgun_Move_8
+  - first:
+      213: 959686384603818381
+    second: Handgun_Move_9
+  - first:
+      213: -7398746015009983527
+    second: Handgun_Move_10
+  - first:
+      213: -5668501162487702816
+    second: Handgun_Move_11
+  - first:
+      213: -6434139193999336496
+    second: Handgun_Move_12
+  - first:
+      213: -4801132563791694300
+    second: Handgun_Move_13
+  - first:
+      213: -8204488610031312211
+    second: Handgun_Move_14
+  - first:
+      213: 2841606135923773887
+    second: Handgun_Move_15
+  - first:
+      213: 5258685315617488865
+    second: Handgun_Move_16
+  - first:
+      213: -2420900431478390373
+    second: Handgun_Move_17
+  - first:
+      213: 1840077778567353753
+    second: Handgun_Move_18
+  - first:
+      213: 8197698423070211642
+    second: Handgun_Move_19
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Handgun_Move_0
+      rect:
+        serializedVersion: 2
+        x: 40
+        y: 1069
+        width: 155
+        height: 210
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 71ed5cb74f0ed8649b2bbcd2b52bb9ab
+      internalID: 2001759929
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Move_1
+      rect:
+        serializedVersion: 2
+        x: 262
+        y: 1067
+        width: 156
+        height: 212
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 59c1bea1bf0791640bb96dd983d302fc
+      internalID: 406625298
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Move_2
+      rect:
+        serializedVersion: 2
+        x: 481
+        y: 1068
+        width: 155
+        height: 211
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3adddd0b4530e8f42b7bc36f8405bccb
+      internalID: 338254153
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Move_3
+      rect:
+        serializedVersion: 2
+        x: 699
+        y: 1070
+        width: 154
+        height: 210
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b91269251bc9f2649985efba9b872681
+      internalID: -1694125190
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Move_4
+      rect:
+        serializedVersion: 2
+        x: 40
+        y: 811
+        width: 154
+        height: 210
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 786985ed049567e46bd84c57db5507e8
+      internalID: -706260632
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Move_5
+      rect:
+        serializedVersion: 2
+        x: 262
+        y: 809
+        width: 156
+        height: 212
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8e60732ad8cd60f42b28825cce636c00
+      internalID: 1697765755
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Move_6
+      rect:
+        serializedVersion: 2
+        x: 481
+        y: 809
+        width: 156
+        height: 212
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7ef0a13da77330043a3997895a2f6d99
+      internalID: -187744973
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Move_7
+      rect:
+        serializedVersion: 2
+        x: 699
+        y: 812
+        width: 154
+        height: 210
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c82e42e44d9f36847ba05289401cca50
+      internalID: 2054381975
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Move_8
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 554
+        width: 154
+        height: 210
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8f0b52878db89b0499170ce192c1197a
+      internalID: 1504877484
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Move_9
+      rect:
+        serializedVersion: 2
+        x: 261
+        y: 551
+        width: 156
+        height: 212
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 49203b3fe58423440a96d0cbbd3cfcb2
+      internalID: 703806417
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Move_10
+      rect:
+        serializedVersion: 2
+        x: 482
+        y: 551
+        width: 156
+        height: 212
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c37027fb81072e047a8a733f016b4989
+      internalID: -423450153
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Move_11
+      rect:
+        serializedVersion: 2
+        x: 700
+        y: 553
+        width: 154
+        height: 210
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bb7193cdd72d5ad4a8fac2b45c5b909b
+      internalID: -1065366251
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Move_12
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 296
+        width: 154
+        height: 210
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 77d36a6e7aa49ec48906efe67ce62011
+      internalID: 23759763
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Move_13
+      rect:
+        serializedVersion: 2
+        x: 261
+        y: 294
+        width: 155
+        height: 211
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cc9e5bbab19d41e4982a771bc2daf39f
+      internalID: -516707514
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Move_14
+      rect:
+        serializedVersion: 2
+        x: 482
+        y: 293
+        width: 156
+        height: 212
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b7cd1e101c6e99d469c2747d08c1b730
+      internalID: -1713383504
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Move_15
+      rect:
+        serializedVersion: 2
+        x: 700
+        y: 295
+        width: 155
+        height: 210
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7fb24a188c94d8d4eacb246ef5d1db6e
+      internalID: 23139818
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Move_16
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 38
+        width: 154
+        height: 210
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ddc0e92f9a2cf5b468f8d6b767d5d4f0
+      internalID: -923714264
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Move_17
+      rect:
+        serializedVersion: 2
+        x: 260
+        y: 36
+        width: 156
+        height: 211
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d5c56ef749bcec84eb7c0a2d780df8f5
+      internalID: 1740693388
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Move_18
+      rect:
+        serializedVersion: 2
+        x: 482
+        y: 35
+        width: 157
+        height: 212
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6eb02a620dde72f43bf0e7eacb5b0db2
+      internalID: 1238822381
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Move_19
+      rect:
+        serializedVersion: 2
+        x: 700
+        y: 36
+        width: 156
+        height: 211
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b31f73101e44caf4dba645549160625e
+      internalID: 951187174
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 9501e8c6ad8dc66458317eb44970c18b
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Handgun_Move_0: 2001759929
+      Handgun_Move_1: 406625298
+      Handgun_Move_10: -423450153
+      Handgun_Move_11: -1065366251
+      Handgun_Move_12: 23759763
+      Handgun_Move_13: -516707514
+      Handgun_Move_14: -1713383504
+      Handgun_Move_15: 23139818
+      Handgun_Move_16: -923714264
+      Handgun_Move_17: 1740693388
+      Handgun_Move_18: 1238822381
+      Handgun_Move_19: 951187174
+      Handgun_Move_2: 338254153
+      Handgun_Move_3: -1694125190
+      Handgun_Move_4: -706260632
+      Handgun_Move_5: 1697765755
+      Handgun_Move_6: -187744973
+      Handgun_Move_7: 2054381975
+      Handgun_Move_8: 1504877484
+      Handgun_Move_9: 703806417
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

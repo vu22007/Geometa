@@ -71,3 +71,17 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
+
+**/.DS_Store
+.vsconfig
+.vscode/
+Assets/Thaleah_PixelFont/Materials/ThaleahFat_TTF Bitmap.asset
+.idea/
+Assets/Resources/Prefabs/Map/Buildify3DBuildingsPrefab.prefab
+Assets/Resources/Prefabs/Map/Buildify3DBuildings.fbx
+Assets/Resources/Prefabs/Map/Buildify3DBuildings.fbx.meta
+Assets/Resources/Prefabs/Map/Buildify3DBuildingsPrefab.prefab
+Assets/Resources/Prefabs/Map/Buildify3DBuildings.glb
+Assets/Resources/Prefabs/Map/Buildify3DBuildings.glb.meta
+Assets/StreamingAssets/Buildify3DBuildings.glb
+Assets/StreamingAssets/Buildify3DBuildings.glb.meta

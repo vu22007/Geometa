@@ -1,0 +1,637 @@
+fileFormatVersion: 2
+guid: d987164d17743a945be8f98d23779ea8
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -4005093354273941070
+    second: Handgun_Idle_0
+  - first:
+      213: 6134214809554185298
+    second: Handgun_Idle_1
+  - first:
+      213: -1376670112756058833
+    second: Handgun_Idle_2
+  - first:
+      213: -1485008969035328932
+    second: Handgun_Idle_3
+  - first:
+      213: -2729133567392558051
+    second: Handgun_Idle_4
+  - first:
+      213: 6865203865175160466
+    second: Handgun_Idle_5
+  - first:
+      213: -5927452262833635568
+    second: Handgun_Idle_6
+  - first:
+      213: 9006353287915520259
+    second: Handgun_Idle_7
+  - first:
+      213: -2350341232709222067
+    second: Handgun_Idle_8
+  - first:
+      213: 452629043886146867
+    second: Handgun_Idle_9
+  - first:
+      213: -4080115152315994752
+    second: Handgun_Idle_10
+  - first:
+      213: -5803799600555954646
+    second: Handgun_Idle_11
+  - first:
+      213: 6715554696842962429
+    second: Handgun_Idle_12
+  - first:
+      213: 4386380381657228104
+    second: Handgun_Idle_13
+  - first:
+      213: -7954684682392430709
+    second: Handgun_Idle_14
+  - first:
+      213: -787467846256678864
+    second: Handgun_Idle_15
+  - first:
+      213: -8549559236097829338
+    second: Handgun_Idle_16
+  - first:
+      213: -2878821776569531852
+    second: Handgun_Idle_17
+  - first:
+      213: 5880401000513000252
+    second: Handgun_Idle_18
+  - first:
+      213: 396895707303404413
+    second: Handgun_Idle_19
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Handgun_Idle_0
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 1045
+        width: 153
+        height: 209
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b8cb57c6cc9d9764288ec8b2419dca20
+      internalID: -181387083
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Idle_1
+      rect:
+        serializedVersion: 2
+        x: 254
+        y: 1045
+        width: 152
+        height: 209
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 04d1ea07b131c7349857d66d36ac9e95
+      internalID: 1957512189
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Idle_2
+      rect:
+        serializedVersion: 2
+        x: 471
+        y: 1045
+        width: 152
+        height: 209
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b144fd77dffea02429203fbd054fc9e0
+      internalID: 2006777432
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Idle_3
+      rect:
+        serializedVersion: 2
+        x: 688
+        y: 1045
+        width: 154
+        height: 210
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1c1e8f26c64d21c438b8e35c6d94c71f
+      internalID: 1214318592
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Idle_4
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 792
+        width: 154
+        height: 209
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 87feddef115d435469c5a2440fe0a70a
+      internalID: 2145165431
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Idle_5
+      rect:
+        serializedVersion: 2
+        x: 254
+        y: 792
+        width: 153
+        height: 209
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4de8bebc2dc6a5d4a979901ba63b948f
+      internalID: -1639868194
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Idle_6
+      rect:
+        serializedVersion: 2
+        x: 470
+        y: 792
+        width: 153
+        height: 209
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 189e0892d9011e6488fc7f1da69a631a
+      internalID: -212189038
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Idle_7
+      rect:
+        serializedVersion: 2
+        x: 687
+        y: 792
+        width: 154
+        height: 210
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: eed8d30ac4e6f604d9047ed7870881de
+      internalID: -416449989
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Idle_8
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 539
+        width: 154
+        height: 210
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 67e893cb75fa26440a249151da1da220
+      internalID: -1687901668
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Idle_9
+      rect:
+        serializedVersion: 2
+        x: 254
+        y: 539
+        width: 153
+        height: 209
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 23e6602d7064f804eb46941233549601
+      internalID: -1151683688
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Idle_10
+      rect:
+        serializedVersion: 2
+        x: 470
+        y: 539
+        width: 153
+        height: 209
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 21040e2eec034464da83596fcb693a76
+      internalID: -15673575
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Idle_11
+      rect:
+        serializedVersion: 2
+        x: 687
+        y: 539
+        width: 154
+        height: 209
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e2d8c854108737747b7210d52bc85688
+      internalID: 979848990
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Idle_12
+      rect:
+        serializedVersion: 2
+        x: 40
+        y: 286
+        width: 154
+        height: 210
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3cb6b965b34b5ec40ac2f70e2a2c1a2c
+      internalID: -1157228738
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Idle_13
+      rect:
+        serializedVersion: 2
+        x: 255
+        y: 286
+        width: 152
+        height: 209
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 699f35056c8a2544aa7c1063b18ecb5d
+      internalID: 1710814129
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Idle_14
+      rect:
+        serializedVersion: 2
+        x: 470
+        y: 286
+        width: 152
+        height: 209
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 00e0973f26a4bf240b93e2bf660d01a1
+      internalID: -55651164
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Idle_15
+      rect:
+        serializedVersion: 2
+        x: 687
+        y: 286
+        width: 153
+        height: 209
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 524dd03fe1ea7a74cbe10bc6e3513e84
+      internalID: 1453526717
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Idle_16
+      rect:
+        serializedVersion: 2
+        x: 40
+        y: 33
+        width: 154
+        height: 210
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a447afbf038362e41a2b412990dcc44f
+      internalID: 1938641510
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Idle_17
+      rect:
+        serializedVersion: 2
+        x: 255
+        y: 33
+        width: 153
+        height: 209
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bf93450e5db689e44860ffcf5e73e9bd
+      internalID: 1438575819
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Idle_18
+      rect:
+        serializedVersion: 2
+        x: 470
+        y: 33
+        width: 152
+        height: 209
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 20644c4149b86ab4ca82343073006452
+      internalID: 833109221
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Handgun_Idle_19
+      rect:
+        serializedVersion: 2
+        x: 687
+        y: 33
+        width: 153
+        height: 209
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 05e34173b1774bf4889904eb18fe6fed
+      internalID: -1666252838
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 7a486b4ef782dc948b423b4b694887ec
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Handgun_Idle_0: -181387083
+      Handgun_Idle_1: 1957512189
+      Handgun_Idle_10: -15673575
+      Handgun_Idle_11: 979848990
+      Handgun_Idle_12: -1157228738
+      Handgun_Idle_13: 1710814129
+      Handgun_Idle_14: -55651164
+      Handgun_Idle_15: 1453526717
+      Handgun_Idle_16: 1938641510
+      Handgun_Idle_17: 1438575819
+      Handgun_Idle_18: 833109221
+      Handgun_Idle_19: -1666252838
+      Handgun_Idle_2: 2006777432
+      Handgun_Idle_3: 1214318592
+      Handgun_Idle_4: 2145165431
+      Handgun_Idle_5: -1639868194
+      Handgun_Idle_6: -212189038
+      Handgun_Idle_7: -416449989
+      Handgun_Idle_8: -1687901668
+      Handgun_Idle_9: -1151683688
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

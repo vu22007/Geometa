@@ -1,0 +1,127 @@
+using System.Collections.Generic;
+using Fusion;
+using UnityEngine;
+
+public class AoESpell : NetworkBehaviour
+{
+    [Networked] public float damage { get; set; }
+    [Networked] public int team { get; set; }
+    [Networked] public float duration { get; set; }
+    [Networked] private TickTimer despawnTimer { get; set; }
+    [Networked] private PlayerRef playerCasting { get; set; }
+    [Networked] private Vector2 direction { get; set; }
+    [Networked] private float speed { get; set; }
+    [Networked] private float maxDistance { get; set; }
+    [Networked] private float score { get; set; }
+    [Networked] private float distanceTraveled { get; set; }
+    [Networked] private TickTimer damageCooldown { get; set; }
+    [Networked, OnChangedRender(nameof(OnActivatedChanged))] private bool isActivated { get; set; }
+
+    AudioSource audioSource;
+    [SerializeField] AudioClip aoeSound;
+    private Animator animator;
+    private List<Player> players;
+    private float damageCooldownMax = 0.6f;
+
+    public void OnCreated(Vector2 direction, float speed, float maxDistance, float damage, int team, float duration, float score, PlayerRef playerCasting)
+    {
+        this.damage = damage;
+        this.team = team;
+        this.duration = duration;
+        this.playerCasting = playerCasting;
+        this.direction = direction.normalized;
+        this.speed = speed;
+        this.maxDistance = maxDistance;
+        this.score = score;
+        distanceTraveled = 0f;
+        isActivated = false;
+        damageCooldown = TickTimer.CreateFromSeconds(Runner, damageCooldownMax);
+    }
+
+    public override void Spawned()
+    {
+        animator = GetComponent<Animator>();
+        audioSource = GetComponent<AudioSource>();
+        OnActivatedChanged();
+        players = new List<Player>();
+        gameObject.transform.localScale = gameObject.transform.localScale * (0.5f + score);
+        
+        // Rotation fix
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        transform.rotation = Quaternion.Euler(0f, 0f, angle+90);
+    }
+
+    public override void FixedUpdateNetwork()
+    {
+        if (isActivated)
+        {
+            if(damageCooldown.Expired(Runner)){
+                DamagePlayers();
+                damageCooldown = TickTimer.CreateFromSeconds(Runner, damageCooldownMax);
+            }
+            
+            // Check if the despawn timer has expired
+            if (despawnTimer.Expired(Runner))
+            {
+                Runner.Despawn(Object);
+            }
+        }
+        else
+        {
+            // Move the spell
+            Vector2 movement = direction * speed * Runner.DeltaTime;
+            transform.position += new Vector3(movement.x, movement.y, 0);
+            distanceTraveled += movement.magnitude;
+
+            if (distanceTraveled >= maxDistance)
+            {
+                isActivated = true;
+                despawnTimer = TickTimer.CreateFromSeconds(Runner, duration);
+            }
+        }
+    }
+
+    private void DamagePlayers()
+    {
+        foreach (Player player in players)
+        {
+            player.TakeDamage(damage, playerCasting);
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D other){
+        if(other.CompareTag("Player")){
+            Player player = other.GetComponentInParent<Player>();
+            if(player != null){
+                if(player.GetTeam() != team){
+                    players.Add(player);
+                }
+            }
+        }
+    }
+
+    private void OnTriggerExit2D(Collider2D other){
+        if(other.CompareTag("Player")){
+            Player player = other.GetComponentInParent<Player>();
+            if(player != null){
+                if(players.Contains(player)){
+                    players.Remove(player);
+                }
+            }
+        }
+    }
+
+    // Called on all clients and host when AoE spell is activated, so that everyone sees the correct sprite
+    void OnActivatedChanged()
+    {
+        if (animator != null)
+        {
+            animator.SetBool("isActivated", isActivated);
+        }
+
+        if (isActivated && audioSource != null && aoeSound != null)
+        {
+            audioSource.PlayOneShot(aoeSound);
+        }
+    }
+}

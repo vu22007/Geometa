@@ -1,0 +1,616 @@
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Fusion;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class Lobby : NetworkBehaviour, IPlayerJoined, IPlayerLeft
+{
+    [Networked, Capacity(6), OnChangedRender(nameof(OnTeam1PlayersChanged))] private NetworkDictionary<PlayerRef, PlayerInfo> team1Players { get; }
+    [Networked, Capacity(6), OnChangedRender(nameof(OnTeam2PlayersChanged))] private NetworkDictionary<PlayerRef, PlayerInfo> team2Players { get; }
+    [Networked] PlayerRef hostPlayerRef { get; set; }
+
+    [SerializeField] GameObject buildingsGeneratorPrefab;
+    private NetworkManager networkManager;
+    private TMP_InputField displayNameInput;
+    private TMP_InputField coordinatesInput;
+    [Networked] NetworkString<_128> coordinates { get; set; }
+    // Corrdinates used for generating the map, so players joined after can generate it as well
+    [Networked] NetworkString<_128> mapGenerationCoordinates { get; set; }
+    private Button team1Button;
+    private Button team2Button;
+    private Button knightButton;
+    private Button wizardButton;
+    private Button readyButton;
+    private Button generateMapButton;
+    private Button startGameButton;
+    private Button selectAreaButton;
+    private Button mapTypeButton;
+    private TextMeshProUGUI mapTypeText;
+    private TextMeshProUGUI generatedMapCounter;
+    private GameObject team1List;
+    private GameObject team2List;
+    private TextMeshProUGUI playerCounter;
+    private TextMeshProUGUI readyCounter;
+    private GameObject playerCardPrefab;
+    private GameObject mapGeneratedLabel;
+    private string displayName = "";
+    private int team = 0;
+    private string characterName = "";
+    private bool playerIsReady = false;
+    RunBlenderScript buildingsGenerator;
+    Map map;
+    CoordinatesDataHolder coordinatesDataHolder;
+    // This one is the player chose the generation type with the button
+    [Networked] bool generateMap { get; set; } = false;
+    // This is for when the player actually generates the map
+    [Networked] bool mapGenerated { get; set; } = false;
+    [Networked, Capacity(16)] private NetworkLinkedList<PlayerRef> playersCompleted3DMapGen { get; }
+    [Networked, Capacity(16)] private NetworkLinkedList<PlayerRef> playersCompleted2DMapGen { get; }
+
+    public override void Spawned()
+    {
+        coordinatesDataHolder = GameObject.Find("CoordinatesDataHolder").GetComponent<CoordinatesDataHolder>();
+        mapGeneratedLabel = GameObject.Find("Map Generated Label");
+        buildingsGenerator = GameObject.Find("BuildingsGenerator").GetComponent<RunBlenderScript>();
+        map = GameObject.Find("Map").GetComponent<Map>();
+        selectAreaButton = GameObject.Find("Select Area").GetComponent<Button>();
+        networkManager = GameObject.Find("Network Runner").GetComponent<NetworkManager>();
+        displayNameInput = GameObject.Find("Display Name Input").GetComponent<TMP_InputField>();
+        coordinatesInput = GameObject.Find("Coordinates Input").GetComponent<TMP_InputField>();
+        team1Button = GameObject.Find("Team 1 Button").GetComponent<Button>();
+        team2Button = GameObject.Find("Team 2 Button").GetComponent<Button>();
+        knightButton = GameObject.Find("Knight Button").GetComponent<Button>();
+        wizardButton = GameObject.Find("Wizard Button").GetComponent<Button>();
+        readyButton = GameObject.Find("Ready Button").GetComponent<Button>();
+        readyButton.onClick.AddListener(PlayerReady);
+        readyButton.interactable = false;
+        startGameButton = GameObject.Find("Start Game Button").GetComponent<Button>();
+        startGameButton.interactable = false;
+        generateMapButton = GameObject.Find("Generate Map Button").GetComponent<Button>();
+        mapTypeButton = GameObject.Find("Map Type Button").GetComponent<Button>();
+        mapTypeButton.image.color = new Color(127f / 255f, 213f / 255f, 135f / 255f, 1f);
+        mapTypeText = mapTypeButton.gameObject.GetComponentInChildren<TextMeshProUGUI>();
+        mapTypeText.text = "Default";
+        generatedMapCounter = GameObject.Find("Generated Map Counter").GetComponent<TextMeshProUGUI>();
+        team1List = GameObject.Find("Team 1 List");
+        team2List = GameObject.Find("Team 2 List");
+        playerCounter = GameObject.Find("Player Counter").GetComponent<TextMeshProUGUI>();
+        readyCounter = GameObject.Find("Ready Counter").GetComponent<TextMeshProUGUI>();
+        playerCardPrefab = Resources.Load("Prefabs/Lobby/PlayerCard") as GameObject;
+
+        // Hide start game button if not the host
+        if (!HasStateAuthority)
+        {
+            startGameButton.gameObject.SetActive(false);
+            mapTypeButton.gameObject.SetActive(false);
+        }
+
+        generateMapButton.gameObject.SetActive(false); 
+        selectAreaButton.gameObject.SetActive(false);
+        coordinatesInput.gameObject.SetActive(false);
+        generatedMapCounter.gameObject.SetActive(false);
+        mapGeneratedLabel.SetActive(false);
+
+        if (mapGenerated & Runner.IsClient)
+        {
+            Debug.Log("Started Generating Map");
+            GenerateMap();
+        }
+
+        // Populate team lists
+        AddPlayerCardsToTeamList(team1List, team1Players);
+        AddPlayerCardsToTeamList(team2List, team2Players);
+    }
+
+    public void Update()
+    {
+        // Make ready button interactable once team and character have been selected
+        if (!playerIsReady && team != 0 && characterName != "")
+            readyButton.interactable = true;
+
+        if (Runner != null)
+        {
+            // Get number of players in lobby and number of players who are ready
+            int numPlayersInLobby = Runner.ActivePlayers.Count();
+            int numPlayersReady = team1Players.Count() + team2Players.Count();
+
+            // Update player and ready counters
+            UpdatePlayerCounter(numPlayersInLobby);
+            UpdateReadyCounter(numPlayersReady);
+            if (generateMap & mapGenerated)
+            {
+                UpdateGeneratedMapCounter();
+            }
+
+            // Enable start game button if all players in lobby are ready, else disable it
+            bool canStart;
+            bool allPlayersAreReady = numPlayersReady == numPlayersInLobby;
+            if (mapGenerated & generateMap)
+            {
+                // If the generate map button is clicked and the type is set to generate map, all players need to have generated the map
+                bool allPlayersGeneratedMap = GetNumPlayersReady() == numPlayersInLobby;
+                canStart = allPlayersAreReady & allPlayersGeneratedMap;
+            }
+            else
+            {
+                // if it's the default map it can start once the players are ready
+                canStart = allPlayersAreReady;
+            }
+            startGameButton.interactable = canStart;
+        }
+    }
+
+    public void OnDisplayNameChanged(string newDisplayName)
+    {
+        // Limit name length
+        int charLimit = 16;
+        newDisplayName = new string(newDisplayName.Take(charLimit).ToArray());
+
+        displayName = newDisplayName;
+        displayNameInput.text = newDisplayName;
+    }
+
+    public void OnCoordinatesChanged(string coordinates)
+    {
+        this.coordinates = coordinates;
+        coordinatesInput.text = coordinates;
+    }
+
+    public void SelectTeam1()
+    {
+        team = 1;
+        team1Button.interactable = false;
+        team2Button.interactable = true;
+    }
+
+    public void SelectTeam2()
+    {
+        team = 2;
+        team1Button.interactable = true;
+        team2Button.interactable = false;
+    }
+
+    public void SelectKnight()
+    {
+        characterName = "Knight";
+        knightButton.interactable = false;
+        wizardButton.interactable = true;
+    }
+
+    public void SelectWizard()
+    {
+        characterName = "Wizard";
+        knightButton.interactable = true;
+        wizardButton.interactable = false;
+    }
+
+    public void PlayerReady()
+    {
+        playerIsReady = true;
+
+        // Turn the ready button into an unready button
+        readyButton.GetComponentInChildren<TextMeshProUGUI>().text = "Unready";
+        readyButton.onClick.RemoveAllListeners();
+        readyButton.onClick.AddListener(PlayerUnready);
+
+        // Disable display name, team and character selection
+        displayNameInput.interactable = false;
+        team1Button.interactable = false;
+        team2Button.interactable = false;
+        knightButton.interactable = false;
+        wizardButton.interactable = false;
+
+        // Send selection to host
+        RPC_PlayerReady(displayName, team, characterName);
+    }
+
+    public void PlayerUnready()
+    {
+        playerIsReady = false;
+
+        // Turn the unready button into a ready button
+        readyButton.GetComponentInChildren<TextMeshProUGUI>().text = "Ready";
+        readyButton.onClick.RemoveAllListeners();
+        readyButton.onClick.AddListener(PlayerReady);
+
+        // Enable display name, team and character selection, with the current selection applied
+        displayNameInput.interactable = true;
+        team1Button.interactable = team != 1;
+        team2Button.interactable = team != 2;
+        knightButton.interactable = characterName != "Knight";
+        wizardButton.interactable = characterName != "Wizard";
+
+        // Remove selection from host
+        RPC_PlayerUnready();
+    }
+
+    public void SelectMapType()
+    {
+        if (generateMap)
+        {
+            generateMap = false;
+            if (HasStateAuthority)
+            {
+                generateMapButton.gameObject.SetActive(false);
+                selectAreaButton.gameObject.SetActive(false);
+                coordinatesInput.gameObject.SetActive(false);
+                mapTypeButton.image.color = new Color(127f / 255f, 213f / 255f, 135f / 255f, 1f);
+                mapTypeText.text = "Default";
+                generatedMapCounter.gameObject.SetActive(false);
+            }
+        }
+        else
+        {
+            generateMap = true;
+            if (HasStateAuthority)
+            {
+                generateMapButton.gameObject.SetActive(true);
+                selectAreaButton.gameObject.SetActive(true);
+                coordinatesInput.gameObject.SetActive(true);
+                mapTypeButton.image.color = new Color(182f / 255f, 61f / 255f, 63f / 255f, 1f);
+                mapTypeText.text = "Generated";
+                // If the host clicked to generate the map show how many players are done generaing
+                if (mapGenerated)
+                {
+                    UpdateGeneratedMapCounter();
+                    generatedMapCounter.gameObject.SetActive(true);
+                }
+            }
+        }
+    }
+
+    public void SelectArea()
+    {
+        string pathToHtmlFile = Path.Combine(Application.streamingAssetsPath, "Non-Unity", "mapCoordinates.html");
+            
+        if (HasStateAuthority)
+        {
+            Application.OpenURL(pathToHtmlFile);
+        }
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_3DMapGenComplete(PlayerRef player)
+    {
+        if (!playersCompleted3DMapGen.Contains(player))
+        {
+            playersCompleted3DMapGen.Add(player);
+            Debug.Log($"Player {player} completed map gen. Total: {playersCompleted3DMapGen.Count()}");
+        }
+    }
+
+    public void ActivateMapGeneratedLabel()
+    {
+        mapGeneratedLabel.SetActive(true);
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    public void RPC_2DMapGenComplete(PlayerRef player)
+    {
+        if (!playersCompleted2DMapGen.Contains(player))
+        {
+            playersCompleted2DMapGen.Add(player);
+            Debug.Log($"Player {player} completed map gen. Total: {playersCompleted2DMapGen.Count()}");
+        }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void RPC_GenerateMap()
+    {
+        // MapGenerationCoordinates are updates when the RPC call is called. So when a player joins, just 
+        // GenerateMap() is called and that uses the coordinates that were last used, i.e MapGenerationCoordinates
+        // This makes sure all of the players have the same map even though some might join late
+        mapGenerationCoordinates = coordinates;
+        GenerateMap();
+    }
+
+    public void GenerateMap()
+    {
+        string[] partsArray = mapGenerationCoordinates.ToString().Split(',')
+                         .Select(s => s.Trim())
+                         .ToArray();
+
+        bool allValid = true;
+        double[] numbers = new double[partsArray.Length];
+
+        for (int i = 0; i < partsArray.Length; i++)
+        {
+            if (double.TryParse(partsArray[i], out double number))
+            {
+                // Round to 4 decimals because blosm has that max accuracy
+                numbers[i] = (double)System.Math.Round(number, 5);
+            }
+            else
+            {
+                allValid = false;
+                Debug.LogError($"Invalid input in: {partsArray[i]}");
+            }
+        }
+
+        if (allValid & partsArray.Length >= 4)
+        {
+            StartCoroutine(buildingsGenerator.RunBlender(numbers[0], numbers[1], numbers[2], numbers[3]));
+            StartCoroutine(map.LoadMapFromBoundingBox(numbers[0], numbers[1], numbers[2], numbers[3]));
+
+            coordinatesDataHolder.SetCoordinates(numbers[0], numbers[1], numbers[2], numbers[3]);
+            if (partsArray.Length >= 6)
+            {
+                coordinatesDataHolder.SetRespawnPoint1(numbers[4], numbers[5]);
+            }
+            if (partsArray.Length >= 8)
+            {
+                coordinatesDataHolder.SetRespawnPoint2(numbers[6], numbers[7]);
+            }
+
+            mapGenerated = true;
+            UpdateGeneratedMapCounter();
+            generateMapButton.interactable = false;
+            if (HasStateAuthority)
+            {
+                generatedMapCounter.gameObject.SetActive(true);
+            }
+        }
+        else
+        {
+            Debug.LogError($"Invalid input for coordinates: {mapGenerationCoordinates}");
+            generatedMapCounter.text = "Invalid input";
+            if (HasStateAuthority)
+            {
+                generatedMapCounter.gameObject.SetActive(true);
+            }
+        }
+    }
+
+    public void StartGame()
+    {
+        if (HasStateAuthority)
+        {
+            Debug.Log("Game started");
+            // Give the network manager the player dictionaries, but first convert the networked ones to standard ones
+            networkManager.team1Players = ConvertFromNetworkDictionary(team1Players);
+            networkManager.team2Players = ConvertFromNetworkDictionary(team2Players);
+
+            if (mapGenerated & generateMap)
+            {
+                // Prevent new players from joining
+                Runner.SessionInfo.IsOpen = false;
+                playersCompleted3DMapGen.Clear();
+                playersCompleted2DMapGen.Clear();
+                // Play Scene with a pre-generated map
+                DontDestroyOnLoad(coordinatesDataHolder);
+                Runner.LoadScene(SceneRef.FromIndex(5));
+
+            }
+            else
+            {
+                // Prevent new players from joining
+                Runner.SessionInfo.IsOpen = false;
+                // Load Scene that will use the 3D Generated buildings and 2D map in scene
+                // Switch to map scene to start the game, and the game controller will spawn player objects using the player dicts in the network manager
+                Runner.LoadScene(SceneRef.FromIndex(3));
+            }
+        }
+    }
+
+    public void LeaveLobby()
+    {
+        // Shut down the network runner, which will cause the game to return to the main menu
+        Runner.Shutdown();
+    }
+
+    // Convert a network dictionary into a standard dictionary
+    Dictionary<PlayerRef, PlayerInfo> ConvertFromNetworkDictionary(NetworkDictionary<PlayerRef, PlayerInfo> networkDictionary)
+    {
+        Dictionary<PlayerRef, PlayerInfo> dictionary = new Dictionary<PlayerRef, PlayerInfo>();
+        foreach (KeyValuePair<PlayerRef, PlayerInfo> item in networkDictionary)
+        {
+            dictionary.Add(item.Key, item.Value);
+        }
+        return dictionary;
+    }
+
+    // Anyone can call this RPC, and it will run only on the server
+    [Rpc(sources: RpcSources.All, targets: RpcTargets.StateAuthority, HostMode = RpcHostMode.SourceIsHostPlayer)]
+    public void RPC_PlayerReady(string displayName, int team, string characterName, RpcInfo info = default)
+    {
+        PlayerRef player = info.Source;
+
+        // Validate player details
+        bool teamIsValid = team == 1 || team == 2;
+        bool characterIsValid = characterName == "Knight" || characterName == "Wizard";
+        if (!teamIsValid || !characterIsValid) return;
+
+        // Use the character name as the display name if one is not provided
+        if (displayName == "") displayName = characterName;
+
+        // Add player to chosen team if they aren't already in a team
+        if (!team1Players.ContainsKey(player) && !team2Players.ContainsKey(player))
+        {
+            PlayerInfo playerInfo = new PlayerInfo(player, displayName, team, characterName);
+            var dict = (team == 1) ? team1Players : team2Players;
+            dict.Add(player, playerInfo);
+        }
+    }
+
+    // Anyone can call this RPC, and it will run only on the server
+    [Rpc(sources: RpcSources.All, targets: RpcTargets.StateAuthority, HostMode = RpcHostMode.SourceIsHostPlayer)]
+    public void RPC_PlayerUnready(RpcInfo info = default)
+    {
+        PlayerRef player = info.Source;
+        RemovePlayerSelection(player);
+    }
+
+    // Called when the team1Players networked property changes
+    void OnTeam1PlayersChanged()
+    {
+        // Clear team list
+        ClearPlayerCardsFromTeamList(team1List);
+
+        // Populate team list based on new player info
+        AddPlayerCardsToTeamList(team1List, team1Players);
+    }
+
+    // Called when the team2Players networked property changes
+    void OnTeam2PlayersChanged()
+    {
+        // Clear team list
+        ClearPlayerCardsFromTeamList(team2List);
+
+        // Populate team list based on new player info
+        AddPlayerCardsToTeamList(team2List, team2Players);
+    }
+
+    void UpdatePlayerCounter(int numPlayersInLobby)
+    {
+        playerCounter.text = "Players in lobby: " + numPlayersInLobby;
+    }
+
+    void UpdateReadyCounter(int numPlayersReady)
+    {
+        readyCounter.text = "Players ready: " + numPlayersReady;
+    }
+
+    void UpdateGeneratedMapCounter()
+    {
+        int readyPlayers = GetNumPlayersReady();
+        int allPlayers = Runner.ActivePlayers.Count();
+
+        if (readyPlayers < allPlayers)
+        {
+            generatedMapCounter.color = Color.white;
+        }
+        else
+        {
+            generatedMapCounter.color = Color.green;
+        }
+            generatedMapCounter.text = "Generated map: " + readyPlayers + "/" + allPlayers;
+    }
+
+    // Get number of players who have finished generating both 3D and 2D maps
+    int GetNumPlayersReady()
+    {
+        // Only players who have generated both 3D and 2D are ready
+        int readyPlayers = 0;
+        foreach (PlayerRef player in playersCompleted3DMapGen)
+        {
+            if (playersCompleted2DMapGen.Contains(player))
+                readyPlayers++;
+        }
+        return readyPlayers;
+    }
+
+    void ClearPlayerCardsFromTeamList(GameObject teamList)
+    {
+        foreach (Transform child in teamList.transform)
+        {
+            if (child.name.Contains("PlayerCard"))
+            {
+                Destroy(child.gameObject);
+            }
+        }
+    }
+
+    void AddPlayerCardsToTeamList(GameObject teamList, NetworkDictionary<PlayerRef, PlayerInfo> players)
+    {
+        // Get card and list height
+        float cardHeight = playerCardPrefab.GetComponent<RectTransform>().rect.height;
+        float listHeight = teamList.GetComponent<RectTransform>().rect.height;
+
+        // Calculate position of first card relative to the list
+        float cardX = 0;
+        float cardY = listHeight / 2 - cardHeight / 2;
+        Vector3 cardPosition = new Vector3(cardX, cardY, 0);
+
+        // Add each player to team list
+        foreach (KeyValuePair<PlayerRef, PlayerInfo> item in players)
+        {
+            PlayerRef playerRef = item.Key;
+            PlayerInfo playerInfo = item.Value;
+            string displayname = (string)playerInfo.displayName;
+            string characterName = (string)playerInfo.characterName;
+
+            // Create and position the player card relative to the list
+            GameObject playerCard = Instantiate(playerCardPrefab, new Vector3(0, 0, 0), Quaternion.identity, teamList.transform);
+            playerCard.transform.localPosition = cardPosition;
+
+            // Set card text to display name, with green colour to show if the player is the client's own player
+            TextMeshProUGUI cardText = playerCard.GetComponentInChildren<TextMeshProUGUI>();
+            cardText.text = displayname;
+            cardText.color = Runner.LocalPlayer.Equals(playerRef) ? Color.green : Color.white;
+
+            // Set card character image based on chosen character
+            GameObject knightImage = playerCard.transform.Find("Knight Image").gameObject;
+            GameObject wizardImage = playerCard.transform.Find("Wizard Image").gameObject;
+            if (characterName == "Knight") wizardImage.SetActive(false);
+            else knightImage.SetActive(false);
+
+            // Puts a nice star next to the host
+            GameObject starImage = playerCard.transform.Find("Star Image").gameObject;
+            if (hostPlayerRef.Equals(playerRef)) starImage.SetActive(true);
+
+            // Set position for next card
+            cardPosition.y -= cardHeight;
+        }
+    }
+
+    public void PlayerJoined(PlayerRef player)
+    {
+        // Store the PlayerRef of the host
+        if (HasStateAuthority && Runner.LocalPlayer.Equals(player))
+        {
+            hostPlayerRef = player;
+            networkManager.hostPlayerRef = player;
+        }
+    }
+
+    public void PlayerLeft(PlayerRef player)
+    {
+        // Remove player from both dictionaries if they leave, so that the team lists
+        // update on each client to no longer show the player
+        if (HasStateAuthority)
+        {
+            if (playersCompleted2DMapGen.Contains(player))
+            {
+                playersCompleted2DMapGen.Remove(player);
+            }
+            if (playersCompleted3DMapGen.Contains(player))
+            {
+                playersCompleted3DMapGen.Remove(player);
+            }
+            RemovePlayerSelection(player);
+        }
+    }
+
+    private void RemovePlayerSelection(PlayerRef player)
+    {
+        if (team1Players.ContainsKey(player))
+        {
+            var dict = team1Players;
+            dict.Remove(player);
+        }
+        else if (team2Players.ContainsKey(player))
+        {
+            var dict = team2Players;
+            dict.Remove(player);
+        }
+    }
+
+    public struct PlayerInfo : INetworkStruct
+    {
+        public PlayerRef playerRef;
+        public NetworkString<_16> displayName;
+        public int team;
+        public NetworkString<_16> characterName;
+
+        public PlayerInfo(PlayerRef playerRef, NetworkString<_16> displayName, int team, NetworkString<_16> characterName)
+        {
+            this.playerRef = playerRef;
+            this.displayName = displayName;
+            this.team = team;
+            this.characterName = characterName;
+        }
+    }
+}
