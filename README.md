@@ -1,8 +1,6 @@
 # Geometa
 Multiplayer game where you form shapes with teammates to grant bonuses to defeat the enemy team
 
-https://github.com/vu22007/Geometa/blob/dev/Geometa.exe
-
 # Gameplay & Rules
 Players are split into 2 teams. Each team has their own base and flag. A team wins the game when they steal the enemy flag and bring it to their base
 
